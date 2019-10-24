@@ -38,14 +38,7 @@ call MPI_comm_rank(mpi_comm_world , myid, ierr)
 
     do i = 1, this%profile%exch_num
         call MPI_irecv(this%recv_buff(i)%p, this%profile%recv_pts_num(i), mpi_real8, this%profile%exchg_proc_id(i), MPI_ANY_TAG, mpi_comm_world, this%mpi_recv_req(i), ierr)
-        if (myid ==0) then
-            print*, 'exch id', this%profile%exchg_proc_id(i), this%profile%recv_pts_num(i)
-        end if
     end do
-
-    if (myid ==0) then
-        print*, 'ASDASD', this%profile%exch_num
-    end if
 
     do i = 1, this%profile%exch_num
 
@@ -60,22 +53,10 @@ call MPI_comm_rank(mpi_comm_world , myid, ierr)
 
         call MPI_isend(this%send_buff(i)%p, this%profile%send_pts_num(i), mpi_real8, this%profile%exchg_proc_id(i), 0, mpi_comm_world, this%mpi_send_req(i), ierr)
 
-        if (myid ==0) then
-            print*, 'send id', this%profile%exchg_proc_id(i), this%profile%send_pts_num(i)
-        end if
-
-        if (myid ==1) then
-            print*, 'buf', this%send_buff(i)%p
-        end if
-
     end do
 
     do ind = 1, this%profile%exch_num
         call mpi_waitany(this%profile%exch_num, this%mpi_recv_req, i, mpi_status_ignore, ierr)
-
-        if (myid ==0) then
-            print*, 'recv_buf', this%recv_buff(i)%p
-        end if
 
         call unpack_from_buf(f(this%profile%recv_tile_ind(i)), this%recv_buff(i)%p,      &
              this%profile%recv_is(i), this%profile%recv_ie(i), &
@@ -83,8 +64,6 @@ call MPI_comm_rank(mpi_comm_world , myid, ierr)
              this%profile%recv_ks(i), this%profile%recv_ke(i), &
              this%profile%recv_pts_num(i) )
     end do
-
-    print*, 'Do exchange!'
 
 end subroutine do_exchange
 
@@ -125,8 +104,6 @@ subroutine pack_to_buf(f, buf, is, ie, js, je, ks, ke, first_dim_index, send_i_s
     integer(kind=4) :: ind, i, j ,k, idx
 
     idx = 0
-
-    print*,'SSSSSSSSSSSSSSSSSSSS', first_dim_index
 
     if (first_dim_index == 'i') then
         if (send_j_step == 1 .and. send_i_step == 1 ) then

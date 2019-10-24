@@ -113,6 +113,8 @@ subroutine create_2d_cross_halo_exchange(exchange, partition, halo_width, myid, 
                                   recv_pts_num    = recv_pts_num(1:exch_num),     &
                                   exch_num        = exch_num                       ) )
 
+    call exchange%profile%check()
+
 
     allocate(exchange%send_buff(exch_num)   , exchange%recv_buff(exch_num)   )
     allocate(exchange%mpi_send_req(exch_num), exchange%mpi_recv_req(exch_num))
