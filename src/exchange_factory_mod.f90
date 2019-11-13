@@ -27,11 +27,11 @@ subroutine create_2d_cross_halo_exchange(exchange, partition, halo_width, myid, 
 
     type(tile_t), pointer :: local_tile, remote_tile
 
-    integer(kind=4),  dimension(6*partition%num_tiles) :: recv_is, recv_ie, recv_js, recv_je, recv_ks, recv_ke, &
+    integer(kind=4),  dimension((6*partition%num_tiles)**2) :: recv_is, recv_ie, recv_js, recv_je, recv_ks, recv_ke, &
                                                           send_is, send_ie, send_js, send_je, send_ks, send_ke, &
                                                           send_i_step, send_j_step, send_tile_ind,  recv_tile_ind, exchg_proc_id
-    integer(kind=4),  dimension(6*partition%num_tiles) :: send_pts_num, recv_pts_num
-    character(len=1), dimension(6*partition%num_tiles) :: first_dim_index
+    integer(kind=4),  dimension((6*partition%num_tiles)**2) :: send_pts_num, recv_pts_num
+    character(len=1), dimension((6*partition%num_tiles)**2) :: first_dim_index
 
 
     integer(kind=4) :: local_ind, remote_ind, exch_num, ind
@@ -81,14 +81,13 @@ subroutine create_2d_cross_halo_exchange(exchange, partition, halo_width, myid, 
                                          (recv_ke(exch_num) - recv_ks(exch_num) + 1)
                 exchg_proc_id(exch_num) = partition%proc_map(remote_ind)
 
-                print*, recv_pts_num(exch_num), send_pts_num(exch_num)
             end if
 
         end do
 
     end do
 
-    print*, myid, send_tile_ind(1:exch_num)
+    print*, myid, exchg_proc_id(1:exch_num)
 
     allocate(exchange%profile, source = exchange_profile_t(                       &
                                   send_is         = send_is(1:exch_num),          &

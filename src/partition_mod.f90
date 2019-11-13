@@ -14,11 +14,12 @@ end type partition_t
 
 contains
 
-subroutine init(this, Nh, Nz, num_tiles, strategy)
+subroutine init(this, Nh, Nz, num_tiles, Np, strategy)
     class(partition_t), intent(inout) :: this
     integer(kind=4),    intent(in)    :: Nh        ! num of points in x and y direction at each panel
     integer(kind=4),    intent(in)    :: Nz        ! num of points in z direction at each panel
     integer(kind=4),    intent(in)    :: num_tiles ! num of tiles at each panel
+    integer(kind=4),    intent(in)    :: Np        ! num of processors
     character(*),       intent(in)    :: strategy
 
 !We assume that number of tiles at each panel are the same
@@ -31,7 +32,7 @@ subroutine init(this, Nh, Nz, num_tiles, strategy)
     select case (strategy)
 
     case ('default')
-        call default_strategy(this, Nh, Nz)
+        call default_strategy(this, Nh, Nz, Np)
 
     case default
         print*, 'Wrong strategy in partition_mod.f90'
@@ -40,12 +41,11 @@ subroutine init(this, Nh, Nz, num_tiles, strategy)
     end select
 end subroutine init
 
-subroutine default_strategy(partition, Nh, Nz)
+subroutine default_strategy(partition, Nh, Nz, Np)
     type(partition_t), intent(inout) :: partition
-    integer(kind=4),    intent(in)   :: Nh
-    integer(kind=4),    intent(in)   :: Nz
+    integer(kind=4),    intent(in)   :: Nh, Nz, Np
 
-    integer(kind=4) :: npx_npy(2)
+    integer(kind=4) :: npx_npy(2), wt(np), s(0:np)
     integer(kind=4), allocatable :: wx(:), wy(:)
     integer(kind=4) :: ind, i, j, panel_ind
     integer(kind=4) :: is, ie, js, je, ks, ke
@@ -87,10 +87,18 @@ subroutine default_strategy(partition, Nh, Nz)
 
                 ! call partition%tile(ind)%print()
 
-                partition%proc_map(ind) = ind-1
+                ! partition%proc_map(ind) = ind-1
 
             end do
         end do
+    end do
+
+    call partition_1d(Np, 6*partition%num_tiles, wt)
+
+    s(0) = 0
+    do ind = 1, Np
+        s(ind) = s(ind-1) + wt(ind)
+        partition%proc_map(s(ind-1)+1:s(ind)) = ind-1
     end do
 
     call partition%write_to_txt('partition.txt')

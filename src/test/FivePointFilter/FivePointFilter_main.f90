@@ -24,18 +24,22 @@ call MPI_init(ierr)
 call MPI_comm_rank(mpi_comm_world , myid, ierr)
 call MPI_comm_size(mpi_comm_world , Np  , ierr)
 
-if (mod(Np,6) /= 0) then
-    if (myid ==0) print*, 'Error! Wrong Np! Abort!'
-    call mpi_barrier(mpi_comm_world, ierr)
-    call mpi_finalize(ierr)
-    stop
-end if
+! if (mod(Np,6) /= 0) then
+!     if (myid ==0) print*, 'Error! Wrong Np! Abort!'
+!     call mpi_barrier(mpi_comm_world, ierr)
+!     call mpi_finalize(ierr)
+!     stop
+! end if
 
-call partition%init(nh, nz, Np/6, strategy = 'default')
+call partition%init(nh, nz, max(1,Np/6), Np, strategy = 'default')
+
+print*, 'NUM TILES', partition%num_tiles
 
 print*, 'Mpi mode. Np = ', Np, 'myid = ', myid
 
     call mpi_barrier(mpi_comm_world, ierr)
+
+if (myid ==0) print*, partition%proc_map
 
 do i = 1, 6*partition%num_tiles
     call mpi_barrier(mpi_comm_world, ierr)
@@ -77,7 +81,7 @@ do ind = ts, te
     do k = partition%tile(ind)%ks, partition%tile(ind)%ke
         do j = partition%tile(ind)%js, partition%tile(ind)%je
             do i = partition%tile(ind)%is, partition%tile(ind)%ie
-                f1(ind).p(i,j,k) = 1000*ind + i+j+k
+                f1(ind).p(i,j,k) = 1000*partition%tile(ind)%panel_number + i+j+k
             end do
         end do
     end do

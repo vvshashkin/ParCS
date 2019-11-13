@@ -19,9 +19,10 @@ subroutine calc_fivepointfilter(f1, f2, tile)
         do j = tile%js, tile%je
             do i = tile%is, tile%ie
                 f2.p(i,j,k) = 0.125_8 * (f1.p(i-1,j,k) + f1.p(i+1,j,k) + f1.p(i,j+1,k) + f1.p(i,j-1,k) + 4.0_8*f1.p(i,j,k))
-                print*, ''
-                print*,  i, j, k, 0.125_8 * (f1.p(i-1,j,k) + f1.p(i+1,j,k) + f1.p(i,j+1,k) + f1.p(i,j-1,k) + 4.0_8*f1.p(i,j,k))
-                print*, ''
+                if (tile%panel_number==1) then
+                    print*,  i, j,  f1.p(i-1,j,k), f1.p(i+1,j,k), f1.p(i,j+1,k), f1.p(i,j-1,k), 4.0_8*f1.p(i,j,k)
+                    print*, ''
+                end if
             end do
         end do
     end do

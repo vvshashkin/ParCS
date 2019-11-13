@@ -20,11 +20,11 @@ COTEXT  = "Compiling $(<F)"
 LITEXT  = "Assembling $@"
 
 #building rules
-$(DEXE)MAIN: $(MKDIRS) $(DOBJ)main.o
-	@rm -f $(filter-out $(DOBJ)main.o,$(EXESOBJ))
+$(DEXE)TEST_EXCH_MAIN: $(MKDIRS) $(DOBJ)test_exch_main.o
+	@rm -f $(filter-out $(DOBJ)test_exch_main.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
-EXES := $(EXES) MAIN
+EXES := $(EXES) TEST_EXCH_MAIN
 $(DEXE)FIVEPOINTFILTER_MAIN: $(MKDIRS) $(DOBJ)fivepointfilter_main.o
 	@rm -f $(filter-out $(DOBJ)fivepointfilter_main.o,$(EXESOBJ))
 	@echo $(LITEXT)
@@ -79,17 +79,17 @@ $(DOBJ)exchange_factory_mod.o: src/exchange_factory_mod.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
-$(DOBJ)test_mod.o: src/test/test_mod.f90 \
+$(DOBJ)test_exch_main.o: src/test/test_exch/test_exch_main.f90 \
+	$(DOBJ)test_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)test_mod.o: src/test/test_exch/test_mod.f90 \
 	$(DOBJ)tile_mod.o \
 	$(DOBJ)partition_mod.o \
 	$(DOBJ)grid_function_mod.o \
 	$(DOBJ)exchange_mod.o \
 	$(DOBJ)exchange_factory_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
-$(DOBJ)main.o: src/test/main.f90 \
-	$(DOBJ)test_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
