@@ -87,8 +87,6 @@ subroutine create_2d_cross_halo_exchange(exchange, partition, halo_width, myid, 
 
     end do
 
-    print*, myid, exchg_proc_id(1:exch_num)
-
     allocate(exchange%profile, source = exchange_profile_t(                       &
                                   send_is         = send_is(1:exch_num),          &
                                   send_ie         = send_ie(1:exch_num),          &

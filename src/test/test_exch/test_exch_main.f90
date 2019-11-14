@@ -1,8 +1,13 @@
 program main
 
-use test_mod
+use test_mod, only : test_exchange
+use mpi
 
-call test_tile_mod()
-call test_partition_mod()
+call MPI_init(ierr)
+
 call test_exchange()
+
+call mpi_barrier(mpi_comm_world, ierr)
+call mpi_finalize(ierr)
+
 end

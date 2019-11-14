@@ -85,10 +85,9 @@ $(DOBJ)test_exch_main.o: src/test/test_exch/test_exch_main.f90 \
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)test_mod.o: src/test/test_exch/test_mod.f90 \
-	$(DOBJ)tile_mod.o \
-	$(DOBJ)partition_mod.o \
 	$(DOBJ)grid_function_mod.o \
 	$(DOBJ)exchange_mod.o \
+	$(DOBJ)partition_mod.o \
 	$(DOBJ)exchange_factory_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@

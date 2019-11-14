@@ -29,6 +29,10 @@ subroutine init(this, Nh, Nz, num_tiles, Np, strategy)
     this%num_tiles = num_tiles
     this%npoints = Nh
 
+    if (Np>6*num_tiles) then
+        print*, 'Error!!! Number of tiles is less than number of processors!!!'
+        stop
+    end if
     select case (strategy)
 
     case ('default')
@@ -84,10 +88,6 @@ subroutine default_strategy(partition, Nh, Nz, Np)
                 ke = Nz
 
                 call partition%tile(ind)%init(is, ie, js, je, ks, ke, panel_ind)
-
-                ! call partition%tile(ind)%print()
-
-                ! partition%proc_map(ind) = ind-1
 
             end do
         end do
