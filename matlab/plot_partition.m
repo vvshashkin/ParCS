@@ -1,6 +1,6 @@
 clear all; close all
 
-data = importdata('partition.txt');
+data = importdata('../partition.txt');
 np = size(data,1)/6;
 N = max(data(:,3));
 
