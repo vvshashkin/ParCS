@@ -3,6 +3,7 @@
 #main building variables
 DSRC    = src
 DOBJ    = obj/
+DOBJEXE = obj_exe/# for .o containing main programs
 DMOD    = mod/
 DEXE    = ./
 LIBS    =
@@ -10,7 +11,7 @@ FC      = mpiifort
 OPTSC   =  -c -traceback -init=snan -init=arrays -check all -ftrapuv -module mod
 OPTSL   =  -traceback -init=snan -init=arrays -check all -ftrapuv -module mod
 VPATH   = $(DSRC) $(DOBJ) $(DMOD)
-MKDIRS  = $(DOBJ) $(DMOD) $(DEXE)
+MKDIRS  = $(DOBJ) $(DOBJEXE) $(DMOD) $(DEXE)
 LCEXES  = $(shell echo $(EXES) | tr '[:upper:]' '[:lower:]')
 EXESPO  = $(addsuffix .o,$(LCEXES))
 EXESOBJ = $(addprefix $(DOBJ),$(EXESPO))
@@ -19,16 +20,19 @@ EXESOBJ = $(addprefix $(DOBJ),$(EXESPO))
 COTEXT  = "Compiling $(<F)"
 LITEXT  = "Assembling $@"
 
+all: $(MKDIRS) tests
+tests: $(DEXE)TEST_EXCH_MAIN $(DEXE)FIVEPOINTFILTER_MAIN
+
 #building rules
-$(DEXE)TEST_EXCH_MAIN: $(MKDIRS) $(DOBJ)test_exch_main.o
-	@rm -f $(filter-out $(DOBJ)test_exch_main.o,$(EXESOBJ))
+$(DEXE)TEST_EXCH_MAIN: $(DOBJEXE)test_exch_main.o
+	#@rm -f $(filter-out $(DOBJ)test_exch_main.o,$(EXESOBJ))
 	@echo $(LITEXT)
-	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
+	@$(FC) $(OPTSL) $(DOBJ)*.o $(DOBJEXE)test_exch_main.o $(LIBS) -o $@
 EXES := $(EXES) TEST_EXCH_MAIN
-$(DEXE)FIVEPOINTFILTER_MAIN: $(MKDIRS) $(DOBJ)fivepointfilter_main.o
-	@rm -f $(filter-out $(DOBJ)fivepointfilter_main.o,$(EXESOBJ))
+$(DEXE)FIVEPOINTFILTER_MAIN: $(DOBJEXE)fivepointfilter_main.o
+	#@rm -f $(filter-out $(DOBJ)fivepointfilter_main.o,$(EXESOBJ))
 	@echo $(LITEXT)
-	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
+	@$(FC) $(OPTSL) $(DOBJ)*.o $(DOBJEXE)fivepointfilter_main.o $(LIBS) -o $@
 EXES := $(EXES) FIVEPOINTFILTER_MAIN
 
 #compiling rules
@@ -79,7 +83,7 @@ $(DOBJ)exchange_factory_mod.o: src/exchange_factory_mod.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
-$(DOBJ)test_exch_main.o: src/test/test_exch/test_exch_main.f90 \
+$(DOBJEXE)test_exch_main.o: src/test/test_exch/test_exch_main.f90 \
 	$(DOBJ)test_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -98,7 +102,7 @@ $(DOBJ)fivepointfilter_mod.o: src/test/FivePointFilter/FivePointFilter_mod.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
-$(DOBJ)fivepointfilter_main.o: src/test/FivePointFilter/FivePointFilter_main.f90 \
+$(DOBJEXE)fivepointfilter_main.o: src/test/FivePointFilter/FivePointFilter_main.f90 \
 	$(DOBJ)exchange_mod.o \
 	$(DOBJ)partition_mod.o \
 	$(DOBJ)grid_function_mod.o \
@@ -108,13 +112,14 @@ $(DOBJ)fivepointfilter_main.o: src/test/FivePointFilter/FivePointFilter_main.f90
 	@$(FC) $(OPTSC)  $< -o $@
 
 #phony auxiliary rules
-.PHONY : $(MKDIRS)
+#.PHONY : $(MKDIRS) #Is this really needed
 $(MKDIRS):
-	@mkdir -p $@
+	@echo "mkdir" $(MKDIRS)
+	@mkdir -p $(MKDIRS)
 .PHONY : cleanobj
 cleanobj:
 	@echo deleting objects
-	@rm -fr $(DOBJ)
+	@rm -fr $(DOBJ) $(DOBJEXE)
 .PHONY : cleanmod
 cleanmod:
 	@echo deleting mods
