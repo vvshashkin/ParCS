@@ -20,7 +20,7 @@ type(partition_t)                  :: partition
 type(grid_function_t), allocatable :: f1(:)
 type(grid_function_t), allocatable :: f2(:)
 
-integer(kind=4), parameter         :: nh=128, nz=3, halo_width=3, ex_halo_width=5
+integer(kind=4), parameter         :: nh=128, nz=3, halo_width=3, ex_halo_width=4
 integer(kind=4), parameter         :: nn(3) = [nh, nh/2, nh/4]
 integer(kind=4)                    :: myid, np, ierr, code
 
@@ -113,14 +113,6 @@ do ind = ts, te
     call whalo(1)%ext_halo(f1(ind))
 end do
 
-!if(myid == 0) then
-!    do i = 1, nh
-!        !print *, i, f1(ts)%p(0,i,1), f2(ts)%p(0,i,1)
-!        print '(i4,3e15.7)', i, f1(ts)%p(i,0,1)-f2(ts)%p(i,0,1), f1(ts)%p(i,0,2)-f2(ts)%p(i,0,2), f1(ts)%p(i,0,3)-f2(ts)%p(i,0,3)
-!        !print '(i4,3e15.7)', i, f1(ts)%p(i,0,1)-f2(ts)%p(i,0,1), f1(ts)%p(i,-1,1)-f2(ts)%p(i,-1,1), f1(ts)%p(i,-2,1)-f2(ts)%p(i,-2,1)
-!    end do
-!end if
-
 inface_err = 0._8; inface_err_max = 0._8
 cross_edge_err = 0._8; cross_edge_err_max = 0._8
 do ind = ts, te
@@ -161,13 +153,14 @@ do ind = ts, te
 
     err     = sum(abs(f1(ind)%p(is:ie,je+1:je+halo_width,:)-f2(ind)%p(is:ie,je+1:je+halo_width,:)))/nh
     err_max = maxval(abs(f1(ind)%p(is:ie,je+1:je+halo_width,:)-f2(ind)%p(is:ie,je+1:je+halo_width,:)))
-    if(js == 1) then
+    if(je == nh) then
         cross_edge_err     = cross_edge_err+err
         cross_edge_err_max = max(cross_edge_err_max,err_max)
     else 
         inface_err     = inface_err+err/nh
         inface_err_max = max(inface_err_max,err_max)
     end if
+    
 end do
 
 call mpi_allreduce(cross_edge_err, gl_cross_edge_err, 1, mpi_double, mpi_sum, mpi_comm_world, ierr)
