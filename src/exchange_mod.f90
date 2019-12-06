@@ -36,11 +36,11 @@ subroutine do_exchange(this, f, tile_s, tile_e)
 call MPI_comm_rank(mpi_comm_world , myid, ierr)
 
 
-    do i = 1, this%profile%exch_num
-        call MPI_irecv(this%recv_buff(i)%p, this%profile%recv_pts_num(i), mpi_real8, this%profile%exchg_proc_id(i), this%profile%send_tile_ind(i), mpi_comm_world, this%mpi_recv_req(i), ierr)
+    do i = 1, this%profile%recv_exch_num
+        call MPI_irecv(this%recv_buff(i)%p, this%profile%recv_pts_num(i), mpi_real8, this%profile%recv_proc_id(i), this%profile%send_tile_ind(i), mpi_comm_world, this%mpi_recv_req(i), ierr)
     end do
 
-    do i = 1, this%profile%exch_num
+    do i = 1, this%profile%send_exch_num
 
         call pack_to_buf(f(this%profile%recv_tile_ind(i)), this%send_buff(i)%p,    &
              this%profile%send_is(i), this%profile%send_ie(i), &
@@ -51,12 +51,12 @@ call MPI_comm_rank(mpi_comm_world , myid, ierr)
              this%profile%send_j_step(i),                      &
              this%profile%send_pts_num(i) )
 
-        call MPI_isend(this%send_buff(i)%p, this%profile%send_pts_num(i), mpi_real8, this%profile%exchg_proc_id(i), this%profile%recv_tile_ind(i), mpi_comm_world, this%mpi_send_req(i), ierr)
+        call MPI_isend(this%send_buff(i)%p, this%profile%send_pts_num(i), mpi_real8, this%profile%send_proc_id(i), this%profile%recv_tile_ind(i), mpi_comm_world, this%mpi_send_req(i), ierr)
 
     end do
 
-    do ind = 1, this%profile%exch_num
-        call mpi_waitany(this%profile%exch_num, this%mpi_recv_req, i, mpi_status_ignore, ierr)
+    do ind = 1, this%profile%recv_exch_num
+        call mpi_waitany(this%profile%recv_exch_num, this%mpi_recv_req, i, mpi_status_ignore, ierr)
 
         call unpack_from_buf(f(this%profile%recv_tile_ind(i)), this%recv_buff(i)%p,      &
              this%profile%recv_is(i), this%profile%recv_ie(i), &
@@ -65,6 +65,8 @@ call MPI_comm_rank(mpi_comm_world , myid, ierr)
              this%profile%recv_pts_num(i) )
 
     end do
+
+    call mpi_waitall(this%profile%send_exch_num, this%mpi_send_req, mpi_statuses_ignore, ierr)
 
 end subroutine do_exchange
 

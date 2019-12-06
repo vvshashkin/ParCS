@@ -9,10 +9,12 @@ type, public :: exchange_profile_t
 
     integer(kind=4),  allocatable :: send_is(:), send_ie(:), send_js(:), send_je(:), send_ks(:), send_ke(:)
     integer(kind=4),  allocatable :: recv_is(:), recv_ie(:), recv_js(:), recv_je(:), recv_ks(:), recv_ke(:)
+
     integer(kind=4),  allocatable :: send_pts_num(:), recv_pts_num(:)
     integer(kind=4),  allocatable :: send_i_step(:), send_j_step(:)
-    integer(kind=4),  allocatable :: send_tile_ind(:), recv_tile_ind(:),  exchg_proc_id(:)
-    integer(kind=4)               :: exch_num
+    integer(kind=4),  allocatable :: send_tile_ind(:), recv_tile_ind(:)
+    integer(kind=4),  allocatable :: send_proc_id(:), recv_proc_id(:)
+    integer(kind=4)               :: send_exch_num, recv_exch_num
     character(len=1), allocatable :: first_dim_index(:)
 
 contains
@@ -31,7 +33,7 @@ subroutine check(this)
     class(exchange_profile_t), intent(in) :: this
 
     integer :: ind
-    logical :: test(20)
+    logical :: test(21)
 
     test(1)  = allocated(this%send_is)
     test(2)  = allocated(this%send_ie)
@@ -51,8 +53,9 @@ subroutine check(this)
     test(16) = allocated(this%send_j_step)
     test(17) = allocated(this%send_tile_ind)
     test(18) = allocated(this%recv_tile_ind)
-    test(19) = allocated(this%exchg_proc_id)
-    test(20) = allocated(this%first_dim_index)
+    test(19) = allocated(this%send_proc_id)
+    test(20) = allocated(this%recv_proc_id)
+    test(21) = allocated(this%first_dim_index)
 
     if ( not(all(test)) ) then
         print*, 'Error in exchange_profile check!!! Some arrays are not allocated!'
