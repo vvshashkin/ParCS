@@ -101,20 +101,32 @@ type(grid_function_t) f
 !local
 real(kind=8) zbufy(f%js-f%nvj : f%je+f%nvj, this%halo_width, f%ks-f%nvk:f%ke+f%nvk)
 real(kind=8) zbufx(f%is-f%nvi : f%ie+f%nvi, this%halo_width, f%ks-f%nvk:f%ke+f%nvk)
-integer(kind=4) n, hw, klev
-integer(kind=4) is,ie,js,je,isv,iev,jsv,jev, nvi, nvj
-integer(kind=8) i,j,k
+integer(kind=4) n, hw
+integer(kind=4) is, ie, js, je
+integer(kind=4) nvi, nvj, nvk
+integer(kind=4) isv, iev, jsv,jev, ksv, kev
+integer(kind=4) klev
+integer(kind=4) i,j,k
 logical lhalo(4) !halo-procedurea at edge
 logical lcorn(4) !corner halo-procedure  for numeration of edges and corners see below
 logical lfail_hw, lfail_corn, lfail_halo_long
 real(kind=8) zf_csp(2,f%ks-f%nvk:f%ke+f%nvk,4) !values at special points in corners
-real(kind=8) zbufc(1-f%nvi:f%nvi,1-f%nvj:f%nvj,f%ks-f%nvk:f%ke+f%nvk) !store values for corner procedure
+!local real(kind=8) zbufc(1-f%nvi:f%nvi,1-f%nvj:f%nvj,f%ks-f%nvk:f%ke+f%nvk) !store values for corner procedure
+
 !short names for needed params
-n = this%n; hw = this%halo_width; klev = f%ke-f%ks+2*f%nvk+1
-is = f%is; ie = f%ie; js = f%js; je = f%je
-nvi = f%nvi; nvj = f%nvj
-isv = is-nvi; iev = ie+nvi
-jsv = js-nvj; jev = je+nvj
+n = this%n
+hw = this%halo_width
+
+is = f%is;      ie = f%ie
+js = f%js;      je = f%je
+nvi = f%nvi;    nvj = f%nvj;     nvk = f%nvk
+
+isv = is-nvi;   iev = ie+nvi
+jsv = js-nvj;   jev = je+nvj
+ksv = f%ks-nvk; kev = f%ke+nvk
+
+klev = kev-ksv+1
+
 
 !check if we need ecs edge-halo procedures for each specific tile edge
                                      !4__________3
@@ -127,16 +139,17 @@ lcorn(2) = lhalo(1) .and. lhalo(4)   !1----------2
 lcorn(3) = lhalo(4) .and. lhalo(2)   !   edge1
 lcorn(4) = lhalo(2) .and. lhalo(3)
 
+if(lcorn(1).or.lcorn(2).or.lcorn(3).or.lcorn(4)) then
+    call ecs_halo_corners(zf_csp,                                       &
+                          f%p,is,ie,js,je,isv,iev,jsv,jev,klev,nvi,nvj, & !function values array and its bounds
+                          this%w,1,n,hw,                                & !weight array and its bounds
+                          lcorn,n,hw)                                   !operating parameters
+end if
+
 !Internal checks to avoid (at least some part of) out-of-array errors
 !check if we have enough data for edge halo-procedure
 lfail_hw = ((lhalo(1) .or. lhalo(2)) .and. nvi< hw) .or. ((lhalo(3) .or. lhalo(4)) .and. nvj< hw)
 if(lfail_hw) call halo_avost("cubed sphere halo_width > grid_function_t halo width, can't continue")
-!check if we have enough data for corner-halo-procedure
-lfail_corn = (lcorn(1) .and. (isv> -2 .or. iev<  3 .or. jsv> -2 .or. jev<  3)) .or.& !corner 1
-             (lcorn(2) .and. (isv>n-2 .or. iev<n+3 .or. jsv> -2 .or. jev<  3)) .or.& !corner 2
-             (lcorn(3) .and. (isv>n-2 .or. iev<n+3 .or. jsv>n-2 .or. jev<n+3)) .or.& !corner 3
-             (lcorn(4) .and. (isv> -2 .or. iev<  3 .or. jsv>n-2 .or. jev<n+3))       !corner 4
-if(lfail_corn) call halo_avost("Must be at least 3 halo points for interpolation at corners")
 !check if we have enough data along edges to perform interpolations
 lfail_halo_long = (lhalo(1) .and. (minval(this%ind(is,:))-1<isv .or. maxval(this%ind(ie,:))+2>iev)) .or.& !edge 1
                   (lhalo(2) .and. (minval(this%ind(is,:))-1<isv .or. maxval(this%ind(ie,:))+2>iev)) .or.& !edge 2
@@ -146,46 +159,6 @@ if(lfail_halo_long) call halo_avost("not enough points along cub.sph edge to per
 
 !calculate values at corner special points 
 !store them in sepparate arrays to not to spoil original f%p
-if(lcorn(1)) then
-    do k=f%ks-f%nvk, f%ke+f%nvk
-        do j=1-nvj,nvj
-            do i=1-nvi,nvi
-                zbufc(i,j,k) = f%p(i,j,k)
-            end do
-        end do
-    end do
-    call ecs_corner_halo(zf_csp(:,:,1),zbufc)
-end if
-if(lcorn(2)) then
-    do k=f%ks-f%nvk, f%ke+f%nvk
-        do j=1-nvj,nvj
-            do i=1-nvi,nvi
-                zbufc(i,j,k) = f%p(n-i+1,j,k)
-            end do
-        end do
-    end do
-    call ecs_corner_halo(zf_csp(:,:,2),zbufc)
-end if
-if(lcorn(3)) then
-    do k=f%ks-f%nvk, f%ke+f%nvk
-        do j=1-nvj,nvj
-            do i=1-nvi,nvi
-                zbufc(i,j,k) = f%p(n-i+1,n-j+1,k)
-            end do
-        end do
-    end do
-    call ecs_corner_halo(zf_csp(:,:,3),zbufc)
-end if
-if(lcorn(4)) then
-    do k=f%ks-f%nvk, f%ke+f%nvk
-        do j=1-nvj,nvj
-            do i=1-nvi,nvi
-                zbufc(i,j,k) = f%p(i,n-j+1,k)
-            end do
-        end do
-    end do
-    call ecs_corner_halo(zf_csp(:,:,4),zbufc)
-end if
 
 !Halo-procedures along edges
 if(lhalo(1)) then
@@ -244,26 +217,6 @@ end if
 
 contains
 
-subroutine ecs_corner_halo(fcsp,fc)
-real(kind=8) fcsp(2,klev)
-real(kind=8) fc(1-nvi:nvi,1-nvj:nvj,klev)
-integer k
-real(kind=8) zx, zy, zz
-
-do k=1, klev
-    zx = this%w(0,1,1)*fc(0,1,k)+this%w(1,1,1)*fc(0, 2,k)+this%w(2,1,1)*fc(0, 3,k)
-    zy = this%w(0,1,1)*fc(1,0,k)+this%w(1,1,1)*fc(1,-1,k)+this%w(2,1,1)*fc(1,-2,k)
-    zz = this%w(0,1,1)*fc(1,1,k)+this%w(1,1,1)*fc(2, 1,k)+this%w(2,1,1)*fc(3, 1,k)
-    fcsp(1,k) = (zx+this%w(-1,1,1)*zy+this%w(-1,1,1)**2*zz)/(1-this%w(-1,1,1)**3)
-
-    zx = this%w(0,1,1)*fc(1,0,k)+this%w(1,1,1)*fc( 2,0,k)+this%w(2,1,1)*fc( 3,0,k)
-    zy = this%w(0,1,1)*fc(0,1,k)+this%w(1,1,1)*fc(-1,1,k)+this%w(2,1,1)*fc(-2,1,k)
-    zz = this%w(0,1,1)*fc(1,1,k)+this%w(1,1,1)*fc( 1,2,k)+this%w(2,1,1)*fc( 1,3,k)
-    fcsp(2,k) = (zx+this%w(-1,1,1)*zy+this%w(-1,1,1)**2*zz)/(1-this%w(-1,1,1)**3)
-end do
-
-end subroutine ecs_corner_halo
-
 subroutine ecs_ext_halo_1e(i1v,i2v,i1,i2,hw,zf)
 integer(kind=4) i1v,i2v,i1,i2,hw
 real(kind=8) zf(i1v:i2v,hw,klev)!input: source face values, output: interpolated target face values
@@ -287,17 +240,120 @@ do k=1, klev
 end do
 end subroutine ecs_ext_halo_1e
 
+end subroutine ecs_ext_halo
+
+!corner procedures for halo-zones
+!currently interpolates only left/right values in first halo row
+!planned: halo-corner interpolation
+subroutine ecs_halo_corners(pfcsp,                                       &
+                            pf,is,ie,js,je,isv,iev,jsv,jev,klev,nvi,nvj, & !function values array and its bounds
+                            w,ws,we,whw,                                 & !weight array and its bounds
+                            lcorn,n,hw)                                    !global operating parameters
+
+!output
+real(kind=8),   intent(out) :: pfcsp(2,klev,4) !values at special points in corners
+!input
+!function values:
+integer(kind=4), intent(in) :: is,ie,js,je,isv,iev,jsv,jev,klev,nvi,nvj
+real(kind=8),    intent(in) :: pf(isv:iev,jsv:jev,klev)
+!interpolation weights
+integer(kind=4), intent(in) :: ws,we,whw
+real(kind=8),    intent(in) :: w(-1:2,ws:we,whw) !interpolation weights
+!operting parameters
+logical,         intent(in) :: lcorn(4)
+integer(kind=4), intent(in) :: n, hw
+!local
+real(kind=8)    zbufc(1-nvi:nvi,1-nvj:nvj,klev) !store values for corner procedure
+integer(kind=4) k, j, i
+logical lfail_corn
+
+!check if we have enough data for corner-halo-procedure
+lfail_corn = (lcorn(1) .and. (isv> -2 .or. iev<  3 .or. jsv> -2 .or. jev<  3)) .or.& !corner 1
+             (lcorn(2) .and. (isv>n-2 .or. iev<n+3 .or. jsv> -2 .or. jev<  3)) .or.& !corner 2
+             (lcorn(3) .and. (isv>n-2 .or. iev<n+3 .or. jsv>n-2 .or. jev<n+3)) .or.& !corner 3
+             (lcorn(4) .and. (isv> -2 .or. iev<  3 .or. jsv>n-2 .or. jev<n+3))       !corner 4
+if(lfail_corn) call halo_avost("Must be at least 3 halo points for interpolation at corners")
+
+if(lcorn(1)) then
+    do k=1, klev
+        do j=1-nvj,nvj
+            do i=1-nvi,nvi
+                zbufc(i,j,k) = pf(i,j,k)
+            end do
+        end do
+    end do
+    call ecs_halo_1corner(pfcsp(:,:,1),zbufc,nvi,nvj,klev,w(:,1,1))
+end if
+if(lcorn(2)) then
+    do k=1, klev
+        do j=1-nvj,nvj
+            do i=1-nvi,nvi
+                zbufc(i,j,k) = pf(n-i+1,j,k)
+            end do
+        end do
+    end do
+    call ecs_halo_1corner(pfcsp(:,:,2),zbufc,nvi,nvj,klev,w(:,1,1))
+end if
+if(lcorn(3)) then
+    do k=1, klev
+        do j=1-nvj,nvj
+            do i=1-nvi,nvi
+                zbufc(i,j,k) = pf(n-i+1,n-j+1,k)
+            end do
+        end do
+    end do
+    call ecs_halo_1corner(pfcsp(:,:,3),zbufc,nvi,nvj,klev,w(:,1,1))
+end if
+if(lcorn(4)) then
+    do k=1, klev
+        do j=1-nvj,nvj
+            do i=1-nvi,nvi
+                zbufc(i,j,k) = pf(i,n-j+1,k)
+            end do
+        end do
+    end do
+    call ecs_halo_1corner(pfcsp(:,:,4),zbufc,nvi,nvj,klev,w(:,1,1))
+end if
+
+end subroutine ecs_halo_corners
+
+subroutine ecs_halo_1corner(pfcsp,fc,nvi,nvj,klev,pw)
+!output
+real(kind=8),   intent(out) :: pfcsp(2,klev)
+!input:
+real(kind=8),    intent(in) :: fc(1-nvi:nvi,1-nvj:nvj,klev)
+integer(kind=4), intent(in) :: nvi, nvj, klev
+real(kind=8),    intent(in) :: pw(-1:2)
+!locals:
+integer(kind=4) k
+real(kind=8) zx, zy, zz
+real(kind=8) zw, zw2, zw3
+
+zw = pw(-1);   zw2 = zw*zw;   zw3 = zw2*zw
+
+do k=1, klev
+    zx = pw(0)*fc(0,1,k)+pw(1)*fc(0, 2,k)+pw(2)*fc(0, 3,k)
+    zy = pw(0)*fc(1,0,k)+pw(1)*fc(1,-1,k)+pw(2)*fc(1,-2,k)
+    zz = pw(0)*fc(1,1,k)+pw(1)*fc(2, 1,k)+pw(2)*fc(3, 1,k)
+    pfcsp(1,k) = (zx+zw*zy+zw2*zz)/(1-zw3)
+
+    zx = pw(0)*fc(1,0,k)+pw(1)*fc( 2,0,k)+pw(2)*fc( 3,0,k)
+    zy = pw(0)*fc(0,1,k)+pw(1)*fc(-1,1,k)+pw(2)*fc(-2,1,k)
+    zz = pw(0)*fc(1,1,k)+pw(1)*fc( 1,2,k)+pw(2)*fc( 1,3,k)
+    pfcsp(2,k) = (zx+zw*zy+zw2*zz)/(1-zw3)
+end do
+
+end subroutine ecs_halo_1corner
+
 subroutine halo_avost(str)
 use mpi
 integer ierr
 character(*) str
 print *, str
-print '(6(A,i8,1x))', "is=", is, "ie=", ie, "js=", js, "je=", je, "nvi=", iev-ie, "nvj=", jev-je
+!print '(6(A,i8,1x))', "is=", is, "ie=", ie, "js=", js, "je=", je, "nvi=", iev-ie, "nvj=", jev-je
 print *, "exit"
 call mpi_finalize(ierr)
 stop
 end subroutine halo_avost
-
-end subroutine ecs_ext_halo
 
 end module ecs_halo_mod
