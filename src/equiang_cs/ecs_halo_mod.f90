@@ -99,8 +99,6 @@ class(ecs_halo_t) this
 type(grid_function_t) f
 
 !local
-real(kind=8) zbufy(f%js-f%nvj : f%je+f%nvj, this%halo_width, f%ks-f%nvk:f%ke+f%nvk)
-real(kind=8) zbufx(f%is-f%nvi : f%ie+f%nvi, this%halo_width, f%ks-f%nvk:f%ke+f%nvk)
 integer(kind=4) n, hw
 integer(kind=4) is, ie, js, je
 integer(kind=4) nvi, nvj, nvk
@@ -140,105 +138,21 @@ lcorn(3) = lhalo(4) .and. lhalo(2)   !   edge1
 lcorn(4) = lhalo(2) .and. lhalo(3)
 
 if(lcorn(1).or.lcorn(2).or.lcorn(3).or.lcorn(4)) then
-    call ecs_halo_corners(zf_csp,                                       &
+    !interpolate f%p to special points in corners, store obtained values in zf_csp
+    !zf_csp -> f%p after edge halo procedure
+    call ecs_halo_corners(zf_csp,                                       & !special oints interpolated values
                           f%p,is,ie,js,je,isv,iev,jsv,jev,klev,nvi,nvj, & !function values array and its bounds
                           this%w,1,n,hw,                                & !weight array and its bounds
                           lcorn,n,hw)                                   !operating parameters
 end if
 
-!Internal checks to avoid (at least some part of) out-of-array errors
-!check if we have enough data for edge halo-procedure
-lfail_hw = ((lhalo(1) .or. lhalo(2)) .and. nvi< hw) .or. ((lhalo(3) .or. lhalo(4)) .and. nvj< hw)
-if(lfail_hw) call halo_avost("cubed sphere halo_width > grid_function_t halo width, can't continue")
-!check if we have enough data along edges to perform interpolations
-lfail_halo_long = (lhalo(1) .and. (minval(this%ind(is,:))-1<isv .or. maxval(this%ind(ie,:))+2>iev)) .or.& !edge 1
-                  (lhalo(2) .and. (minval(this%ind(is,:))-1<isv .or. maxval(this%ind(ie,:))+2>iev)) .or.& !edge 2
-                  (lhalo(3) .and. (minval(this%ind(js,:))-1<jsv .or. maxval(this%ind(je,:))+2>jev)) .or.& !edge 3
-                  (lhalo(4) .and. (minval(this%ind(js,:))-1<jsv .or. maxval(this%ind(je,:))+2>jev))       !edge 4
-if(lfail_halo_long) call halo_avost("not enough points along cub.sph edge to perform halo-interpolations (nvi=5 needed)")
-
-!calculate values at corner special points 
-!store them in sepparate arrays to not to spoil original f%p
-
-!Halo-procedures along edges
-if(lhalo(1)) then
-    zbufx = f%p(isv:iev, 0:1-hw:-1,:)
-    call ecs_ext_halo_1e(isv,iev,is,ie,hw,zbufx)
-    f%p(isv:iev,1-hw:0,:) = zbufx(:,hw:1:-1,:)
-end if
-if(lhalo(2)) then
-    zbufx = f%p(isv:iev, n+1:n+hw, :)
-    call ecs_ext_halo_1e(isv,iev,is,ie,hw,zbufx)
-    f%p(isv:iev, n+1:n+hw, :) = zbufx
-end if
-if(lhalo(3)) then
-    do k=f%ks-f%nvk, f%ke+f%nvk
-        do j=jsv, jev
-            zbufy(j,1:hw,k) = f%p(0:1-hw:-1,j,k)
-        end do
-    end do
-    call ecs_ext_halo_1e(jsv,jev,js,je,hw,zbufy)
-    do k=f%ks-f%nvk, f%ke+f%nvk
-        do j=1,hw
-            f%p(1-j,jsv:jev,k) = zbufy(jsv:jev,j,k)
-        end do
-    end do
-end if
-if(lhalo(4)) then
-    do k=f%ks-f%nvk, f%ke+f%nvk
-        do j=jsv,jev
-            zbufy(j,1:hw,k) = f%p(n+1:n+hw,j,k)
-        end do
-    end do
-    call ecs_ext_halo_1e(jsv,jev,js,je,hw,zbufy)
-    do k=f%ks-f%nvk, f%ke+f%nvk
-        do j=1,hw
-            f%p(n+j,jsv:jev,k) = zbufy(jsv:jev,j,k)
-        end do
-    end do
+if(lhalo(1).or.lhalo(2).or.lhalo(3).or.lhalo(4)) then
+    call ecs_halo_edges(f%p,is,ie,js,je,isv,iev,jsv,jev,klev,nvi,nvj, & !function values array and its bounds
+                        this%w,1,n,hw,this%ind,                       & !weight array and its bounds
+                        lhalo,n,hw)                                   !operating parameters
 end if
 
-if(lcorn(1)) then
-    f%p(0,1,:) = zf_csp(1,:,1)
-    f%p(1,0,:) = zf_csp(2,:,1)
-end if
-if(lcorn(2)) then
-    f%p(n+1,1,:) = zf_csp(1,:,2)
-    f%p(n,0,:) = zf_csp(2,:,2)
-end if
-if(lcorn(3)) then
-    f%p(n+1,n,:) = zf_csp(1,:,3)
-    f%p(n,n+1,:) = zf_csp(2,:,3)
-end if
-if(lcorn(4)) then
-    f%p(0,n,:) = zf_csp(1,:,4)
-    f%p(1,n+1,:) = zf_csp(2,:,4)
-end if
-
-contains
-
-subroutine ecs_ext_halo_1e(i1v,i2v,i1,i2,hw,zf)
-integer(kind=4) i1v,i2v,i1,i2,hw
-real(kind=8) zf(i1v:i2v,hw,klev)!input: source face values, output: interpolated target face values
-!locals
-real(kind=8) zh(max(1,i1):min(n,i2))!buffer for interpolated values
-integer i, j, k, ii
-integer ihs(hw), ihe(hw)
-
-!exclude "special" points at first row, where we initially have not enough surrounding values to use cubic-interpolation
-ihs(2:) = 1; ihs(1) = 2
-ihe(2:) = n; ihe(1) = n-1
-
-do k=1, klev
-    do j=1, hw
-        do i = max(i1,ihs(j)),min(i2,ihe(j))
-            ii = this%ind(i,j)
-            zh(i) = sum(this%w(:,i,j)*zf(ii-1:ii+2,j,k))
-        end do
-        zf(max(i1,ihs(j)):min(i2,ihe(j)),j,k) = zh(max(i1,ihs(j)):min(i2,ihe(j)))
-    end do
-end do
-end subroutine ecs_ext_halo_1e
+call ecs_halo_corners_put(f%p,isv,iev,jsv,jev,klev,zf_csp,n,lcorn)
 
 end subroutine ecs_ext_halo
 
@@ -264,8 +178,14 @@ logical,         intent(in) :: lcorn(4)
 integer(kind=4), intent(in) :: n, hw
 !local
 real(kind=8)    zbufc(1-nvi:nvi,1-nvj:nvj,klev) !store values for corner procedure
-integer(kind=4) k, j, i
+integer(kind=4) k, j, i, icor
 logical lfail_corn
+integer(kind=4) ist(4),jst(4),jdir(4),idir(4)
+
+ist = [0,n+1,n+1,0  ]
+idir= [1, -1, -1, 1]
+jst = [0, 0, n+1,n+1]
+jdir= [1, 1,  -1, -1]
 
 !check if we have enough data for corner-halo-procedure
 lfail_corn = (lcorn(1) .and. (isv> -2 .or. iev<  3 .or. jsv> -2 .or. jev<  3)) .or.& !corner 1
@@ -274,46 +194,18 @@ lfail_corn = (lcorn(1) .and. (isv> -2 .or. iev<  3 .or. jsv> -2 .or. jev<  3)) .
              (lcorn(4) .and. (isv> -2 .or. iev<  3 .or. jsv>n-2 .or. jev<n+3))       !corner 4
 if(lfail_corn) call halo_avost("Must be at least 3 halo points for interpolation at corners")
 
-if(lcorn(1)) then
-    do k=1, klev
-        do j=1-nvj,nvj
-            do i=1-nvi,nvi
-                zbufc(i,j,k) = pf(i,j,k)
+do icor = 1,4
+    if(lcorn(icor)) then
+        do k=1, klev
+            do j=1-nvj,nvj
+                do i=1-nvi,nvi
+                    zbufc(i,j,k) = pf(ist(icor)+idir(icor)*i,jst(icor)+jdir(icor)*j,k)
+                end do
             end do
         end do
-    end do
-    call ecs_halo_1corner(pfcsp(:,:,1),zbufc,nvi,nvj,klev,w(:,1,1))
-end if
-if(lcorn(2)) then
-    do k=1, klev
-        do j=1-nvj,nvj
-            do i=1-nvi,nvi
-                zbufc(i,j,k) = pf(n-i+1,j,k)
-            end do
-        end do
-    end do
-    call ecs_halo_1corner(pfcsp(:,:,2),zbufc,nvi,nvj,klev,w(:,1,1))
-end if
-if(lcorn(3)) then
-    do k=1, klev
-        do j=1-nvj,nvj
-            do i=1-nvi,nvi
-                zbufc(i,j,k) = pf(n-i+1,n-j+1,k)
-            end do
-        end do
-    end do
-    call ecs_halo_1corner(pfcsp(:,:,3),zbufc,nvi,nvj,klev,w(:,1,1))
-end if
-if(lcorn(4)) then
-    do k=1, klev
-        do j=1-nvj,nvj
-            do i=1-nvi,nvi
-                zbufc(i,j,k) = pf(i,n-j+1,k)
-            end do
-        end do
-    end do
-    call ecs_halo_1corner(pfcsp(:,:,4),zbufc,nvi,nvj,klev,w(:,1,1))
-end if
+        call ecs_halo_1corner(pfcsp(:,:,icor),zbufc,nvi,nvj,klev,w(:,1,1))
+    end if
+end do
 
 end subroutine ecs_halo_corners
 
@@ -344,6 +236,141 @@ do k=1, klev
 end do
 
 end subroutine ecs_halo_1corner
+
+subroutine ecs_halo_corners_put(pf,isv,iev,jsv,jev,klev,pfcsp,n,lcorn)
+!output
+real(kind=8), intent(inout) :: pf(isv:iev,jsv:jev,klev) !output field
+!input
+integer(kind=4), intent(in) :: isv,iev,jsv,jev,klev   !dimensions of pf
+real(kind=8),    intent(in) :: pfcsp(2,klev,4)          !previously interpolated values at 'special' corner points
+integer(kind=4), intent(in) :: n
+logical,         intent(in) :: lcorn(4)                 !if pf corner is cubedsphere corner
+
+if(lcorn(1)) then
+    pf(0,1,:) = pfcsp(1,:,1)
+    pf(1,0,:) = pfcsp(2,:,1)
+end if
+if(lcorn(2)) then
+    pf(n+1,1,:) = pfcsp(1,:,2)
+    pf(n,0,:) = pfcsp(2,:,2)
+end if
+if(lcorn(3)) then
+    pf(n+1,n,:) = pfcsp(1,:,3)
+    pf(n,n+1,:) = pfcsp(2,:,3)
+end if
+if(lcorn(4)) then
+    pf(0,n,:) = pfcsp(1,:,4)
+    pf(1,n+1,:) = pfcsp(2,:,4)
+end if
+end subroutine ecs_halo_corners_put
+
+subroutine ecs_halo_edges(pf,is,ie,js,je,isv,iev,jsv,jev,klev,nvi,nvj, & !function values array and its bounds
+                          w,ws,we,whw,ind,                             & !weights and indices  arrays and their bounds
+                          lhalo,n,hw)                                    !global operating parameters
+
+!in-output
+real(kind=8), intent(inout) :: pf(isv:iev,jsv:jev,klev)
+!input
+integer(kind=4), intent(in) :: is,ie,js,je,isv,iev,jsv,jev,klev,nvi,nvj
+!interpolation weights
+integer(kind=4), intent(in) :: ws,we,whw
+real(kind=8),    intent(in) :: w(-1:2,ws:we,whw) !interpolation weights
+integer(kind=4), intent(in) :: ind(ws:we,whw)
+!operting parameters
+logical,         intent(in) :: lhalo(4)
+integer(kind=4), intent(in) :: n, hw
+!local
+integer(kind=4) k, j, i
+logical lfail_hw
+logical lfail_halo_long
+real(kind=8) zbufy(jsv:jev, hw, klev)
+real(kind=8) zbufx(isv:iev, hw, klev)
+
+!Internal checks to avoid (at least some part of) out-of-array errors
+!check if we have enough data for edge halo-procedure
+lfail_hw = ((lhalo(1) .or. lhalo(2)) .and. nvi< hw) .or. ((lhalo(3) .or. lhalo(4)) .and. nvj< hw)
+if(lfail_hw) call halo_avost("cubed sphere halo_width > grid_function_t halo width, can't continue")
+!check if we have enough data along edges to perform interpolations
+lfail_halo_long = (lhalo(1) .and. (minval(ind(is,:))-1<isv .or. maxval(ind(ie,:))+2>iev)) .or.& !edge 1
+                  (lhalo(2) .and. (minval(ind(is,:))-1<isv .or. maxval(ind(ie,:))+2>iev)) .or.& !edge 2
+                  (lhalo(3) .and. (minval(ind(js,:))-1<jsv .or. maxval(ind(je,:))+2>jev)) .or.& !edge 3
+                  (lhalo(4) .and. (minval(ind(js,:))-1<jsv .or. maxval(ind(je,:))+2>jev))       !edge 4
+if(lfail_halo_long) call halo_avost("not enough points along cub.sph edge to perform halo-interpolations (nvi=5 needed)")
+
+!calculate values at corner special points 
+!store them in sepparate arrays to not to spoil original f%p
+
+!Halo-procedures along edges
+if(lhalo(1)) then
+    zbufx = pf(isv:iev, 0:1-hw:-1,:)
+    call ecs_ext_halo_1e(zbufx,isv,iev,is,ie,hw,klev,w,ws,we,whw,ind,n)
+    pf(isv:iev,1-hw:0,:) = zbufx(:,hw:1:-1,:)
+end if
+if(lhalo(2)) then
+    zbufx = pf(isv:iev, n+1:n+hw, :)
+    call ecs_ext_halo_1e(zbufx,isv,iev,is,ie,hw,klev,w,ws,we,whw,ind,n)
+    pf(isv:iev, n+1:n+hw, :) = zbufx
+end if
+if(lhalo(3)) then
+    do k=1,klev
+        do j=jsv, jev
+            zbufy(j,1:hw,k) = pf(0:1-hw:-1,j,k)
+        end do
+    end do
+    call ecs_ext_halo_1e(zbufy,jsv,jev,js,je,hw,klev,w,ws,we,whw,ind,n)
+    do k=1,klev
+        do j=1,hw
+            pf(1-j,jsv:jev,k) = zbufy(jsv:jev,j,k)
+        end do
+    end do
+end if
+if(lhalo(4)) then
+    do k=1, klev
+        do j=jsv,jev
+            zbufy(j,1:hw,k) = pf(n+1:n+hw,j,k)
+        end do
+    end do
+    call ecs_ext_halo_1e(zbufy,jsv,jev,js,je,hw,klev,w,ws,we,whw,ind,n)
+    do k=1,klev
+        do j=1,hw
+            pf(n+j,jsv:jev,k) = zbufy(jsv:jev,j,k)
+        end do
+    end do
+end if
+
+
+end subroutine ecs_halo_edges
+
+subroutine ecs_ext_halo_1e(zf,i1v,i2v,i1,i2,hw,klev,w,ws,we,whw,ind,n)
+!input
+integer(kind=4), intent(in) :: i1v,i2v,i1,i2,hw,klev
+!in-output:
+real(kind=8), intent(inout) :: zf(i1v:i2v,hw,klev)!input: source face values, output: interpolated target face values
+!input
+integer(kind=4), intent(in) :: ws,we,whw
+real(kind=8),    intent(in) :: w(-1:2,ws:we,whw)
+integer(kind=4), intent(in) :: ind(ws:we,whw)
+integer(kind=4), intent(in) :: n
+!locals
+real(kind=8) zh(i1:i2)!buffer for interpolated values
+integer i, j, k, ii
+integer ihs(hw), ihe(hw)
+
+!exclude "special" points at first row, where we initially have not enough surrounding values to use cubic-interpolation
+ihs(2:) = 1; ihs(1) = 2
+ihe(2:) = n; ihe(1) = n-1
+
+do k=1, klev
+    do j=1, hw
+        do i = max(i1,ihs(j)),min(i2,ihe(j))
+            ii = ind(i,j)
+            zh(i) = sum(w(:,i,j)*zf(ii-1:ii+2,j,k))
+        end do
+        zf(max(i1,ihs(j)):min(i2,ihe(j)),j,k) = zh(max(i1,ihs(j)):min(i2,ihe(j)))
+    end do
+end do
+
+end subroutine ecs_ext_halo_1e
 
 subroutine halo_avost(str)
 use mpi
