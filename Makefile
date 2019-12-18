@@ -25,6 +25,11 @@ $(DEXE)TEST_EXCH_MAIN: $(MKDIRS) $(DOBJ)test_exch_main.o
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_EXCH_MAIN
+$(DEXE)TEST_MESH_MAIN: $(MKDIRS) $(DOBJ)test_mesh_main.o
+	@rm -f $(filter-out $(DOBJ)test_mesh_main.o,$(EXESOBJ))
+	@echo $(LITEXT)
+	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
+EXES := $(EXES) TEST_MESH_MAIN
 $(DEXE)FIVEPOINTFILTER_MAIN: $(MKDIRS) $(DOBJ)fivepointfilter_main.o
 	@rm -f $(filter-out $(DOBJ)fivepointfilter_main.o,$(EXESOBJ))
 	@echo $(LITEXT)
@@ -45,6 +50,11 @@ $(DOBJ)topology_mod.o: src/topology_mod.f90
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)tile_mod.o: src/tile_mod.f90
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)outputer_mod.o: src/outputer_mod.f90 \
+	$(DOBJ)grid_function_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -70,6 +80,16 @@ $(DOBJ)parcs_mpi_mod.o: src/ParCS_mpi_mod.f90
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)mesh_factory_mod.o: src/mesh_factory_mod.f90 \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)topology_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)mesh_mod.o: src/mesh_mod.f90
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)exchange_factory_mod.o: src/exchange_factory_mod.f90 \
 	$(DOBJ)exchange_mod.o \
 	$(DOBJ)exchange_profile_mod.o \
@@ -89,6 +109,18 @@ $(DOBJ)test_mod.o: src/test/test_exch/test_mod.f90 \
 	$(DOBJ)exchange_mod.o \
 	$(DOBJ)partition_mod.o \
 	$(DOBJ)exchange_factory_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)test_mesh_mod.o: src/test/test_mesh/test_mesh_mod.f90 \
+	$(DOBJ)partition_mod.o \
+	$(DOBJ)mesh_factory_mod.o \
+	$(DOBJ)mesh_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)test_mesh_main.o: src/test/test_mesh/test_mesh_main.f90 \
+	$(DOBJ)test_mesh_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
