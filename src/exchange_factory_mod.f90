@@ -10,14 +10,6 @@ implicit none
 
 contains
 
-! subroutine create_exchange(exchange)
-!
-!     type(exchange_t), intent(inout) :: exchange
-!
-!
-! end subroutine create_exchange
-
-
 subroutine create_2d_cross_halo_exchange(exchange, partition, halo_width, myid, np)
 
     type(exchange_t),          intent(out)   :: exchange
@@ -28,9 +20,14 @@ subroutine create_2d_cross_halo_exchange(exchange, partition, halo_width, myid, 
     type(tile_t), pointer :: local_tile, remote_tile
 
     integer(kind=4),  dimension((6*partition%num_tiles)**2) :: recv_is, recv_ie, recv_js, recv_je, recv_ks, recv_ke, &
-                                                          send_is, send_ie, send_js, send_je, send_ks, send_ke, &
-                                                          send_i_step, send_j_step, send_tile_ind,  recv_tile_ind, exchg_proc_id
+                                                               send_is, send_ie, send_js, send_je, send_ks, send_ke
+    integer(kind=4),  dimension((6*partition%num_tiles)**2) :: send_to_proc_id, recv_from_proc_id   , &
+                                                               recv_from_tile_ind, recv_to_tile_ind , &
+                                                               send_from_tile_ind, send_to_tile_ind , &
+                                                               send_tag, recv_tag
     integer(kind=4),  dimension((6*partition%num_tiles)**2) :: send_pts_num, recv_pts_num
+
+    integer(kind=4),  dimension((6*partition%num_tiles)**2) :: send_i_step, send_j_step
     character(len=1), dimension((6*partition%num_tiles)**2) :: first_dim_index
 
 
@@ -63,8 +60,12 @@ subroutine create_2d_cross_halo_exchange(exchange, partition, halo_width, myid, 
 
             if (is_intersection) then
                 exch_num = exch_num + 1
-                send_tile_ind(exch_num) = remote_ind
-                recv_tile_ind(exch_num) = local_ind
+
+                recv_to_tile_ind  (exch_num) = local_ind
+                recv_from_tile_ind(exch_num) = remote_ind
+
+                send_from_tile_ind(exch_num) = local_ind
+                send_to_tile_ind  (exch_num) = remote_ind
 
                 send_ks(exch_num) = local_tile%ks
                 send_ke(exch_num) = local_tile%ke
@@ -79,7 +80,12 @@ subroutine create_2d_cross_halo_exchange(exchange, partition, halo_width, myid, 
                 recv_pts_num(exch_num) = (recv_ie(exch_num) - recv_is(exch_num) + 1)* &
                                          (recv_je(exch_num) - recv_js(exch_num) + 1)* &
                                          (recv_ke(exch_num) - recv_ks(exch_num) + 1)
-                exchg_proc_id(exch_num) = partition%proc_map(remote_ind)
+
+                send_to_proc_id  (exch_num) = partition%proc_map(remote_ind)
+                recv_from_proc_id(exch_num) = partition%proc_map(remote_ind)
+
+                send_tag(exch_num) = 6*partition%num_tiles*(send_from_tile_ind(exch_num)-1) + send_to_tile_ind(exch_num)
+                recv_tag(exch_num) = 6*partition%num_tiles*(recv_from_tile_ind(exch_num)-1) + recv_to_tile_ind(exch_num)
 
             end if
 
@@ -88,30 +94,35 @@ subroutine create_2d_cross_halo_exchange(exchange, partition, halo_width, myid, 
     end do
 
     allocate(exchange%profile, source = exchange_profile_t(                       &
-                                  send_is         = send_is(1:exch_num),          &
-                                  send_ie         = send_ie(1:exch_num),          &
-                                  send_js         = send_js(1:exch_num),          &
-                                  send_je         = send_je(1:exch_num),          &
-                                  send_ks         = send_ks(1:exch_num),          &
-                                  send_ke         = send_ke(1:exch_num),          &
-                                  recv_is         = recv_is(1:exch_num),          &
-                                  recv_ie         = recv_ie(1:exch_num),          &
-                                  recv_js         = recv_js(1:exch_num),          &
-                                  recv_je         = recv_je(1:exch_num),          &
-                                  recv_ks         = recv_ks(1:exch_num),          &
-                                  recv_ke         = recv_ke(1:exch_num),          &
-                                  send_i_step     = send_i_step(1:exch_num),      &
-                                  send_j_step     = send_j_step(1:exch_num),      &
-                                  first_dim_index = first_dim_index(1:exch_num),  &
-                                  send_tile_ind   = send_tile_ind(1:exch_num),    &
-                                  recv_tile_ind   = recv_tile_ind(1:exch_num),    &
-                                  exchg_proc_id   = exchg_proc_id(1:exch_num),    &
-                                  send_pts_num    = send_pts_num(1:exch_num),     &
-                                  recv_pts_num    = recv_pts_num(1:exch_num),     &
-                                  exch_num        = exch_num                       ) )
+            send_is            = send_is(1:exch_num),          &
+            send_ie            = send_ie(1:exch_num),          &
+            send_js            = send_js(1:exch_num),          &
+            send_je            = send_je(1:exch_num),          &
+            send_ks            = send_ks(1:exch_num),          &
+            send_ke            = send_ke(1:exch_num),          &
+            recv_is            = recv_is(1:exch_num),          &
+            recv_ie            = recv_ie(1:exch_num),          &
+            recv_js            = recv_js(1:exch_num),          &
+            recv_je            = recv_je(1:exch_num),          &
+            recv_ks            = recv_ks(1:exch_num),          &
+            recv_ke            = recv_ke(1:exch_num),          &
+            send_i_step        = send_i_step(1:exch_num),      &
+            send_j_step        = send_j_step(1:exch_num),      &
+            first_dim_index    = first_dim_index(1:exch_num),  &
+            recv_from_tile_ind = recv_from_tile_ind(1:exch_num),    &
+            recv_to_tile_ind   = recv_to_tile_ind(1:exch_num),    &
+            send_from_tile_ind = send_from_tile_ind(1:exch_num),    &
+            send_to_tile_ind   = send_to_tile_ind(1:exch_num),    &
+            send_to_proc_id    = send_to_proc_id(1:exch_num),     &
+            recv_from_proc_id  = recv_from_proc_id(1:exch_num),     &
+            send_pts_num       = send_pts_num(1:exch_num),     &
+            recv_pts_num       = recv_pts_num(1:exch_num),     &
+            send_tag           = send_tag(1:exch_num),         &
+            recv_tag           = recv_tag(1:exch_num),         &
+            send_exch_num      = exch_num                ,     &
+            recv_exch_num      = exch_num) )
 
     call exchange%profile%check()
-
 
     allocate(exchange%send_buff(exch_num)   , exchange%recv_buff(exch_num)   )
     allocate(exchange%mpi_send_req(exch_num), exchange%mpi_recv_req(exch_num))
@@ -163,10 +174,6 @@ subroutine find_cross_halo_intersection(l_tile, r_tile, halo_width, npoints, is_
     !left recv halo
     is_l = l_tile%is-halo_width; ie_l = l_tile%is-1
     js_l = l_tile%js           ; je_l = l_tile%je
-
-    ! if (r_tile%panel_number==4) then
-    !     print*, is_l, ie_l, js_l, je_l
-    ! end if
 
     recv_is = max(is_l, r_tile_is); recv_ie = min(ie_l, r_tile_ie)
     recv_js = max(js_l, r_tile_js); recv_je = min(je_l, r_tile_je)
@@ -258,105 +265,124 @@ end subroutine find_cross_halo_intersection
 
 subroutine create_2d_full_halo_exchange(exchange, partition, halo_width, myid, np)
 
-    type(exchange_t),          intent(out)   :: exchange
-    type(partition_t), target, intent(in)    :: partition
-    integer(kind=4),           intent(in)    :: halo_width !halo width
-    integer(kind=4),           intent(in)    :: myid, np !proc id and number of processors
+        type(exchange_t),          intent(out)   :: exchange
+        type(partition_t), target, intent(in)    :: partition
+        integer(kind=4),           intent(in)    :: halo_width !halo width
+        integer(kind=4),           intent(in)    :: myid, np !proc id and number of processors
 
-    type(tile_t), pointer :: local_tile, remote_tile
+        type(tile_t), pointer :: local_tile, remote_tile
 
-    integer(kind=4),  dimension((6*partition%num_tiles)**2) :: recv_is, recv_ie, recv_js, recv_je, recv_ks, recv_ke, &
-                                                          send_is, send_ie, send_js, send_je, send_ks, send_ke, &
-                                                          send_i_step, send_j_step, send_tile_ind,  recv_tile_ind, exchg_proc_id
-    integer(kind=4),  dimension((6*partition%num_tiles)**2) :: send_pts_num, recv_pts_num
-    character(len=1), dimension((6*partition%num_tiles)**2) :: first_dim_index
+        integer(kind=4),  dimension((6*partition%num_tiles)**2) :: recv_is, recv_ie, recv_js, recv_je, recv_ks, recv_ke, &
+                                                                   send_is, send_ie, send_js, send_je, send_ks, send_ke
+        integer(kind=4),  dimension((6*partition%num_tiles)**2) :: send_to_proc_id, recv_from_proc_id   , &
+                                                                   recv_from_tile_ind, recv_to_tile_ind , &
+                                                                   send_from_tile_ind, send_to_tile_ind , &
+                                                                   send_tag, recv_tag
+        integer(kind=4),  dimension((6*partition%num_tiles)**2) :: send_pts_num, recv_pts_num
+
+        integer(kind=4),  dimension((6*partition%num_tiles)**2) :: send_i_step, send_j_step
+        character(len=1), dimension((6*partition%num_tiles)**2) :: first_dim_index
 
 
-    integer(kind=4) :: local_ind, remote_ind, exch_num, ind
-    logical :: is_intersection
+        integer(kind=4) :: local_ind, remote_ind, exch_num, ind
+        logical :: is_intersection
 
-    if (halo_width > partition%npoints) then
-        write(*,*) 'Error! Halo is too wide! Abort!'
-        stop
-    end if
+        if (halo_width > partition%npoints) then
+            write(*,*) 'Error! Halo is too wide! Abort!'
+            stop
+        end if
 
-    exch_num = 0
+        exch_num = 0
 
-    do local_ind = 1, 6*partition%num_tiles
+        do local_ind = 1, 6*partition%num_tiles
 
-        if (partition%proc_map(local_ind) /= myid) cycle
+            if (partition%proc_map(local_ind) /= myid) cycle
 
-        local_tile => partition%tile(local_ind)
+            local_tile => partition%tile(local_ind)
 
-        do remote_ind = 1, 6*partition%num_tiles
+            do remote_ind = 1, 6*partition%num_tiles
 
-            remote_tile => partition%tile(remote_ind)
+                remote_tile => partition%tile(remote_ind)
 
-            call find_full_halo_intersection(local_tile, remote_tile, halo_width, partition%npoints, is_intersection , &
-                                              recv_is(exch_num + 1), recv_ie(exch_num + 1)                            , &
-                                              recv_js(exch_num + 1), recv_je(exch_num + 1)                            , &
-                                              send_is(exch_num + 1), send_ie(exch_num + 1)                            , &
-                                              send_js(exch_num + 1), send_je(exch_num + 1)                            , &
-                                              send_i_step(exch_num+1), send_j_step(exch_num+1), first_dim_index(exch_num+1) )
+                call find_full_halo_intersection(local_tile, remote_tile, halo_width, partition%npoints, is_intersection , &
+                                                  recv_is(exch_num + 1), recv_ie(exch_num + 1)                            , &
+                                                  recv_js(exch_num + 1), recv_je(exch_num + 1)                            , &
+                                                  send_is(exch_num + 1), send_ie(exch_num + 1)                            , &
+                                                  send_js(exch_num + 1), send_je(exch_num + 1)                            , &
+                                                  send_i_step(exch_num+1), send_j_step(exch_num+1), first_dim_index(exch_num+1) )
 
-            if (is_intersection) then
-                exch_num = exch_num + 1
-                send_tile_ind(exch_num) = remote_ind
-                recv_tile_ind(exch_num) = local_ind
+                if (is_intersection) then
+                    exch_num = exch_num + 1
 
-                send_ks(exch_num) = local_tile%ks
-                send_ke(exch_num) = local_tile%ke
+                    recv_to_tile_ind  (exch_num) = local_ind
+                    recv_from_tile_ind(exch_num) = remote_ind
 
-                recv_ks(exch_num) = remote_tile%ks
-                recv_ke(exch_num) = remote_tile%ke
+                    send_from_tile_ind(exch_num) = local_ind
+                    send_to_tile_ind  (exch_num) = remote_ind
 
-                send_pts_num(exch_num) = (send_ie(exch_num) - send_is(exch_num) + 1)* &
-                                         (send_je(exch_num) - send_js(exch_num) + 1)* &
-                                         (send_ke(exch_num) - send_ks(exch_num) + 1)
+                    send_ks(exch_num) = local_tile%ks
+                    send_ke(exch_num) = local_tile%ke
 
-                recv_pts_num(exch_num) = (recv_ie(exch_num) - recv_is(exch_num) + 1)* &
-                                         (recv_je(exch_num) - recv_js(exch_num) + 1)* &
-                                         (recv_ke(exch_num) - recv_ks(exch_num) + 1)
-                exchg_proc_id(exch_num) = partition%proc_map(remote_ind)
+                    recv_ks(exch_num) = remote_tile%ks
+                    recv_ke(exch_num) = remote_tile%ke
 
-            end if
+                    send_pts_num(exch_num) = (send_ie(exch_num) - send_is(exch_num) + 1)* &
+                                             (send_je(exch_num) - send_js(exch_num) + 1)* &
+                                             (send_ke(exch_num) - send_ks(exch_num) + 1)
+
+                    recv_pts_num(exch_num) = (recv_ie(exch_num) - recv_is(exch_num) + 1)* &
+                                             (recv_je(exch_num) - recv_js(exch_num) + 1)* &
+                                             (recv_ke(exch_num) - recv_ks(exch_num) + 1)
+
+                    send_to_proc_id  (exch_num) = partition%proc_map(remote_ind)
+                    recv_from_proc_id(exch_num) = partition%proc_map(remote_ind)
+
+                    send_tag(exch_num) = 6*partition%num_tiles*(send_from_tile_ind(exch_num)-1) + send_to_tile_ind(exch_num)
+                    recv_tag(exch_num) = 6*partition%num_tiles*(recv_from_tile_ind(exch_num)-1) + recv_to_tile_ind(exch_num)
+
+                end if
+
+            end do
 
         end do
 
-    end do
+        allocate(exchange%profile, source = exchange_profile_t(                       &
+                send_is            = send_is(1:exch_num),          &
+                send_ie            = send_ie(1:exch_num),          &
+                send_js            = send_js(1:exch_num),          &
+                send_je            = send_je(1:exch_num),          &
+                send_ks            = send_ks(1:exch_num),          &
+                send_ke            = send_ke(1:exch_num),          &
+                recv_is            = recv_is(1:exch_num),          &
+                recv_ie            = recv_ie(1:exch_num),          &
+                recv_js            = recv_js(1:exch_num),          &
+                recv_je            = recv_je(1:exch_num),          &
+                recv_ks            = recv_ks(1:exch_num),          &
+                recv_ke            = recv_ke(1:exch_num),          &
+                send_i_step        = send_i_step(1:exch_num),      &
+                send_j_step        = send_j_step(1:exch_num),      &
+                first_dim_index    = first_dim_index(1:exch_num),  &
+                recv_from_tile_ind = recv_from_tile_ind(1:exch_num),    &
+                recv_to_tile_ind   = recv_to_tile_ind(1:exch_num),    &
+                send_from_tile_ind = send_from_tile_ind(1:exch_num),    &
+                send_to_tile_ind   = send_to_tile_ind(1:exch_num),    &
+                send_to_proc_id    = send_to_proc_id(1:exch_num),     &
+                recv_from_proc_id  = recv_from_proc_id(1:exch_num),     &
+                send_pts_num       = send_pts_num(1:exch_num),     &
+                recv_pts_num       = recv_pts_num(1:exch_num),     &
+                send_tag           = send_tag(1:exch_num),         &
+                recv_tag           = recv_tag(1:exch_num),         &
+                send_exch_num      = exch_num                ,     &
+                recv_exch_num      = exch_num) )
 
-    allocate(exchange%profile, source = exchange_profile_t(                       &
-                                  send_is         = send_is(1:exch_num),          &
-                                  send_ie         = send_ie(1:exch_num),          &
-                                  send_js         = send_js(1:exch_num),          &
-                                  send_je         = send_je(1:exch_num),          &
-                                  send_ks         = send_ks(1:exch_num),          &
-                                  send_ke         = send_ke(1:exch_num),          &
-                                  recv_is         = recv_is(1:exch_num),          &
-                                  recv_ie         = recv_ie(1:exch_num),          &
-                                  recv_js         = recv_js(1:exch_num),          &
-                                  recv_je         = recv_je(1:exch_num),          &
-                                  recv_ks         = recv_ks(1:exch_num),          &
-                                  recv_ke         = recv_ke(1:exch_num),          &
-                                  send_i_step     = send_i_step(1:exch_num),      &
-                                  send_j_step     = send_j_step(1:exch_num),      &
-                                  first_dim_index = first_dim_index(1:exch_num),  &
-                                  send_tile_ind   = send_tile_ind(1:exch_num),    &
-                                  recv_tile_ind   = recv_tile_ind(1:exch_num),    &
-                                  exchg_proc_id   = exchg_proc_id(1:exch_num),    &
-                                  send_pts_num    = send_pts_num(1:exch_num),     &
-                                  recv_pts_num    = recv_pts_num(1:exch_num),     &
-                                  exch_num        = exch_num                       ) )
+        call exchange%profile%check()
 
-    call exchange%profile%check()
-
-
-    allocate(exchange%send_buff(exch_num)   , exchange%recv_buff(exch_num)   )
-    allocate(exchange%mpi_send_req(exch_num), exchange%mpi_recv_req(exch_num))
-    do ind = 1, exch_num
-        call exchange%send_buff(ind)%init(send_pts_num(ind))
-        call exchange%recv_buff(ind)%init(recv_pts_num(ind))
-    end do
+        allocate(exchange%send_buff(exch_num)   , exchange%recv_buff(exch_num)   )
+        allocate(exchange%mpi_send_req(exch_num), exchange%mpi_recv_req(exch_num))
+        do ind = 1, exch_num
+            call exchange%send_buff(ind)%init(send_pts_num(ind))
+            call exchange%recv_buff(ind)%init(recv_pts_num(ind))
+        end do
 
 end subroutine create_2d_full_halo_exchange
 
@@ -602,6 +628,138 @@ subroutine find_full_halo_intersection(l_tile, r_tile, halo_width, npoints, is_i
     is_intersection = .false.
 
 end subroutine find_full_halo_intersection
+
+subroutine create_gather_exchange(exchange, partition, master_id, myid, np)
+
+    type(exchange_t),          intent(out)   :: exchange
+    type(partition_t), target, intent(in)    :: partition
+    integer(kind=4),           intent(in)    :: master_id !master process id
+    integer(kind=4),           intent(in)    :: myid, np  !proc id and number of processors
+
+    integer(kind=4),  dimension((6*partition%num_tiles)**2) :: recv_is, recv_ie, recv_js, recv_je, recv_ks, recv_ke, &
+                                                               send_is, send_ie, send_js, send_je, send_ks, send_ke
+    integer(kind=4),  dimension((6*partition%num_tiles)**2) :: send_to_proc_id, recv_from_proc_id   , &
+                                                               recv_from_tile_ind, recv_to_tile_ind , &
+                                                               send_from_tile_ind, send_to_tile_ind , &
+                                                               send_tag, recv_tag
+    integer(kind=4),  dimension((6*partition%num_tiles)**2) :: send_pts_num, recv_pts_num
+
+    integer(kind=4),  dimension((6*partition%num_tiles)**2) :: send_i_step, send_j_step
+    character(len=1), dimension((6*partition%num_tiles)**2) :: first_dim_index
+
+
+    integer(kind=4) :: ind, send_exch_num, recv_exch_num
+
+    recv_exch_num = 0
+    send_exch_num = 0
+
+    if (myid == master_id) then
+
+        do ind = 1, 6*partition%num_tiles
+
+            if (partition%proc_map(ind) == myid) cycle
+
+            recv_exch_num = recv_exch_num + 1
+
+            recv_is(recv_exch_num) = partition%tile(ind)%is
+            recv_ie(recv_exch_num) = partition%tile(ind)%ie
+
+            recv_js(recv_exch_num) = partition%tile(ind)%js
+            recv_je(recv_exch_num) = partition%tile(ind)%je
+
+            recv_ks(recv_exch_num) = partition%tile(ind)%ks
+            recv_ke(recv_exch_num) = partition%tile(ind)%ke
+
+            recv_pts_num(recv_exch_num) = (recv_ie(recv_exch_num) - recv_is(recv_exch_num) + 1)* &
+                                          (recv_je(recv_exch_num) - recv_js(recv_exch_num) + 1)* &
+                                          (recv_ke(recv_exch_num) - recv_ks(recv_exch_num) + 1)
+
+            recv_to_tile_ind  (recv_exch_num) = ind
+            recv_from_tile_ind(recv_exch_num) = ind
+
+            recv_from_proc_id(recv_exch_num)  = partition%proc_map(ind)
+
+            recv_tag(recv_exch_num) = 6*partition%num_tiles*(recv_from_tile_ind(recv_exch_num)-1) + recv_to_tile_ind(recv_exch_num)
+
+        end do
+
+    else
+
+        do ind = 1, 6*partition%num_tiles
+
+            if (partition%proc_map(ind) /= myid) cycle
+
+            send_exch_num = send_exch_num + 1
+
+            send_is(send_exch_num) = partition%tile(ind)%is
+            send_ie(send_exch_num) = partition%tile(ind)%ie
+
+            send_js(send_exch_num) = partition%tile(ind)%js
+            send_je(send_exch_num) = partition%tile(ind)%je
+
+            send_ks(send_exch_num) = partition%tile(ind)%ks
+            send_ke(send_exch_num) = partition%tile(ind)%ke
+
+            send_pts_num(send_exch_num) = (send_ie(send_exch_num) - send_is(send_exch_num) + 1)* &
+                                          (send_je(send_exch_num) - send_js(send_exch_num) + 1)* &
+                                          (send_ke(send_exch_num) - send_ks(send_exch_num) + 1)
+
+            send_to_tile_ind  (send_exch_num) = ind
+            send_from_tile_ind(send_exch_num) = ind
+
+            send_to_proc_id(send_exch_num) = master_id
+
+            send_i_step(send_exch_num) = 1
+            send_j_step(send_exch_num) = 1
+            first_dim_index(send_exch_num) = 'i'
+
+            send_tag(send_exch_num) = 6*partition%num_tiles*(send_from_tile_ind(send_exch_num)-1) + send_to_tile_ind(send_exch_num)
+
+        end do
+    end if
+
+    allocate(exchange%profile, source = exchange_profile_t(                       &
+            send_is            = send_is(1:send_exch_num),          &
+            send_ie            = send_ie(1:send_exch_num),          &
+            send_js            = send_js(1:send_exch_num),          &
+            send_je            = send_je(1:send_exch_num),          &
+            send_ks            = send_ks(1:send_exch_num),          &
+            send_ke            = send_ke(1:send_exch_num),          &
+            recv_is            = recv_is(1:recv_exch_num),          &
+            recv_ie            = recv_ie(1:recv_exch_num),          &
+            recv_js            = recv_js(1:recv_exch_num),          &
+            recv_je            = recv_je(1:recv_exch_num),          &
+            recv_ks            = recv_ks(1:recv_exch_num),          &
+            recv_ke            = recv_ke(1:recv_exch_num),          &
+            send_i_step        = send_i_step(1:send_exch_num),      &
+            send_j_step        = send_j_step(1:send_exch_num),      &
+            first_dim_index    = first_dim_index(1:send_exch_num),  &
+            recv_from_tile_ind = recv_from_tile_ind(1:recv_exch_num),    &
+            recv_to_tile_ind   = recv_to_tile_ind(1:recv_exch_num),    &
+            send_from_tile_ind = send_from_tile_ind(1:send_exch_num),    &
+            send_to_tile_ind   = send_to_tile_ind(1:send_exch_num),    &
+            send_to_proc_id    = send_to_proc_id(1:send_exch_num),     &
+            recv_from_proc_id  = recv_from_proc_id(1:recv_exch_num),     &
+            send_pts_num       = send_pts_num(1:send_exch_num),     &
+            recv_pts_num       = recv_pts_num(1:recv_exch_num),     &
+            send_tag           = send_tag(1:send_exch_num),         &
+            recv_tag           = recv_tag(1:recv_exch_num),         &
+            send_exch_num      = send_exch_num                ,     &
+            recv_exch_num      = recv_exch_num) )
+
+    call exchange%profile%check()
+
+
+    allocate(exchange%send_buff(1:send_exch_num)   , exchange%recv_buff(1:recv_exch_num)   )
+    allocate(exchange%mpi_send_req(1:send_exch_num), exchange%mpi_recv_req(1:recv_exch_num))
+    do ind = 1, recv_exch_num
+        call exchange%recv_buff(ind)%init(recv_pts_num(ind))
+    end do
+    do ind = 1, send_exch_num
+        call exchange%send_buff(ind)%init(send_pts_num(ind))
+    end do
+
+end subroutine create_gather_exchange
 
 
 end module exchange_factory_mod

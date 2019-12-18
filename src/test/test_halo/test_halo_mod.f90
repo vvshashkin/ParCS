@@ -11,12 +11,14 @@ use grid_function_mod,    only : grid_function_t
 use exchange_mod,         only : exchange_t
 use partition_mod,        only : partition_t
 use exchange_factory_mod, only : create_2d_full_halo_exchange, create_2d_cross_halo_exchange
+use mesh_factory_mod,     only : create_equiangular_mesh
+use mesh_mod,             only : mesh_t
 
-use ecs_geometry_mod,     only : ecs_geometry_mod_init, ecs_geometry_mod_check, rhx, rhy, rhz
 use ecs_halo_mod,         only : ecs_halo_mod_init, whalo
 
 type(exchange_t)                   :: exch_halo
 type(partition_t)                  :: partition
+type(mesh_t),          allocatable :: mesh(:)
 type(grid_function_t), allocatable :: f1(:)
 type(grid_function_t), allocatable :: f2(:)
 
@@ -41,20 +43,29 @@ real(kind=8) gl_inedge_corner_err, gl_inedge_corner_err_max
 real(kind=8) gl_halo_corner_err, gl_halo_corner_err_max
 integer(kind=4) num_inedge_corners, gl_num_inedge_corners
 
-integer(kind=4) :: local_tile_ind, remote_tile_ind, local_tile_panel_number, remote_tile_panel_number
-
-character(:), allocatable :: frmt
 logical lpass, glpass
 
 call MPI_comm_rank(mpi_comm_world , myid, ierr)
 call MPI_comm_size(mpi_comm_world , Np  , ierr)
 
-call ecs_geometry_mod_init(nh, ex_halo_width)
+call partition%init(nh, nz, max(1,Np/6), Np, strategy = 'default')
+!call partition%init(nh, nz, 64, Np, strategy = 'default')
 
-call mpi_barrier(mpi_comm_world, ierr)
-if (myid==0) print *, 'equiangular cubed-sphere halo-zone interpolation test'
+!find start and end index of tiles belonging to the current proccesor
+ts = findloc(partition%proc_map, myid, dim=1)
+te = findloc(partition%proc_map, myid, back = .true., dim=1)
+
+allocate(mesh(ts:te))
+do ind = ts, te
+    call create_equiangular_mesh(mesh(ind), partition%tile(ind)%is, partition%tile(ind)%ie, &
+                                            partition%tile(ind)%js, partition%tile(ind)%je, &
+                                            partition%tile(ind)%ks, partition%tile(ind)%ke, &
+                                            nh, ex_halo_width, partition%tile(ind)%panel_number)
+end do
 
 call ecs_halo_mod_init(nn,halo_width)
+call mpi_barrier(mpi_comm_world, ierr)
+if (myid==0) print *, 'equiangular cubed-sphere halo-zone interpolation test'
 
 lpass = ( size(whalo) == size(nn) )
 do k = 1, size(nn)
@@ -72,15 +83,8 @@ else
    return
 end if
 
-call partition%init(nh, nz, max(1,Np/6), Np, strategy = 'default')
-!call partition%init(nh, nz, 64, Np, strategy = 'default')
-
-!find start and end index of tiles belonging to the current proccesor
-ts = findloc(partition%proc_map, myid, dim=1)
-te = findloc(partition%proc_map, myid, back = .true., dim=1)
 
 !Init arrays
-
 allocate(f1(ts:te))
 allocate(f2(ts:te))
 
@@ -97,14 +101,13 @@ do i = ts, te
 end do
 
 do ind = ts, te
-     ifc = partition%tile(ind)%panel_number
      isv = f1(ind)%is-f1(ind)%nvi
      iev = f1(ind)%ie+f1(ind)%nvi
      jsv = f1(ind)%js-f1(ind)%nvj
      jev = f1(ind)%je+f1(ind)%nvj
-     f1(ind).p(isv:iev,jsv:jev,1) = rhx(isv:iev,jsv:jev,ifc)
-     f1(ind).p(isv:iev,jsv:jev,2) = rhy(isv:iev,jsv:jev,ifc)
-     f1(ind).p(isv:iev,jsv:jev,3) = rhz(isv:iev,jsv:jev,ifc)
+     f1(ind).p(isv:iev,jsv:jev,1) = mesh(ind)%rhx(isv:iev,jsv:jev)
+     f1(ind).p(isv:iev,jsv:jev,2) = mesh(ind)%rhy(isv:iev,jsv:jev)
+     f1(ind).p(isv:iev,jsv:jev,3) = mesh(ind)%rhz(isv:iev,jsv:jev)
      f2(ind).p(:,:,:) = f1(ind).p(:,:,:)
 end do
 
