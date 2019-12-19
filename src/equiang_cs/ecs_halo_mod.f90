@@ -1,5 +1,5 @@
 !Module to interpolate values to virtual points beyond face edge
-!Here we use two prototype faces to precompute weights:
+!Edge interpolations are treated as one following case:
 !    __________
 !   / source  /
 !  / /^b     /
@@ -10,6 +10,19 @@
 !|  | targ |     |/
 !|  +-->a  |     +------->x
 !|_________|
+
+!Edge and corners numeration:
+!4__________3
+!| edge2    |
+!|e        e|
+!|d        d|
+!|g        g|
+!|3        4|
+!1----------2
+!   edge1
+
+!corner procedures are treated as corner N1
+
 module ecs_halo_mod
 
 use halo_mod, only : halo_t
@@ -38,82 +51,6 @@ type, extends(halo_t) :: ecs_halo_t
 end type ecs_halo_t
 
 contains
-
-type(ecs_halo_t) function init_ecs_halo(mesh,halo_width) result(halo)
-use mesh_mod,  only : mesh_t
-
-type(mesh_t),    intent(in) :: mesh
-integer(kind=4), intent(in) :: halo_width
-
-halo%n = mesh%nx
-halo%halo_width = halo_width
-
-!check if we need ecs edge-halo procedures for each specific tile edge
-                                                    !4__________3
-halo%lhalo(1) = mesh%js == 1                        !| edge2    |
-halo%lhalo(2) = mesh%je == mesh%nx                  !|e        e|
-halo%lhalo(3) = mesh%is == 1                        !|d        d|
-halo%lhalo(4) = mesh%ie == mesh%nx                  !|g        g|
-halo%lcorn(1) = halo%lhalo(1) .and. halo%lhalo(3)   !|3        4|
-halo%lcorn(2) = halo%lhalo(1) .and. halo%lhalo(4)   !1----------2
-halo%lcorn(3) = halo%lhalo(4) .and. halo%lhalo(2)   !   edge1
-halo%lcorn(4) = halo%lhalo(2) .and. halo%lhalo(3)
-
-!initialize interpolation weights
-if(halo%lhalo(1) .or. halo%lhalo(2)) then
-    halo%wsx = max(mesh%is-halo_width,-1)
-    halo%wex = min(mesh%ie+halo_width,mesh%nx+2)
-    if(halo%lcorn(1).or.halo%lcorn(4)) halo%wsx = min(halo%wsx,-1)        !approve that we will have weights needed for corners
-    if(halo%lcorn(2).or.halo%lcorn(3)) halo%wex = max(halo%wex,mesh%nx+2) !x-y and nx/2 symetri will be used
-    call init_halo_interp(halo%wx, halo%indx, mesh%hx, halo%wsx, halo%wex, halo_width)
-end if
-if(halo%lhalo(3) .or. halo%lhalo(4)) then
-    halo%wsy = max(mesh%js-halo_width,-1)
-    halo%wey = min(mesh%je+halo_width,mesh%nx+2)
-    call init_halo_interp(halo%wy, halo%indy, mesh%hx, halo%wsy, halo%wey, halo_width)
-end if
-
-end function init_ecs_halo
-
-subroutine init_halo_interp(w, ind, dxa, i1, i2, hw)
-use const_mod, only : pi
-!output
-real(kind=8),    allocatable, intent(out) :: w(:,:,:)
-integer(kind=4), allocatable, intent(out) :: ind(:,:)
-!input
-real(kind=8),    intent(in) :: dxa
-integer(kind=4), intent(in) :: i1, i2, hw
-!local:
-integer i,j
-real(kind=8) za, zb !angle coordinates at target grid face
-real(kind=8) zx, zz !cartesian coordinates, zy is not needed
-real(kind=8) zxi ! normalized displacement inside interpolation stencil
-
-allocate(w(-1:2,i1:i2,hw))
-allocate(ind(i1:i2,hw))
-
-do j=1, hw
-    zb = 0.25_8*pi+(j-0.5_8)*dxa
-    do i = i1, i2
-        za = -0.25_8*pi+(i-0.5_8)*dxa
-        !cartesian coordinates of target cube face with alpha = za, beta = zb:
-        zx = tan(za)
-        zz = tan(zb)
-        !implicitly project to sphere r = r/||r|| and then to source cube face zx,zy = zx/zz,zy/zz,zz=1
-        zx = zx / zz
-        !get alpha on source face:
-        za = atan(zx)
-        !i-index of source face point immediately to the left of projected target point
-        ind(i,j) = floor((za+0.25_8*pi-0.5_8*dxa)/dxa)+1
-        zxi = (za+0.25_8*pi)/dxa - (ind(i,j)-0.5_8)
-        w(-1,i,j) =- zxi      *(zxi-1._8)*(zxi-2._8) / 6._8
-        w( 0,i,j) = (zxi+1._8)*(zxi-1._8)*(zxi-2._8) / 2._8
-        w( 1,i,j) =-(zxi+1._8)* zxi      *(zxi-2._8) / 2._8
-        w( 2,i,j) = (zxi+1._8)* zxi      *(zxi-1._8) / 6._8
-    end do
-end do
-
-end subroutine init_halo_interp
 
 subroutine ecs_ext_halo(this, f)
 !interpolate source face values at halo zones to target face virtual points
@@ -238,7 +175,7 @@ do icor = 1,4
         else
             zpw(-1:2,-1:2,1:whw) = w(2:-1:-1,n+2:n-1:-1,1:whw)
         end if
-        call ecs_halo_1corner(pfcsp(:,:,icor),zbufc,nvi,nvj,klev,zpw,-1,2,whw)
+        call ecs_halo_1corner(pfcsp(1:6,1:klev,icor),zbufc,nvi,nvj,klev,zpw,-1,2,whw)
     end if
 end do
 
@@ -307,36 +244,36 @@ integer(kind=4), intent(in) :: n
 logical,         intent(in) :: lcorn(4)                 !if pf corner is cubedsphere corner
 
 if(lcorn(1)) then
-    pf( 0, 1,:) = pfcsp(1,:,1)
-    pf( 1, 0,:) = pfcsp(2,:,1)
-    pf( 0, 0,:) = pfcsp(3,:,1)
-    pf(-1, 0,:) = pfcsp(4,:,1)
-    pf( 0,-1,:) = pfcsp(5,:,1)
-    pf(-1,-1,:) = pfcsp(6,:,1)
+    pf( 0, 1,1:klev) = pfcsp(1,1:klev,1)
+    pf( 1, 0,1:klev) = pfcsp(2,1:klev,1)
+    pf( 0, 0,1:klev) = pfcsp(3,1:klev,1)
+    pf(-1, 0,1:klev) = pfcsp(4,1:klev,1)
+    pf( 0,-1,1:klev) = pfcsp(5,1:klev,1)
+    pf(-1,-1,1:klev) = pfcsp(6,1:klev,1)
 end if
 if(lcorn(2)) then
-    pf(n+1, 1,:) = pfcsp(1,:,2)
-    pf(n  , 0,:) = pfcsp(2,:,2)
-    pf(n+1, 0,:) = pfcsp(3,:,2)
-    pf(n+2, 0,:) = pfcsp(4,:,2)
-    pf(n+1,-1,:) = pfcsp(5,:,2)
-    pf(n+2,-1,:) = pfcsp(6,:,2)
+    pf(n+1, 1,1:klev) = pfcsp(1,1:klev,2)
+    pf(n  , 0,1:klev) = pfcsp(2,1:klev,2)
+    pf(n+1, 0,1:klev) = pfcsp(3,1:klev,2)
+    pf(n+2, 0,1:klev) = pfcsp(4,1:klev,2)
+    pf(n+1,-1,1:klev) = pfcsp(5,1:klev,2)
+    pf(n+2,-1,1:klev) = pfcsp(6,1:klev,2)
 end if
 if(lcorn(3)) then
-    pf(n+1,n  ,:) = pfcsp(1,:,3)
-    pf(n  ,n+1,:) = pfcsp(2,:,3)
-    pf(n+1,n+1,:) = pfcsp(3,:,3)
-    pf(n+2,n+1,:) = pfcsp(4,:,3)
-    pf(n+1,n+2,:) = pfcsp(5,:,3)
-    pf(n+2,n+2,:) = pfcsp(6,:,3)
+    pf(n+1,n  ,1:klev) = pfcsp(1,1:klev,3)
+    pf(n  ,n+1,1:klev) = pfcsp(2,1:klev,3)
+    pf(n+1,n+1,1:klev) = pfcsp(3,1:klev,3)
+    pf(n+2,n+1,1:klev) = pfcsp(4,1:klev,3)
+    pf(n+1,n+2,1:klev) = pfcsp(5,1:klev,3)
+    pf(n+2,n+2,1:klev) = pfcsp(6,1:klev,3)
 end if
 if(lcorn(4)) then
-    pf( 0,n  ,:) = pfcsp(1,:,4)
-    pf( 1,n+1,:) = pfcsp(2,:,4)
-    pf( 0,n+1,:) = pfcsp(3,:,4)
-    pf(-1,n+1,:) = pfcsp(4,:,4)
-    pf( 0,n+2,:) = pfcsp(5,:,4)
-    pf(-1,n+2,:) = pfcsp(6,:,4)
+    pf( 0,n  ,1:klev) = pfcsp(1,1:klev,4)
+    pf( 1,n+1,1:klev) = pfcsp(2,1:klev,4)
+    pf( 0,n+1,1:klev) = pfcsp(3,1:klev,4)
+    pf(-1,n+1,1:klev) = pfcsp(4,1:klev,4)
+    pf( 0,n+2,1:klev) = pfcsp(5,1:klev,4)
+    pf(-1,n+2,1:klev) = pfcsp(6,1:klev,4)
 end if
 end subroutine ecs_halo_corners_put
 
@@ -369,7 +306,7 @@ if(lfail_hw) call halo_avost("cubed sphere halo_width > grid_function_t halo wid
 !check if we have enough data along edges to perform interpolations
 ish = max(1,is-hw); ieh = min(n,ie+hw)
 lfail_halo_long = .false.
-lfail_halo_long = (minval(indx(ish,:))-1<isv .or. maxval(indx(ieh,:))+2>iev)
+lfail_halo_long = (minval(indx(ish,1:whw))-1<isv .or. maxval(indx(ieh,1:whw))+2>iev)
 if(lfail_halo_long) call halo_avost("not enough points along cub.sph edge to perform halo-interpolations (nvi=5 needed)")
 
 !calculate values at corner special points 
@@ -377,14 +314,14 @@ if(lfail_halo_long) call halo_avost("not enough points along cub.sph edge to per
 
 !Halo-procedures along edges
 if(lhalo(1)) then
-    zbufx = pf(isv:iev, 0:1-hw:-1,:)
+    zbufx(isv:iev,1:hw,1:klev) = pf(isv:iev, 0:1-hw:-1,1:klev)
     call ecs_ext_halo_1e(zbufx,isv,iev,is,ie,hw,klev,wx,wsx,wex,whw,indx,n)
-    pf(isv:iev,1-hw:0,:) = zbufx(:,hw:1:-1,:)
+    pf(isv:iev,1-hw:0,1:klev) = zbufx(isv:iev,hw:1:-1,1:klev)
 end if
 if(lhalo(2)) then
-    zbufx = pf(isv:iev, n+1:n+hw, :)
+    zbufx(isv:iev,1:hw,1:klev) = pf(isv:iev, n+1:n+hw, 1:klev)
     call ecs_ext_halo_1e(zbufx,isv,iev,is,ie,hw,klev,wx,wsx,wex,whw,indx,n)
-    pf(isv:iev, n+1:n+hw, :) = zbufx
+    pf(isv:iev, n+1:n+hw, 1:klev) = zbufx(isv:iev,1:hw,1:klev)
 end if
 
 end subroutine ecs_halo_edges_x
@@ -417,7 +354,7 @@ lfail_hw = nvj< hw
 if(lfail_hw) call halo_avost("cubed sphere halo_width > grid_function_t halo width, can't continue")
 !check if we have enough data along edges to perform interpolations
 jsh = max(1,js-hw); jeh = min(n,je+hw)
-lfail_halo_long = (minval(indy(jsh,:))-1<jsv .or. maxval(indy(jeh,:))+2>jev)
+lfail_halo_long = (minval(indy(jsh,1:whw))-1<jsv .or. maxval(indy(jeh,1:whw))+2>jev)
 if(lfail_halo_long) call halo_avost("not enough points along cub.sph edge to perform halo-interpolations (nvi=5 needed)")
 
 !calculate values at corner special points 

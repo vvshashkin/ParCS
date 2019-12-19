@@ -14,7 +14,8 @@ use exchange_factory_mod, only : create_2d_full_halo_exchange, create_2d_cross_h
 use mesh_factory_mod,     only : create_equiangular_mesh
 use mesh_mod,             only : mesh_t
 
-use ecs_halo_mod,         only : init_ecs_halo, ecs_halo_t
+use ecs_halo_mod,         only : ecs_halo_t
+use ecs_halo_factory_mod, only : init_ecs_halo
 
 type(exchange_t)                   :: exch_halo
 type(partition_t)                  :: partition
@@ -28,7 +29,7 @@ integer(kind=4)                    :: myid, np, ierr, code
 integer(kind=4) :: ts, te
 integer(kind=4) :: ind, i, j, k, ifc, err_sum, gl_err_sum
 integer(kind=4) :: iev, isv, jev, jsv
-integer(kind=4) :: ie, is, js, je, klev
+integer(kind=4) :: ie, is, js, je, klev, ke, ks
 
 real(kind=8) err, inface_err, cross_edge_err
 real(kind=8) err_max, inface_err_max, cross_edge_err_max
@@ -60,7 +61,10 @@ do ind = ts, te
                                             partition%tile(ind)%js, partition%tile(ind)%je, &
                                             partition%tile(ind)%ks, partition%tile(ind)%ke, &
                                             nh, ex_halo_width, partition%tile(ind)%panel_number)
-    mesh(ind)%halo = init_ecs_halo(mesh(ind),halo_width)
+    mesh(ind)%halo = init_ecs_halo(mesh(ind)%is, mesh(ind)%ie, &
+                                   mesh(ind)%js, mesh(ind)%je, &
+                                   mesh(ind)%nx, halo_width,   &
+                                   mesh(ind)%hx)
 end do
 
 call mpi_barrier(mpi_comm_world, ierr)
@@ -114,11 +118,12 @@ do ind = ts, te
 
     is = partition%tile(ind)%is; ie = partition%tile(ind)%ie
     js = partition%tile(ind)%js; je = partition%tile(ind)%je
-    klev = partition%tile(ind)%ke-partition%tile(ind)%ks+1
+    ks = partition%tile(ind)%ks; ke = partition%tile(ind)%ke
+    klev = ke-ks+1
 
     !tile edge errors
-    err     = sum(abs(f1(ind)%p(is-halo_width:is-1,js:je,:)-f2(ind)%p(is-halo_width:is-1,js:je,:)))/nh
-    err_max = maxval(abs(f1(ind)%p(is-halo_width:is-1,js:je,:)-f2(ind)%p(is-halo_width:is-1,js:je,:)))
+    err     = sum(abs(f1(ind)%p(is-halo_width:is-1,js:je,ks:ke)-f2(ind)%p(is-halo_width:is-1,js:je,ks:ke)))/nh
+    err_max = maxval(abs(f1(ind)%p(is-halo_width:is-1,js:je,ks:ke)-f2(ind)%p(is-halo_width:is-1,js:je,ks:ke)))
     if(is == 1) then
         cross_edge_err     = cross_edge_err+err
         cross_edge_err_max = max(cross_edge_err_max,err_max)
@@ -127,8 +132,8 @@ do ind = ts, te
         inface_err_max = max(inface_err_max,err_max)
     end if
 
-    err     = sum(abs(f1(ind)%p(ie+1:ie+halo_width,js:je,:)-f2(ind)%p(ie+1:ie+halo_width,js:je,:)))/nh
-    err_max = maxval(abs(f1(ind)%p(ie+1:ie+halo_width,js:je,:)-f2(ind)%p(ie+1:ie+halo_width,js:je,:)))
+    err     = sum(abs(f1(ind)%p(ie+1:ie+halo_width,js:je,ks:ke)-f2(ind)%p(ie+1:ie+halo_width,js:je,ks:ke)))/nh
+    err_max = maxval(abs(f1(ind)%p(ie+1:ie+halo_width,js:je,ks:ke)-f2(ind)%p(ie+1:ie+halo_width,js:je,ks:ke)))
     if(ie == nh) then
         cross_edge_err     = cross_edge_err+err
         cross_edge_err_max = max(cross_edge_err_max,err_max)
@@ -137,8 +142,8 @@ do ind = ts, te
         inface_err_max = max(inface_err_max,err_max)
     end if
 
-    err     = sum(abs(f1(ind)%p(is:ie,js-halo_width:js-1,:)-f2(ind)%p(is:ie,js-halo_width:js-1,:)))/nh
-    err_max = maxval(abs(f1(ind)%p(is:ie,js-halo_width:js-1,:)-f2(ind)%p(is:ie,js-halo_width:js-1,:)))
+    err     = sum(abs(f1(ind)%p(is:ie,js-halo_width:js-1,ks:ke)-f2(ind)%p(is:ie,js-halo_width:js-1,ks:ke)))/nh
+    err_max = maxval(abs(f1(ind)%p(is:ie,js-halo_width:js-1,ks:ke)-f2(ind)%p(is:ie,js-halo_width:js-1,ks:ke)))
     if(js == 1) then
         cross_edge_err     = cross_edge_err+err
         cross_edge_err_max = max(cross_edge_err_max,err_max)
@@ -147,8 +152,8 @@ do ind = ts, te
         inface_err_max = max(inface_err_max,err_max)
     end if
 
-    err     = sum(abs(f1(ind)%p(is:ie,je+1:je+halo_width,:)-f2(ind)%p(is:ie,je+1:je+halo_width,:)))/nh
-    err_max = maxval(abs(f1(ind)%p(is:ie,je+1:je+halo_width,:)-f2(ind)%p(is:ie,je+1:je+halo_width,:)))
+    err     = sum(abs(f1(ind)%p(is:ie,je+1:je+halo_width,ks:ke)-f2(ind)%p(is:ie,je+1:je+halo_width,ks:ke)))/nh
+    err_max = maxval(abs(f1(ind)%p(is:ie,je+1:je+halo_width,ks:ke)-f2(ind)%p(is:ie,je+1:je+halo_width,ks:ke)))
     if(je == nh) then
         cross_edge_err     = cross_edge_err+err
         cross_edge_err_max = max(cross_edge_err_max,err_max)
@@ -157,8 +162,8 @@ do ind = ts, te
         inface_err_max = max(inface_err_max,err_max)
     end if
 
-    err     = sum(abs(f1(ind)%p(is-halo_width:is-1,js-halo_width:js-1,:)-f2(ind)%p(is-halo_width:is-1,js-halo_width:js-1,:))) / halo_width**2
-    err_max = maxval(abs(f1(ind)%p(is-halo_width:is-1,js-halo_width:js-1,:)-f2(ind)%p(is-halo_width:is-1,js-halo_width:js-1,:)))
+    err     = sum(abs(f1(ind)%p(is-halo_width:is-1,js-halo_width:js-1,ks:ke)-f2(ind)%p(is-halo_width:is-1,js-halo_width:js-1,ks:ke))) / halo_width**2
+    err_max = maxval(abs(f1(ind)%p(is-halo_width:is-1,js-halo_width:js-1,ks:ke)-f2(ind)%p(is-halo_width:is-1,js-halo_width:js-1,ks:ke)))
     if(is == 1 .and. js == 1) then
         halo_corner_err = halo_corner_err+err
         halo_corner_err_max = max(halo_corner_err_max,err_max)
@@ -171,8 +176,8 @@ do ind = ts, te
         inface_corner_err_max = max(inface_corner_err_max,err_max)
     end if
 
-    err     = sum(abs(f1(ind)%p(ie+1:ie+halo_width,js-halo_width:js-1,:)-f2(ind)%p(ie+1:ie+halo_width,js-halo_width:js-1,:))) / halo_width**2
-    err_max = maxval(abs(f1(ind)%p(ie+1:ie+halo_width,js-halo_width:js-1,:)-f2(ind)%p(ie+1:ie+halo_width,js-halo_width:js-1,:)))
+    err     = sum(abs(f1(ind)%p(ie+1:ie+halo_width,js-halo_width:js-1,ks:ke)-f2(ind)%p(ie+1:ie+halo_width,js-halo_width:js-1,ks:ke))) / halo_width**2
+    err_max = maxval(abs(f1(ind)%p(ie+1:ie+halo_width,js-halo_width:js-1,ks:ke)-f2(ind)%p(ie+1:ie+halo_width,js-halo_width:js-1,ks:ke)))
     if(ie == nh .and. js == 1) then
         halo_corner_err = halo_corner_err+err
         halo_corner_err_max = max(halo_corner_err_max,err_max)
@@ -185,8 +190,8 @@ do ind = ts, te
         inface_corner_err_max = max(inface_corner_err_max,err_max)
     end if
 
-    err     = sum(abs(f1(ind)%p(ie+1:ie+halo_width,je+1:je+halo_width,:)-f2(ind)%p(ie+1:ie+halo_width,je+1:je+halo_width,:))) / halo_width**2
-    err_max = maxval(abs(f1(ind)%p(ie+1:ie+halo_width,je+1:je+halo_width,:)-f2(ind)%p(ie+1:ie+halo_width,je+1:je+halo_width,:)))
+    err     = sum(abs(f1(ind)%p(ie+1:ie+halo_width,je+1:je+halo_width,ks:ke)-f2(ind)%p(ie+1:ie+halo_width,je+1:je+halo_width,ks:ke))) / halo_width**2
+    err_max = maxval(abs(f1(ind)%p(ie+1:ie+halo_width,je+1:je+halo_width,ks:ke)-f2(ind)%p(ie+1:ie+halo_width,je+1:je+halo_width,ks:ke)))
     if(ie == nh .and. je == nh) then
         halo_corner_err = halo_corner_err+err
         halo_corner_err_max = max(halo_corner_err_max,err_max)
@@ -199,8 +204,8 @@ do ind = ts, te
         inface_corner_err_max = max(inface_corner_err_max,err_max)
     end if
 
-    err     = sum(abs(f1(ind)%p(is-halo_width:is-1,je+1:je+halo_width,:)-f2(ind)%p(is-halo_width:is-1,je+1:je+halo_width,:))) / halo_width**2
-    err_max = maxval(abs(f1(ind)%p(is-halo_width:is-1,je+1:je+halo_width,:)-f2(ind)%p(is-halo_width:is-1,je+1:je+halo_width,:)))
+    err     = sum(abs(f1(ind)%p(is-halo_width:is-1,je+1:je+halo_width,ks:ke)-f2(ind)%p(is-halo_width:is-1,je+1:je+halo_width,ks:ke))) / halo_width**2
+    err_max = maxval(abs(f1(ind)%p(is-halo_width:is-1,je+1:je+halo_width,ks:ke)-f2(ind)%p(is-halo_width:is-1,je+1:je+halo_width,ks:ke)))
     if(is == 1 .and. je == nh) then
         halo_corner_err = halo_corner_err+err
         halo_corner_err_max = max(halo_corner_err_max,err_max)
