@@ -26,6 +26,7 @@ subroutine create_equiangular_mesh(mesh, is, ie, js, je, ks, ke, nh, halo_width,
 
     mesh%panel_ind = panel_ind
     mesh%hx = 0.5_8 * pi / (real(nh, 8))
+    mesh%nx = nh
 
     do j = js - halo_width, je + halo_width
         beta = -0.25_8*pi + (j-0.5_8)*mesh.hx

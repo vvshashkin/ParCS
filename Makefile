@@ -64,13 +64,19 @@ $(DOBJ)buffer_mod.o: src/buffer_mod.f90
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)halo_mod.o: src/halo_mod.f90 \
+	$(DOBJ)grid_function_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)exchange_profile_mod.o: src/exchange_profile_mod.f90 \
 	$(DOBJ)partition_mod.o \
 	$(DOBJ)tile_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
-$(DOBJ)mesh_mod.o: src/mesh_mod.f90
+$(DOBJ)mesh_mod.o: src/mesh_mod.f90 \
+	$(DOBJ)halo_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -115,6 +121,7 @@ $(DOBJ)ecs_geometry_mod.o: src/equiang_cs/ecs_geometry_mod.f90 \
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)ecs_halo_mod.o: src/equiang_cs/ecs_halo_mod.f90 \
+	$(DOBJ)halo_mod.o \
 	$(DOBJ)const_mod.o \
 	$(DOBJ)grid_function_mod.o
 	@echo $(COTEXT)

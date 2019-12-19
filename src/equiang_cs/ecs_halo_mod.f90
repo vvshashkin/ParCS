@@ -12,48 +12,48 @@
 !|_________|
 module ecs_halo_mod
 
+use halo_mod, only : halo_t
+
 implicit none
 
 !type-container for precomputed interpolation weights to have
 !multiple halo-interpolators for multiple grids (for geometric MG-solver)
 
-type ecs_halo_t
+type, extends(halo_t) :: ecs_halo_t
   integer(kind=4) n          !number of real grid points along cubed-sphere face edge
   integer(kind=4) halo_width !number of rows in halo-zone
   integer(kind=4) ws, we     !starting and ending index of interpolation weights
   real(kind=8)   , allocatable :: w(:,:,:)
   integer(kind=4), allocatable :: ind(:,:)
   contains
-  procedure, public :: ext_halo=>ecs_ext_halo
+  procedure, public :: interp  => ecs_ext_halo
+  procedure, public :: interpv => ecs_ext_halo_vect
 end type ecs_halo_t
-
-type(ecs_halo_t), allocatable :: whalo(:)
 
 contains
 
-subroutine ecs_halo_mod_init(nn,halo_width)
-!input
-integer nn(:)      !dimension of each cub-sph grid (6*nn(i)**2)
-integer halo_width !number of rows in halo-zone
-!locals:
-integer nmg   !number of grids
-integer i
+!subroutine ecs_halo_mod_init(nn,halo_width)
+!!input
+!integer nn(:)      !dimension of each cub-sph grid (6*nn(i)**2)
+!integer halo_width !number of rows in halo-zone
+!!locals:
+!integer nmg   !number of grids
+!integer i
+!
+!nmg = size(nn)
+!
+!allocate(whalo(nmg))
+!
+!do i=1,nmg
+!    call init_ecs_halo_t(nn(i),halo_width,whalo(i))
+!end do
+!
+!end subroutine ecs_halo_mod_init
 
-nmg = size(nn)
-
-allocate(whalo(nmg))
-
-do i=1,nmg
-    call init_ecs_halo_t(nn(i),halo_width,whalo(i))
-end do
-
-end subroutine ecs_halo_mod_init
-
-subroutine init_ecs_halo_t(n,halo_width,wh)
+type(ecs_halo_t) function init_ecs_halo(n,halo_width) result(halo)
 use const_mod, only: pi
 
-integer n, halo_width
-type(ecs_halo_t) wh
+integer(kind=4), intent(in) :: n, halo_width
 
 !local:
 integer i,j
@@ -62,18 +62,18 @@ real(kind=8) za, zb !angle coordinates at target grid face
 real(kind=8) zx, zz !cartesian coordinates, zy is not needed
 real(kind=8) zxi ! normalized displacement inside interpolation stencil
 
-wh%n = n
-wh%halo_width = halo_width
-wh%ws = -1
-wh%we = n+2
-allocate(wh%w(-1:2,wh%ws:wh%we,halo_width))
-allocate(wh%ind(wh%ws:wh%we,halo_width))
+halo%n = n
+halo%halo_width = halo_width
+halo%ws = -1
+halo%we = n+2
+allocate(halo%w(-1:2,halo%ws:halo%we,halo_width))
+allocate(halo%ind(halo%ws:halo%we,halo_width))
 
 
 zda = 0.5_8*pi/n
 do j=1, halo_width
     zb = 0.25_8*pi+(j-0.5_8)*zda
-    do i = wh%ws, wh%we!1, n
+    do i = halo%ws, halo%we
         za = -0.25_8*pi+(i-0.5_8)*zda
         !cartesian coordinates of target cube face with alpha = za, beta = zb:
         zx = tan(za)
@@ -83,23 +83,23 @@ do j=1, halo_width
         !get alpha on source face:
         za = atan(zx)
         !i-index of source face point immediately to the left of projected target point
-        wh%ind(i,j) = floor((za+0.25_8*pi-0.5_8*zda)/zda)+1
-        zxi = (za+0.25_8*pi)/zda - (wh%ind(i,j)-0.5_8)
-        wh%w(-1,i,j) =- zxi      *(zxi-1._8)*(zxi-2._8) / 6._8
-        wh%w( 0,i,j) = (zxi+1._8)*(zxi-1._8)*(zxi-2._8) / 2._8
-        wh%w( 1,i,j) =-(zxi+1._8)* zxi      *(zxi-2._8) / 2._8
-        wh%w( 2,i,j) = (zxi+1._8)* zxi      *(zxi-1._8) / 6._8
+        halo%ind(i,j) = floor((za+0.25_8*pi-0.5_8*zda)/zda)+1
+        zxi = (za+0.25_8*pi)/zda - (halo%ind(i,j)-0.5_8)
+        halo%w(-1,i,j) =- zxi      *(zxi-1._8)*(zxi-2._8) / 6._8
+        halo%w( 0,i,j) = (zxi+1._8)*(zxi-1._8)*(zxi-2._8) / 2._8
+        halo%w( 1,i,j) =-(zxi+1._8)* zxi      *(zxi-2._8) / 2._8
+        halo%w( 2,i,j) = (zxi+1._8)* zxi      *(zxi-1._8) / 6._8
     end do
 end do
 
-end subroutine init_ecs_halo_t
+end function init_ecs_halo
 
 subroutine ecs_ext_halo(this, f)
 !interpolate source face values at halo zones to target face virtual points
 use grid_function_mod, only: grid_function_t
 
-class(ecs_halo_t) this
-type(grid_function_t) f
+class(ecs_halo_t),     intent(in)    :: this
+type(grid_function_t), intent(inout) :: f
 
 !local
 integer(kind=4) n, hw
@@ -108,7 +108,7 @@ integer(kind=4) nvi, nvj, nvk
 integer(kind=4) isv, iev, jsv,jev, ksv, kev
 integer(kind=4) klev
 integer(kind=4) i,j,k
-logical lhalo(4) !halo-procedurea at edge
+logical lhalo(4) !halo-procedure at edge
 logical lcorn(4) !corner halo-procedure  for numeration of edges and corners see below
 logical lfail_hw, lfail_corn, lfail_halo_long
 real(kind=8) zf_csp(6,f%ks-f%nvk:f%ke+f%nvk,4) !values at corner-points and near-corner points@first halo-row
@@ -437,5 +437,15 @@ print *, "exit"
 call mpi_finalize(ierr)
 stop
 end subroutine halo_avost
+
+
+subroutine ecs_ext_halo_vect(this, u, v)
+!interpolate source face values at halo zones to target face virtual points
+use grid_function_mod, only: grid_function_t
+
+class(ecs_halo_t),     intent(in)    :: this
+type(grid_function_t), intent(inout) :: u, v
+
+end subroutine ecs_ext_halo_vect
 
 end module ecs_halo_mod

@@ -14,7 +14,7 @@ use exchange_factory_mod, only : create_2d_full_halo_exchange, create_2d_cross_h
 use mesh_factory_mod,     only : create_equiangular_mesh
 use mesh_mod,             only : mesh_t
 
-use ecs_halo_mod,         only : ecs_halo_mod_init, whalo
+use ecs_halo_mod,         only : init_ecs_halo, ecs_halo_t
 
 type(exchange_t)                   :: exch_halo
 type(partition_t)                  :: partition
@@ -23,7 +23,6 @@ type(grid_function_t), allocatable :: f1(:)
 type(grid_function_t), allocatable :: f2(:)
 
 integer(kind=4), parameter         :: nh=128, nz=3, halo_width=3, ex_halo_width=8
-integer(kind=4), parameter         :: nn(3) = [nh, nh/2, nh/4]
 integer(kind=4)                    :: myid, np, ierr, code
 
 integer(kind=4) :: ts, te
@@ -61,28 +60,11 @@ do ind = ts, te
                                             partition%tile(ind)%js, partition%tile(ind)%je, &
                                             partition%tile(ind)%ks, partition%tile(ind)%ke, &
                                             nh, ex_halo_width, partition%tile(ind)%panel_number)
+    mesh(ind)%halo = init_ecs_halo(mesh(ind)%nx,halo_width)
 end do
 
-call ecs_halo_mod_init(nn,halo_width)
 call mpi_barrier(mpi_comm_world, ierr)
 if (myid==0) print *, 'equiangular cubed-sphere halo-zone interpolation test'
-
-lpass = ( size(whalo) == size(nn) )
-do k = 1, size(nn)
-    lpass = lpass .and. (whalo(k).n == nn(k))
-end do
-
-glpass = .false.
-
-call mpi_allreduce(lpass, glpass, 1, mpi_logical, mpi_land, mpi_comm_world, ierr)
-
-if(glpass) then
-   if(myid == 0) print *, "ecs halo module initialization consistent"
-else
-   if(myid == 0) print *, "ecs halo module initialization inconsistent"
-   return
-end if
-
 
 !Init arrays
 allocate(f1(ts:te))
@@ -111,8 +93,6 @@ do ind = ts, te
      f2(ind).p(:,:,:) = f1(ind).p(:,:,:)
 end do
 
-
-
 !Init exchange
 call create_2d_full_halo_exchange(exch_halo, partition, ex_halo_width, myid, np)
 
@@ -120,7 +100,8 @@ call create_2d_full_halo_exchange(exch_halo, partition, ex_halo_width, myid, np)
 call exch_halo%do(f1, ts, te)
 call mpi_barrier(mpi_comm_world, ierr)
 do ind = ts, te
-    call whalo(1)%ext_halo(f1(ind))
+    !call whalo(1)%ext_halo(f1(ind))
+    call mesh(ind)%halo%interp(f1(ind))
 end do
 
 inface_err = 0._8; inface_err_max = 0._8
