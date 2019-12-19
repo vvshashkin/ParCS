@@ -60,7 +60,7 @@ do ind = ts, te
                                             partition%tile(ind)%js, partition%tile(ind)%je, &
                                             partition%tile(ind)%ks, partition%tile(ind)%ke, &
                                             nh, ex_halo_width, partition%tile(ind)%panel_number)
-    mesh(ind)%halo = init_ecs_halo(mesh(ind)%nx,halo_width)
+    mesh(ind)%halo = init_ecs_halo(mesh(ind),halo_width)
 end do
 
 call mpi_barrier(mpi_comm_world, ierr)

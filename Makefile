@@ -122,6 +122,7 @@ $(DOBJ)ecs_geometry_mod.o: src/equiang_cs/ecs_geometry_mod.f90 \
 
 $(DOBJ)ecs_halo_mod.o: src/equiang_cs/ecs_halo_mod.f90 \
 	$(DOBJ)halo_mod.o \
+	$(DOBJ)mesh_mod.o \
 	$(DOBJ)const_mod.o \
 	$(DOBJ)grid_function_mod.o
 	@echo $(COTEXT)
