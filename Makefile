@@ -98,7 +98,8 @@ $(DOBJ)topology_mod.o: src/topology_mod.f90
 
 $(DOBJ)mesh_factory_mod.o: src/mesh_factory_mod.f90 \
 	$(DOBJ)mesh_mod.o \
-	$(DOBJ)topology_mod.o
+	$(DOBJ)topology_mod.o \
+	$(DOBJ)ecs_halo_factory_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -115,7 +116,6 @@ $(DOBJ)exchange_mod.o: src/exchange_mod.f90 \
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)ecs_geometry_mod.o: src/equiang_cs/ecs_geometry_mod.f90 \
-	$(DOBJ)const_mod.o \
 	$(DOBJ)topology_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -199,8 +199,7 @@ $(DOBJ)test_metric_mod.o: src/test/test_metric/test_metric_mod.f90 \
 	$(DOBJ)grid_function_mod.o \
 	$(DOBJ)exchange_mod.o \
 	$(DOBJ)partition_mod.o \
-	$(DOBJ)exchange_factory_mod.o \
-	$(DOBJ)ecs_geometry_mod.o
+	$(DOBJ)exchange_factory_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

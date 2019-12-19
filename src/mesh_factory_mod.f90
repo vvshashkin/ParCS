@@ -10,6 +10,7 @@ contains
 
 
 subroutine create_equiangular_mesh(mesh, is, ie, js, je, ks, ke, nh, halo_width, panel_ind)
+    use ecs_halo_factory_mod, only: init_ecs_halo
 
     type(mesh_t),    intent(inout) :: mesh
     integer(kind=4), intent(in)    :: is, ie, js, je, ks, ke
@@ -46,6 +47,10 @@ subroutine create_equiangular_mesh(mesh, is, ie, js, je, ks, ke, nh, halo_width,
 
         end do
     end do
+    mesh%halo = init_ecs_halo(mesh%is, mesh%ie,           &
+                              mesh%js, mesh%je,           &
+                              mesh%nx, halo_width,   &
+                              mesh%hx)
 
 end subroutine create_equiangular_mesh
 

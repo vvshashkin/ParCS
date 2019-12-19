@@ -14,8 +14,8 @@ use exchange_factory_mod, only : create_2d_full_halo_exchange, create_2d_cross_h
 use mesh_factory_mod,     only : create_equiangular_mesh
 use mesh_mod,             only : mesh_t
 
-use ecs_halo_mod,         only : ecs_halo_t
-use ecs_halo_factory_mod, only : init_ecs_halo
+!use ecs_halo_mod,         only : ecs_halo_t
+!use ecs_halo_factory_mod, only : init_ecs_halo
 
 type(exchange_t)                   :: exch_halo
 type(partition_t)                  :: partition
@@ -60,11 +60,11 @@ do ind = ts, te
     call create_equiangular_mesh(mesh(ind), partition%tile(ind)%is, partition%tile(ind)%ie, &
                                             partition%tile(ind)%js, partition%tile(ind)%je, &
                                             partition%tile(ind)%ks, partition%tile(ind)%ke, &
-                                            nh, ex_halo_width, partition%tile(ind)%panel_number)
-    mesh(ind)%halo = init_ecs_halo(mesh(ind)%is, mesh(ind)%ie, &
-                                   mesh(ind)%js, mesh(ind)%je, &
-                                   mesh(ind)%nx, halo_width,   &
-                                   mesh(ind)%hx)
+                                            nh, halo_width, partition%tile(ind)%panel_number)
+!    mesh(ind)%halo = init_ecs_halo(mesh(ind)%is, mesh(ind)%ie, &
+!                                   mesh(ind)%js, mesh(ind)%je, &
+!                                   mesh(ind)%nx, halo_width,   &
+!                                   mesh(ind)%hx)
 end do
 
 call mpi_barrier(mpi_comm_world, ierr)
@@ -87,10 +87,10 @@ do i = ts, te
 end do
 
 do ind = ts, te
-     isv = f1(ind)%is-f1(ind)%nvi
-     iev = f1(ind)%ie+f1(ind)%nvi
-     jsv = f1(ind)%js-f1(ind)%nvj
-     jev = f1(ind)%je+f1(ind)%nvj
+     isv = f1(ind)%is-halo_width!-f1(ind)%nvi
+     iev = f1(ind)%ie+halo_width!+f1(ind)%nvi
+     jsv = f1(ind)%js-halo_width!-f1(ind)%nvj
+     jev = f1(ind)%je+halo_width!+f1(ind)%nvj
      f1(ind).p(isv:iev,jsv:jev,1) = mesh(ind)%rhx(isv:iev,jsv:jev)
      f1(ind).p(isv:iev,jsv:jev,2) = mesh(ind)%rhy(isv:iev,jsv:jev)
      f1(ind).p(isv:iev,jsv:jev,3) = mesh(ind)%rhz(isv:iev,jsv:jev)
