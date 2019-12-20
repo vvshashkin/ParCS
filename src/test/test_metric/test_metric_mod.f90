@@ -11,13 +11,14 @@ use grid_function_mod,    only : grid_function_t
 use exchange_mod,         only : exchange_t
 use partition_mod,        only : partition_t
 use exchange_factory_mod, only : create_2d_full_halo_exchange, create_2d_cross_halo_exchange
-
-use ecs_geometry_mod,     only : ecs_geometry_mod_init, ecs_geometry_mod_check, rhx, rhy, rhz
+use mesh_factory_mod,     only : create_equiangular_mesh
+use mesh_mod,             only : mesh_t
 
 type(exchange_t)                   :: exch_halo
 type(partition_t)                  :: partition
 type(grid_function_t), allocatable :: f1(:)
 type(grid_function_t), allocatable :: f2(:)
+type(mesh_t),          allocatable :: mesh(:)
 
 integer(kind=4), parameter         :: nh=16, nz=3, halo_width=1
 integer(kind=4)                    :: myid, np, ierr, code
@@ -36,9 +37,6 @@ real(kind=8) zq(1:nh,3), zp(1:nh,3)
 call MPI_comm_rank(mpi_comm_world , myid, ierr)
 call MPI_comm_size(mpi_comm_world , Np  , ierr)
 
-call ecs_geometry_mod_init(nh, halo_width)
-
-
 if (myid==0) print *, 'equiangular cubed-sphere test'
 
 if(Np >1) then
@@ -46,9 +44,9 @@ if(Np >1) then
     return
 end if
 
-if(myid == 0) then
-    call ecs_geometry_mod_check()
-end if
+!if(myid == 0) then
+!    call ecs_geometry_mod_check()
+!end if
 
 call mpi_barrier(mpi_comm_world, ierr)
 
@@ -57,6 +55,18 @@ call partition%init(nh, nz, max(1,Np/6), Np, strategy = 'default')
 !find start and end index of tiles belonging to the current proccesor
 ts = findloc(partition%proc_map, myid, dim=1)
 te = findloc(partition%proc_map, myid, back = .true., dim=1)
+
+allocate(mesh(ts:te))
+do ind = ts, te
+    call create_equiangular_mesh(mesh(ind), partition%tile(ind)%is, partition%tile(ind)%ie, &
+                                            partition%tile(ind)%js, partition%tile(ind)%je, &
+                                            partition%tile(ind)%ks, partition%tile(ind)%ke, &
+                                            nh, halo_width, partition%tile(ind)%panel_number)
+!    mesh(ind)%halo = init_ecs_halo(mesh(ind)%is, mesh(ind)%ie, &
+!                                   mesh(ind)%js, mesh(ind)%je, &
+!                                   mesh(ind)%nx, halo_width,   &
+!                                   mesh(ind)%hx)
+end do
 
 !Init arrays
 
@@ -77,9 +87,9 @@ end do
 
 do ind = ts, te
      ifc = partition%tile(ind)%panel_number
-     f1(ind).p(:,:,1) = rhx(:,:,ifc)
-     f1(ind).p(:,:,2) = rhy(:,:,ifc)
-     f1(ind).p(:,:,3) = rhz(:,:,ifc)
+     f1(ind).p(:,:,1) = mesh(ind)%rhx(:,:)
+     f1(ind).p(:,:,2) = mesh(ind)%rhy(:,:)
+     f1(ind).p(:,:,3) = mesh(ind)%rhz(:,:)
      f2(ind).p(:,:,:) = f1(ind).p(:,:,:)
 end do
 

@@ -1,5 +1,5 @@
 module mesh_mod
-
+use halo_mod, only : halo_t
 implicit none
 
 type, public :: mesh_t
@@ -11,6 +11,7 @@ type, public :: mesh_t
 
     real(kind=8), allocatable    :: rhx(:,:), rhy(:,:), rhz(:,:)
     real(kind=8)                 :: hx !horizontal grid step
+    class(halo_t), allocatable   :: halo
 
 contains
 

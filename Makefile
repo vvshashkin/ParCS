@@ -60,6 +60,11 @@ $(DOBJ)grid_function_mod.o: src/grid_function_mod.f90
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)halo_mod.o: src/halo_mod.f90 \
+	$(DOBJ)grid_function_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)topology_mod.o: src/topology_mod.f90
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -92,11 +97,13 @@ $(DOBJ)parcs_mpi_mod.o: src/ParCS_mpi_mod.f90
 
 $(DOBJ)mesh_factory_mod.o: src/mesh_factory_mod.f90 \
 	$(DOBJ)mesh_mod.o \
-	$(DOBJ)topology_mod.o
+	$(DOBJ)topology_mod.o \
+	$(DOBJ)ecs_halo_factory_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
-$(DOBJ)mesh_mod.o: src/mesh_mod.f90
+$(DOBJ)mesh_mod.o: src/mesh_mod.f90 \
+	$(DOBJ)halo_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -114,13 +121,19 @@ $(DOBJ)const_mod.o: src/const_mod.f90
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)ecs_geometry_mod.o: src/equiang_cs/ecs_geometry_mod.f90 \
-	$(DOBJ)const_mod.o \
 	$(DOBJ)topology_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)ecs_halo_factory_mod.o: src/equiang_cs/ecs_halo_factory_mod.f90 \
+	$(DOBJ)ecs_halo_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)const_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)ecs_halo_mod.o: src/equiang_cs/ecs_halo_mod.f90 \
-	$(DOBJ)const_mod.o \
+	$(DOBJ)halo_mod.o \
 	$(DOBJ)grid_function_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -166,8 +179,8 @@ $(DOBJ)test_halo_mod.o: src/test/test_halo/test_halo_mod.f90 \
 	$(DOBJ)exchange_mod.o \
 	$(DOBJ)partition_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
-	$(DOBJ)ecs_geometry_mod.o \
-	$(DOBJ)ecs_halo_mod.o
+	$(DOBJ)mesh_factory_mod.o \
+	$(DOBJ)mesh_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -191,7 +204,8 @@ $(DOBJ)test_metric_mod.o: src/test/test_metric/test_metric_mod.f90 \
 	$(DOBJ)exchange_mod.o \
 	$(DOBJ)partition_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
-	$(DOBJ)ecs_geometry_mod.o
+	$(DOBJ)mesh_factory_mod.o \
+	$(DOBJ)mesh_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
