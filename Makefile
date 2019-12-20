@@ -8,7 +8,7 @@ DEXE    = ./
 LIBS    =
 FC      = mpiifort
 OPTSC   =  -c -traceback -init=snan -init=arrays -check all -ftrapuv -module mod
-OPTSL   =  -module mod
+OPTSL   =  -traceback -init=snan -init=arrays -check all -ftrapuv -module mod
 VPATH   = $(DSRC) $(DOBJ) $(DMOD)
 MKDIRS  = $(DOBJ) $(DMOD) $(DEXE)
 LCEXES  = $(shell echo $(EXES) | tr '[:upper:]' '[:lower:]')
@@ -25,11 +25,21 @@ $(DEXE)TEST_EXCH_MAIN: $(MKDIRS) $(DOBJ)test_exch_main.o
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_EXCH_MAIN
+$(DEXE)TEST_HALO_MAIN: $(MKDIRS) $(DOBJ)test_halo_main.o
+	@rm -f $(filter-out $(DOBJ)test_halo_main.o,$(EXESOBJ))
+	@echo $(LITEXT)
+	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
+EXES := $(EXES) TEST_HALO_MAIN
 $(DEXE)TEST_OUTPUT_MAIN: $(MKDIRS) $(DOBJ)test_output_main.o
 	@rm -f $(filter-out $(DOBJ)test_output_main.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_OUTPUT_MAIN
+$(DEXE)TEST_METRIC_MAIN: $(MKDIRS) $(DOBJ)test_metric_main.o
+	@rm -f $(filter-out $(DOBJ)test_metric_main.o,$(EXESOBJ))
+	@echo $(LITEXT)
+	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
+EXES := $(EXES) TEST_METRIC_MAIN
 $(DEXE)TEST_MESH_MAIN: $(MKDIRS) $(DOBJ)test_mesh_main.o
 	@rm -f $(filter-out $(DOBJ)test_mesh_main.o,$(EXESOBJ))
 	@echo $(LITEXT)
@@ -99,6 +109,22 @@ $(DOBJ)exchange_factory_mod.o: src/exchange_factory_mod.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)const_mod.o: src/const_mod.f90
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)ecs_geometry_mod.o: src/equiang_cs/ecs_geometry_mod.f90 \
+	$(DOBJ)const_mod.o \
+	$(DOBJ)topology_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)ecs_halo_mod.o: src/equiang_cs/ecs_halo_mod.f90 \
+	$(DOBJ)const_mod.o \
+	$(DOBJ)grid_function_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)outputer_factory_mod.o: src/outputer/outputer_factory_mod.f90 \
 	$(DOBJ)master_process_outputer_mod.o \
 	$(DOBJ)exchange_mod.o
@@ -130,6 +156,21 @@ $(DOBJ)test_mod.o: src/test/test_exch/test_mod.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)test_halo_main.o: src/test/test_halo/test_halo_main.f90 \
+	$(DOBJ)test_halo_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)test_halo_mod.o: src/test/test_halo/test_halo_mod.f90 \
+	$(DOBJ)grid_function_mod.o \
+	$(DOBJ)exchange_mod.o \
+	$(DOBJ)partition_mod.o \
+	$(DOBJ)exchange_factory_mod.o \
+	$(DOBJ)ecs_geometry_mod.o \
+	$(DOBJ)ecs_halo_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)test_output_main.o: src/test/test_output/test_output_main.f90 \
 	$(DOBJ)test_output_mod.o
 	@echo $(COTEXT)
@@ -140,8 +181,22 @@ $(DOBJ)test_output_mod.o: src/test/test_output/test_output_mod.f90 \
 	$(DOBJ)exchange_mod.o \
 	$(DOBJ)partition_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
-	$(DOBJ)master_process_outputer_mod.o \
+	$(DOBJ)outputer_abstract_mod.o \
 	$(DOBJ)outputer_factory_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)test_metric_mod.o: src/test/test_metric/test_metric_mod.f90 \
+	$(DOBJ)grid_function_mod.o \
+	$(DOBJ)exchange_mod.o \
+	$(DOBJ)partition_mod.o \
+	$(DOBJ)exchange_factory_mod.o \
+	$(DOBJ)ecs_geometry_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)test_metric_main.o: src/test/test_metric/test_metric_main.f90 \
+	$(DOBJ)test_metric_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
