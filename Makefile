@@ -261,3 +261,4 @@ cleanexe:
 clean: cleanobj cleanmod
 .PHONY : cleanall
 cleanall: clean cleanexe
+all: $(addprefix $(DEXE),$(EXES))
