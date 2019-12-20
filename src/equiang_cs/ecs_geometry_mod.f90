@@ -118,43 +118,4 @@ pa = atan(zx/zz);   pb = atan(zy/zz)
 
 end subroutine ecs_xyz2ab
 
-!subroutine ecs_geometry_mod_check()
-!use topology_mod, only : ex, ey, n
-!logical lsym_check
-!integer(kind=4) ifc, is, ie, js, je
-!real(kind=8) ee(3)
-!
-!lsym_check = .true.
-!
-!is = 1-halo_w; ie = nx+halo_w
-!js = 1-halo_w; je = nx+halo_w
-!do ifc = 1,6
-!    ee = real(ex(:,ifc),8)
-!    lsym_check = lsym_check .and. symmetric(is,ie,js,js,ifc,ee)
-!    lsym_check = lsym_check .and. symmetric(is,ie,je,je,ifc,ee)
-!    ee = real(ey(:,ifc),8)
-!    lsym_check = lsym_check .and. symmetric(is,is,js,je,ifc,ee)
-!    lsym_check = lsym_check .and. symmetric(ie,ie,js,je,ifc,ee)
-!end do
-!if(lsym_check) then
-!    print *, "x,y,z symmetricity check passed"
-!else
-!    print *, "x,y,z symmetricity check failed"
-!end if
-!contains
-!    logical function symmetric(i1,i2,j1,j2,ifc,ee) result(lsym)
-!        integer(kind=4) i1,i2,j1,j2,ifc
-!        real(kind=8) ee(3)
-!        real(kind=8) a(3), b(3), zpr
-!        real(kind=8), parameter :: zeps = 1e-16_8
-!    
-!        a = [rhx(i1,j1,ifc), rhy(i1,j1,ifc), rhz(i1,j1,ifc)]
-!        b = [rhx(i2,j2,ifc), rhy(i2,j2,ifc), rhz(i2,j2,ifc)]
-!        zpr = sum(a*ee)
-!        a = a - 2._8*zpr*ee
-!        lsym = sum(abs(a-b))<zeps
-!    end function symmetric
-!
-!end subroutine ecs_geometry_mod_check
-!
 end module ecs_geometry_mod

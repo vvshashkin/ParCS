@@ -1,6 +1,7 @@
 module test_metric_mod
 implicit none
-
+private
+public :: test_metric
 contains
 
 subroutine test_metric()
@@ -30,7 +31,7 @@ integer(kind=4) :: ie, is
 integer(kind=4) :: local_tile_ind, remote_tile_ind, local_tile_panel_number, remote_tile_panel_number
 
 character(:), allocatable :: frmt
-logical lcross_edge_xyz
+logical lcross_edge_xyz, lsymm_check
 real(kind=8) zq(1:nh,3), zp(1:nh,3)
 
 
@@ -44,10 +45,6 @@ if(Np >1) then
     return
 end if
 
-!if(myid == 0) then
-!    call ecs_geometry_mod_check()
-!end if
-
 call mpi_barrier(mpi_comm_world, ierr)
 
 call partition%init(nh, nz, max(1,Np/6), Np, strategy = 'default')
@@ -57,16 +54,21 @@ ts = findloc(partition%proc_map, myid, dim=1)
 te = findloc(partition%proc_map, myid, back = .true., dim=1)
 
 allocate(mesh(ts:te))
+lsymm_check = .true.
 do ind = ts, te
     call create_equiangular_mesh(mesh(ind), partition%tile(ind)%is, partition%tile(ind)%ie, &
                                             partition%tile(ind)%js, partition%tile(ind)%je, &
                                             partition%tile(ind)%ks, partition%tile(ind)%ke, &
                                             nh, halo_width, partition%tile(ind)%panel_number)
-!    mesh(ind)%halo = init_ecs_halo(mesh(ind)%is, mesh(ind)%ie, &
-!                                   mesh(ind)%js, mesh(ind)%je, &
-!                                   mesh(ind)%nx, halo_width,   &
-!                                   mesh(ind)%hx)
+    lsymm_check = lsymm_check .and. symmetricity_check_h(mesh(ind)%rhx,mesh(ind)%rhy,mesh(ind)%rhz, &
+                                                         nh+2*halo_width,mesh(ind)%panel_ind)
 end do
+
+if(lsymm_check) then
+    print *, "symmetricity test passed"
+else
+    print *, "symmetricity test failed"
+end if
 
 !Init arrays
 
@@ -160,5 +162,39 @@ lpass = lpass .and. abs(zpr) < zeps
 end function cross_edge_xyz_check
 
 end subroutine test_metric
+
+!check symmetricity of pressure(h)-points on ecs grid face
+logical function symmetricity_check_h(phx,phy,phz,nn,panel_ind) result(lsym_check)
+use topology_mod, only : n, ex, ey
+integer(kind=4), intent(in) :: nn, panel_ind !number of h-points incl halo, ind of cs-panel
+real(kind=8),    intent(in) :: phx(nn, nn), phy(nn, nn), phz(nn, nn)
+!local
+real(kind=8) ee(3)
+
+lsym_check = .true.
+
+ee = real(ex(:,panel_ind),8)
+lsym_check = lsym_check .and. symmetric( 1,nn, 1, 1,panel_ind,ee)
+lsym_check = lsym_check .and. symmetric( 1,nn,nn,nn,panel_ind,ee)
+ee = real(ey(:,panel_ind),8)
+lsym_check = lsym_check .and. symmetric( 1, 1, 1,nn,panel_ind,ee)
+lsym_check = lsym_check .and. symmetric(nn,nn, 1,nn,panel_ind,ee)
+
+contains
+logical function symmetric(i1,i2,j1,j2,panel_ind,ee) result(lsym)
+    integer(kind=4), intent(in) :: i1,i2,j1,j2,panel_ind
+    real(kind=8),    intent(in) :: ee(3)
+    !local
+    real(kind=8) a(3), b(3), zpr
+    real(kind=8), parameter :: zeps = 1e-16_8
+
+    a = [phx(i1,j1), phy(i1,j1), phz(i1,j1)]
+    b = [phx(i2,j2), phy(i2,j2), phz(i2,j2)]
+    zpr = sum(a*ee)
+    a = a - 2._8*zpr*ee !flip a-vector
+    lsym = sum(abs(a-b))<zeps
+end function symmetric
+
+end function symmetricity_check_h
 
 end module test_metric_mod
