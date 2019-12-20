@@ -8,7 +8,7 @@ DEXE    = ./
 LIBS    =
 FC      = mpiifort
 OPTSC   =  -c -traceback -init=snan -init=arrays -check all -ftrapuv -module mod
-OPTSL   =  -traceback -init=snan -init=arrays -check all -ftrapuv -module mod
+OPTSL   =  -module mod
 VPATH   = $(DSRC) $(DOBJ) $(DMOD)
 MKDIRS  = $(DOBJ) $(DMOD) $(DEXE)
 LCEXES  = $(shell echo $(EXES) | tr '[:upper:]' '[:lower:]')
@@ -20,26 +20,22 @@ COTEXT  = "Compiling $(<F)"
 LITEXT  = "Assembling $@"
 
 #building rules
-$(DEXE)TEST_EXCH_MAIN: $(MKDIRS) $(DOBJ)test_exch_main.o \
-	$(DOBJ)outputer_mod.o
+$(DEXE)TEST_EXCH_MAIN: $(MKDIRS) $(DOBJ)test_exch_main.o
 	@rm -f $(filter-out $(DOBJ)test_exch_main.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_EXCH_MAIN
-$(DEXE)TEST_OUTPUT_MAIN: $(MKDIRS) $(DOBJ)test_output_main.o \
-	$(DOBJ)outputer_mod.o
+$(DEXE)TEST_OUTPUT_MAIN: $(MKDIRS) $(DOBJ)test_output_main.o
 	@rm -f $(filter-out $(DOBJ)test_output_main.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_OUTPUT_MAIN
-$(DEXE)TEST_MESH_MAIN: $(MKDIRS) $(DOBJ)test_mesh_main.o \
-	$(DOBJ)outputer_mod.o
+$(DEXE)TEST_MESH_MAIN: $(MKDIRS) $(DOBJ)test_mesh_main.o
 	@rm -f $(filter-out $(DOBJ)test_mesh_main.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_MESH_MAIN
-$(DEXE)FIVEPOINTFILTER_MAIN: $(MKDIRS) $(DOBJ)fivepointfilter_main.o \
-	$(DOBJ)outputer_mod.o
+$(DEXE)FIVEPOINTFILTER_MAIN: $(MKDIRS) $(DOBJ)fivepointfilter_main.o
 	@rm -f $(filter-out $(DOBJ)fivepointfilter_main.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
@@ -59,10 +55,6 @@ $(DOBJ)topology_mod.o: src/topology_mod.f90
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)tile_mod.o: src/tile_mod.f90
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
-$(DOBJ)outputer_mod.o: src/outputer_mod.f90
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -107,19 +99,18 @@ $(DOBJ)exchange_factory_mod.o: src/exchange_factory_mod.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
-$(DOBJ)ouputer_factory_mod.o: src/ouputer_factory_mod.f90 \
-	$(DOBJ)outputer_abstract_mod.o \
+$(DOBJ)outputer_factory_mod.o: src/outputer/outputer_factory_mod.f90 \
 	$(DOBJ)master_process_outputer_mod.o \
 	$(DOBJ)exchange_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
-$(DOBJ)outputer_abstract_mod.o: src/outputer_abstract_mod.f90 \
+$(DOBJ)outputer_abstract_mod.o: src/outputer/outputer_abstract_mod.f90 \
 	$(DOBJ)grid_function_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
-$(DOBJ)master_process_outputer_mod.o: src/master_process_outputer_mod.f90 \
+$(DOBJ)master_process_outputer_mod.o: src/outputer/master_process_outputer_mod.f90 \
 	$(DOBJ)outputer_abstract_mod.o \
 	$(DOBJ)grid_function_mod.o \
 	$(DOBJ)exchange_mod.o
@@ -150,7 +141,7 @@ $(DOBJ)test_output_mod.o: src/test/test_output/test_output_mod.f90 \
 	$(DOBJ)partition_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
 	$(DOBJ)master_process_outputer_mod.o \
-	$(DOBJ)ouputer_factory_mod.o
+	$(DOBJ)outputer_factory_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
