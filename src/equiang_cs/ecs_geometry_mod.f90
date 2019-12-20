@@ -53,18 +53,19 @@ contains
 !
 !end subroutine ecs_geometry_mod_init
 
-subroutine ecs_ab2xyz_proto(px,py,pz,pa,pb)
-real(kind=8), intent(out) :: px, py, pz
-real(kind=8), intent(in)  ::  pa, pb
-!locals:
-real(kind=8) zr
+function ecs_ab2xyz_proto(alpha,beta) result(xyz)
+    real(kind=8)                   xyz(3)
+    real(kind=8), intent(in)    :: alpha, beta
+    !locals:
+    real(kind=8) r
+    integer(kind=4) i
 
-!grid point at proto cube face: (assumes px = tan(pa), py = tan(pb), pz = 1)
-zr = sqrt(1._8+tan(pa)**2+tan(pb)**2)
-!coordinates at prototype spherical face: vec(r)/||r||, r = (zx, zy, zz)
-px = tan(pa)/zr; py = tan(pb)/zr; pz = 1._8/zr
+    !grid point at proto cube face: (assumes x = tan(alpha), y = tan(beta), z = 1)
+    r = sqrt(1._8+tan(alpha)**2+tan(beta)**2)
+    !coordinates at prototype spherical face: vec(r)/||r||, r = (x, y, z)
+    xyz(1) = tan(alpha)/r; xyz(2) = tan(beta)/r; xyz(3) = 1._8/r
 
-end subroutine ecs_ab2xyz_proto
+end function ecs_ab2xyz_proto
 
 subroutine ecs_cov_proto(pacov,pbcov,pa,pb)
 !covariant vectors at prototype face given alpha&beta
@@ -84,20 +85,18 @@ pbcov(2) = (1d0+zta**2d0)*(1d0+ztb**2d0)/(1d0+zta**2d0+ztb**2d0)**(3d0/2d0)
 pbcov(3) = -ztb*(1d0+ztb**2d0) / (1d0+zta**2d0+ztb**2d0)**(3d0/2d0)
 end subroutine ecs_cov_proto
 
-subroutine ecs_proto2face(px,py,pz,px0,py0,pz0,ifc)
+function ecs_proto2face(xyz,panel_ind) result(xyz1)
 !transform prototype-face xyz to real spherical face
 use topology_mod, only : ex, ey, n
-real(kind=8), intent(out)   :: px,py,pz
-real(kind=8), intent(in)    :: px0,py0,pz0
-integer(kind=4), intent(in) :: ifc
-!local
-real(kind=8) zx, zy, zz
+real(kind=8)                :: xyz1(3)
+real(kind=8), intent(in)    :: xyz(3)
+integer(kind=4), intent(in) :: panel_ind
 
-px = ex(1,ifc)*px0+ey(1,ifc)*py0-n(1,ifc)*pz0
-py = ex(2,ifc)*px0+ey(2,ifc)*py0-n(2,ifc)*pz0
-pz = ex(3,ifc)*px0+ey(3,ifc)*py0-n(3,ifc)*pz0
+xyz1(1) = ex(1,panel_ind)*xyz(1)+ey(1,panel_ind)*xyz(2)-n(1,panel_ind)*xyz(3)
+xyz1(2) = ex(2,panel_ind)*xyz(1)+ey(2,panel_ind)*xyz(2)-n(2,panel_ind)*xyz(3)
+xyz1(3) = ex(3,panel_ind)*xyz(1)+ey(3,panel_ind)*xyz(2)-n(3,panel_ind)*xyz(3)
 
-end subroutine ecs_proto2face
+end function ecs_proto2face
 
 subroutine ecs_xyz2ab(pa,pb,px,py,pz,ifc)
 use topology_mod, only : ex, ey, n

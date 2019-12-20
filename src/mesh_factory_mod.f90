@@ -10,6 +10,8 @@ contains
 
 
 subroutine create_equiangular_mesh(mesh, is, ie, js, je, ks, ke, nh, halo_width, panel_ind)
+    use const_mod,            only: pi
+    use ecs_geometry_mod,     only: ecs_ab2xyz_proto, ecs_proto2face
     use ecs_halo_factory_mod, only: init_ecs_halo
 
     type(mesh_t),    intent(inout) :: mesh
@@ -19,9 +21,7 @@ subroutine create_equiangular_mesh(mesh, is, ie, js, je, ks, ke, nh, halo_width,
 
     integer(kind=4) :: i, j, k
     real(kind=8) :: alpha, beta, x, y, z, r
-    real(kind=8) :: pi
-
-    pi = acos(-1.0_8)
+    real(kind=8) :: xyz(3)
 
     call mesh%init(is, ie, js, je, ks, ke, halo_width)
 
@@ -34,16 +34,15 @@ subroutine create_equiangular_mesh(mesh, is, ie, js, je, ks, ke, nh, halo_width,
         do i = is - halo_width, ie + halo_width
             alpha = -0.25_8*pi+(i-0.5_8)*mesh%hx
 
-            !grid point at cube face: (assumes x = tan(alpha), y = tan(beta), z = 1)
-            r = sqrt(1.0_8 + tan(alpha)**2 + tan(beta)**2)
+            !cartesian coordinates of (alpha,beta) point at prototype face
+            xyz = ecs_ab2xyz_proto(alpha,beta)
+            !rotate to real face
+            xyz = ecs_proto2face(xyz,panel_ind)
+            mesh%rhx(i,j) = xyz(1)
+            mesh%rhy(i,j) = xyz(2)
+            mesh%rhz(i,j) = xyz(3)
+            
 
-            !coordinates at prototype spherical face: vec(r)/||r||, r = (x, y, z)
-            x = tan(alpha)/r; y = tan(beta)/r; z = 1.0_8/r
-
-            !transform to real spherical face
-            mesh%rhx(i,j) = ex(1,panel_ind)*x + ey(1,panel_ind)*y - n(1,panel_ind)*z
-            mesh%rhy(i,j) = ex(2,panel_ind)*x + ey(2,panel_ind)*y - n(2,panel_ind)*z
-            mesh%rhz(i,j) = ex(3,panel_ind)*x + ey(3,panel_ind)*y - n(3,panel_ind)*z
 
         end do
     end do
