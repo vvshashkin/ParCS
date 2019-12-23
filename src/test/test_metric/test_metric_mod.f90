@@ -22,18 +22,19 @@ type(grid_function_t), allocatable :: f2(:)
 type(mesh_t),          allocatable :: mesh(:)
 
 integer(kind=4), parameter         :: nh=16, nz=3, halo_width=1
+real(kind=8),    parameter         :: zeps = 1e-16_8
 integer(kind=4)                    :: myid, np, ierr, code
 
 integer(kind=4) :: ts, te
 integer(kind=4) :: ind, i, j, k, ifc, err_sum, gl_err_sum
-integer(kind=4) :: ie, is
+integer(kind=4) :: ie, is, js, je
 
 integer(kind=4) :: local_tile_ind, remote_tile_ind, local_tile_panel_number, remote_tile_panel_number
 
 character(:), allocatable :: frmt
 logical lcross_edge_xyz, lsymm_check
 real(kind=8) zq(1:nh,3), zp(1:nh,3)
-
+real(kind=8) err_ort_rab, err_ort_abt, err_q, err_qi, err_g
 
 call MPI_comm_rank(mpi_comm_world , myid, ierr)
 call MPI_comm_size(mpi_comm_world , Np  , ierr)
@@ -120,13 +121,76 @@ else
     print *, "cross edge xyz test failed"
 end if
 
+!check the following facts
+!1)cubsph basis vectors tangent to sphere
+!2)acov orthogonal to bctv and vice versa
+!3)metric tensor is matrix of covariant vectors dot-prods
+!4)actv = qi11*acov+qi12*bcov and same for bctv
+!5)G = det(Q) is determinant of Q
+err_ort_abt = 0._8; err_ort_rab = 0._8
+err_q = 0._8; err_qi = 0._8; err_g = 0._8
+do ind=ts,te
+    js = mesh(ind)%js-mesh(ind)%halo_width
+    je = mesh(ind)%je+mesh(ind)%halo_width
+    is = mesh(ind)%is-mesh(ind)%halo_width
+    ie = mesh(ind)%ie+mesh(ind)%halo_width
+    do j=mesh(ind)%js-mesh(ind)%halo_width,mesh(ind)%je+mesh(ind)%halo_width
+        do i=mesh(ind)%is-mesh(ind)%halo_width,mesh(ind)%ie+mesh(ind)%halo_width
+            err_ort_rab = err_ort_rab+&
+                              abs(mesh(ind)%acov(1,i,j)*mesh(ind)%rhx(i,j)+&
+                                  mesh(ind)%acov(2,i,j)*mesh(ind)%rhy(i,j)+&
+                                  mesh(ind)%acov(3,i,j)*mesh(ind)%rhz(i,j))
+            err_ort_rab = err_ort_rab+&
+                              abs(mesh(ind)%bcov(1,i,j)*mesh(ind)%rhx(i,j)+&
+                                  mesh(ind)%bcov(2,i,j)*mesh(ind)%rhy(i,j)+&
+                                  mesh(ind)%bcov(3,i,j)*mesh(ind)%rhz(i,j))
+            err_ort_rab = err_ort_rab+&
+                              abs(mesh(ind)%actv(1,i,j)*mesh(ind)%rhx(i,j)+&
+                                  mesh(ind)%actv(2,i,j)*mesh(ind)%rhy(i,j)+&
+                                  mesh(ind)%actv(3,i,j)*mesh(ind)%rhz(i,j))
+            err_ort_rab = err_ort_rab+&
+                              abs(mesh(ind)%bctv(1,i,j)*mesh(ind)%rhx(i,j)+&
+                                  mesh(ind)%bctv(2,i,j)*mesh(ind)%rhy(i,j)+&
+                                  mesh(ind)%bctv(3,i,j)*mesh(ind)%rhz(i,j))
+            err_ort_abt = err_ort_abt+&
+                              abs(sum(mesh(ind)%acov(:,i,j)*mesh(ind)%bctv(:,i,j)))
+            err_ort_abt = err_ort_abt+&
+                              abs(sum(mesh(ind)%actv(:,i,j)*mesh(ind)%bcov(:,i,j)))
+            err_q = err_q+abs(sum(mesh(ind)%acov(:,i,j)**2)-mesh(ind)%Q(1,i,j))+&
+                          abs(sum(mesh(ind)%acov(:,i,j)*mesh(ind)%bcov(:,i,j))-mesh(ind)%Q(2,i,j))+&
+                          abs(sum(mesh(ind)%bcov(:,i,j)**2)-mesh(ind)%Q(3,i,j))
+            err_qi = err_qi+sum(abs(mesh(ind)%actv(:,i,j)                    -&
+                                    mesh(ind)%Qi(1,i,j)*mesh(ind)%acov(:,i,j)-&
+                                    mesh(ind)%Qi(2,i,j)*mesh(ind)%bcov(:,i,j)))
+            err_qi = err_qi+sum(abs(mesh(ind)%bctv(:,i,j)                    -&
+                                    mesh(ind)%Qi(2,i,j)*mesh(ind)%acov(:,i,j)-&
+                                    mesh(ind)%Qi(3,i,j)*mesh(ind)%bcov(:,i,j)))
+            err_g = err_g + abs(sqrt(mesh(ind)%Q(1,i,j)*mesh(ind)%Q(3,i,j)-mesh(ind)%Q(2,i,j)**2)-&
+                                     mesh(ind)%G(i,j))
+        end do
+    end do
+    err_ort_rab = err_ort_rab / (4*(ie-is+1)*(je-js+1))
+    err_ort_abt = err_ort_abt / (2*(ie-is+1)*(je-js+1))
+    err_q = err_q / ((ie-is+1)*(je-js+1))
+    err_qi = err_qi / (2*(ie-is+1)*(je-js+1))
+    err_g = err_g / ((ie-is+1)*(je-js+1))
+end do
+    err_ort_rab = err_ort_rab / (te-ts+1)
+    err_ort_abt = err_ort_abt / (te-ts+1)
+    err_q = err_q / (te-ts+1)
+    err_qi = err_qi / (te-ts+1)
+    err_g = err_g / (te-ts+1)
+!print *, "metric errors", err_ort_rab, err_ort_abt, err_q, err_qi, err_g
+if(max(err_ort_rab, err_ort_abt, err_q, err_qi, err_g) < zeps) then
+    print *, "ecs metric test passed"
+end if
+
 contains
 logical function cross_edge_xyz_check(q,p,nx) result(lpass)
 real(kind=8) p(1:nx,3), q(1:nx,3)
 integer nx
 real(kind=8) znorm(3), zpr
 real(kind=8) za(3), zb(3)
-real(kind=8), parameter :: zeps = 1e-15_8
 
 za = [q(nx,1)-q(1,1),q(nx,2)-q(1,2),q(nx,3)-q(1,3)]
 zb = [p(nx,1)-p(1,1),p(nx,2)-p(1,2),p(nx,3)-p(1,3)]
