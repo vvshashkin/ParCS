@@ -11,11 +11,12 @@ type, abstract :: halo_t
 end type halo_t
 
 interface
-    subroutine halo_interp(this,f)
+    subroutine halo_interp(this,f,halo_width)
         import halo_t
         import grid_function_t
-        class(halo_t),        intent(in)    :: this
-        type(grid_function_t),intent(inout) :: f
+        class(halo_t),         intent(in)    :: this
+        type(grid_function_t), intent(inout) :: f
+        integer(kind=4),       intent(in)    :: halo_width
     end subroutine halo_interp
 
     subroutine halo_interpv(this,u,v)

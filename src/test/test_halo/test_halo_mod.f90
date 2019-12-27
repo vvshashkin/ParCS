@@ -20,8 +20,8 @@ use mesh_mod,             only : mesh_t
 type(exchange_t)                   :: exch_halo
 type(partition_t)                  :: partition
 type(mesh_t),          allocatable :: mesh(:)
-type(grid_function_t), allocatable :: f1(:)
-type(grid_function_t), allocatable :: f2(:)
+type(grid_function_t), allocatable :: f_test(:)
+type(grid_function_t), allocatable :: f_true(:)
 
 integer(kind=4), parameter         :: nh=128, nz=3, halo_width=3, ex_halo_width=8
 integer(kind=4)                    :: myid, np, ierr, code
@@ -55,7 +55,7 @@ do ind = ts, te
     call create_equiangular_mesh(mesh(ind), partition%tile(ind)%is, partition%tile(ind)%ie, &
                                             partition%tile(ind)%js, partition%tile(ind)%je, &
                                             partition%tile(ind)%ks, partition%tile(ind)%ke, &
-                                            nh, halo_width, partition%tile(ind)%panel_number)
+                                            nh, ex_halo_width, partition%tile(ind)%panel_number)
 !    mesh(ind)%halo = init_ecs_halo(mesh(ind)%is, mesh(ind)%ie, &
 !                                   mesh(ind)%js, mesh(ind)%je, &
 !                                   mesh(ind)%nx, halo_width,   &
@@ -65,47 +65,23 @@ end do
 call mpi_barrier(mpi_comm_world, ierr)
 if (myid==0) print *, 'equiangular cubed-sphere halo-zone interpolation test'
 
-!Init arrays
-allocate(f1(ts:te))
-allocate(f2(ts:te))
-
-do i = ts, te
-
-    call f1(i)%init(partition%tile(i)%is, partition%tile(i)%ie, &
-                    partition%tile(i)%js, partition%tile(i)%je, &
-                    partition%tile(i)%ks, partition%tile(i)%ke, &
-                    ex_halo_width, ex_halo_width, 0)
-    call f2(i)%init(partition%tile(i)%is, partition%tile(i)%ie, &
-                    partition%tile(i)%js, partition%tile(i)%je, &
-                    partition%tile(i)%ks, partition%tile(i)%ke, &
-                    ex_halo_width, ex_halo_width, 0)
-end do
-
-do ind = ts, te
-     isv = f1(ind)%is-halo_width!-f1(ind)%nvi
-     iev = f1(ind)%ie+halo_width!+f1(ind)%nvi
-     jsv = f1(ind)%js-halo_width!-f1(ind)%nvj
-     jev = f1(ind)%je+halo_width!+f1(ind)%nvj
-     f1(ind).p(isv:iev,jsv:jev,1) = mesh(ind)%rhx(isv:iev,jsv:jev)
-     f1(ind).p(isv:iev,jsv:jev,2) = mesh(ind)%rhy(isv:iev,jsv:jev)
-     f1(ind).p(isv:iev,jsv:jev,3) = mesh(ind)%rhz(isv:iev,jsv:jev)
-     f2(ind).p(:,:,:) = f1(ind).p(:,:,:)
-end do
+call init_scalar_halo_test_fun(f_test,ts,te,partition,mesh,ex_halo_width)
+call init_scalar_halo_test_fun(f_true,ts,te,partition,mesh,ex_halo_width)
 
 !Init exchange
 call create_2d_full_halo_exchange(exch_halo, partition, ex_halo_width, myid, np)
 
 !Perform exchange
-call exch_halo%do(f1, ts, te)
+call exch_halo%do(f_test, ts, te)
 call mpi_barrier(mpi_comm_world, ierr)
 do ind = ts, te
-    call mesh(ind)%halo%interp(f1(ind))
+    call mesh(ind)%halo%interp(f_test(ind),halo_width)
 end do
 
 call halo_err(gl_inface_err, gl_inface_err_max, gl_cross_edge_err, gl_cross_edge_err_max, &
               gl_inface_corner_err, gl_inface_corner_err_max, gl_inedge_corner_err,       &
               gl_inedge_corner_err_max, gl_halo_corner_err, gl_halo_corner_err_max,       &
-              nh, halo_width, f1, f2, te-ts+1)
+              nh, halo_width, f_test, f_true, te-ts+1)
 
 if(myid == 0) then
   print *, "halo errors:"
@@ -118,6 +94,45 @@ if(myid == 0) then
 end if
 
 end subroutine test_ecs_halo
+
+
+
+subroutine init_scalar_halo_test_fun(f,ts,te,partition,mesh,halo_width)
+
+use grid_function_mod, only: grid_function_t
+use partition_mod,     only: partition_t
+use mesh_mod,          only: mesh_t
+
+type(grid_function_t), allocatable, intent(out) :: f(:)
+
+integer(kind=4),   intent(in) :: ts, te
+type(partition_t), intent(in) :: partition
+type(mesh_t),      intent(in) :: mesh(ts:te)
+integer(kind=4),   intent(in) :: halo_width
+
+!locals
+integer(kind=4) ind, isv, iev, jsv, jev
+
+!Init arrays
+allocate(f(ts:te))
+
+do ind = ts, te
+     call f(ind)%init(partition%tile(ind)%is, partition%tile(ind)%ie, &
+                   partition%tile(ind)%js, partition%tile(ind)%je, &
+                   partition%tile(ind)%ks, partition%tile(ind)%ke, &
+                   halo_width, halo_width, 0)
+     isv = f(ind)%is-halo_width
+     iev = f(ind)%ie+halo_width
+     jsv = f(ind)%js-halo_width
+     jev = f(ind)%je+halo_width
+     f(ind).p(isv:iev,jsv:jev,1) = mesh(ind)%rhx(isv:iev,jsv:jev)
+     f(ind).p(isv:iev,jsv:jev,2) = mesh(ind)%rhy(isv:iev,jsv:jev)
+     f(ind).p(isv:iev,jsv:jev,3) = mesh(ind)%rhz(isv:iev,jsv:jev)
+end do
+
+end subroutine init_scalar_halo_test_fun
+
+
 
 subroutine halo_err(&
               gl_inface_err, gl_inface_err_max, gl_cross_edge_err, gl_cross_edge_err_max, &
