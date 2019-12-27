@@ -117,6 +117,7 @@ $(DOBJ)topology_mod.o: src/topology_mod.f90
 $(DOBJ)mesh_factory_mod.o: src/mesh_factory_mod.f90 \
 	$(DOBJ)mesh_mod.o \
 	$(DOBJ)topology_mod.o \
+	$(DOBJ)const_mod.o \
 	$(DOBJ)ecs_geometry_mod.o \
 	$(DOBJ)ecs_halo_factory_mod.o
 	@echo $(COTEXT)

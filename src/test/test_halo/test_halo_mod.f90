@@ -1,6 +1,9 @@
 module test_halo_mod
 implicit none
 
+private
+public   :: test_ecs_halo
+
 contains
 
 subroutine test_ecs_halo()
@@ -13,9 +16,6 @@ use partition_mod,        only : partition_t
 use exchange_factory_mod, only : create_2d_full_halo_exchange, create_2d_cross_halo_exchange
 use mesh_factory_mod,     only : create_equiangular_mesh
 use mesh_mod,             only : mesh_t
-
-!use ecs_halo_mod,         only : ecs_halo_t
-!use ecs_halo_factory_mod, only : init_ecs_halo
 
 type(exchange_t)                   :: exch_halo
 type(partition_t)                  :: partition
@@ -31,11 +31,6 @@ integer(kind=4) :: ind, i, j, k, ifc, err_sum, gl_err_sum
 integer(kind=4) :: iev, isv, jev, jsv
 integer(kind=4) :: ie, is, js, je, klev, ke, ks
 
-real(kind=8) err, inface_err, cross_edge_err
-real(kind=8) err_max, inface_err_max, cross_edge_err_max
-real(kind=8) inface_corner_err, inface_corner_err_max
-real(kind=8) inedge_corner_err, inedge_corner_err_max
-real(kind=8) halo_corner_err, halo_corner_err_max
 real(kind=8) gl_inface_err, gl_cross_edge_err
 real(kind=8) gl_inface_err_max, gl_cross_edge_err_max
 real(kind=8) gl_inface_corner_err, gl_inface_corner_err_max
@@ -104,21 +99,63 @@ call create_2d_full_halo_exchange(exch_halo, partition, ex_halo_width, myid, np)
 call exch_halo%do(f1, ts, te)
 call mpi_barrier(mpi_comm_world, ierr)
 do ind = ts, te
-    !call whalo(1)%ext_halo(f1(ind))
     call mesh(ind)%halo%interp(f1(ind))
 end do
 
-inface_err = 0._8; inface_err_max = 0._8
-cross_edge_err = 0._8; cross_edge_err_max = 0._8
-inface_corner_err = 0._8; inface_corner_err_max = 0._8
-inedge_corner_err = 0._8; inedge_corner_err_max = 0._8
-halo_corner_err = 0._8; halo_corner_err_max = 0._8
-num_inedge_corners = 0
-do ind = ts, te
+call halo_err(gl_inface_err, gl_inface_err_max, gl_cross_edge_err, gl_cross_edge_err_max, &
+              gl_inface_corner_err, gl_inface_corner_err_max, gl_inedge_corner_err,       &
+              gl_inedge_corner_err_max, gl_halo_corner_err, gl_halo_corner_err_max,       &
+              nh, halo_width, f1, f2, te-ts+1)
 
-    is = partition%tile(ind)%is; ie = partition%tile(ind)%ie
-    js = partition%tile(ind)%js; je = partition%tile(ind)%je
-    ks = partition%tile(ind)%ks; ke = partition%tile(ind)%ke
+if(myid == 0) then
+  print *, "halo errors:"
+  print *, "inface mean abs, inface max, cross edge mean abs, cross edge max"
+  print '(4e15.7)', gl_inface_err, gl_inface_err_max, gl_cross_edge_err, gl_cross_edge_err_max
+  print *, "inface-corner mean abs, inface-corner max, inedge-corner mean abs, inedge-corner max, halo-corner mean abs, halo-corner max"
+  print '(6e15.7)', gl_inface_corner_err, gl_inface_corner_err_max, gl_inedge_corner_err, gl_inedge_corner_err_max,&
+                    gl_halo_corner_err, gl_halo_corner_err_max
+
+end if
+
+end subroutine test_ecs_halo
+
+subroutine halo_err(&
+              gl_inface_err, gl_inface_err_max, gl_cross_edge_err, gl_cross_edge_err_max, &
+              gl_inface_corner_err, gl_inface_corner_err_max, gl_inedge_corner_err,       &
+              gl_inedge_corner_err_max, gl_halo_corner_err, gl_halo_corner_err_max,       &
+              nh, halo_width, f1, f2, ntiles)
+
+use mpi
+use grid_function_mod, only: grid_function_t
+
+real(kind=8),          intent(out) :: gl_inface_err, gl_cross_edge_err
+real(kind=8),          intent(out) :: gl_inface_err_max, gl_cross_edge_err_max
+real(kind=8),          intent(out) :: gl_inface_corner_err, gl_inface_corner_err_max
+real(kind=8),          intent(out) :: gl_inedge_corner_err, gl_inedge_corner_err_max
+real(kind=8),          intent(out) :: gl_halo_corner_err, gl_halo_corner_err_max
+integer(kind=4),       intent(in)  :: nh, halo_width, ntiles
+type(grid_function_t), intent(in)  :: f1(ntiles), f2(ntiles)
+!locals
+real(kind=8)      err, inface_err, cross_edge_err
+real(kind=8)      err_max, inface_err_max, cross_edge_err_max
+real(kind=8)      inface_corner_err, inface_corner_err_max
+real(kind=8)      inedge_corner_err, inedge_corner_err_max
+real(kind=8)      halo_corner_err, halo_corner_err_max
+integer(kind=4)   num_inedge_corners, gl_num_inedge_corners
+integer(kind=4)   is, ie, js, je, ks, ke, klev, ind, ierr
+
+inface_err = 0._8;          inface_err_max = 0._8
+cross_edge_err = 0._8;      cross_edge_err_max = 0._8
+inface_corner_err = 0._8;   inface_corner_err_max = 0._8
+inedge_corner_err = 0._8;   inedge_corner_err_max = 0._8
+halo_corner_err = 0._8;     halo_corner_err_max = 0._8
+num_inedge_corners = 0
+
+do ind = 1, ntiles
+
+    is = f1(ind)%is; ie = f1(ind)%ie
+    js = f1(ind)%js; je = f1(ind)%je
+    ks = f1(ind)%ks; ke = f1(ind)%ke
     klev = ke-ks+1
 
     !tile edge errors
@@ -127,7 +164,7 @@ do ind = ts, te
     if(is == 1) then
         cross_edge_err     = cross_edge_err+err
         cross_edge_err_max = max(cross_edge_err_max,err_max)
-    else 
+    else
         inface_err     = inface_err+err/nh
         inface_err_max = max(inface_err_max,err_max)
     end if
@@ -137,7 +174,7 @@ do ind = ts, te
     if(ie == nh) then
         cross_edge_err     = cross_edge_err+err
         cross_edge_err_max = max(cross_edge_err_max,err_max)
-    else 
+    else
         inface_err     = inface_err+err/nh
         inface_err_max = max(inface_err_max,err_max)
     end if
@@ -147,7 +184,7 @@ do ind = ts, te
     if(js == 1) then
         cross_edge_err     = cross_edge_err+err
         cross_edge_err_max = max(cross_edge_err_max,err_max)
-    else 
+    else
         inface_err     = inface_err+err/nh
         inface_err_max = max(inface_err_max,err_max)
     end if
@@ -157,7 +194,7 @@ do ind = ts, te
     if(je == nh) then
         cross_edge_err     = cross_edge_err+err
         cross_edge_err_max = max(cross_edge_err_max,err_max)
-    else 
+    else
         inface_err     = inface_err+err/nh
         inface_err_max = max(inface_err_max,err_max)
     end if
@@ -237,17 +274,6 @@ call mpi_allreduce(halo_corner_err_max,     gl_halo_corner_err_max    , 1, mpi_d
 gl_inedge_corner_err = gl_inedge_corner_err / max(gl_num_inedge_corners,1) / klev
 gl_halo_corner_err = gl_halo_corner_err / 48 / klev
 
-if(myid == 0) then
-  print *, "halo errors:"
-  print *, "inface mean abs, inface max, cross edge mean abs, cross edge max"
-  print '(4e15.7)', gl_inface_err, gl_inface_err_max, gl_cross_edge_err, gl_cross_edge_err_max
-  print *, "inface-corner mean abs, inface-corner max, inedge-corner mean abs, inedge-corner max, halo-corner mean abs, halo-corner max"
-  print '(6e15.7)', gl_inface_corner_err, gl_inface_corner_err_max, gl_inedge_corner_err, gl_inedge_corner_err_max,&
-                    gl_halo_corner_err, gl_halo_corner_err_max
-
-end if
-
-
-end subroutine test_ecs_halo
+end subroutine halo_err
 
 end module test_halo_mod
