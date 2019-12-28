@@ -47,7 +47,7 @@ type, extends(halo_t) :: ecs_halo_t
 
   contains
   procedure, public :: interp  => ecs_ext_halo
-  procedure, public :: interpv => ecs_ext_halo_vect
+
 end type ecs_halo_t
 
 contains

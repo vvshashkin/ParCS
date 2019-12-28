@@ -58,10 +58,10 @@ subroutine create_equiangular_mesh(mesh, is, ie, js, je, ks, ke, nh, halo_width,
             mesh%G(i,j)    = ecs_G(alpha, beta)
         end do
     end do
-    mesh%halo = init_ecs_halo(mesh%is, mesh%ie,           &
-                              mesh%js, mesh%je,           &
-                              mesh%nx, halo_width,   &
-                              mesh%hx)
+    !mesh%halo = init_ecs_halo(mesh%is, mesh%ie,           &
+    !                          mesh%js, mesh%je,           &
+    !                          mesh%nx, halo_width,   &
+    !                          mesh%hx)
 
 end subroutine create_equiangular_mesh
 

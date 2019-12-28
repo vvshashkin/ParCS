@@ -16,12 +16,17 @@ use partition_mod,        only : partition_t
 use exchange_factory_mod, only : create_2d_full_halo_exchange, create_2d_cross_halo_exchange
 use mesh_factory_mod,     only : create_equiangular_mesh
 use mesh_mod,             only : mesh_t
+use ecs_halo_mod,         only : ecs_halo_t
+use ecs_halo_factory_mod, only : init_ecs_halo
+use ecs_halo_vec_a_factory_mod, only : init_ecs_halo_vect
+
 
 type(exchange_t)                   :: exch_halo
 type(partition_t)                  :: partition
 type(mesh_t),          allocatable :: mesh(:)
 type(grid_function_t), allocatable :: f_test(:), u_test(:), v_test(:)
 type(grid_function_t), allocatable :: f_true(:), u_true(:), v_true(:)
+type(ecs_halo_t),      allocatable :: halo
 
 integer(kind=4), parameter         :: nh=128, nz=3, halo_width=3, ex_halo_width=8
 integer(kind=4)                    :: myid, np, ierr, code
@@ -56,10 +61,16 @@ do ind = ts, te
                                             partition%tile(ind)%js, partition%tile(ind)%je, &
                                             partition%tile(ind)%ks, partition%tile(ind)%ke, &
                                             nh, ex_halo_width, partition%tile(ind)%panel_number)
-!    mesh(ind)%halo = init_ecs_halo(mesh(ind)%is, mesh(ind)%ie, &
-!                                   mesh(ind)%js, mesh(ind)%je, &
-!                                   mesh(ind)%nx, halo_width,   &
-!                                   mesh(ind)%hx)
+    halo = init_ecs_halo(mesh(ind)%is, mesh(ind)%ie, &
+                         mesh(ind)%js, mesh(ind)%je, &
+                         mesh(ind)%nx, halo_width,   &
+                         mesh(ind)%hx)
+    mesh(ind)%halo = halo
+    mesh(ind)%halo_vec = init_ecs_halo_vect(mesh(ind)%panel_ind,&
+                                   mesh(ind)%is, mesh(ind)%ie,  &
+                                   mesh(ind)%js, mesh(ind)%je,  &
+                                   mesh(ind)%nx, halo_width,    &
+                                   mesh(ind)%hx, halo)
 end do
 
 call mpi_barrier(mpi_comm_world, ierr)
@@ -75,10 +86,20 @@ call create_2d_full_halo_exchange(exch_halo, partition, ex_halo_width, myid, np)
 
 !Perform exchange
 call exch_halo%do(f_test, ts, te)
+call exch_halo%do(u_test, ts, te)
+call exch_halo%do(v_test, ts, te)
+
 call mpi_barrier(mpi_comm_world, ierr)
 do ind = ts, te
     call mesh(ind)%halo%interp(f_test(ind),halo_width)
+    call mesh(ind)%halo_vec%interpv(u_test(ind),v_test(ind),halo_width)
 end do
+
+do i=1-halo_width,nh+halo_width
+    print *, i,u_test(1)%p(i,0,1) -u_true(1)%p(i,0,1), &
+               v_test(1)%p(i,0,1) -v_true(1)%p(i,0,1)
+end do
+
 
 call halo_err(gl_inface_err, gl_inface_err_max, gl_cross_edge_err, gl_cross_edge_err_max, &
               gl_inface_corner_err, gl_inface_corner_err_max, gl_inedge_corner_err,       &

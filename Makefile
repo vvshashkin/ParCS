@@ -140,6 +140,13 @@ $(DOBJ)outputer_abstract_mod.o: src/outputer_abstract_mod.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)ecs_halo_vec_a_mod.o: src/equiang_cs/ecs_halo_vec_a_mod.f90 \
+	$(DOBJ)halo_mod.o \
+	$(DOBJ)ecs_halo_mod.o \
+	$(DOBJ)grid_function_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)ecs_geometry_mod.o: src/equiang_cs/ecs_geometry_mod.f90 \
 	$(DOBJ)topology_mod.o
 	@echo $(COTEXT)
@@ -149,6 +156,15 @@ $(DOBJ)ecs_halo_factory_mod.o: src/equiang_cs/ecs_halo_factory_mod.f90 \
 	$(DOBJ)ecs_halo_mod.o \
 	$(DOBJ)mesh_mod.o \
 	$(DOBJ)const_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)ecs_halo_vec_a_factory_mod.o: src/equiang_cs/ecs_halo_vec_a_factory_mod.f90 \
+	$(DOBJ)ecs_halo_mod.o \
+	$(DOBJ)ecs_halo_vec_a_mod.o \
+	$(DOBJ)topology_mod.o \
+	$(DOBJ)const_mod.o \
+	$(DOBJ)ecs_geometry_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -199,7 +215,10 @@ $(DOBJ)test_halo_mod.o: src/test/test_halo/test_halo_mod.f90 \
 	$(DOBJ)partition_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
 	$(DOBJ)mesh_factory_mod.o \
-	$(DOBJ)mesh_mod.o
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)ecs_halo_mod.o \
+	$(DOBJ)ecs_halo_factory_mod.o \
+	$(DOBJ)ecs_halo_vec_a_factory_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
