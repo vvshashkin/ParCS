@@ -95,12 +95,6 @@ do ind = ts, te
     call mesh(ind)%halo_vec%interpv(u_test(ind),v_test(ind),halo_width)
 end do
 
-do i=1-halo_width,nh+halo_width
-    print *, i,u_test(1)%p(i,0,1) -u_true(1)%p(i,0,1), &
-               v_test(1)%p(i,0,1) -v_true(1)%p(i,0,1)
-end do
-
-
 call halo_err(gl_inface_err, gl_inface_err_max, gl_cross_edge_err, gl_cross_edge_err_max, &
               gl_inface_corner_err, gl_inface_corner_err_max, gl_inedge_corner_err,       &
               gl_inedge_corner_err_max, gl_halo_corner_err, gl_halo_corner_err_max,       &

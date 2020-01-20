@@ -10,6 +10,8 @@ use ecs_halo_vec_a_mod, only : ecs_halo_vec_t
 
 implicit none
 
+integer, parameter :: corner_halo_width = 5!minimum halo-width to compute 2x2 corner-halo-areas
+
 private
 public   :: init_ecs_halo_vect
 
@@ -29,55 +31,61 @@ type(ecs_halo_vec_t) function init_ecs_halo_vect(panel_ind,is,ie,js,je, &
     integer(kind=4) ish, ieh, jsh, jeh
     integer(kind=4) jst, jinc(2), ist, iinc(2) !start points and increments for adjacent panel
                                                ! inc(1) - along edge, inc(2) accross
-    integer(kind=4) adjacent_panel_ind
+    integer(kind=4) adjacent_panel_ind, cor_hw
 
     halo_vec%n = nx
     halo_vec%halo = halo !implicit allocate here
     halo_vec%lhalo = halo%lhalo
     halo_vec%panel_ind = panel_ind
+    halo_vec%halo_width = max(halo_width,corner_halo_width)
+    halo_vec%corner_halo_width = corner_halo_width
+    cor_hw = corner_halo_width
 
-    ish = max(1,is-halo_width)
-    ish = max(1,minval(halo%indx(ish,1:halo_width)-1))
-    ieh = min(nx,ie+halo_width)
-    ieh = min(nx,maxval(halo%indx(ieh,1:halo_width))+2)
-    halo_vec%ish = ish; halo_vec%ieh = ieh
-
-    jsh = max(1,js-halo_width)
-    jsh = max(1,minval(halo%indy(jsh,1:halo_width)-1))
-    jeh = min(nx,je+halo_width)
-    jeh = min(nx,maxval(halo%indy(jeh,1:halo_width))+2)
-    halo_vec%jsh = jsh; halo_vec%jeh = jeh
+    if(halo_vec%lhalo(1) .or. halo_vec%lhalo(2)) then
+        ish = max(1,is-halo_width)
+        ish = max(1,minval(halo%indx(ish,1:halo_width)-1))
+        ieh = min(nx,ie+halo_width)
+        ieh = min(nx,maxval(halo%indx(ieh,1:halo_width))+2)
+        halo_vec%ish = ish; halo_vec%ieh = ieh
+    end if
+    if(halo_vec%lhalo(3) .or. halo_vec%lhalo(4)) then
+        jsh = max(1,js-halo_width)
+        jsh = max(1,minval(halo%indy(jsh,1:halo_width)-1))
+        jeh = min(nx,je+halo_width)
+        jeh = min(nx,maxval(halo%indy(jeh,1:halo_width))+2)
+        halo_vec%jsh = jsh; halo_vec%jeh = jeh
+    end if
 
     if(halo_vec%lhalo(1)) then
-        allocate(halo_vec%TM1(4,ish:ieh,1:halo_width))
+        allocate(halo_vec%TM1(4,ish:ieh,1:max(halo_width,cor_hw)))
         call find_adjacent_panel(adjacent_panel_ind, ist, iinc, jst, jinc, &
                                  panel_ind, edge_dir(1:3,1), nx)
         !print '(8I5)',panel_ind, adjacent_panel_ind, ist, iinc, jst, jinc
-        call init_transform_matrix(halo_vec%TM1,ish,ieh,halo_width, panel_ind, &
+        call init_transform_matrix(halo_vec%TM1,ish,ieh,max(halo_width,cor_hw), panel_ind, &
                               adjacent_panel_ind, ist, iinc, jst, jinc, hx)
     end if
     if(halo_vec%lhalo(2)) then
-        allocate(halo_vec%TM2(4,ish:ieh,1:halo_width))
+        allocate(halo_vec%TM2(4,ish:ieh,1:max(halo_width,cor_hw)))
         call find_adjacent_panel(adjacent_panel_ind, ist, iinc, jst, jinc, &
                                  panel_ind, edge_dir(1:3,2), nx)
         !print '(8I5)',panel_ind, adjacent_panel_ind, ist, iinc, jst, jinc
-        call init_transform_matrix(halo_vec%TM2,ish,ieh,halo_width, panel_ind,&
+        call init_transform_matrix(halo_vec%TM2,ish,ieh,max(halo_width,cor_hw), panel_ind,&
                               adjacent_panel_ind, ist, iinc, jst, jinc, hx)
     end if
     if(halo_vec%lhalo(3)) then
-        allocate(halo_vec%TM3(4,jsh:jeh,1:halo_width))
+        allocate(halo_vec%TM3(4,jsh:jeh,1:max(halo_width,cor_hw)))
         call find_adjacent_panel(adjacent_panel_ind, ist, iinc, jst, jinc, &
                                  panel_ind, edge_dir(1:3,3), nx)
         !print '(8I5)',panel_ind, adjacent_panel_ind, ist, iinc, jst, jinc
-        call init_transform_matrix(halo_vec%TM3,jsh,jeh,halo_width, panel_ind, &
+        call init_transform_matrix(halo_vec%TM3,jsh,jeh,max(halo_width,cor_hw), panel_ind, &
                               adjacent_panel_ind, ist, iinc, jst, jinc, hx)
     end if
     if(halo_vec%lhalo(4)) then
-        allocate(halo_vec%TM4(4,jsh:jeh,1:halo_width))
+        allocate(halo_vec%TM4(4,jsh:jeh,1:max(halo_width,cor_hw)))
         call find_adjacent_panel(adjacent_panel_ind, ist, iinc, jst, jinc, &
                                  panel_ind, edge_dir(1:3,4), nx)
         !print '(8I5)',panel_ind, adjacent_panel_ind, ist, iinc, jst, jinc
-        call init_transform_matrix(halo_vec%TM4,jsh,jeh,halo_width, panel_ind,&
+        call init_transform_matrix(halo_vec%TM4,jsh,jeh,max(halo_width,cor_hw), panel_ind,&
                               adjacent_panel_ind, ist, iinc, jst, jinc, hx)
     end if
 end function init_ecs_halo_vect
