@@ -40,6 +40,11 @@ $(DEXE)TEST_MESH_MAIN: $(MKDIRS) $(DOBJ)test_mesh_main.o
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_MESH_MAIN
+$(DEXE)TEST_TS: $(MKDIRS) $(DOBJ)test_ts.o
+	@rm -f $(filter-out $(DOBJ)test_ts.o,$(EXESOBJ))
+	@echo $(LITEXT)
+	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
+EXES := $(EXES) TEST_TS
 $(DEXE)TEST_EXCH_MAIN: $(MKDIRS) $(DOBJ)test_exch_main.o
 	@rm -f $(filter-out $(DOBJ)test_exch_main.o,$(EXESOBJ))
 	@echo $(LITEXT)
@@ -140,10 +145,19 @@ $(DOBJ)outputer_abstract_mod.o: src/outputer_abstract_mod.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)stvec_iomega_mod.o: src/iomega_model/stvec_iomega_mod.f90 \
+	$(DOBJ)stvec_abstract_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)ecs_halo_vec_a_mod.o: src/equiang_cs/ecs_halo_vec_a_mod.f90 \
 	$(DOBJ)halo_mod.o \
 	$(DOBJ)ecs_halo_mod.o \
 	$(DOBJ)grid_function_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)stvec_abstract_mod.o: src/equiang_cs/stvec_abstract_mod.f90
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -231,6 +245,16 @@ $(DOBJ)test_mesh_mod.o: src/test/test_mesh/test_mesh_mod.f90 \
 	$(DOBJ)partition_mod.o \
 	$(DOBJ)mesh_factory_mod.o \
 	$(DOBJ)mesh_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)test_rk4.o: src/test/test_time_steping/test_rk4.f90 \
+	$(DOBJ)stvec_iomega_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)test_ts.o: src/test/test_time_steping/test_ts.f90 \
+	$(DOBJ)test_rk4.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
