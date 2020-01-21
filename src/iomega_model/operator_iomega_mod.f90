@@ -44,15 +44,15 @@ subroutine act(this,vout,vin)
     class is (stvec_iomega_t)
         select type (vin)
             class is (stvec_iomega_t)
-                !vout%N = this%N
-                !allocate(vout%f(1:this%N)) !thanks to intent(in)!
                 do i=1,this%N
                     vout%f(i) = this%omega(i)*vin%f(i)
                 end do
         class default
+            print *, "iomega operator fuilure: vin of wrong type"
             stop
         end select
     class default
+        print *, "iomega operator fuilure: vout of wrong type"
         stop
     end select
 end subroutine act

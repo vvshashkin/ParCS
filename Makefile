@@ -94,6 +94,10 @@ $(DOBJ)grid_function_mod.o: src/grid_function_mod.f90
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)stvec_abstract_mod.o: src/stvec_abstract_mod.f90
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)parcs_mpi_mod.o: src/ParCS_mpi_mod.f90
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -169,10 +173,6 @@ $(DOBJ)ecs_halo_vec_a_mod.o: src/equiang_cs/ecs_halo_vec_a_mod.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
-$(DOBJ)stvec_abstract_mod.o: src/equiang_cs/stvec_abstract_mod.f90
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
 $(DOBJ)ecs_geometry_mod.o: src/equiang_cs/ecs_geometry_mod.f90 \
 	$(DOBJ)topology_mod.o
 	@echo $(COTEXT)
@@ -209,6 +209,13 @@ $(DOBJ)explicit_eul1_mod.o: src/time_schemes/explicit_Eul1_mod.f90 \
 
 $(DOBJ)timescheme_abstract_mod.o: src/time_schemes/timescheme_abstract_mod.f90 \
 	$(DOBJ)stvec_abstract_mod.o \
+	$(DOBJ)operator_abstract_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)rk4_mod.o: src/time_schemes/rk4_mod.f90 \
+	$(DOBJ)stvec_abstract_mod.o \
+	$(DOBJ)timescheme_abstract_mod.o \
 	$(DOBJ)operator_abstract_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -277,6 +284,7 @@ $(DOBJ)test_rk4.o: src/test/test_time_steping/test_rk4.f90 \
 	$(DOBJ)stvec_iomega_mod.o \
 	$(DOBJ)operator_iomega_mod.o \
 	$(DOBJ)explicit_eul1_mod.o \
+	$(DOBJ)rk4_mod.o \
 	$(DOBJ)const_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
