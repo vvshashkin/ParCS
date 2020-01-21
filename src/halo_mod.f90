@@ -29,7 +29,7 @@ interface
         import grid_function_t
         class(halo_vec_t),    intent(in)    :: this
         type(grid_function_t),intent(inout) :: u, v
-        integer(kind=4),       intent(in)    :: halo_width
+        integer(kind=4),      intent(in)    :: halo_width
     end subroutine halo_interpv
 end interface
 
