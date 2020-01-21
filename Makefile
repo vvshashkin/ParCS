@@ -40,6 +40,11 @@ $(DEXE)TEST_MESH_MAIN: $(MKDIRS) $(DOBJ)test_mesh_main.o
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_MESH_MAIN
+$(DEXE)TEST_TS: $(MKDIRS) $(DOBJ)test_ts.o
+	@rm -f $(filter-out $(DOBJ)test_ts.o,$(EXESOBJ))
+	@echo $(LITEXT)
+	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
+EXES := $(EXES) TEST_TS
 $(DEXE)TEST_EXCH_MAIN: $(MKDIRS) $(DOBJ)test_exch_main.o
 	@rm -f $(filter-out $(DOBJ)test_exch_main.o,$(EXESOBJ))
 	@echo $(LITEXT)
@@ -89,6 +94,10 @@ $(DOBJ)grid_function_mod.o: src/grid_function_mod.f90
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)stvec_abstract_mod.o: src/stvec_abstract_mod.f90
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)parcs_mpi_mod.o: src/ParCS_mpi_mod.f90
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -103,6 +112,11 @@ $(DOBJ)master_process_outputer_mod.o: src/master_process_outputer_mod.f90 \
 	$(DOBJ)outputer_abstract_mod.o \
 	$(DOBJ)grid_function_mod.o \
 	$(DOBJ)exchange_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)operator_abstract_mod.o: src/operator_abstract_mod.f90 \
+	$(DOBJ)stvec_abstract_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -140,6 +154,18 @@ $(DOBJ)outputer_abstract_mod.o: src/outputer_abstract_mod.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)stvec_iomega_mod.o: src/iomega_model/stvec_iomega_mod.f90 \
+	$(DOBJ)stvec_abstract_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)operator_iomega_mod.o: src/iomega_model/operator_iomega_mod.f90 \
+	$(DOBJ)operator_abstract_mod.o \
+	$(DOBJ)stvec_abstract_mod.o \
+	$(DOBJ)stvec_iomega_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)ecs_halo_vec_a_mod.o: src/equiang_cs/ecs_halo_vec_a_mod.f90 \
 	$(DOBJ)halo_mod.o \
 	$(DOBJ)ecs_halo_mod.o \
@@ -171,6 +197,26 @@ $(DOBJ)ecs_halo_vec_a_factory_mod.o: src/equiang_cs/ecs_halo_vec_a_factory_mod.f
 $(DOBJ)ecs_halo_mod.o: src/equiang_cs/ecs_halo_mod.f90 \
 	$(DOBJ)halo_mod.o \
 	$(DOBJ)grid_function_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)explicit_eul1_mod.o: src/time_schemes/explicit_Eul1_mod.f90 \
+	$(DOBJ)stvec_abstract_mod.o \
+	$(DOBJ)timescheme_abstract_mod.o \
+	$(DOBJ)operator_abstract_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)timescheme_abstract_mod.o: src/time_schemes/timescheme_abstract_mod.f90 \
+	$(DOBJ)stvec_abstract_mod.o \
+	$(DOBJ)operator_abstract_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)rk4_mod.o: src/time_schemes/rk4_mod.f90 \
+	$(DOBJ)stvec_abstract_mod.o \
+	$(DOBJ)timescheme_abstract_mod.o \
+	$(DOBJ)operator_abstract_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -231,6 +277,20 @@ $(DOBJ)test_mesh_mod.o: src/test/test_mesh/test_mesh_mod.f90 \
 	$(DOBJ)partition_mod.o \
 	$(DOBJ)mesh_factory_mod.o \
 	$(DOBJ)mesh_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)test_rk4.o: src/test/test_time_steping/test_rk4.f90 \
+	$(DOBJ)stvec_iomega_mod.o \
+	$(DOBJ)operator_iomega_mod.o \
+	$(DOBJ)explicit_eul1_mod.o \
+	$(DOBJ)rk4_mod.o \
+	$(DOBJ)const_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)test_ts.o: src/test/test_time_steping/test_ts.f90 \
+	$(DOBJ)test_rk4.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
