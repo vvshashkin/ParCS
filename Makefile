@@ -20,6 +20,11 @@ COTEXT  = "Compiling $(<F)"
 LITEXT  = "Assembling $@"
 
 #building rules
+$(DEXE)TEST_NAMELIST: $(MKDIRS) $(DOBJ)test_namelist.o
+	@rm -f $(filter-out $(DOBJ)test_namelist.o,$(EXESOBJ))
+	@echo $(LITEXT)
+	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
+EXES := $(EXES) TEST_NAMELIST
 $(DEXE)TEST_OUTPUT_MAIN: $(MKDIRS) $(DOBJ)test_output_main.o
 	@rm -f $(filter-out $(DOBJ)test_output_main.o,$(EXESOBJ))
 	@echo $(LITEXT)
@@ -82,6 +87,10 @@ $(DOBJ)halo_mod.o: src/halo_mod.f90 \
 $(DOBJ)exchange_profile_mod.o: src/exchange_profile_mod.f90 \
 	$(DOBJ)partition_mod.o \
 	$(DOBJ)tile_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)namelist_read_mod.o: src/namelist_read_mod.f90
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -217,6 +226,16 @@ $(DOBJ)rk4_mod.o: src/time_schemes/rk4_mod.f90 \
 	$(DOBJ)stvec_abstract_mod.o \
 	$(DOBJ)timescheme_abstract_mod.o \
 	$(DOBJ)operator_abstract_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)test_namelist.o: src/test/test_namelist/test_namelist.f90 \
+	$(DOBJ)test_namelist_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)test_namelist_mod.o: src/test/test_namelist/test_namelist_mod.f90 \
+	$(DOBJ)namelist_read_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
