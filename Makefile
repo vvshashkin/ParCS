@@ -111,19 +111,6 @@ $(DOBJ)parcs_mpi_mod.o: src/ParCS_mpi_mod.f90
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
-$(DOBJ)ouputer_factory_mod.o: src/ouputer_factory_mod.f90 \
-	$(DOBJ)master_process_outputer_mod.o \
-	$(DOBJ)exchange_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
-$(DOBJ)master_process_outputer_mod.o: src/master_process_outputer_mod.f90 \
-	$(DOBJ)outputer_abstract_mod.o \
-	$(DOBJ)grid_function_mod.o \
-	$(DOBJ)exchange_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
 $(DOBJ)operator_abstract_mod.o: src/operator_abstract_mod.f90 \
 	$(DOBJ)stvec_abstract_mod.o
 	@echo $(COTEXT)
@@ -154,11 +141,6 @@ $(DOBJ)partition_mod.o: src/partition_mod.f90 \
 $(DOBJ)exchange_mod.o: src/exchange_mod.f90 \
 	$(DOBJ)exchange_profile_mod.o \
 	$(DOBJ)buffer_mod.o \
-	$(DOBJ)grid_function_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
-$(DOBJ)outputer_abstract_mod.o: src/outputer_abstract_mod.f90 \
 	$(DOBJ)grid_function_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -249,8 +231,8 @@ $(DOBJ)test_output_mod.o: src/test/test_output/test_output_mod.f90 \
 	$(DOBJ)exchange_mod.o \
 	$(DOBJ)partition_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
-	$(DOBJ)master_process_outputer_mod.o \
-	$(DOBJ)ouputer_factory_mod.o
+	$(DOBJ)outputer_abstract_mod.o \
+	$(DOBJ)outputer_factory_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -339,6 +321,24 @@ $(DOBJ)test_metric_mod.o: src/test/test_metric/test_metric_mod.f90 \
 	$(DOBJ)mesh_factory_mod.o \
 	$(DOBJ)mesh_mod.o \
 	$(DOBJ)topology_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)master_process_outputer_mod.o: src/outputer/master_process_outputer_mod.f90 \
+	$(DOBJ)outputer_abstract_mod.o \
+	$(DOBJ)grid_function_mod.o \
+	$(DOBJ)exchange_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)outputer_abstract_mod.o: src/outputer/outputer_abstract_mod.f90 \
+	$(DOBJ)grid_function_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)outputer_factory_mod.o: src/outputer/outputer_factory_mod.f90 \
+	$(DOBJ)master_process_outputer_mod.o \
+	$(DOBJ)exchange_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

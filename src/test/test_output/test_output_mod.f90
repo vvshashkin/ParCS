@@ -9,12 +9,12 @@ subroutine test_output()
     use exchange_mod,                only : exchange_t
     use partition_mod,               only : partition_t
     use exchange_factory_mod,        only : create_gather_exchange
-    use master_process_outputer_mod, only : master_process_outputer_t
+    use outputer_abstract_mod,       only : outputer_t
     use outputer_factory_mod,        only : create_master_process_outputer
 
     type(exchange_t)                   :: exch_gather
     type(partition_t)                  :: partition
-    type(master_process_outputer_t)    :: outputer
+    class(outputer_t), allocatable     :: outputer_bin, outputer_txt
     type(grid_function_t), allocatable :: f1(:)
 
     integer(kind=4)                    :: nh=20, nz=2, halo_width=10
@@ -44,8 +44,8 @@ subroutine test_output()
 
 
     if (myid == master_id) then
-        allocate(f1(1:6*partition%num_tiles))
-        do i = 1, 6*partition%num_tiles
+        allocate( f1(size(partition%tile,1)) )
+        do i = 1, size(partition%tile,1)
             call f1(i)%init(partition%tile(i)%is, partition%tile(i)%ie, &
                             partition%tile(i)%js, partition%tile(i)%je, &
                             partition%tile(i)%ks, partition%tile(i)%ke, &
@@ -76,9 +76,15 @@ subroutine test_output()
     !Init exchange
     call create_gather_exchange(exch_gather, partition, master_id, myid, np)
 
-    outputer = create_master_process_outputer(0, exch_gather)
+    outputer_bin = create_master_process_outputer(master_id = 0, gather_exch = exch_gather, write_type = 'bin')
+    outputer_txt = create_master_process_outputer(master_id = 0, gather_exch = exch_gather, write_type = 'txt')
 
-    call outputer%write(f1, lbound(f1, dim=1), ubound(f1, dim=1), 'test_output')
+    do ind = 1, 5
+
+        call outputer_bin%write(f1, lbound(f1, dim=1), ubound(f1, dim=1), 'test_output')
+        call outputer_txt%write(f1, lbound(f1, dim=1), ubound(f1, dim=1), 'test_output')
+
+    end do
 
     call mpi_barrier(mpi_comm_world, ierr)
 
