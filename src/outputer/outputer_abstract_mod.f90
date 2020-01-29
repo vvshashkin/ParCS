@@ -1,6 +1,7 @@
 module outputer_abstract_mod
 
 use grid_function_mod, only : grid_function_t
+use mesh_mod,              only : mesh_t
 
 implicit none
 
@@ -17,11 +18,12 @@ contains
 end type outputer_t
 
 abstract interface
-    subroutine write_proc(this, f, ts, te, file_name, rec_num)
-        import outputer_t, grid_function_t
+    subroutine write_proc(this, f, mesh, ts, te, file_name, rec_num)
+        import outputer_t, grid_function_t, mesh_t
         class(outputer_t),     intent(inout) :: this
         integer(kind=4),       intent(in)    :: ts, te
         type(grid_function_t), intent(inout) :: f(ts:te)
+        type(mesh_t),          intent(in)    :: mesh(ts:te)
         character(*),          intent(in)    :: file_name
         integer(kind=4),       intent(in), &
                                optional      :: rec_num

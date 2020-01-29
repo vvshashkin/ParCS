@@ -232,7 +232,8 @@ $(DOBJ)test_output_mod.o: src/test/test_output/test_output_mod.f90 \
 	$(DOBJ)partition_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
 	$(DOBJ)outputer_abstract_mod.o \
-	$(DOBJ)outputer_factory_mod.o
+	$(DOBJ)outputer_factory_mod.o \
+	$(DOBJ)mesh_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -327,12 +328,14 @@ $(DOBJ)test_metric_mod.o: src/test/test_metric/test_metric_mod.f90 \
 $(DOBJ)master_process_outputer_mod.o: src/outputer/master_process_outputer_mod.f90 \
 	$(DOBJ)outputer_abstract_mod.o \
 	$(DOBJ)grid_function_mod.o \
+	$(DOBJ)mesh_mod.o \
 	$(DOBJ)exchange_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)outputer_abstract_mod.o: src/outputer/outputer_abstract_mod.f90 \
-	$(DOBJ)grid_function_mod.o
+	$(DOBJ)grid_function_mod.o \
+	$(DOBJ)mesh_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

@@ -2,6 +2,7 @@ module master_process_outputer_mod
 
 use outputer_abstract_mod, only : outputer_t
 use grid_function_mod,     only : grid_function_t
+use mesh_mod,              only : mesh_t
 use exchange_mod,          only : exchange_t
 use mpi
 
@@ -22,11 +23,12 @@ end type master_process_outputer_t
 
 contains
 
-subroutine master_process_write(this, f, ts, te, file_name, rec_num)
+subroutine master_process_write(this, f, mesh, ts, te, file_name, rec_num)
 
     class(master_process_outputer_t), intent(inout) :: this
     integer(kind=4),                  intent(in)    :: ts, te
     type(grid_function_t),            intent(inout) :: f(ts:te)
+    type(mesh_t),                     intent(in)    :: mesh(ts:te)
     character(*),                     intent(in)    :: file_name
     integer(kind=4),                  intent(in), &
                                       optional      :: rec_num
@@ -36,8 +38,6 @@ subroutine master_process_write(this, f, ts, te, file_name, rec_num)
     call this%gather_exch%do(f, lbound(f, dim=1), ubound(f, dim=1))
 
     call mpi_comm_rank(mpi_comm_world, myid, ierr)
-
-    if(myid == this%master_id) print *, maxval(f(:)%panel_ind), minval(f(:)%panel_ind)
 
     if (myid == this%master_id) then
 

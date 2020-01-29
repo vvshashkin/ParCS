@@ -11,11 +11,13 @@ subroutine test_output()
     use exchange_factory_mod,        only : create_gather_exchange
     use outputer_abstract_mod,       only : outputer_t
     use outputer_factory_mod,        only : create_master_process_outputer
+    use mesh_mod,                    only : mesh_t
 
     type(exchange_t)                   :: exch_gather
     type(partition_t)                  :: partition
     class(outputer_t), allocatable     :: outputer_bin, outputer_txt
     type(grid_function_t), allocatable :: f1(:)
+    type(mesh_t), allocatable          :: mesh(:)
 
     integer(kind=4)                    :: nh=20, nz=2, halo_width=10
     integer(kind=4)                    :: myid, np, ierr, code
@@ -45,6 +47,7 @@ subroutine test_output()
 
     if (myid == master_id) then
         allocate( f1(size(partition%tile,1)) )
+        allocate( mesh(size(partition%tile,1)) )
         do i = 1, size(partition%tile,1)
             call f1(i)%init(partition%tile(i)%panel_number,             &
                             partition%tile(i)%is, partition%tile(i)%ie, &
@@ -55,6 +58,7 @@ subroutine test_output()
         end do
     else
         allocate(f1(ts:te))
+        allocate(mesh(ts:te))
         do i = ts, te
             call f1(i)%init(partition%tile(i)%panel_number,             &
                             partition%tile(i)%is, partition%tile(i)%ie, &
@@ -83,8 +87,8 @@ subroutine test_output()
 
     do ind = 1, 5
 
-        call outputer_bin%write(f1, lbound(f1, dim=1), ubound(f1, dim=1), 'test_output')
-        call outputer_txt%write(f1, lbound(f1, dim=1), ubound(f1, dim=1), 'test_output')
+        call outputer_bin%write(f1, mesh, lbound(f1, dim=1), ubound(f1, dim=1), 'test_output')
+        call outputer_txt%write(f1, mesh, lbound(f1, dim=1), ubound(f1, dim=1), 'test_output')
 
     end do
 
