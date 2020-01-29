@@ -160,10 +160,11 @@ integer(kind=4) ind, isv, iev, jsv, jev
 allocate(f(ts:te))
 
 do ind = ts, te
-     call f(ind)%init(partition%tile(ind)%is, partition%tile(ind)%ie, &
-                   partition%tile(ind)%js, partition%tile(ind)%je, &
-                   partition%tile(ind)%ks, partition%tile(ind)%ke, &
-                   halo_width, halo_width, 0)
+     call f(ind)%init(partition%tile(ind)%panel_number,               &
+                      partition%tile(ind)%is, partition%tile(ind)%ie, &
+                      partition%tile(ind)%js, partition%tile(ind)%je, &
+                      partition%tile(ind)%ks, partition%tile(ind)%ke, &
+                      halo_width, halo_width, 0)
      isv = mesh(ind)%is-halo_width
      iev = mesh(ind)%ie+halo_width
      jsv = mesh(ind)%js-halo_width
@@ -197,14 +198,16 @@ real(kind=8) vx, vy, vz
 allocate(u(ts:te), v(ts:te))
 
 do ind = ts, te
-     call u(ind)%init(partition%tile(ind)%is, partition%tile(ind)%ie, &
-                   partition%tile(ind)%js, partition%tile(ind)%je, &
-                   partition%tile(ind)%ks, partition%tile(ind)%ke, &
-                   halo_width, halo_width, 0)
-     call v(ind)%init(partition%tile(ind)%is, partition%tile(ind)%ie, &
-                   partition%tile(ind)%js, partition%tile(ind)%je, &
-                   partition%tile(ind)%ks, partition%tile(ind)%ke, &
-                   halo_width, halo_width, 0)
+     call u(ind)%init(partition%tile(ind)%panel_number,               &
+                      partition%tile(ind)%is, partition%tile(ind)%ie, &
+                      partition%tile(ind)%js, partition%tile(ind)%je, &
+                      partition%tile(ind)%ks, partition%tile(ind)%ke, &
+                      halo_width, halo_width, 0)
+     call v(ind)%init(partition%tile(ind)%panel_number,               &
+                      partition%tile(ind)%is, partition%tile(ind)%ie, &
+                      partition%tile(ind)%js, partition%tile(ind)%je, &
+                      partition%tile(ind)%ks, partition%tile(ind)%ke, &
+                      halo_width, halo_width, 0)
 
      isv = mesh(ind)%is-halo_width
      iev = mesh(ind)%ie+halo_width

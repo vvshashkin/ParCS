@@ -78,11 +78,13 @@ allocate(f2(ts:te))
 
 do i = ts, te
 
-    call f1(i)%init(partition%tile(i)%is, partition%tile(i)%ie, &
+    call f1(i)%init(partition%tile(i)%panel_number,             &
+                    partition%tile(i)%is, partition%tile(i)%ie, &
                     partition%tile(i)%js, partition%tile(i)%je, &
                     partition%tile(i)%ks, partition%tile(i)%ke, &
                     halo_width, halo_width, 0)
-    call f2(i)%init(partition%tile(i)%is, partition%tile(i)%ie, &
+    call f2(i)%init(partition%tile(i)%panel_number,             &
+                    partition%tile(i)%is, partition%tile(i)%ie, &
                     partition%tile(i)%js, partition%tile(i)%je, &
                     partition%tile(i)%ks, partition%tile(i)%ke, &
                     halo_width, halo_width, 0)

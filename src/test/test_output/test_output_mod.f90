@@ -46,7 +46,8 @@ subroutine test_output()
     if (myid == master_id) then
         allocate( f1(size(partition%tile,1)) )
         do i = 1, size(partition%tile,1)
-            call f1(i)%init(partition%tile(i)%is, partition%tile(i)%ie, &
+            call f1(i)%init(partition%tile(i)%panel_number,             &
+                            partition%tile(i)%is, partition%tile(i)%ie, &
                             partition%tile(i)%js, partition%tile(i)%je, &
                             partition%tile(i)%ks, partition%tile(i)%ke, &
                             halo_width, halo_width, 0)
@@ -55,7 +56,8 @@ subroutine test_output()
     else
         allocate(f1(ts:te))
         do i = ts, te
-            call f1(i)%init(partition%tile(i)%is, partition%tile(i)%ie, &
+            call f1(i)%init(partition%tile(i)%panel_number,             &
+                            partition%tile(i)%is, partition%tile(i)%ie, &
                             partition%tile(i)%js, partition%tile(i)%je, &
                             partition%tile(i)%ks, partition%tile(i)%ke, &
                             halo_width, halo_width, 0)

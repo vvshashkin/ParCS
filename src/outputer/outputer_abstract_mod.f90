@@ -17,12 +17,14 @@ contains
 end type outputer_t
 
 abstract interface
-    subroutine write_proc(this, f, ts, te, file_name)
+    subroutine write_proc(this, f, ts, te, file_name, rec_num)
         import outputer_t, grid_function_t
         class(outputer_t),     intent(inout) :: this
         integer(kind=4),       intent(in)    :: ts, te
         type(grid_function_t), intent(inout) :: f(ts:te)
         character(*),          intent(in)    :: file_name
+        integer(kind=4),       intent(in), &
+                               optional      :: rec_num
     end subroutine
 end interface
 

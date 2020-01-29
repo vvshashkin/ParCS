@@ -22,18 +22,22 @@ end type master_process_outputer_t
 
 contains
 
-subroutine master_process_write(this, f, ts, te, file_name)
+subroutine master_process_write(this, f, ts, te, file_name, rec_num)
 
     class(master_process_outputer_t), intent(inout) :: this
     integer(kind=4),                  intent(in)    :: ts, te
     type(grid_function_t),            intent(inout) :: f(ts:te)
     character(*),                     intent(in)    :: file_name
+    integer(kind=4),                  intent(in), &
+                                      optional      :: rec_num
 
     integer(kind=4) :: t, i, j, k, myid, ierr, code
 
     call this%gather_exch%do(f, lbound(f, dim=1), ubound(f, dim=1))
 
     call mpi_comm_rank(mpi_comm_world, myid, ierr)
+
+    if(myid == this%master_id) print *, maxval(f(:)%panel_ind), minval(f(:)%panel_ind)
 
     if (myid == this%master_id) then
 
