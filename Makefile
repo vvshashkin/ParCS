@@ -55,6 +55,11 @@ $(DEXE)TEST_TS: $(MKDIRS) $(DOBJ)test_ts.o
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_TS
+$(DEXE)TEST_CMD_LINE: $(MKDIRS) $(DOBJ)test_cmd_line.o
+	@rm -f $(filter-out $(DOBJ)test_cmd_line.o,$(EXESOBJ))
+	@echo $(LITEXT)
+	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
+EXES := $(EXES) TEST_CMD_LINE
 $(DEXE)TEST_EXCH_MAIN: $(MKDIRS) $(DOBJ)test_exch_main.o
 	@rm -f $(filter-out $(DOBJ)test_exch_main.o,$(EXESOBJ))
 	@echo $(LITEXT)
@@ -68,6 +73,10 @@ EXES := $(EXES) TEST_METRIC_MAIN
 
 #compiling rules
 $(DOBJ)tile_mod.o: src/tile_mod.f90
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)cmd_args_mod.o: src/cmd_args_mod.f90
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -315,6 +324,16 @@ $(DOBJ)test_rk4.o: src/test/test_time_steping/test_rk4.f90 \
 
 $(DOBJ)test_ts.o: src/test/test_time_steping/test_ts.f90 \
 	$(DOBJ)test_rk4.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)cmd_args_test_mod.o: src/test/test_cmd_line/cmd_args_test_mod.f90 \
+	$(DOBJ)cmd_args_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)test_cmd_line.o: src/test/test_cmd_line/test_cmd_line.f90 \
+	$(DOBJ)cmd_args_test_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
