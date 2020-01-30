@@ -23,15 +23,16 @@ subroutine read_namelist_as_str(namelist_str,namelist_fname,mpi_id,master_id)
     end if
 
     if(lmaster) then !read namelist to string at master process
-        print *, "reading namelist:", namelist_fname
+        print *, "----reading namelist: ", namelist_fname," ----------"
         inquire(file=namelist_fname,size=namelist_len)
         open(newunit=unit_nam, file=namelist_fname, action="read", &
              form="unformatted",access="stream")
         allocate(character(namelist_len) :: namelist_str)
         read(unit_nam) namelist_str
         close(unit_nam)
-        print *, namelist_str !I think it will be usefull for future model use
+        print '(A)', namelist_str !I think it will be usefull for future model use
                                !as it will allow to get used namelists from log file
+        print *, "-----namelist end---------------"
     end if
 
     !broadcast namelist length

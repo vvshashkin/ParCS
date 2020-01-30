@@ -70,6 +70,11 @@ $(DEXE)TEST_METRIC_MAIN: $(MKDIRS) $(DOBJ)test_metric_main.o
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_METRIC_MAIN
+$(DEXE)SWLIN: $(MKDIRS) $(DOBJ)swlin.o
+	@rm -f $(filter-out $(DOBJ)swlin.o,$(EXESOBJ))
+	@echo $(LITEXT)
+	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
+EXES := $(EXES) SWLIN
 
 #compiling rules
 $(DOBJ)tile_mod.o: src/tile_mod.f90
@@ -363,6 +368,17 @@ $(DOBJ)operator_iomega_mod.o: src/models/iomega_model/operator_iomega_mod.f90 \
 	$(DOBJ)operator_abstract_mod.o \
 	$(DOBJ)stvec_abstract_mod.o \
 	$(DOBJ)stvec_iomega_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)swlin_mod.o: src/models/linear_shallow_water/swlin_mod.f90 \
+	$(DOBJ)cmd_args_mod.o \
+	$(DOBJ)namelist_read_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)swlin.o: src/models/linear_shallow_water/swlin.f90 \
+	$(DOBJ)swlin_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
