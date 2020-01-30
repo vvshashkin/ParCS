@@ -162,7 +162,7 @@ te = findloc(partition%proc_map, myid, back = .true., dim=1)
 allocate(f1(ts:te))
 
 do i = ts, te
-    call f1(i)%init(partition%tile(ind)%panel_number,           &
+    call f1(i)%init(partition%tile(i)%panel_number,           &
                     partition%tile(i)%is, partition%tile(i)%ie, &
                     partition%tile(i)%js, partition%tile(i)%je, &
                     partition%tile(i)%ks, partition%tile(i)%ke, &
@@ -285,7 +285,7 @@ te = findloc(partition%proc_map, myid, back = .true., dim=1)
 if (myid == master_id) then
     allocate(f1(1:6*partition%num_tiles))
     do i = 1, 6*partition%num_tiles
-        call f1(i)%init(partition%tile(ind)%panel_number,           &
+        call f1(i)%init(partition%tile(i)%panel_number,             &
                         partition%tile(i)%is, partition%tile(i)%ie, &
                         partition%tile(i)%js, partition%tile(i)%je, &
                         partition%tile(i)%ks, partition%tile(i)%ke, &
@@ -295,7 +295,7 @@ if (myid == master_id) then
 else
     allocate(f1(ts:te))
     do i = ts, te
-        call f1(i)%init(partition%tile(ind)%panel_number,           &
+        call f1(i)%init(partition%tile(i)%panel_number,             &
                         partition%tile(i)%is, partition%tile(i)%ie, &
                         partition%tile(i)%js, partition%tile(i)%je, &
                         partition%tile(i)%ks, partition%tile(i)%ke, &
