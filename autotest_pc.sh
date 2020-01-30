@@ -31,7 +31,7 @@ msgall(){
     msglong $@
 }
 
-[ -e $test_res_dir ] && echo $test_res_dir "already exists, please clean in or use another directory for test results" && exit
+[ -e $test_res_dir ] && echo $test_res_dir "already exists, please remove it or use another directory for test results" && exit
 mkdir $test_res_dir
 cd $test_res_dir
 if [ $? -ne 0 ]

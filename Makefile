@@ -159,18 +159,6 @@ $(DOBJ)exchange_mod.o: src/exchange_mod.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
-$(DOBJ)stvec_iomega_mod.o: src/iomega_model/stvec_iomega_mod.f90 \
-	$(DOBJ)stvec_abstract_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
-$(DOBJ)operator_iomega_mod.o: src/iomega_model/operator_iomega_mod.f90 \
-	$(DOBJ)operator_abstract_mod.o \
-	$(DOBJ)stvec_abstract_mod.o \
-	$(DOBJ)stvec_iomega_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
 $(DOBJ)ecs_halo_vec_a_mod.o: src/equiang_cs/ecs_halo_vec_a_mod.f90 \
 	$(DOBJ)halo_mod.o \
 	$(DOBJ)ecs_halo_mod.o \
@@ -363,6 +351,18 @@ $(DOBJ)test_metric_mod.o: src/test/test_metric/test_metric_mod.f90 \
 	$(DOBJ)mesh_factory_mod.o \
 	$(DOBJ)mesh_mod.o \
 	$(DOBJ)topology_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)stvec_iomega_mod.o: src/models/iomega_model/stvec_iomega_mod.f90 \
+	$(DOBJ)stvec_abstract_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)operator_iomega_mod.o: src/models/iomega_model/operator_iomega_mod.f90 \
+	$(DOBJ)operator_abstract_mod.o \
+	$(DOBJ)stvec_abstract_mod.o \
+	$(DOBJ)stvec_iomega_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
