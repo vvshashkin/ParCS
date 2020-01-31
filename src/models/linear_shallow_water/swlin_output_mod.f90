@@ -59,6 +59,18 @@ subroutine write_swlin(myid, master_id, ts, te, stvec, ms, me, mesh, rec_num)
 
     call outputer%write(gf_buffer, mesh, ms, me, "h.dat", rec_num)
 
+    do ind = ts, te
+        gf_buffer(ind) = stvec%u(ind)
+    end do
+
+    call outputer%write(gf_buffer, mesh, ms, me, "u.dat", rec_num)
+
+    do ind = ts, te
+        gf_buffer(ind) = stvec%v(ind)
+    end do
+
+    call outputer%write(gf_buffer, mesh, ms, me, "v.dat", rec_num)
+
 end subroutine write_swlin
 
 end module swlin_output_mod
