@@ -1,0 +1,12 @@
+&DIMS
+    nx = 128
+/
+&DYN
+    dt = 1800.,
+    H0 = 11d3
+/
+&CTR
+    test_case_num = 2,
+    NSTEP = 10000,
+    NZAP  = 10
+/

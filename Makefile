@@ -20,57 +20,68 @@ COTEXT  = "Compiling $(<F)"
 LITEXT  = "Assembling $@"
 
 #building rules
-$(DEXE)TEST_NAMELIST: $(MKDIRS) $(DOBJ)test_namelist.o
+$(DEXE)TEST_NAMELIST: $(MKDIRS) $(DOBJ)test_namelist.o \
+	$(DOBJ)avost.o
 	@rm -f $(filter-out $(DOBJ)test_namelist.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_NAMELIST
-$(DEXE)TEST_OUTPUT_MAIN: $(MKDIRS) $(DOBJ)test_output_main.o
+$(DEXE)TEST_OUTPUT_MAIN: $(MKDIRS) $(DOBJ)test_output_main.o \
+	$(DOBJ)avost.o
 	@rm -f $(filter-out $(DOBJ)test_output_main.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_OUTPUT_MAIN
-$(DEXE)FIVEPOINTFILTER_MAIN: $(MKDIRS) $(DOBJ)fivepointfilter_main.o
+$(DEXE)FIVEPOINTFILTER_MAIN: $(MKDIRS) $(DOBJ)fivepointfilter_main.o \
+	$(DOBJ)avost.o
 	@rm -f $(filter-out $(DOBJ)fivepointfilter_main.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) FIVEPOINTFILTER_MAIN
-$(DEXE)TEST_HALO_MAIN: $(MKDIRS) $(DOBJ)test_halo_main.o
+$(DEXE)TEST_HALO_MAIN: $(MKDIRS) $(DOBJ)test_halo_main.o \
+	$(DOBJ)avost.o
 	@rm -f $(filter-out $(DOBJ)test_halo_main.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_HALO_MAIN
-$(DEXE)TEST_MESH_MAIN: $(MKDIRS) $(DOBJ)test_mesh_main.o
+$(DEXE)TEST_MESH_MAIN: $(MKDIRS) $(DOBJ)test_mesh_main.o \
+	$(DOBJ)avost.o
 	@rm -f $(filter-out $(DOBJ)test_mesh_main.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_MESH_MAIN
-$(DEXE)TEST_PANELED_OUTPUT: $(MKDIRS) $(DOBJ)test_paneled_output.o
+$(DEXE)TEST_PANELED_OUTPUT: $(MKDIRS) $(DOBJ)test_paneled_output.o \
+	$(DOBJ)avost.o
 	@rm -f $(filter-out $(DOBJ)test_paneled_output.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_PANELED_OUTPUT
-$(DEXE)TEST_TS: $(MKDIRS) $(DOBJ)test_ts.o
+$(DEXE)TEST_TS: $(MKDIRS) $(DOBJ)test_ts.o \
+	$(DOBJ)avost.o
 	@rm -f $(filter-out $(DOBJ)test_ts.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_TS
-$(DEXE)TEST_CMD_LINE: $(MKDIRS) $(DOBJ)test_cmd_line.o
+$(DEXE)TEST_CMD_LINE: $(MKDIRS) $(DOBJ)test_cmd_line.o \
+	$(DOBJ)avost.o
 	@rm -f $(filter-out $(DOBJ)test_cmd_line.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_CMD_LINE
-$(DEXE)TEST_EXCH_MAIN: $(MKDIRS) $(DOBJ)test_exch_main.o
+$(DEXE)TEST_EXCH_MAIN: $(MKDIRS) $(DOBJ)test_exch_main.o \
+	$(DOBJ)avost.o
 	@rm -f $(filter-out $(DOBJ)test_exch_main.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_EXCH_MAIN
-$(DEXE)TEST_METRIC_MAIN: $(MKDIRS) $(DOBJ)test_metric_main.o
+$(DEXE)TEST_METRIC_MAIN: $(MKDIRS) $(DOBJ)test_metric_main.o \
+	$(DOBJ)avost.o
 	@rm -f $(filter-out $(DOBJ)test_metric_main.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_METRIC_MAIN
-$(DEXE)SWLIN: $(MKDIRS) $(DOBJ)swlin.o
+$(DEXE)SWLIN: $(MKDIRS) $(DOBJ)swlin.o \
+	$(DOBJ)avost.o
 	@rm -f $(filter-out $(DOBJ)swlin.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
@@ -132,6 +143,10 @@ $(DOBJ)parcs_mpi_mod.o: src/ParCS_mpi_mod.f90
 
 $(DOBJ)operator_abstract_mod.o: src/operator_abstract_mod.f90 \
 	$(DOBJ)stvec_abstract_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)avost.o: src/avost.f90
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -371,14 +386,44 @@ $(DOBJ)operator_iomega_mod.o: src/models/iomega_model/operator_iomega_mod.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)swlin_initial_cond_mod.o: src/models/linear_shallow_water/swlin_initial_cond_mod.f90 \
+	$(DOBJ)stvec_swlin_mod.o \
+	$(DOBJ)mesh_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)swlin_mod.o: src/models/linear_shallow_water/swlin_mod.f90 \
+	$(DOBJ)partition_mod.o \
+	$(DOBJ)stvec_swlin_mod.o \
+	$(DOBJ)mesh_mod.o \
 	$(DOBJ)cmd_args_mod.o \
-	$(DOBJ)namelist_read_mod.o
+	$(DOBJ)namelist_read_mod.o \
+	$(DOBJ)mesh_factory_mod.o \
+	$(DOBJ)swlin_output_mod.o \
+	$(DOBJ)swlin_initial_cond_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)stvec_swlin_mod.o: src/models/linear_shallow_water/stvec_swlin_mod.f90 \
+	$(DOBJ)stvec_abstract_mod.o \
+	$(DOBJ)grid_function_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)swlin.o: src/models/linear_shallow_water/swlin.f90 \
 	$(DOBJ)swlin_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)swlin_output_mod.o: src/models/linear_shallow_water/swlin_output_mod.f90 \
+	$(DOBJ)grid_function_mod.o \
+	$(DOBJ)outputer_abstract_mod.o \
+	$(DOBJ)stvec_swlin_mod.o \
+	$(DOBJ)partition_mod.o \
+	$(DOBJ)exchange_mod.o \
+	$(DOBJ)exchange_factory_mod.o \
+	$(DOBJ)outputer_factory_mod.o \
+	$(DOBJ)mesh_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

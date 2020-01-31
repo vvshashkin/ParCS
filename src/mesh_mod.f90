@@ -15,6 +15,8 @@ type, public :: mesh_t
     real(kind=8), allocatable    :: Q(:,:,:)                       !metric tensor at mesh-points
     real(kind=8), allocatable    :: QI(:,:,:)                      !inverse metric tensor at mesh-points
     real(kind=8), allocatable    :: G(:,:)                         !metric tensor det at mesh-points
+    real(kind=8), allocatable    :: Gu(:,:)                        !metric tensor det at u-points
+    real(kind=8), allocatable    :: Gv(:,:)                        !metric tensor det at v-points
     real(kind=8)                 :: hx !horizontal grid step
     class(halo_t), allocatable       :: halo
     class(halo_vec_t), allocatable   :: halo_vec
@@ -43,6 +45,8 @@ subroutine init_mesh(this, is, ie, js, je, ks, ke, halo_width)
     allocate(this%Q(3, is-halo_width : ie+halo_width , js-halo_width : je+halo_width)) !3 elements of 2x2 matrix are stored due to symmetricity
     allocate(this%QI(3, is-halo_width : ie+halo_width , js-halo_width : je+halo_width))! -'-'-
     allocate(this%G(is-halo_width : ie+halo_width , js-halo_width : je+halo_width))
+    allocate(this%Gu(is-halo_width-1 : ie+halo_width, js-halo_width : je+halo_width))
+    allocate(this%Gv(is-halo_width : ie+halo_width, js-halo_width-1 : je+halo_width))
 
     this%is = is
     this%ie = ie

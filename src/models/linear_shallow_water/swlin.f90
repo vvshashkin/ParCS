@@ -1,16 +1,15 @@
 program swlin_main
 
     use mpi
-    use swlin_mod, only : swlin_model_main
+    use swlin_mod, only : init_swlin_model, run_swlin_model
     implicit none
 
     integer(kind=4) ierr
 
     call mpi_init(ierr)
 
-    print *, "linear shallow water model"
-
-    call swlin_model_main()
+    call init_swlin_model()
+    call run_swlin_model()
 
     call mpi_finalize(ierr)
 

@@ -58,6 +58,20 @@ subroutine create_equiangular_mesh(mesh, is, ie, js, je, ks, ke, nh, halo_width,
             mesh%G(i,j)    = ecs_G(alpha, beta)
         end do
     end do
+    do j=js-halo_width, je+halo_width
+        beta = -0.25_8*pi + (j-0.5_8)*mesh.hx
+        do i=is-halo_width-1, ie+halo_width
+            alpha = -0.25_8*pi+i*mesh%hx
+            mesh%Gu(i,j)    = ecs_G(alpha, beta)
+        end do
+    end do
+    do j=js-halo_width-1, je+halo_width
+        beta = -0.25_8*pi + j*mesh.hx
+        do i=is-halo_width, ie+halo_width
+            alpha = -0.25_8*pi+(i-0.5_8)*mesh%hx
+            mesh%Gv(i,j)    = ecs_G(alpha, beta)
+        end do
+    end do
     !mesh%halo = init_ecs_halo(mesh%is, mesh%ie,           &
     !                          mesh%js, mesh%je,           &
     !                          mesh%nx, halo_width,   &
