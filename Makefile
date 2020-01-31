@@ -419,11 +419,11 @@ $(DOBJ)swlin_output_mod.o: src/models/linear_shallow_water/swlin_output_mod.f90 
 	$(DOBJ)grid_function_mod.o \
 	$(DOBJ)outputer_abstract_mod.o \
 	$(DOBJ)stvec_swlin_mod.o \
+	$(DOBJ)mesh_mod.o \
 	$(DOBJ)partition_mod.o \
 	$(DOBJ)exchange_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
-	$(DOBJ)outputer_factory_mod.o \
-	$(DOBJ)mesh_mod.o
+	$(DOBJ)outputer_factory_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

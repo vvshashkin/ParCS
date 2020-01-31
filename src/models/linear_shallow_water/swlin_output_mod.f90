@@ -22,7 +22,6 @@ subroutine init_swlin_output(myid, master_id, np, partition, ts, te, mesh)
     integer(kind=4),     intent(in) :: myid, master_id, np
     type(partition_t),   intent(in) :: partition
     integer(kind=4),     intent(in) :: ts, te
-    !type(stvec_swlin_t), intent(in) :: stvec
     type(mesh_t),        intent(in) :: mesh(ts:te)
 
     integer(kind=4) i

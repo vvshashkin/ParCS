@@ -113,6 +113,8 @@ subroutine run_swlin_model()
     use swlin_output_mod,         only : write_swlin
 
     integer(kind=4) myid, Np, ierr
+    integer(kind=4) ind
+    type(stvec_swlin_t) v2
 
     call MPI_comm_rank(mpi_comm_world , myid, ierr)
     call MPI_comm_size(mpi_comm_world , Np  , ierr)
@@ -120,6 +122,15 @@ subroutine run_swlin_model()
     call write_swlin(myid, master_id, stvec%ts, stvec%te, stvec,  &
                      lbound(mesh, dim=1),ubound(mesh, dim=1), mesh, 1)
     print *, "wr"
+    call v2.copy(stvec)
+    call v2.add(stvec,1._8, 0.5_8)
+
+    do ind=v2%ts, v2%te
+        print *, "hmax", ind, maxval(v2%h(ind)%p(:,:,:))
+    end do
+
+    call write_swlin(myid, master_id, stvec%ts, stvec%te, v2,  &
+                     lbound(mesh, dim=1),ubound(mesh, dim=1), mesh, 2)
 end subroutine run_swlin_model
 
 end module swlin_mod

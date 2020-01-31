@@ -42,14 +42,19 @@ subroutine init_stvec_swlin(new_stvec, ts, te, panel_ind, is, ie, js, je, ks, ke
         call new_stvec%h(ind)%init(panel_ind(ind),is(ind), ie(ind),    &
                                    js(ind), je(ind), ks(ind), ke(ind), &
                                    halo_width, halo_width, 0)
+        new_stvec%h(ind)%p(:,:,:) = 0._8
         call new_stvec%u(ind)%init(panel_ind(ind),is(ind), ie(ind),    &
                                    js(ind), je(ind), ks(ind), ke(ind), &
                                    halo_width, halo_width, 0)
+        new_stvec%u(ind)%p(:,:,:) = 0._8
         call new_stvec%v(ind)%init(panel_ind(ind),is(ind), ie(ind),    &
                                    js(ind), je(ind), ks(ind), ke(ind), &
                                    halo_width, halo_width, 0)
+        new_stvec%v(ind)%p(:,:,:) = 0._8
 
     end do
+
+    new_stvec%init_and_alloc = .true.
 
 end subroutine init_stvec_swlin
 
@@ -58,24 +63,66 @@ subroutine add(this,other,alpha,beta)
     class(stvec_abstract_t), intent(in)     :: other
     real(kind=8),            intent(in)     :: alpha, beta
 
-    !select type (other)
-    !class is (stvec_iomega_t)
-    !    this%f(1:this%N) = alpha*this%f(1:this%N)+beta*other%f(1:this%N)
-    !class default
-    !    stop
-    !end select
+    integer(kind=4) ts, te
+    integer(kind=4) i1, i2, j1, j2
+    integer(kind=4) ind
+
+
+    select type (other)
+    class is (stvec_swlin_t)
+        ts = this%ts; te = this%te
+        do ind = ts,te
+            j1 = this%h(ind)%js-this%h(ind)%nvj
+            j2 = this%h(ind)%je+this%h(ind)%nvj
+            i1 = this%h(ind)%is-this%h(ind)%nvi
+            i2 = this%h(ind)%ie+this%h(ind)%nvi
+            this%h(ind)%p(i1:i2,j1:j2,1) = alpha*this%h(ind)%p(i1:i2,j1:j2,1) + &
+                                           beta*other%h(ind)%p(i1:i2,j1:j2,1)
+            this%u(ind)%p(i1:i2,j1:j2,1) = alpha*this%u(ind)%p(i1:i2,j1:j2,1) + &
+                                           beta*other%u(ind)%p(i1:i2,j1:j2,1)
+            this%v(ind)%p(i1:i2,j1:j2,1) = alpha*this%v(ind)%p(i1:i2,j1:j2,1) + &
+                                           beta*other%v(ind)%p(i1:i2,j1:j2,1)
+        end do
+    class default
+        call avost("swlin_stvec_t%add types mismatch. stop!")
+    end select
 end subroutine add
 
 subroutine copy(this,source_stvec)
     class(stvec_swlin_t),   intent(inout)  :: this
     class(stvec_abstract_t), intent(in)    :: source_stvec
 
-    !select type (source_stvec)
-    !class is (stvec_iomega_t)
-    !    call init_stvec_iomega(this,source_stvec%N,source_stvec%f)
-    !class default
-    !    stop
-    !end select
+    integer(kind=4), allocatable :: is(:), ie(:), js(:), je(:)
+    integer(kind=4), allocatable :: ks(:), ke(:), panel_ind(:)
+    integer(kind=4) ts, te, halo_width
+
+    integer(kind=4) i1, i2, j1, j2
+    integer(kind=4) ind
+
+    select type (source_stvec)
+    class is (stvec_swlin_t)
+        ts = source_stvec%ts; te = source_stvec%te
+        if(.not. this%init_and_alloc) then
+            panel_ind = source_stvec%h(ts:te)%panel_ind
+            is = source_stvec%h(ts:te)%is; ie = source_stvec%h(ts:te)%ie
+            js = source_stvec%h(ts:te)%js; je = source_stvec%h(ts:te)%je
+            ks = source_stvec%h(ts:te)%ks; ke = source_stvec%h(ts:te)%ke
+            halo_width = max(source_stvec%h(ts)%nvi, source_stvec%h(ts)%nvj)
+            call init_stvec_swlin(this, ts, te, panel_ind, is, ie, js,   &
+                                  je, ks, ke, halo_width)
+        end if
+        do ind = ts,te
+            j1 = source_stvec%h(ind)%js-source_stvec%h(ind)%nvj
+            j2 = source_stvec%h(ind)%je+source_stvec%h(ind)%nvj
+            i1 = source_stvec%h(ind)%is-source_stvec%h(ind)%nvi
+            i2 = source_stvec%h(ind)%ie+source_stvec%h(ind)%nvi
+            this%h(ind)%p(i1:i2,j1:j2,1) = source_stvec%h(ind)%p(i1:i2,j1:j2,1)
+            this%u(ind)%p(i1:i2,j1:j2,1) = source_stvec%u(ind)%p(i1:i2,j1:j2,1)
+            this%v(ind)%p(i1:i2,j1:j2,1) = source_stvec%v(ind)%p(i1:i2,j1:j2,1)
+        end do
+    class default
+        call avost("swlin_stvec_t%copy types mismatch. stop!")
+    end select
 end subroutine copy
 
 real(kind=8) function dot(this, other) result(dot_prod)
