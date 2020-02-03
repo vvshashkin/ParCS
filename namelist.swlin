@@ -2,11 +2,11 @@
     nx = 128
 /
 &DYN
-    dt = 1800.,
-    H0 = 11d3
+    dt = 400.,
+    H0 = 1d3
 /
 &CTR
     test_case_num = 1,
-    NSTEP = 10000,
+    NSTEP = 1200,
     NZAP  = 10
 /

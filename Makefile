@@ -397,11 +397,13 @@ $(DOBJ)swlin_mod.o: src/models/linear_shallow_water/swlin_mod.f90 \
 	$(DOBJ)stvec_swlin_mod.o \
 	$(DOBJ)mesh_mod.o \
 	$(DOBJ)operator_swlin_mod.o \
+	$(DOBJ)timescheme_abstract_mod.o \
 	$(DOBJ)cmd_args_mod.o \
 	$(DOBJ)namelist_read_mod.o \
 	$(DOBJ)mesh_factory_mod.o \
 	$(DOBJ)swlin_output_mod.o \
-	$(DOBJ)swlin_initial_cond_mod.o
+	$(DOBJ)swlin_initial_cond_mod.o \
+	$(DOBJ)rk4_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

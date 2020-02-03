@@ -98,6 +98,8 @@ subroutine act(this, vout, vin)
                                           mesh_isv, mesh_iev, mesh_jsv, mesh_jev,       &
                                           this%mesh(ind)%hx, this%H0)
 
+                    call this%ext_halo(vout)
+
                 end do
         class default
             call avost("swlin operator: non-swlin state vector on input. Stop")

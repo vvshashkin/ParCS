@@ -1,25 +1,27 @@
 module swlin_mod
 
-use partition_mod,      only : partition_t
-use stvec_swlin_mod,    only : stvec_swlin_t, init_stvec_swlin
-use mesh_mod,           only : mesh_t
-use operator_swlin_mod, only : operator_swlin_t
+use partition_mod,           only : partition_t
+use stvec_swlin_mod,         only : stvec_swlin_t, init_stvec_swlin
+use mesh_mod,                only : mesh_t
+use operator_swlin_mod,      only : operator_swlin_t
+use timescheme_abstract_mod, only : timescheme_abstract_t
 
 implicit none
 
 !dimensions
-integer(kind=4)            :: nx    = 64
+integer(kind=4)            :: nx    = 128
 integer(kind=4), parameter :: nz    = 1 !shallow water!
-namelist /dims/ nx
+logical                    :: lcgrid = .true.
+namelist /dims/ nx, lcgrid
 
 !model specific constants
 real(kind=8)               :: H0    = 1e3_8
-real(kind=8)               :: dt    = 100._8
+real(kind=8)               :: dt    = 300._8
 namelist /dyn/ H0, dt
 
 !run & output controls
-integer(kind=4)            :: nstep = 1000
-integer(kind=4)            :: nzap  = 100
+integer(kind=4)            :: nstep = 10
+integer(kind=4)            :: nzap  = 1
 integer(kind=4)            :: test_case_num = 1
 namelist /ctr/ nstep, nzap, test_case_num
 
@@ -34,6 +36,7 @@ type(mesh_t), allocatable, &
 
 !
 type(operator_swlin_t)     :: operator
+class(timescheme_abstract_t), allocatable :: time_scheme
 
 contains
 
@@ -46,6 +49,7 @@ subroutine init_swlin_model()
     use swlin_output_mod,         only : init_swlin_output
     use swlin_initial_cond_mod,   only : set_swlin_initial_conditions
     use operator_swlin_mod,       only : init_swlin_operator
+    use rk4_mod,                  only : rk4_t, init_rk4
 
     integer(kind=4) myid, Np, ierr
 
@@ -58,6 +62,8 @@ subroutine init_swlin_model()
     integer(kind=4), allocatable :: is(:), ie(:), js(:), je(:)
     integer(kind=4), allocatable :: ks(:), ke(:), panel_ind(:)
     integer(kind=4) ind
+
+    type(rk4_t)                  :: ts_rk4
 
     call MPI_comm_rank(mpi_comm_world , myid, ierr)
     call MPI_comm_size(mpi_comm_world , Np  , ierr)
@@ -116,32 +122,35 @@ subroutine init_swlin_model()
                              partition, halo_width, myid, Np, H0)
     call operator%ext_halo(stvec)
 
+    call init_rk4(ts_rk4, stvec)
+    time_scheme = ts_rk4
+
 end subroutine init_swlin_model
 
 subroutine run_swlin_model()
     use mpi
-    use swlin_output_mod,         only : write_swlin
+    use swlin_output_mod,         only : write_swlin, print_swlin_diag
 
     integer(kind=4) myid, Np, ierr
-    integer(kind=4) ind
-    type(stvec_swlin_t) v2
+    integer(kind=4) istep, ind, irec
 
     call MPI_comm_rank(mpi_comm_world , myid, ierr)
     call MPI_comm_size(mpi_comm_world , Np  , ierr)
 
     call write_swlin(myid, master_id, stvec%ts, stvec%te, stvec,  &
                      lbound(mesh, dim=1),ubound(mesh, dim=1), mesh, 1)
-    print *, "wr"
-    call v2.copy(stvec)
-    call v2.add(stvec,1._8, 0.5_8)
 
-    do ind=v2%ts, v2%te
-        print *, "hmax", ind, maxval(v2%h(ind)%p(:,:,:))
+    irec = 1
+    do istep = 1, nstep
+        call time_scheme%step(operator, stvec, dt)
+        if(mod(istep,nzap) == 0) then
+            call write_swlin(myid, master_id, stvec%ts, stvec%te, stvec,  &
+                             lbound(mesh, dim=1),ubound(mesh, dim=1), mesh, irec)
+            call print_swlin_diag(stvec,stvec%ts, stvec%te, mesh,         &
+                                  myid, master_id, istep)
+            irec = irec+1
+        end if
     end do
-
-    call operator%act(v2,stvec)
-    call write_swlin(myid, master_id, stvec%ts, stvec%te, v2,  &
-                     lbound(mesh, dim=1),ubound(mesh, dim=1), mesh, 2)
 end subroutine run_swlin_model
 
 end module swlin_mod
