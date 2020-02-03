@@ -1,8 +1,9 @@
 module swlin_mod
 
-use partition_mod,   only : partition_t
-use stvec_swlin_mod, only : stvec_swlin_t, init_stvec_swlin
-use mesh_mod,        only : mesh_t
+use partition_mod,      only : partition_t
+use stvec_swlin_mod,    only : stvec_swlin_t, init_stvec_swlin
+use mesh_mod,           only : mesh_t
+use operator_swlin_mod, only : operator_swlin_t
 
 implicit none
 
@@ -28,7 +29,11 @@ integer(kind=4)            :: master_id = 0
 integer(kind=4)            :: halo_width = 8
 type(partition_t)          :: partition
 type(stvec_swlin_t)        :: stvec
-type(mesh_t), allocatable  :: mesh(:)
+type(mesh_t), allocatable, &
+              target       :: mesh(:)
+
+!
+type(operator_swlin_t)     :: operator
 
 contains
 
@@ -40,6 +45,7 @@ subroutine init_swlin_model()
     use mesh_factory_mod,         only : create_equiangular_mesh
     use swlin_output_mod,         only : init_swlin_output
     use swlin_initial_cond_mod,   only : set_swlin_initial_conditions
+    use operator_swlin_mod,       only : init_swlin_operator
 
     integer(kind=4) myid, Np, ierr
 
@@ -106,6 +112,10 @@ subroutine init_swlin_model()
 
     call set_swlin_initial_conditions(stvec, test_case_num, ts,te, mesh(ts:te))
 
+    call init_swlin_operator(operator, ts, te, mesh(ts:te), &
+                             partition, halo_width, myid, Np, H0)
+    call operator%ext_halo(stvec)
+
 end subroutine init_swlin_model
 
 subroutine run_swlin_model()
@@ -129,6 +139,7 @@ subroutine run_swlin_model()
         print *, "hmax", ind, maxval(v2%h(ind)%p(:,:,:))
     end do
 
+    call operator%act(v2,stvec)
     call write_swlin(myid, master_id, stvec%ts, stvec%te, v2,  &
                      lbound(mesh, dim=1),ubound(mesh, dim=1), mesh, 2)
 end subroutine run_swlin_model

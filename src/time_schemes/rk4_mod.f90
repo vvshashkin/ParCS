@@ -35,7 +35,7 @@ subroutine step_rk4(this, operator, v0, dt)
     use operator_abstract_mod, only : operator_abstract_t
 
     class(rk4_t),                    intent(inout) :: this
-    class(operator_abstract_t),      intent(in)    :: operator
+    class(operator_abstract_t),      intent(inout) :: operator
     class(stvec_abstract_t), target, intent(inout) :: v0
     real(kind=8),                    intent(in)    :: dt
 

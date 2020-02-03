@@ -17,7 +17,7 @@ abstract interface
         import timescheme_abstract_t
 
         class(timescheme_abstract_t),    intent(inout) :: this
-        class(operator_abstract_t),      intent(in)    :: operator
+        class(operator_abstract_t),      intent(inout) :: operator
         class(stvec_abstract_t), target, intent(inout) :: v0
         real(kind=8),                    intent(in)    :: dt
     end subroutine step

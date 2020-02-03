@@ -36,7 +36,7 @@ subroutine set_swlin_gauss_hill(stvec, test_case_num, ts, te, mesh)
     type(mesh_t),        intent(in)    :: mesh(ts:te)
 
     real(kind=8), parameter :: x0 = 0._8, y0 = 0._8, z0 = 1._8
-    real(kind=8), parameter :: r0 = 0.5_8
+    real(kind=8), parameter :: r0 = 0.25_8
     real(kind=8), parameter :: hmax = 1.0_8
 
     integer(kind=4) ind
@@ -55,7 +55,7 @@ subroutine set_swlin_gauss_hill(stvec, test_case_num, ts, te, mesh)
                 stvec%h(ind)%p(i,j,1) = hmax*exp(-(dist/r0)**2)
             end do
         end do
-        
+
     end do
 
 end subroutine set_swlin_gauss_hill

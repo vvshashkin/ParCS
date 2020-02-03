@@ -34,7 +34,7 @@ subroutine init_operator_iomega(new_operator, N, omega)
 end subroutine init_operator_iomega
 
 subroutine act(this,vout,vin)
-    class(operator_iomega_t), intent(in)    :: this
+    class(operator_iomega_t), intent(inout) :: this
     class(stvec_abstract_t),  intent(inout) :: vout !inout to enable preallocated vectors
     class(stvec_abstract_t),  intent(in)    :: vin
 

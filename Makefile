@@ -396,6 +396,7 @@ $(DOBJ)swlin_mod.o: src/models/linear_shallow_water/swlin_mod.f90 \
 	$(DOBJ)partition_mod.o \
 	$(DOBJ)stvec_swlin_mod.o \
 	$(DOBJ)mesh_mod.o \
+	$(DOBJ)operator_swlin_mod.o \
 	$(DOBJ)cmd_args_mod.o \
 	$(DOBJ)namelist_read_mod.o \
 	$(DOBJ)mesh_factory_mod.o \
@@ -424,6 +425,20 @@ $(DOBJ)swlin_output_mod.o: src/models/linear_shallow_water/swlin_output_mod.f90 
 	$(DOBJ)exchange_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
 	$(DOBJ)outputer_factory_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)operator_swlin_mod.o: src/models/linear_shallow_water/operator_swlin_mod.f90 \
+	$(DOBJ)operator_abstract_mod.o \
+	$(DOBJ)stvec_abstract_mod.o \
+	$(DOBJ)stvec_swlin_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)exchange_mod.o \
+	$(DOBJ)ecs_halo_mod.o \
+	$(DOBJ)partition_mod.o \
+	$(DOBJ)exchange_factory_mod.o \
+	$(DOBJ)ecs_halo_factory_mod.o \
+	$(DOBJ)const_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
