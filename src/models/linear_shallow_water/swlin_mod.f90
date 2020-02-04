@@ -75,11 +75,13 @@ subroutine init_swlin_model()
     if(nargs > 1) then
         call read_namelist_as_str(namelist_str,cmd_args(2)%str, myid, master_id = master_id)
     end if
+
     if(allocated(namelist_str)) then
         read(namelist_str, dims)
         read(namelist_str, dyn)
         read(namelist_str, ctr)
     end if
+
     if(myid == master_id) then
         print *, "---Model parameters:"
         print *, "nx=", nx
@@ -87,6 +89,7 @@ subroutine init_swlin_model()
         print *, "dt=", dt
         print *, "nstep=", nstep
         print *, "nzap=", nzap
+        print *, "lcgrid=", lcgrid
         print *, "--------------------"
     end if
 
@@ -99,6 +102,7 @@ subroutine init_swlin_model()
     is = partition%tile(ts:te)%is; ie = partition%tile(ts:te)%ie
     js = partition%tile(ts:te)%js; je = partition%tile(ts:te)%je
     ks = partition%tile(ts:te)%ks; ke = partition%tile(ts:te)%ke
+
     call init_stvec_swlin(stvec, ts, te, panel_ind, is, ie, js,   &
                           je, ks, ke, halo_width)
 
