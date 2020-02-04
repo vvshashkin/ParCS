@@ -179,6 +179,19 @@ $(DOBJ)exchange_mod.o: src/exchange_mod.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)hor_difops_basic_mod.o: src/differential_operators/hor_difops_basic_mod.f90 \
+	$(DOBJ)grid_function_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)const_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)hor_difops_abstract_mod.o: src/differential_operators/hor_difops_abstract_mod.f90 \
+	$(DOBJ)grid_function_mod.o \
+	$(DOBJ)mesh_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)ecs_halo_vec_a_mod.o: src/equiang_cs/ecs_halo_vec_a_mod.f90 \
 	$(DOBJ)halo_mod.o \
 	$(DOBJ)ecs_halo_mod.o \
@@ -437,9 +450,11 @@ $(DOBJ)operator_swlin_mod.o: src/models/linear_shallow_water/operator_swlin_mod.
 	$(DOBJ)mesh_mod.o \
 	$(DOBJ)exchange_mod.o \
 	$(DOBJ)ecs_halo_mod.o \
+	$(DOBJ)hor_difops_abstract_mod.o \
 	$(DOBJ)partition_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
 	$(DOBJ)ecs_halo_factory_mod.o \
+	$(DOBJ)hor_difops_basic_mod.o \
 	$(DOBJ)const_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
