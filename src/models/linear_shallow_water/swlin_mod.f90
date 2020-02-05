@@ -126,8 +126,9 @@ subroutine init_swlin_model()
                              partition, halo_width, myid, Np, H0)
     call operator%ext_halo(stvec)
 
-    call init_rk4(ts_rk4, stvec)
-    time_scheme = ts_rk4
+    !call init_rk4(ts_rk4, stvec)
+    !time_scheme = ts_rk4
+    time_scheme = init_rk4(operator, stvec)
 
 end subroutine init_swlin_model
 
@@ -146,7 +147,7 @@ subroutine run_swlin_model()
 
     irec = 1
     do istep = 1, nstep
-        call time_scheme%step(operator, stvec, dt)
+        call time_scheme%step(stvec, dt)
         if(mod(istep,nzap) == 0) then
             call write_swlin(myid, master_id, stvec%ts, stvec%te, stvec,  &
                              lbound(mesh, dim=1),ubound(mesh, dim=1), mesh, irec)
