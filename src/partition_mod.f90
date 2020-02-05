@@ -10,6 +10,7 @@ type, public :: partition_t
 contains
     procedure, public :: init
     procedure, public :: write_to_txt
+    procedure, public :: write_to_txt_3d
 end type partition_t
 
 contains
@@ -121,6 +122,30 @@ subroutine write_to_txt(this, filename)
     close(120)
 
 end subroutine
+subroutine write_to_txt_3d(this, filename)
+
+    use topology_mod, only : ex, ey, r
+
+    class(partition_t), intent(in) :: this
+    character(*),       intent(in) :: filename
+
+    integer(kind=4) :: ind, xyz_s(1:3), xyz_e(1:3)
+
+    open(120, file=filename)
+
+    do ind = 1, size(this%tile,1)
+
+        xyz_s(1:3) = r(1:3,this%tile(ind)%panel_number)*this%npoints + (this%tile(ind)%is-1)*ex(1:3, this%tile(ind)%panel_number) + &
+                                                             (this%tile(ind)%js-1)*ey(1:3, this%tile(ind)%panel_number)
+        xyz_e(1:3) = r(1:3,this%tile(ind)%panel_number)*this%npoints + (this%tile(ind)%ie-1)*ex(1:3, this%tile(ind)%panel_number) + &
+                                                             (this%tile(ind)%je-1)*ey(1:3, this%tile(ind)%panel_number)
+
+        write(120,'(8I4)') this%tile(ind)%panel_number, xyz_s(1), xyz_e(1), xyz_s(2), xyz_e(2), xyz_s(3), xyz_e(3), this%proc_map(ind)
+    end do
+
+    close(120)
+
+end subroutine write_to_txt_3d
 
 subroutine partition_1d(Np, N, work)
     integer(kind=4), intent(in)  :: Np, N
