@@ -31,21 +31,22 @@ end type operator_swlin_t
 
 contains
 
-subroutine init_swlin_operator(oper, ts, te, mesh, partition, ex_halo_width, myid, np, H0)
+function init_swlin_operator(ts, te, mesh, partition, ex_halo_width, &
+                                           myid, np, H0, namelist_str) result(oper)
 
     use partition_mod,        only : partition_t
     use exchange_factory_mod, only : create_2d_full_halo_exchange
     use ecs_halo_factory_mod, only : init_ecs_halo
     use hor_difops_basic_mod, only : cl_gradient_contra_c2, cl_divergence_cgr2
 
-    type(operator_swlin_t), intent(out) :: oper
-    integer(kind=4),        intent(in)  :: ts, te
-    type(mesh_t),           intent(in), &
-                            target      :: mesh(ts:te)
-    type(partition_t),      intent(in)  :: partition
-    integer(kind=4),        intent(in)  :: ex_halo_width
-    integer(kind=4),        intent(in)  :: myid, np
-    real(kind=8),           intent(in)  :: H0
+    type(operator_swlin_t)                 :: oper
+    integer(kind=4),           intent(in)  :: ts, te
+    type(mesh_t),     target,  intent(in)  :: mesh(ts:te)
+    type(partition_t),         intent(in)  :: partition
+    integer(kind=4),           intent(in)  :: ex_halo_width
+    integer(kind=4),           intent(in)  :: myid, np
+    real(kind=8),              intent(in)  :: H0
+    character(:), allocatable, intent(in)  :: namelist_str
 
     integer(kind=4) ind
 
@@ -67,7 +68,7 @@ subroutine init_swlin_operator(oper, ts, te, mesh, partition, ex_halo_width, myi
     oper%grad_contra => cl_gradient_contra_c2
     oper%div         => cl_divergence_cgr2
 
-end subroutine init_swlin_operator
+end function init_swlin_operator
 
 subroutine act(this, vout, vin)
 
@@ -96,7 +97,7 @@ subroutine act(this, vout, vin)
             end do
 
             call this%ext_halo(vout)
-            
+
         class default
             call avost("swlin operator: non-swlin state vector on input. Stop")
         end select

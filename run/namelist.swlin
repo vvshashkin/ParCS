@@ -6,7 +6,10 @@
     H0 = 1d3
 /
 &CTR
-    test_case_num = 1,
     NSTEP = 1200,
     NZAP  = 10
+/
+
+&INI_COND
+    test_case_num = 1
 /

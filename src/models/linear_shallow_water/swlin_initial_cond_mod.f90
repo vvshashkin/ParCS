@@ -2,20 +2,37 @@ module swlin_initial_cond_mod
 
 implicit none
 
+integer(kind=4)  :: test_case_num = 1
+namelist /ini_cond/ test_case_num
+
 private
 public :: set_swlin_initial_conditions
 
 contains
 
-subroutine set_swlin_initial_conditions(stvec, test_case_num, ts, te, mesh)
+subroutine set_swlin_initial_conditions(stvec, namelist_str, ts, te, mesh, &
+                                        myid, master_id)
 
     use stvec_swlin_mod, only : stvec_swlin_t
     use mesh_mod,        only : mesh_t
 
-    type(stvec_swlin_t), intent(inout) :: stvec
-    integer(kind=4),     intent(in)    :: test_case_num
-    integer(kind=4),     intent(in)    :: ts, te
-    type(mesh_t),        intent(in)    :: mesh(ts:te)
+    type(stvec_swlin_t),       intent(inout) :: stvec
+    character(:), allocatable, intent(in)    :: namelist_str
+    integer(kind=4),           intent(in)    :: ts, te
+    type(mesh_t),              intent(in)    :: mesh(ts:te)
+    integer(kind=4),           intent(in)    :: myid, master_id
+
+    integer(kind=4) namelist_read_stat
+
+    if(allocated(namelist_str)) then
+        read(namelist_str, ini_cond)
+    end if
+
+    if(myid == master_id) then
+        print *, "---Initial conditions module initialization"
+        print *, "test_case_num = ", test_case_num
+        print *, "-------------------------------------------"
+    end if
 
     if(test_case_num == 1) then
         call set_swlin_gauss_hill(stvec, test_case_num, ts, te, mesh)

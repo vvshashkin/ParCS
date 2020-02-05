@@ -22,8 +22,7 @@ namelist /dyn/ H0, dt
 !run & output controls
 integer(kind=4)            :: nstep = 10
 integer(kind=4)            :: nzap  = 1
-integer(kind=4)            :: test_case_num = 1
-namelist /ctr/ nstep, nzap, test_case_num
+namelist /ctr/ nstep, nzap
 
 !internal controls
 integer(kind=4)            :: master_id = 0
@@ -120,14 +119,13 @@ subroutine init_swlin_model()
     call init_swlin_output(myid, master_id, Np, partition,                &
                            lbound(mesh, dim=1),ubound(mesh, dim=1),mesh)
 
-    call set_swlin_initial_conditions(stvec, test_case_num, ts,te, mesh(ts:te))
+    call set_swlin_initial_conditions(stvec, namelist_str, ts,te, mesh(ts:te), &
+                                      myid, master_id)
 
-    call init_swlin_operator(operator, ts, te, mesh(ts:te), &
-                             partition, halo_width, myid, Np, H0)
+    operator = init_swlin_operator(ts, te, mesh(ts:te), partition,        &
+                                   halo_width, myid, Np, H0, namelist_str)
     call operator%ext_halo(stvec)
 
-    !call init_rk4(ts_rk4, stvec)
-    !time_scheme = ts_rk4
     time_scheme = init_rk4(operator, stvec)
 
 end subroutine init_swlin_model
