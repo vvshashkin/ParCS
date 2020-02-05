@@ -1,8 +1,10 @@
 module stvec_abstract_mod
 
+use state_abstract_mod, only : state_abstract_t
+
 implicit none
 
-type, abstract, public :: stvec_abstract_t
+type, abstract, public, extends(state_abstract_t) :: stvec_abstract_t
 
 contains
 

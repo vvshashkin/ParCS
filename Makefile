@@ -133,7 +133,8 @@ $(DOBJ)grid_function_mod.o: src/grid_function_mod.f90
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
-$(DOBJ)stvec_abstract_mod.o: src/stvec_abstract_mod.f90
+$(DOBJ)stvec_abstract_mod.o: src/stvec_abstract_mod.f90 \
+	$(DOBJ)state_abstract_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -176,6 +177,10 @@ $(DOBJ)exchange_mod.o: src/exchange_mod.f90 \
 	$(DOBJ)exchange_profile_mod.o \
 	$(DOBJ)buffer_mod.o \
 	$(DOBJ)grid_function_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)state_abstract_mod.o: src/state_abstract_mod.f90
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
