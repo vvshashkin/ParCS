@@ -5,6 +5,7 @@ module grid_function_mod
 type, public :: grid_function_t
 
     real(kind=8), allocatable :: p(:,:,:)
+    integer(kind=4)           :: panel_ind
     integer(kind=4)           :: is, ie, js, je, ks, ke
     integer(kind=4)           :: nvi, nvj, nvk
 
@@ -17,9 +18,10 @@ end type grid_function_t
 contains
 
 
-subroutine grid_function_init(this, is, ie, js, je, ks, ke, nvi, nvj, nvk)
+subroutine grid_function_init(this, panel_ind, is, ie, js, je, ks, ke, nvi, nvj, nvk)
 
     class(grid_function_t), intent(out) :: this
+    integer(kind=4),        intent(in)  :: panel_ind
     integer(kind=4),        intent(in)  :: is, ie, js, je, ks, ke, nvi, nvj, nvk
 
     if (is>ie .or. js>je .or. ks>ke .or. nvi<0 .or. nvj<0 .or. nvk<0) then
@@ -29,6 +31,7 @@ subroutine grid_function_init(this, is, ie, js, je, ks, ke, nvi, nvj, nvk)
 
     allocate( this.p(is-nvi : ie+nvi, js-nvj : je+nvj, ks-nvk : ke+nvk) )
 
+    this%panel_ind = panel_ind
     this%is = is; this%ie = ie
     this%js = js; this%je = je
     this%ks = ks; this%ke = ke

@@ -4,7 +4,7 @@
 !   / source  /
 !  / /^b     /
 ! / +-->a   /
-!/_________/     ^z  
+!/_________/     ^z
 !|         |     |  /^y
 !|  ^b     |     | /
 !|  | targ |     |/
@@ -47,20 +47,21 @@ type, extends(halo_t) :: ecs_halo_t
 
   contains
   procedure, public :: interp  => ecs_ext_halo
-  procedure, public :: interpv => ecs_ext_halo_vect
+
 end type ecs_halo_t
 
 contains
 
-subroutine ecs_ext_halo(this, f)
+subroutine ecs_ext_halo(this, f, halo_width)
 !interpolate source face values at halo zones to target face virtual points
 use grid_function_mod, only: grid_function_t
 
 class(ecs_halo_t),     intent(in)    :: this
 type(grid_function_t), intent(inout) :: f
+integer(kind=4),       intent(in)    :: halo_width
 
 !local
-integer(kind=4) n, hw
+integer(kind=4) n, thw, ihw
 integer(kind=4) is, ie, js, je
 integer(kind=4) nvi, nvj, nvk
 integer(kind=4) isv, iev, jsv,jev, ksv, kev
@@ -74,7 +75,10 @@ real(kind=8) zf_csp(6,f%ks-f%nvk:f%ke+f%nvk,4) !values at corner-points and near
 
 !short names for needed params
 n = this%n
-hw = this%halo_width
+thw = this%halo_width !dimensions of initialized weights, theoretically max hw
+ihw = halo_width      !width of user-requested halo-interpolations
+
+if(thw < ihw) call halo_avost("requested halo width is greater than initialized maximum halo_width")
 
 is = f%is;      ie = f%ie
 js = f%js;      je = f%je
@@ -94,22 +98,22 @@ if(lcorn(1).or.lcorn(2).or.lcorn(3).or.lcorn(4)) then
     !zf_csp -> f%p after edge halo procedure
     call ecs_halo_corners(zf_csp,                                       & !special points interpolated values
                           f%p,is,ie,js,je,isv,iev,jsv,jev,klev,nvi,nvj, & !function values array and its bounds
-                          this%wx,this%wsx,this%wex,hw,                 & !weight array and its bounds
-                          lcorn,n,hw)                                   !operating parameters
+                          this%wx,this%wsx,this%wex,thw,                & !weight array and its bounds
+                          lcorn,n,ihw)                                  !operating parameters
 end if
 
 if(lhalo(1).or.lhalo(2)) then
     call ecs_halo_edges_x(f%p,is,ie,js,je,isv,iev,jsv,jev,klev,nvi,nvj, & !function values array and its bounds
-                          this%wx,this%wsx,this%wex,hw,this%indx,       & !weight array and its bounds
-                          lhalo,n,hw)                                   !operating parameters
+                          this%wx,this%wsx,this%wex,thw,this%indx,      & !weight array and its bounds
+                          lhalo,n,ihw)                                  !operating parameters
 end if
 if(lhalo(3).or.lhalo(4)) then
     call ecs_halo_edges_y(f%p,is,ie,js,je,isv,iev,jsv,jev,klev,nvi,nvj, & !function values array and its bounds
-                          this%wy,this%wsy,this%wey,hw,this%indy,       & !weight array and its bounds
-                          lhalo,n,hw)                                   !operating parameters
+                          this%wy,this%wsy,this%wey,thw,this%indy,      & !weight array and its bounds
+                          lhalo,n,ihw)                                  !operating parameters
 end if
 
-call ecs_halo_corners_put(f%p,isv,iev,jsv,jev,klev,zf_csp,n,lcorn)
+call ecs_halo_corners_put(f%p,isv,iev,jsv,jev,klev,zf_csp,n,lcorn,ihw)
 
 end subroutine ecs_ext_halo
 
@@ -175,19 +179,19 @@ do icor = 1,4
         else
             zpw(-1:2,-1:2,1:whw) = w(2:-1:-1,n+2:n-1:-1,1:whw)
         end if
-        call ecs_halo_1corner(pfcsp(1:6,1:klev,icor),zbufc,nvi,nvj,klev,zpw,-1,2,whw)
+        call ecs_halo_1corner(pfcsp(1:6,1:klev,icor),zbufc,nvi,nvj,klev,zpw,-1,2,whw,hw)
     end if
 end do
 
 end subroutine ecs_halo_corners
 
-subroutine ecs_halo_1corner(pfcsp,fc,nvi,nvj,klev,pw,ws,we,whw)
+subroutine ecs_halo_1corner(pfcsp,fc,nvi,nvj,klev,pw,ws,we,whw,hw)
 !output
 real(kind=8),   intent(out) :: pfcsp(6,klev)
 !input:
 real(kind=8),    intent(in) :: fc(1-nvi:nvi,1-nvj:nvj,klev)
 integer(kind=4), intent(in) :: nvi, nvj, klev
-integer(kind=4), intent(in) :: ws, we, whw
+integer(kind=4), intent(in) :: ws, we, whw, hw
 real(kind=8),    intent(in) :: pw(-1:2,ws:we,whw)
 !locals:
 integer(kind=4) k
@@ -218,62 +222,70 @@ do k=1, klev
     zff2 = pw(-1,1,2)*fc(0,2,k)+pw(0,1,2)*fc(-1,2,k)+pw(1,1,2)*fc(-2,2,k)+pw(2,1,2)*fc(-3,2,k)
     pfcsp(3,k) = 0.5_8*(pw(-1,0,1)*zff1+pw(0,0,1)*zfy1+pw(1,0,1)*fc(0,1,k)+pw(2,0,1)*fc(0,2,k)+&
                         pw(-1,0,1)*zff2+pw(0,0,1)*zfy2+pw(1,0,1)*fc(1,0,k)+pw(2,0,1)*fc(2,0,k))
+    if(hw>1) then
+        zff1  = pw(-1,2,1)*fc(1,0,k)+pw(0,2,1)*fc(1,-1,k)+pw(1,2,1)*fc(1,-2,k)+pw(2,2,1)*fc(1,-3,k)
+        zff11 = pw(-1,2,2)*fc(2,-1,k)+pw(0,2,2)*fc(2,-2,k)+pw(1,2,2)*fc(2,-3,k)+pw(2,2,2)*fc(2,-4,k)
+        zff2  = pw(-1,2,1)*fc(0,1,k)+pw(0,2,1)*fc(-1,1,k)+pw(1,2,1)*fc(-2,1,k)+pw(2,2,1)*fc(-3,1,k)
+        zff22 = pw(-1,2,2)*fc(-1,2,k)+pw(0,2,2)*fc(-2,2,k)+pw(1,2,2)*fc(-3,2,k)+pw(2,2,2)*fc(-4,2,k)
 
-    zff1  = pw(-1,2,1)*fc(1,0,k)+pw(0,2,1)*fc(1,-1,k)+pw(1,2,1)*fc(1,-2,k)+pw(2,2,1)*fc(1,-3,k)
-    zff11 = pw(-1,2,2)*fc(2,-1,k)+pw(0,2,2)*fc(2,-2,k)+pw(1,2,2)*fc(2,-3,k)+pw(2,2,2)*fc(2,-4,k)
-    zff2  = pw(-1,2,1)*fc(0,1,k)+pw(0,2,1)*fc(-1,1,k)+pw(1,2,1)*fc(-2,1,k)+pw(2,2,1)*fc(-3,1,k)
-    zff22 = pw(-1,2,2)*fc(-1,2,k)+pw(0,2,2)*fc(-2,2,k)+pw(1,2,2)*fc(-3,2,k)+pw(2,2,2)*fc(-4,2,k)
+        pfcsp(4,k) = pw(-1,0,2)*zff1+pw(0,0,2)*fc(-1,1,k)+pw(1,0,2)*fc(-1,2,k)+pw(2,0,2)*fc(-1,3,k)
+        pfcsp(5,k) = pw(-1,0,2)*zff2+pw(0,0,2)*fc(1,-1,k)+pw(1,0,2)*fc(2,-1,k)+pw(2,0,2)*fc(3,-1,k)
 
-    pfcsp(4,k) = pw(-1,0,2)*zff1+pw(0,0,2)*fc(-1,1,k)+pw(1,0,2)*fc(-1,2,k)+pw(2,0,2)*fc(-1,3,k)
-    pfcsp(5,k) = pw(-1,0,2)*zff2+pw(0,0,2)*fc(1,-1,k)+pw(1,0,2)*fc(2,-1,k)+pw(2,0,2)*fc(3,-1,k)
-
-    pfcsp(6,k) = 0.5_8*(pw(-1,-1,2)*zff11+pw(0,-1,2)*zff1+pw(1,-1,2)*fc(-1,1,k)+pw(2,-1,2)*fc(-1,2,k)+&
-                        pw(-1,-1,2)*zff22+pw(0,-1,2)*zff2+pw(1,-1,2)*fc(1,-1,k)+pw(2,-1,2)*fc(2,-1,k))
-    
+        pfcsp(6,k) = 0.5_8*(pw(-1,-1,2)*zff11+pw(0,-1,2)*zff1+pw(1,-1,2)*fc(-1,1,k)+pw(2,-1,2)*fc(-1,2,k)+&
+                            pw(-1,-1,2)*zff22+pw(0,-1,2)*zff2+pw(1,-1,2)*fc(1,-1,k)+pw(2,-1,2)*fc(2,-1,k))
+    end if
 end do
 
 end subroutine ecs_halo_1corner
 
-subroutine ecs_halo_corners_put(pf,isv,iev,jsv,jev,klev,pfcsp,n,lcorn)
+subroutine ecs_halo_corners_put(pf,isv,iev,jsv,jev,klev,pfcsp,n,lcorn,hw)
 !output
 real(kind=8), intent(inout) :: pf(isv:iev,jsv:jev,klev) !output field
 !input
 integer(kind=4), intent(in) :: isv,iev,jsv,jev,klev   !dimensions of pf
 real(kind=8),    intent(in) :: pfcsp(6,klev,4)          !previously interpolated values at 'special' corner points
-integer(kind=4), intent(in) :: n
+integer(kind=4), intent(in) :: n, hw
 logical,         intent(in) :: lcorn(4)                 !if pf corner is cubedsphere corner
 
 if(lcorn(1)) then
     pf( 0, 1,1:klev) = pfcsp(1,1:klev,1)
     pf( 1, 0,1:klev) = pfcsp(2,1:klev,1)
     pf( 0, 0,1:klev) = pfcsp(3,1:klev,1)
-    pf(-1, 0,1:klev) = pfcsp(4,1:klev,1)
-    pf( 0,-1,1:klev) = pfcsp(5,1:klev,1)
-    pf(-1,-1,1:klev) = pfcsp(6,1:klev,1)
+    if(hw>1) then
+        pf(-1, 0,1:klev) = pfcsp(4,1:klev,1)
+        pf( 0,-1,1:klev) = pfcsp(5,1:klev,1)
+        pf(-1,-1,1:klev) = pfcsp(6,1:klev,1)
+    end if
 end if
 if(lcorn(2)) then
     pf(n+1, 1,1:klev) = pfcsp(1,1:klev,2)
     pf(n  , 0,1:klev) = pfcsp(2,1:klev,2)
     pf(n+1, 0,1:klev) = pfcsp(3,1:klev,2)
-    pf(n+2, 0,1:klev) = pfcsp(4,1:klev,2)
-    pf(n+1,-1,1:klev) = pfcsp(5,1:klev,2)
-    pf(n+2,-1,1:klev) = pfcsp(6,1:klev,2)
+    if(hw>1) then
+        pf(n+2, 0,1:klev) = pfcsp(4,1:klev,2)
+        pf(n+1,-1,1:klev) = pfcsp(5,1:klev,2)
+        pf(n+2,-1,1:klev) = pfcsp(6,1:klev,2)
+    end if
 end if
 if(lcorn(3)) then
     pf(n+1,n  ,1:klev) = pfcsp(1,1:klev,3)
     pf(n  ,n+1,1:klev) = pfcsp(2,1:klev,3)
     pf(n+1,n+1,1:klev) = pfcsp(3,1:klev,3)
-    pf(n+2,n+1,1:klev) = pfcsp(4,1:klev,3)
-    pf(n+1,n+2,1:klev) = pfcsp(5,1:klev,3)
-    pf(n+2,n+2,1:klev) = pfcsp(6,1:klev,3)
+    if(hw>1) then
+        pf(n+2,n+1,1:klev) = pfcsp(4,1:klev,3)
+        pf(n+1,n+2,1:klev) = pfcsp(5,1:klev,3)
+        pf(n+2,n+2,1:klev) = pfcsp(6,1:klev,3)
+    end if
 end if
 if(lcorn(4)) then
     pf( 0,n  ,1:klev) = pfcsp(1,1:klev,4)
     pf( 1,n+1,1:klev) = pfcsp(2,1:klev,4)
     pf( 0,n+1,1:klev) = pfcsp(3,1:klev,4)
-    pf(-1,n+1,1:klev) = pfcsp(4,1:klev,4)
-    pf( 0,n+2,1:klev) = pfcsp(5,1:klev,4)
-    pf(-1,n+2,1:klev) = pfcsp(6,1:klev,4)
+    if(hw>1) then
+        pf(-1,n+1,1:klev) = pfcsp(4,1:klev,4)
+        pf( 0,n+2,1:klev) = pfcsp(5,1:klev,4)
+        pf(-1,n+2,1:klev) = pfcsp(6,1:klev,4)
+    end if
 end if
 end subroutine ecs_halo_corners_put
 
@@ -306,10 +318,10 @@ if(lfail_hw) call halo_avost("cubed sphere halo_width > grid_function_t halo wid
 !check if we have enough data along edges to perform interpolations
 ish = max(1,is-hw); ieh = min(n,ie+hw)
 lfail_halo_long = .false.
-lfail_halo_long = (minval(indx(ish,1:whw))-1<isv .or. maxval(indx(ieh,1:whw))+2>iev)
+lfail_halo_long = (minval(indx(ish,1:hw))-1<isv .or. maxval(indx(ieh,1:hw))+2>iev)
 if(lfail_halo_long) call halo_avost("not enough points along cub.sph edge to perform halo-interpolations (nvi=5 needed)")
 
-!calculate values at corner special points 
+!calculate values at corner special points
 !store them in sepparate arrays to not to spoil original f%p
 
 !Halo-procedures along edges
@@ -354,10 +366,10 @@ lfail_hw = nvj< hw
 if(lfail_hw) call halo_avost("cubed sphere halo_width > grid_function_t halo width, can't continue")
 !check if we have enough data along edges to perform interpolations
 jsh = max(1,js-hw); jeh = min(n,je+hw)
-lfail_halo_long = (minval(indy(jsh,1:whw))-1<jsv .or. maxval(indy(jeh,1:whw))+2>jev)
+lfail_halo_long = (minval(indy(jsh,1:hw))-1<jsv .or. maxval(indy(jeh,1:hw))+2>jev)
 if(lfail_halo_long) call halo_avost("not enough points along cub.sph edge to perform halo-interpolations (nvi=5 needed)")
 
-!calculate values at corner special points 
+!calculate values at corner special points
 !store them in sepparate arrays to not to spoil original f%p
 
 !Halo-procedures along edges

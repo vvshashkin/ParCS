@@ -2,13 +2,13 @@
 
 #main building variables
 DSRC    = src
-DOBJ    = obj/
-DMOD    = mod/
+DOBJ    = obj_opt/
+DMOD    = mod_opt/
 DEXE    = ./
 LIBS    =
 FC      = mpiifort
-OPTSC   =  -c -traceback -init=snan -init=arrays -check all -ftrapuv -module mod
-OPTSL   =  -traceback -init=snan -init=arrays -check all -ftrapuv -module mod
+OPTSC   =  -c -traceback -O3 -ipo -module mod_opt
+OPTSL   =  -traceback -O3 -ipo -module mod_opt
 VPATH   = $(DSRC) $(DOBJ) $(DMOD)
 MKDIRS  = $(DOBJ) $(DMOD) $(DEXE)
 LCEXES  = $(shell echo $(EXES) | tr '[:upper:]' '[:lower:]')
@@ -515,4 +515,3 @@ cleanexe:
 clean: cleanobj cleanmod
 .PHONY : cleanall
 cleanall: clean cleanexe
-all: $(addprefix $(DEXE),$(EXES))
