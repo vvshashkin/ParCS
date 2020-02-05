@@ -100,4 +100,26 @@ subroutine cl_divergence_cgr2(div, u, v, mesh, multiplier)
 
 end subroutine cl_divergence_cgr2
 
+!fake test operator: 0-grad on any field f
+subroutine cl_gradient_0(gx, gy, f, mesh, multiplier)
+    type(grid_function_t),  intent(inout) :: gx, gy
+    type(grid_function_t),  intent(in)    :: f
+    type(mesh_t),           intent(in)    :: mesh
+    real(kind=8), optional, intent(in)    :: multiplier
+
+    gx%p = 0._8; gy%p = 0._8
+
+end subroutine cl_gradient_0
+
+!Fake test operator: 0-divergence on any u,v, field
+subroutine cl_divergence_0(div, u, v, mesh, multiplier)
+    type(grid_function_t),  intent(inout) :: div
+    type(grid_function_t),  intent(in)    :: u, v
+    type(mesh_t),           intent(in)    :: mesh
+    real(kind=8), optional, intent(in)    :: multiplier
+
+    div%p = 0._8
+
+end subroutine cl_divergence_0
+
 end module hor_difops_basic_mod

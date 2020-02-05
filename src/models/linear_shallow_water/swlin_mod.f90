@@ -122,8 +122,8 @@ subroutine init_swlin_model()
     call set_swlin_initial_conditions(stvec, namelist_str, ts,te, mesh(ts:te), &
                                       myid, master_id)
 
-    operator = init_swlin_operator(ts, te, mesh(ts:te), partition,        &
-                                   halo_width, myid, Np, H0, namelist_str)
+    operator = init_swlin_operator(ts, te, mesh(ts:te), partition, halo_width, &
+                                   master_id, myid, Np, H0, namelist_str)
     call operator%ext_halo(stvec)
 
     time_scheme = init_rk4(operator, stvec)

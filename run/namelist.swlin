@@ -13,3 +13,7 @@
 &INI_COND
     test_case_num = 1
 /
+&OPER_INI
+    grad_op_name = "gradient2"
+    div_op_name = "divergence2"
+/
