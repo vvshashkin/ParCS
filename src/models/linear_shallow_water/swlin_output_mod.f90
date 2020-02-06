@@ -11,12 +11,11 @@ class(outputer_t),     allocatable :: outputer
 contains
 
 subroutine init_swlin_output(myid, master_id, np, partition, ts, te, mesh)
-    use stvec_swlin_mod,      only : stvec_swlin_t
-    use mesh_mod,             only : mesh_t
-    use partition_mod,        only : partition_t
-    use exchange_mod,         only : exchange_t
-    use exchange_factory_mod, only : create_gather_exchange
-    use outputer_factory_mod, only : create_master_paneled_outputer
+    use stvec_swlin_mod,       only : stvec_swlin_t
+    use mesh_mod,              only : mesh_t
+    use partition_mod,         only : partition_t
+    use exchange_factory_mod,  only : create_gather_exchange
+    use outputer_factory_mod,  only : create_master_paneled_outputer
 
 
     integer(kind=4),     intent(in) :: myid, master_id, np
@@ -25,7 +24,6 @@ subroutine init_swlin_output(myid, master_id, np, partition, ts, te, mesh)
     type(mesh_t),        intent(in) :: mesh(ts:te)
 
     integer(kind=4) i
-    type(exchange_t) exch_gather
 
     allocate(gf_buffer(ts:te))
 
@@ -35,8 +33,8 @@ subroutine init_swlin_output(myid, master_id, np, partition, ts, te, mesh)
                                mesh(i)%halo_width,mesh(i)%halo_width, 0)
     end do
 
-    call create_gather_exchange(exch_gather, partition, master_id, myid, np)
-    outputer = create_master_paneled_outputer(master_id = master_id, gather_exch = exch_gather)
+    outputer = create_master_paneled_outputer(master_id = master_id,  &
+    gather_exch = create_gather_exchange(partition, master_id, myid, np))
 end subroutine init_swlin_output
 
 subroutine write_swlin(myid, master_id, ts, te, stvec, ms, me, mesh, rec_num)

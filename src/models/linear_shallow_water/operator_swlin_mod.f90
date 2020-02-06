@@ -4,7 +4,7 @@ use operator_abstract_mod,       only : operator_abstract_t
 use stvec_abstract_mod,          only : stvec_abstract_t
 use stvec_swlin_mod,             only : stvec_swlin_t
 use mesh_mod,                    only : mesh_t
-use exchange_mod,                only : exchange_t
+use exchange_abstract_mod,       only : exchange_t
 use ecs_halo_mod,                only : ecs_halo_t
 use hor_difops_abstract_mod,     only : gradient, divergence
 
@@ -19,8 +19,8 @@ type, extends(operator_abstract_t) :: operator_swlin_t
 
     integer(kind=4)                :: ts, te
     type(mesh_t), pointer          :: mesh(:)
-    type(exchange_t)               :: exch_halo
-    type(ecs_halo_t), allocatable  :: halo(:)
+    class(exchange_t), allocatable :: exch_halo
+    type(ecs_halo_t),  allocatable :: halo(:)
     real(kind=8)                   :: H0
     procedure(gradient),   pointer, nopass :: grad_contra
     procedure(divergence), pointer, nopass :: div
@@ -38,7 +38,7 @@ function init_swlin_operator(ts, te, mesh, partition, ex_halo_width, &
                              master_id, myid, np, H0, namelist_str)    result(oper)
 
     use partition_mod,        only : partition_t
-    use exchange_factory_mod, only : create_2d_full_halo_exchange
+    use exchange_factory_mod, only : create_2d_halo_exchange
     use ecs_halo_factory_mod, only : init_ecs_halo
     use hor_difops_basic_mod, only : cl_gradient_contra_c2, cl_divergence_cgr2, &
                                      cl_gradient_0, cl_divergence_0
@@ -57,7 +57,7 @@ function init_swlin_operator(ts, te, mesh, partition, ex_halo_width, &
     oper%ts = ts; oper%te = te
     oper%mesh(ts:te) => mesh(ts:te)
 
-    call create_2d_full_halo_exchange(oper%exch_halo, partition, ex_halo_width, myid, np)
+    oper%exch_halo = create_2d_halo_exchange(partition, ex_halo_width, 'full', myid, np)
 
     allocate(oper%halo(ts:te))
     do ind=ts,te

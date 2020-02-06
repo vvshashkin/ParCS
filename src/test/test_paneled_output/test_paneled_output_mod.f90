@@ -6,7 +6,6 @@ subroutine test_paneled_output()
     use mpi
 
     use grid_function_mod,           only : grid_function_t
-    use exchange_mod,                only : exchange_t
     use partition_mod,               only : partition_t
     use exchange_factory_mod,        only : create_gather_exchange
     use outputer_abstract_mod,       only : outputer_t
@@ -14,7 +13,6 @@ subroutine test_paneled_output()
     use mesh_mod,                    only : mesh_t
     use mesh_factory_mod,            only : create_equiangular_mesh
 
-    type(exchange_t)                   :: exch_gather
     type(partition_t)                  :: partition
     class(outputer_t), allocatable     :: outputer
     type(grid_function_t), allocatable :: f1(:)
@@ -102,10 +100,8 @@ subroutine test_paneled_output()
         end do
     end do
 
-    !Init exchange
-    call create_gather_exchange(exch_gather, partition, master_id, myid, np)
-
-    outputer = create_master_paneled_outputer(master_id = 0, gather_exch = exch_gather)
+    outputer = create_master_paneled_outputer( master_id = 0, &
+    gather_exch = create_gather_exchange(partition, master_id, myid, np) )
 
     call outputer%write(f1, mesh, lbound(f1, dim=1), ubound(f1, dim=1), file_name)
 

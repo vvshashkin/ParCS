@@ -1,7 +1,6 @@
 module timescheme_abstract_mod
 
 use state_abstract_mod,    only : state_abstract_t
-use operator_abstract_mod, only : operator_abstract_t
 
 implicit none
 
@@ -13,7 +12,6 @@ end type timescheme_abstract_t
 abstract interface
     subroutine step(this, v0, dt)
         import state_abstract_t
-        import operator_abstract_t
         import timescheme_abstract_t
 
         class(timescheme_abstract_t),    intent(inout) :: this

@@ -8,14 +8,14 @@ subroutine test_metric()
 
 use mpi
 
-use grid_function_mod,    only : grid_function_t
-use exchange_mod,         only : exchange_t
-use partition_mod,        only : partition_t
-use exchange_factory_mod, only : create_2d_full_halo_exchange, create_2d_cross_halo_exchange
-use mesh_factory_mod,     only : create_equiangular_mesh
-use mesh_mod,             only : mesh_t
+use grid_function_mod,     only : grid_function_t
+use exchange_abstract_mod, only : exchange_t
+use partition_mod,         only : partition_t
+use exchange_factory_mod,  only : create_2d_halo_exchange
+use mesh_factory_mod,      only : create_equiangular_mesh
+use mesh_mod,              only : mesh_t
 
-type(exchange_t)                   :: exch_halo
+class(exchange_t),     allocatable :: exch_halo
 type(partition_t)                  :: partition
 type(grid_function_t), allocatable :: f1(:)
 type(grid_function_t), allocatable :: f2(:)
@@ -99,11 +99,10 @@ do ind = ts, te
 end do
 
 !Init exchange
-call create_2d_full_halo_exchange(exch_halo, partition, halo_width, myid, np)
+exch_halo = create_2d_halo_exchange(partition, halo_width, 'full', myid, np)
 
 !Perform exchange
-call exch_halo%do(f1, ts, te)
-call mpi_barrier(mpi_comm_world, ierr)
+call exch_halo%do(f1, lbound(f1, 1), ubound(f1, 1))
 
 lcross_edge_xyz = .true.
 do ind = ts, te

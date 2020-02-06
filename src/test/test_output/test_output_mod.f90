@@ -6,14 +6,12 @@ subroutine test_output()
     use mpi
 
     use grid_function_mod,           only : grid_function_t
-    use exchange_mod,                only : exchange_t
     use partition_mod,               only : partition_t
     use exchange_factory_mod,        only : create_gather_exchange
     use outputer_abstract_mod,       only : outputer_t
     use outputer_factory_mod,        only : create_master_process_outputer
     use mesh_mod,                    only : mesh_t
 
-    type(exchange_t)                   :: exch_gather
     type(partition_t)                  :: partition
     class(outputer_t), allocatable     :: outputer_bin, outputer_txt
     type(grid_function_t), allocatable :: f1(:)
@@ -79,11 +77,14 @@ subroutine test_output()
         end do
     end do
 
-    !Init exchange
-    call create_gather_exchange(exch_gather, partition, master_id, myid, np)
 
-    outputer_bin = create_master_process_outputer(master_id = 0, gather_exch = exch_gather, write_type = 'bin')
-    outputer_txt = create_master_process_outputer(master_id = 0, gather_exch = exch_gather, write_type = 'txt')
+    outputer_bin = create_master_process_outputer(master_id = 0, &
+                   gather_exch =create_gather_exchange(partition, master_id, myid, np), &
+                   write_type = 'bin')
+
+    outputer_txt = create_master_process_outputer(master_id = 0, &
+                   gather_exch =create_gather_exchange(partition, master_id, myid, np), &
+                   write_type = 'txt')
 
     do ind = 1, 5
 

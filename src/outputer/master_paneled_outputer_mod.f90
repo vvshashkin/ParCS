@@ -3,14 +3,14 @@ module master_paneled_outputer_mod
 use outputer_abstract_mod, only : outputer_t
 use grid_function_mod,     only : grid_function_t
 use mesh_mod,              only : mesh_t
-use exchange_mod,          only : exchange_t
+use exchange_abstract_mod, only : exchange_t
 use mpi
 
     implicit none
 
 type, public, extends(outputer_t) :: master_paneled_outputer_t
 
-    type(exchange_t)              :: gather_exch
+    class(exchange_t),allocatable :: gather_exch
     integer(kind=4)               :: master_id
     character(len=:), allocatable :: write_type !'bin' or 'txt'
     integer(kind=4)               :: rec_num = 1
@@ -39,7 +39,7 @@ subroutine master_paneled_write(this, f, mesh, ts, te, file_name, rec_num)
 
     integer(kind=4) :: t, i, j, k, myid, ierr, code
 
-    call this%gather_exch%do(f, lbound(f, dim=1), ubound(f, dim=1))
+    call this%gather_exch%do(f,ts,te)
 
     call mpi_comm_rank(mpi_comm_world, myid, ierr)
 
