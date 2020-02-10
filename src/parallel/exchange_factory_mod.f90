@@ -36,7 +36,7 @@ function create_2d_halo_exchange(partition, halo_width, halo_type, myid, np ) re
     integer(kind=4) :: local_ind, remote_ind, exch_num, ind,ts ,te
     logical :: is_intersection
 
-    if (halo_width > partition%npoints) then
+    if (halo_width > partition%Nh) then
         write(*,*) 'Error! Halo is too wide! Abort!'
         stop
     end if
@@ -60,7 +60,7 @@ function create_2d_halo_exchange(partition, halo_width, halo_type, myid, np ) re
 
             case('cross')
 
-            call find_cross_halo_intersection(local_tile, remote_tile, halo_width, partition%npoints, is_intersection , &
+            call find_cross_halo_intersection(local_tile, remote_tile, halo_width, partition%Nh, is_intersection , &
                                               recv_is(exch_num + 1), recv_ie(exch_num + 1)                            , &
                                               recv_js(exch_num + 1), recv_je(exch_num + 1)                            , &
                                               send_is(exch_num + 1), send_ie(exch_num + 1)                            , &
@@ -68,7 +68,7 @@ function create_2d_halo_exchange(partition, halo_width, halo_type, myid, np ) re
                                               send_i_step(exch_num+1), send_j_step(exch_num+1), first_dim_index(exch_num+1) )
 
             case('full')
-                call find_full_halo_intersection(local_tile, remote_tile, halo_width, partition%npoints, is_intersection , &
+                call find_full_halo_intersection(local_tile, remote_tile, halo_width, partition%Nh, is_intersection , &
                                                   recv_is(exch_num + 1), recv_ie(exch_num + 1)                            , &
                                                   recv_js(exch_num + 1), recv_je(exch_num + 1)                            , &
                                                   send_is(exch_num + 1), send_ie(exch_num + 1)                            , &

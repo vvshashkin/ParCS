@@ -62,12 +62,6 @@ $(DEXE)TEST_TS: $(MKDIRS) $(DOBJ)test_ts.o \
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_TS
-$(DEXE)TEST_OUTPUT_MAIN: $(MKDIRS) $(DOBJ)test_output_main.o \
-	$(DOBJ)avost.o
-	@rm -f $(filter-out $(DOBJ)test_output_main.o,$(EXESOBJ))
-	@echo $(LITEXT)
-	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
-EXES := $(EXES) TEST_OUTPUT_MAIN
 $(DEXE)TEST_METRIC_MAIN: $(MKDIRS) $(DOBJ)test_metric_main.o \
 	$(DOBJ)avost.o
 	@rm -f $(filter-out $(DOBJ)test_metric_main.o,$(EXESOBJ))
@@ -287,32 +281,32 @@ $(DOBJ)stvec_iomega_mod.o: src/models/iomega_model/stvec_iomega_mod.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)mpi_paneled_outputer_mod.o: src/outputer/mpi_paneled_outputer_mod.f90 \
+	$(DOBJ)outputer_abstract_mod.o \
+	$(DOBJ)grid_function_mod.o \
+	$(DOBJ)partition_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)outputer_factory_mod.o: src/outputer/outputer_factory_mod.f90 \
-	$(DOBJ)master_process_outputer_mod.o \
+	$(DOBJ)master_paneled_outputer_mod.o \
 	$(DOBJ)exchange_abstract_mod.o \
-	$(DOBJ)master_paneled_outputer_mod.o
+	$(DOBJ)mpi_paneled_outputer_mod.o \
+	$(DOBJ)partition_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)master_paneled_outputer_mod.o: src/outputer/master_paneled_outputer_mod.f90 \
 	$(DOBJ)outputer_abstract_mod.o \
+	$(DOBJ)partition_mod.o \
 	$(DOBJ)grid_function_mod.o \
-	$(DOBJ)mesh_mod.o \
 	$(DOBJ)exchange_abstract_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)outputer_abstract_mod.o: src/outputer/outputer_abstract_mod.f90 \
 	$(DOBJ)grid_function_mod.o \
-	$(DOBJ)mesh_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
-$(DOBJ)master_process_outputer_mod.o: src/outputer/master_process_outputer_mod.f90 \
-	$(DOBJ)outputer_abstract_mod.o \
-	$(DOBJ)grid_function_mod.o \
-	$(DOBJ)mesh_mod.o \
-	$(DOBJ)exchange_abstract_mod.o
+	$(DOBJ)partition_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -429,21 +423,6 @@ $(DOBJ)test_rk4.o: src/test/test_time_steping/test_rk4.f90 \
 
 $(DOBJ)test_ts.o: src/test/test_time_steping/test_ts.f90 \
 	$(DOBJ)test_rk4.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
-$(DOBJ)test_output_main.o: src/test/test_output/test_output_main.f90 \
-	$(DOBJ)test_output_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
-$(DOBJ)test_output_mod.o: src/test/test_output/test_output_mod.f90 \
-	$(DOBJ)grid_function_mod.o \
-	$(DOBJ)partition_mod.o \
-	$(DOBJ)exchange_factory_mod.o \
-	$(DOBJ)outputer_abstract_mod.o \
-	$(DOBJ)outputer_factory_mod.o \
-	$(DOBJ)mesh_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

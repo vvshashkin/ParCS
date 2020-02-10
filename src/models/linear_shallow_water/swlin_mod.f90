@@ -92,7 +92,7 @@ subroutine init_swlin_model()
         print *, "--------------------"
     end if
 
-    call partition%init(nx, nz, max(1,Np/6), Np, strategy = 'default')
+    call partition%init(nx, nz, max(1,Np/6), myid, Np, strategy = 'default')
 
     ts = findloc(partition%proc_map, myid, dim=1)
     te = findloc(partition%proc_map, myid, back = .true., dim=1)
@@ -116,8 +116,7 @@ subroutine init_swlin_model()
                                                 partition%tile(ind)%ks, partition%tile(ind)%ke, &
                                                 nx, halo_width, partition%tile(ind)%panel_number)
     end do
-    call init_swlin_output(myid, master_id, Np, partition,                &
-                           lbound(mesh, dim=1),ubound(mesh, dim=1),mesh)
+    call init_swlin_output(myid, master_id, Np, partition)
 
     call set_swlin_initial_conditions(stvec, namelist_str, ts,te, mesh(ts:te), &
                                       myid, master_id)
@@ -140,15 +139,13 @@ subroutine run_swlin_model()
     call MPI_comm_rank(mpi_comm_world , myid, ierr)
     call MPI_comm_size(mpi_comm_world , Np  , ierr)
 
-    call write_swlin(myid, master_id, stvec%ts, stvec%te, stvec,  &
-                     lbound(mesh, dim=1),ubound(mesh, dim=1), mesh, 1)
+    call write_swlin(stvec, partition, 1)
 
     irec = 1
     do istep = 1, nstep
         call time_scheme%step(stvec, dt)
         if(mod(istep,nzap) == 0) then
-            call write_swlin(myid, master_id, stvec%ts, stvec%te, stvec,  &
-                             lbound(mesh, dim=1),ubound(mesh, dim=1), mesh, irec)
+            call write_swlin(stvec, partition,irec)
             call print_swlin_diag(stvec,stvec%ts, stvec%te, mesh,         &
                                   myid, master_id, istep)
             irec = irec+1

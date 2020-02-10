@@ -48,7 +48,7 @@ logical lpass, glpass
 call MPI_comm_rank(mpi_comm_world , myid, ierr)
 call MPI_comm_size(mpi_comm_world , Np  , ierr)
 
-call partition%init(nh, nz, max(1,Np/6), Np, strategy = 'default')
+call partition%init(nh, nz, max(1,Np/6), myid, Np, strategy = 'default')
 !call partition%init(nh, nz, 64, Np, strategy = 'default')
 
 !find start and end index of tiles belonging to the current proccesor

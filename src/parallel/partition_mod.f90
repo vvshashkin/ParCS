@@ -1,12 +1,15 @@
 module partition_mod
 use tile_mod, only : tile_t
+use mpi
 implicit none
 
 type, public :: partition_t
     type(tile_t),    allocatable :: tile(:)     !array of partition tiles
     integer(kind=4), allocatable :: proc_map(:) !determine belonging of the tile to the specific processor
-    integer(kind=4)              :: npoints     !number of grid points in x/y direction for the one panel
+    integer(kind=4)              :: Nh, Nz      !number of grid points in x/y, z direction for the one panel
     integer(kind=4)              :: num_tiles   !number of tiles in the partition
+    integer(kind=4)              :: num_panels  !
+    integer(kind=4)              :: ts, te      ! start and end index of the tiles belonging to the specific processor
 contains
     procedure, public :: init
     procedure, public :: write_to_txt
@@ -15,20 +18,26 @@ end type partition_t
 
 contains
 
-subroutine init(this, Nh, Nz, num_tiles, Np, strategy)
+subroutine init(this, Nh, Nz, num_tiles, myid, Np, strategy)
     class(partition_t), intent(inout) :: this
     integer(kind=4),    intent(in)    :: Nh        ! num of points in x and y direction at each panel
     integer(kind=4),    intent(in)    :: Nz        ! num of points in z direction at each panel
     integer(kind=4),    intent(in)    :: num_tiles ! num of tiles at each panel
-    integer(kind=4),    intent(in)    :: Np        ! num of processors
+    integer(kind=4),    intent(in)    :: myid, Np  ! myid and num of processors
     character(*),       intent(in)    :: strategy
 
-!We assume that number of tiles at each panel are the same
+    integer(kind=4) :: num_panels ! this must bs argument of the routine
 
-    allocate(this%tile(6*num_tiles))
-    allocate(this%proc_map(6*num_tiles))
+!We assume that number of tiles at each panel are the same
+    num_panels = 6
+
+    this%num_panels = num_panels ! need to modify
+
+    allocate(this%tile(num_panels*num_tiles))
+    allocate(this%proc_map(num_panels*num_tiles))
     this%num_tiles = num_tiles
-    this%npoints = Nh
+    this%Nh = Nh
+    this%Nz = Nz
 
     if (Np>6*num_tiles) then
         print*, 'Error!!! Number of tiles is less than number of processors!!!'
@@ -44,6 +53,10 @@ subroutine init(this, Nh, Nz, num_tiles, Np, strategy)
         stop
 
     end select
+
+    this%ts = findloc(this%proc_map, myid, dim=1)
+    this%te = findloc(this%proc_map, myid, back = .true., dim=1)
+
 end subroutine init
 
 subroutine default_strategy(partition, Nh, Nz, Np)
@@ -63,7 +76,7 @@ subroutine default_strategy(partition, Nh, Nz, Np)
     call partition_1d(npx_npy(2), Nh, wy)
 
     ind = 0
-    do panel_ind = 1, 6
+    do panel_ind = 1, partition%num_panels
         do j = 1, npx_npy(2)
             do i = 1, npx_npy(1)
 
@@ -94,7 +107,7 @@ subroutine default_strategy(partition, Nh, Nz, Np)
         end do
     end do
 
-    call partition_1d(Np, 6*partition%num_tiles, wt)
+    call partition_1d(Np, partition%num_panels*partition%num_tiles, wt)
 
     s(0) = 0
     do ind = 1, Np
@@ -135,9 +148,9 @@ subroutine write_to_txt_3d(this, filename)
 
     do ind = 1, size(this%tile,1)
 
-        xyz_s(1:3) = r(1:3,this%tile(ind)%panel_number)*this%npoints + (this%tile(ind)%is-1)*ex(1:3, this%tile(ind)%panel_number) + &
+        xyz_s(1:3) = r(1:3,this%tile(ind)%panel_number)*this%Nh + (this%tile(ind)%is-1)*ex(1:3, this%tile(ind)%panel_number) + &
                                                              (this%tile(ind)%js-1)*ey(1:3, this%tile(ind)%panel_number)
-        xyz_e(1:3) = r(1:3,this%tile(ind)%panel_number)*this%npoints + (this%tile(ind)%ie-1)*ex(1:3, this%tile(ind)%panel_number) + &
+        xyz_e(1:3) = r(1:3,this%tile(ind)%panel_number)*this%Nh + (this%tile(ind)%ie-1)*ex(1:3, this%tile(ind)%panel_number) + &
                                                              (this%tile(ind)%je-1)*ey(1:3, this%tile(ind)%panel_number)
 
         write(120,'(8I4)') this%tile(ind)%panel_number, xyz_s(1), xyz_e(1), xyz_s(2), xyz_e(2), xyz_s(3), xyz_e(3), this%proc_map(ind)

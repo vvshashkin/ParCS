@@ -30,7 +30,7 @@ call MPI_comm_size(mpi_comm_world , Np  , ierr)
 
 if (myid==0) print*, 'Running cross_halo_exchange test!'
 
-call partition%init(nh, nz, max(1,Np/6), Np, strategy = 'default')
+call partition%init(nh, nz, max(1,Np/6), myid, Np, strategy = 'default')
 
 !find start and end index of tiles belonging to the current proccesor
 ts = findloc(partition%proc_map, myid, dim=1)
@@ -155,7 +155,7 @@ subroutine test_full_halo_exchange()
 
     if (myid==0) print*, 'Running cross_halo_exchange test!'
 
-    call partition%init(nh, nz, max(1,Np/6), Np, strategy = 'default')
+    call partition%init(nh, nz, max(1,Np/6), myid, Np, strategy = 'default')
 
     !find start and end index of tiles belonging to the current proccesor
     ts = findloc(partition%proc_map, myid, dim=1)
@@ -283,7 +283,7 @@ call MPI_comm_size(mpi_comm_world , Np  , ierr)
 
 if (myid==0) print*, 'Running gather_exchange test!'
 
-call partition%init(nh, nz, max(1,Np/6), Np, strategy = 'default')
+call partition%init(nh, nz, max(1,Np/6), myid, Np, strategy = 'default')
 
 !find start and end index of tiles belonging to the current proccesor
 ts = findloc(partition%proc_map, myid, dim=1)
