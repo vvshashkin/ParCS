@@ -46,19 +46,19 @@ subroutine step_rk4(this, v0, model_params, dt)
     select type(v0)
         class is (stvec_abstract_t)
 
-    call this%operator%act(this%k1,v0)
+    call this%operator%act(this%k1,v0,model_params)
 
     call this%y%copy(v0)
     call this%y%add(this%k1,1._8,0.5_8*dt)
-    call this%operator%act(this%k2,this%y)
+    call this%operator%act(this%k2,this%y,model_params)
 
     call this%y%copy(v0)
     call this%y%add(this%k2,1._8,0.5_8*dt)
-    call this%operator%act(this%k3,this%y)
+    call this%operator%act(this%k3,this%y,model_params)
 
     call this%y%copy(v0)
     call this%y%add(this%k3,1.0_8,dt)
-    call this%operator%act(this%k4,this%y)
+    call this%operator%act(this%k4,this%y,model_params)
 
     call v0%add(this%k1,1._8,dt/6._8)
     call v0%add(this%k2,1._8,dt/3._8)

@@ -147,7 +147,8 @@ $(DOBJ)parcs_mpi_mod.o: src/ParCS_mpi_mod.f90
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)operator_abstract_mod.o: src/operator_abstract_mod.f90 \
-	$(DOBJ)stvec_abstract_mod.o
+	$(DOBJ)stvec_abstract_mod.o \
+	$(DOBJ)container_abstract_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -408,7 +409,9 @@ $(DOBJ)stvec_iomega_mod.o: src/models/iomega_model/stvec_iomega_mod.f90 \
 $(DOBJ)operator_iomega_mod.o: src/models/iomega_model/operator_iomega_mod.f90 \
 	$(DOBJ)operator_abstract_mod.o \
 	$(DOBJ)stvec_abstract_mod.o \
-	$(DOBJ)stvec_iomega_mod.o
+	$(DOBJ)stvec_iomega_mod.o \
+	$(DOBJ)container_abstract_mod.o \
+	$(DOBJ)parameters_iomega_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -466,6 +469,8 @@ $(DOBJ)operator_swlin_mod.o: src/models/linear_shallow_water/operator_swlin_mod.
 	$(DOBJ)operator_abstract_mod.o \
 	$(DOBJ)stvec_abstract_mod.o \
 	$(DOBJ)stvec_swlin_mod.o \
+	$(DOBJ)container_abstract_mod.o \
+	$(DOBJ)parameters_swlin_mod.o \
 	$(DOBJ)mesh_mod.o \
 	$(DOBJ)exchange_mod.o \
 	$(DOBJ)ecs_halo_mod.o \

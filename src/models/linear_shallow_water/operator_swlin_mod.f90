@@ -3,6 +3,8 @@ module operator_swlin_mod
 use operator_abstract_mod,       only : operator_abstract_t
 use stvec_abstract_mod,          only : stvec_abstract_t
 use stvec_swlin_mod,             only : stvec_swlin_t
+use container_abstract_mod,      only : model_parameters_abstract_t
+use parameters_swlin_mod,        only : parameters_swlin_t
 use mesh_mod,                    only : mesh_t
 use exchange_mod,                only : exchange_t
 use ecs_halo_mod,                only : ecs_halo_t
@@ -100,13 +102,14 @@ function init_swlin_operator(ts, te, mesh, partition, ex_halo_width, &
 
 end function init_swlin_operator
 
-subroutine act(this, vout, vin)
+subroutine act(this, vout, vin, model_params)
 
     use const_mod, only : grav
 
-    class(operator_swlin_t),    intent(inout) :: this
-    class(stvec_abstract_t),    intent(inout) :: vout !inout to enable preallocated vectors
-    class(stvec_abstract_t),    intent(in)    :: vin
+    class(operator_swlin_t),             intent(inout) :: this
+    class(stvec_abstract_t),             intent(inout) :: vout !inout to enable preallocated vectors
+    class(stvec_abstract_t),             intent(in)    :: vin
+    class(model_parameters_abstract_t),  intent(in)    :: model_params
 
     integer(kind=4) ind, is, ie, js, je, nvi, nvj
     integer(kind=4) isv, iev, jsv, jev

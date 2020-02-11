@@ -39,7 +39,7 @@ subroutine step_expl_Eul1(this, v0, model_params, dt)
     select type(v0)
         class is (stvec_abstract_t)
             allocate(v,source=v0) !infer specific type of v0 into v
-            call this%operator%act(v,v0)
+            call this%operator%act(v,v0,model_params)
             call v0.add(v,1._8,dt)
         class default
             call avost("Explicit Eulerian 1st order scheme works only with class(stvec_abstract_t)")

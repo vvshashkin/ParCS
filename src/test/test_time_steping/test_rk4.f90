@@ -6,14 +6,14 @@ contains
 
 subroutine test_rk4()
     use stvec_iomega_mod,      only: stvec_iomega_t, init_stvec_iomega
-    use operator_iomega_mod,   only: operator_iomega_t, init_operator_iomega
-    use parameters_iomega_mod, only: parameters_iomega_t
+    use operator_iomega_mod,   only: operator_iomega_t
+    use parameters_iomega_mod, only: parameters_iomega_t, init_iomega_params
     use explicit_Eul1_mod,     only: explicit_Eul1_t, init_expl_Eul1_ts
     use rk4_mod,               only: rk4_t, init_rk4
     use const_mod,             only: pi, Day24h_sec
     type(stvec_iomega_t) v1, v2
     type(operator_iomega_t) oper
-    type(parameters_iomega_t)   model_params
+    type(parameters_iomega_t), allocatable :: model_params
     type(explicit_Eul1_t) ts_exEul
     type(rk4_t) ts_rk4
     integer, parameter :: N = 10
@@ -37,7 +37,8 @@ subroutine test_rk4()
                                               (dt*omega(i))**4/24._8
     end do
 
-    call init_operator_iomega(oper, N, omega)
+    model_params = init_iomega_params(omega)
+    !call init_operator_iomega(oper, N, omega)
 
     ts_exEul = init_expl_Eul1_ts(oper)
     call ts_exEul%step(v1, model_params, dt)
