@@ -107,12 +107,9 @@ subroutine init_swlin_model()
     call init_stvec_swlin(stvec, ts, te, panel_ind, is, ie, js,   &
                           je, ks, ke, halo_width)
 
-    if(myid == master_id) then
-        allocate(mesh(partition%num_tiles*6))
-    else
-        allocate(mesh(ts:te))
-    end if
-    do ind = lbound(mesh, dim=1),ubound(mesh, dim=1)
+    allocate(mesh(ts:te))
+
+    do ind = ts, te
         call create_equiangular_mesh(mesh(ind), partition%tile(ind)%is, partition%tile(ind)%ie, &
                                                 partition%tile(ind)%js, partition%tile(ind)%je, &
                                                 partition%tile(ind)%ks, partition%tile(ind)%ke, &
@@ -143,7 +140,7 @@ subroutine run_swlin_model()
 
     call write_swlin(stvec, partition, 1)
 
-    irec = 1
+    irec = 2
     do istep = 1, nstep
         call time_scheme%step(stvec, params, dt)
         if(mod(istep,nzap) == 0) then
