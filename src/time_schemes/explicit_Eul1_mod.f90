@@ -1,6 +1,6 @@
 module explicit_Eul1_mod
 
-use state_abstract_mod,      only : state_abstract_t
+use container_abstract_mod,  only : state_abstract_t, model_parameters_abstract_t
 use stvec_abstract_mod,      only : stvec_abstract_t
 use timescheme_abstract_mod, only : timescheme_abstract_t
 use operator_abstract_mod,   only : operator_abstract_t
@@ -26,11 +26,12 @@ function init_expl_Eul1_ts(operator) result(Eul1_ts)
     Eul1_ts%operator = operator
 end function init_expl_Eul1_ts
 
-subroutine step_expl_Eul1(this, v0, dt)
+subroutine step_expl_Eul1(this, v0, model_params, dt)
 
-    class(explicit_Eul1_t),          intent(inout) :: this
-    class(state_abstract_t), target, intent(inout) :: v0
-    real(kind=8),                    intent(in)    :: dt
+    class(explicit_Eul1_t),             intent(inout) :: this
+    class(state_abstract_t),            intent(inout) :: v0
+    class(model_parameters_abstract_t), intent(in)    :: model_params
+    real(kind=8),                       intent(in)    :: dt
 
     !local
     class(stvec_abstract_t), allocatable :: v

@@ -1,6 +1,7 @@
 module swlin_mod
 
 use partition_mod,           only : partition_t
+use parameters_swlin_mod,    only : parameters_swlin_t
 use stvec_swlin_mod,         only : stvec_swlin_t, init_stvec_swlin
 use mesh_mod,                only : mesh_t
 use operator_swlin_mod,      only : operator_swlin_t
@@ -35,6 +36,7 @@ type(mesh_t), allocatable, &
 
 !
 type(operator_swlin_t)     :: operator
+type(parameters_swlin_t)   :: params
 class(timescheme_abstract_t), allocatable :: time_scheme
 
 contains
@@ -145,7 +147,7 @@ subroutine run_swlin_model()
 
     irec = 1
     do istep = 1, nstep
-        call time_scheme%step(stvec, dt)
+        call time_scheme%step(stvec, params, dt)
         if(mod(istep,nzap) == 0) then
             call write_swlin(myid, master_id, stvec%ts, stvec%te, stvec,  &
                              lbound(mesh, dim=1),ubound(mesh, dim=1), mesh, irec)

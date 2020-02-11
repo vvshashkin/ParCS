@@ -1,6 +1,6 @@
 module rk4_mod
 
-use state_abstract_mod,      only : state_abstract_t
+use container_abstract_mod,  only : state_abstract_t, model_parameters_abstract_t
 use stvec_abstract_mod,      only : stvec_abstract_t
 use timescheme_abstract_mod, only : timescheme_abstract_t
 use operator_abstract_mod,   only : operator_abstract_t
@@ -36,11 +36,12 @@ function init_rk4(operator, v) result(ts_rk4)
 
 end function init_rk4
 
-subroutine step_rk4(this, v0, dt)
+subroutine step_rk4(this, v0, model_params, dt)
 
-    class(rk4_t),                    intent(inout) :: this
-    class(state_abstract_t), target, intent(inout) :: v0
-    real(kind=8),                    intent(in)    :: dt
+    class(rk4_t),                       intent(inout) :: this
+    class(state_abstract_t),            intent(inout) :: v0
+    class(model_parameters_abstract_t), intent(in)    :: model_params
+    real(kind=8),                       intent(in)    :: dt
 
     select type(v0)
         class is (stvec_abstract_t)

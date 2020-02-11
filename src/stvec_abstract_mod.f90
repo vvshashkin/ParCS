@@ -1,6 +1,6 @@
 module stvec_abstract_mod
 
-use state_abstract_mod, only : state_abstract_t
+use container_abstract_mod, only : state_abstract_t
 
 implicit none
 
@@ -20,7 +20,7 @@ abstract interface
         import stvec_abstract_t
         class(stvec_abstract_t), intent(inout) :: this
         class(stvec_abstract_t), intent(in)    :: other
-        real(kind=8),  intent(in)    :: alpha, beta
+        real(kind=8),            intent(in)    :: alpha, beta
     end subroutine add
 
     subroutine copy(this, source_stvec)
