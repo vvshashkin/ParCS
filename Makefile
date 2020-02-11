@@ -26,18 +26,6 @@ $(DEXE)TEST_NAMELIST: $(MKDIRS) $(DOBJ)test_namelist.o \
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_NAMELIST
-$(DEXE)TEST_OUTPUT_MAIN: $(MKDIRS) $(DOBJ)test_output_main.o \
-	$(DOBJ)avost.o
-	@rm -f $(filter-out $(DOBJ)test_output_main.o,$(EXESOBJ))
-	@echo $(LITEXT)
-	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
-EXES := $(EXES) TEST_OUTPUT_MAIN
-$(DEXE)FIVEPOINTFILTER_MAIN: $(MKDIRS) $(DOBJ)fivepointfilter_main.o \
-	$(DOBJ)avost.o
-	@rm -f $(filter-out $(DOBJ)fivepointfilter_main.o,$(EXESOBJ))
-	@echo $(LITEXT)
-	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
-EXES := $(EXES) FIVEPOINTFILTER_MAIN
 $(DEXE)TEST_HALO_MAIN: $(MKDIRS) $(DOBJ)test_halo_main.o \
 	$(DOBJ)avost.o
 	@rm -f $(filter-out $(DOBJ)test_halo_main.o,$(EXESOBJ))
@@ -96,31 +84,12 @@ $(DOBJ)cmd_args_mod.o: src/cmd_args_mod.f90
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
-$(DOBJ)exchange_factory_mod.o: src/exchange_factory_mod.f90 \
-	$(DOBJ)exchange_mod.o \
-	$(DOBJ)exchange_profile_mod.o \
-	$(DOBJ)partition_mod.o \
-	$(DOBJ)tile_mod.o \
-	$(DOBJ)topology_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
 $(DOBJ)container_abstract_mod.o: src/container_abstract_mod.f90
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
-$(DOBJ)buffer_mod.o: src/buffer_mod.f90
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)halo_mod.o: src/halo_mod.f90 \
 	$(DOBJ)grid_function_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
-$(DOBJ)exchange_profile_mod.o: src/exchange_profile_mod.f90 \
-	$(DOBJ)partition_mod.o \
-	$(DOBJ)tile_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -139,10 +108,6 @@ $(DOBJ)grid_function_mod.o: src/grid_function_mod.f90
 
 $(DOBJ)stvec_abstract_mod.o: src/stvec_abstract_mod.f90 \
 	$(DOBJ)container_abstract_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
-$(DOBJ)parcs_mpi_mod.o: src/ParCS_mpi_mod.f90
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -170,18 +135,6 @@ $(DOBJ)mesh_factory_mod.o: src/mesh_factory_mod.f90 \
 	$(DOBJ)const_mod.o \
 	$(DOBJ)ecs_geometry_mod.o \
 	$(DOBJ)ecs_halo_factory_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
-$(DOBJ)partition_mod.o: src/partition_mod.f90 \
-	$(DOBJ)tile_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
-$(DOBJ)exchange_mod.o: src/exchange_mod.f90 \
-	$(DOBJ)exchange_profile_mod.o \
-	$(DOBJ)buffer_mod.o \
-	$(DOBJ)grid_function_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -254,6 +207,45 @@ $(DOBJ)rk4_mod.o: src/time_schemes/rk4_mod.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)exchange_factory_mod.o: src/parallel/exchange_factory_mod.f90 \
+	$(DOBJ)partition_mod.o \
+	$(DOBJ)tile_mod.o \
+	$(DOBJ)exchange_halo_mod.o \
+	$(DOBJ)topology_mod.o \
+	$(DOBJ)exchange_gather_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)buffer_mod.o: src/parallel/buffer_mod.f90 \
+	$(DOBJ)grid_function_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)exchange_abstract_mod.o: src/parallel/exchange_abstract_mod.f90 \
+	$(DOBJ)grid_function_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)exchange_halo_mod.o: src/parallel/exchange_halo_mod.f90 \
+	$(DOBJ)grid_function_mod.o \
+	$(DOBJ)exchange_abstract_mod.o \
+	$(DOBJ)buffer_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)exchange_gather_mod.o: src/parallel/exchange_gather_mod.f90 \
+	$(DOBJ)grid_function_mod.o \
+	$(DOBJ)exchange_abstract_mod.o \
+	$(DOBJ)buffer_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)partition_mod.o: src/parallel/partition_mod.f90 \
+	$(DOBJ)tile_mod.o \
+	$(DOBJ)topology_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)test_namelist.o: src/test/test_namelist/test_namelist.f90 \
 	$(DOBJ)test_namelist_mod.o
 	@echo $(COTEXT)
@@ -264,37 +256,6 @@ $(DOBJ)test_namelist_mod.o: src/test/test_namelist/test_namelist_mod.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
-$(DOBJ)test_output_main.o: src/test/test_output/test_output_main.f90 \
-	$(DOBJ)test_output_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
-$(DOBJ)test_output_mod.o: src/test/test_output/test_output_mod.f90 \
-	$(DOBJ)grid_function_mod.o \
-	$(DOBJ)exchange_mod.o \
-	$(DOBJ)partition_mod.o \
-	$(DOBJ)exchange_factory_mod.o \
-	$(DOBJ)outputer_abstract_mod.o \
-	$(DOBJ)outputer_factory_mod.o \
-	$(DOBJ)mesh_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
-$(DOBJ)fivepointfilter_mod.o: src/test/FivePointFilter/FivePointFilter_mod.f90 \
-	$(DOBJ)grid_function_mod.o \
-	$(DOBJ)tile_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
-$(DOBJ)fivepointfilter_main.o: src/test/FivePointFilter/FivePointFilter_main.f90 \
-	$(DOBJ)exchange_mod.o \
-	$(DOBJ)partition_mod.o \
-	$(DOBJ)grid_function_mod.o \
-	$(DOBJ)exchange_factory_mod.o \
-	$(DOBJ)fivepointfilter_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
 $(DOBJ)test_halo_main.o: src/test/test_halo/test_halo_main.f90 \
 	$(DOBJ)test_halo_mod.o
 	@echo $(COTEXT)
@@ -302,7 +263,7 @@ $(DOBJ)test_halo_main.o: src/test/test_halo/test_halo_main.f90 \
 
 $(DOBJ)test_halo_mod.o: src/test/test_halo/test_halo_mod.f90 \
 	$(DOBJ)grid_function_mod.o \
-	$(DOBJ)exchange_mod.o \
+	$(DOBJ)exchange_abstract_mod.o \
 	$(DOBJ)partition_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
 	$(DOBJ)mesh_factory_mod.o \
@@ -326,12 +287,11 @@ $(DOBJ)test_mesh_mod.o: src/test/test_mesh/test_mesh_mod.f90 \
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)test_paneled_output_mod.o: src/test/test_paneled_output/test_paneled_output_mod.f90 \
-	$(DOBJ)grid_function_mod.o \
-	$(DOBJ)exchange_mod.o \
-	$(DOBJ)partition_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
 	$(DOBJ)outputer_abstract_mod.o \
 	$(DOBJ)outputer_factory_mod.o \
+	$(DOBJ)partition_mod.o \
+	$(DOBJ)grid_function_mod.o \
 	$(DOBJ)mesh_mod.o \
 	$(DOBJ)mesh_factory_mod.o
 	@echo $(COTEXT)
@@ -374,7 +334,8 @@ $(DOBJ)test_exch_main.o: src/test/test_exch/test_exch_main.f90 \
 
 $(DOBJ)test_mod.o: src/test/test_exch/test_mod.f90 \
 	$(DOBJ)grid_function_mod.o \
-	$(DOBJ)exchange_mod.o \
+	$(DOBJ)exchange_abstract_mod.o \
+	$(DOBJ)exchange_halo_mod.o \
 	$(DOBJ)partition_mod.o \
 	$(DOBJ)exchange_factory_mod.o
 	@echo $(COTEXT)
@@ -387,7 +348,7 @@ $(DOBJ)test_metric_main.o: src/test/test_metric/test_metric_main.f90 \
 
 $(DOBJ)test_metric_mod.o: src/test/test_metric/test_metric_mod.f90 \
 	$(DOBJ)grid_function_mod.o \
-	$(DOBJ)exchange_mod.o \
+	$(DOBJ)exchange_abstract_mod.o \
 	$(DOBJ)partition_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
 	$(DOBJ)mesh_factory_mod.o \
@@ -456,12 +417,11 @@ $(DOBJ)swlin.o: src/models/linear_shallow_water/swlin.f90 \
 $(DOBJ)swlin_output_mod.o: src/models/linear_shallow_water/swlin_output_mod.f90 \
 	$(DOBJ)grid_function_mod.o \
 	$(DOBJ)outputer_abstract_mod.o \
-	$(DOBJ)stvec_swlin_mod.o \
-	$(DOBJ)mesh_mod.o \
 	$(DOBJ)partition_mod.o \
-	$(DOBJ)exchange_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
-	$(DOBJ)outputer_factory_mod.o
+	$(DOBJ)outputer_factory_mod.o \
+	$(DOBJ)stvec_swlin_mod.o \
+	$(DOBJ)mesh_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -472,7 +432,7 @@ $(DOBJ)operator_swlin_mod.o: src/models/linear_shallow_water/operator_swlin_mod.
 	$(DOBJ)container_abstract_mod.o \
 	$(DOBJ)parameters_swlin_mod.o \
 	$(DOBJ)mesh_mod.o \
-	$(DOBJ)exchange_mod.o \
+	$(DOBJ)exchange_abstract_mod.o \
 	$(DOBJ)ecs_halo_mod.o \
 	$(DOBJ)hor_difops_abstract_mod.o \
 	$(DOBJ)partition_mod.o \
@@ -483,32 +443,24 @@ $(DOBJ)operator_swlin_mod.o: src/models/linear_shallow_water/operator_swlin_mod.
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
-$(DOBJ)master_process_outputer_mod.o: src/outputer/master_process_outputer_mod.f90 \
-	$(DOBJ)outputer_abstract_mod.o \
-	$(DOBJ)grid_function_mod.o \
-	$(DOBJ)mesh_mod.o \
-	$(DOBJ)exchange_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
 $(DOBJ)master_paneled_outputer_mod.o: src/outputer/master_paneled_outputer_mod.f90 \
 	$(DOBJ)outputer_abstract_mod.o \
+	$(DOBJ)partition_mod.o \
 	$(DOBJ)grid_function_mod.o \
-	$(DOBJ)mesh_mod.o \
-	$(DOBJ)exchange_mod.o
+	$(DOBJ)exchange_abstract_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)outputer_abstract_mod.o: src/outputer/outputer_abstract_mod.f90 \
 	$(DOBJ)grid_function_mod.o \
-	$(DOBJ)mesh_mod.o
+	$(DOBJ)partition_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)outputer_factory_mod.o: src/outputer/outputer_factory_mod.f90 \
-	$(DOBJ)master_process_outputer_mod.o \
-	$(DOBJ)exchange_mod.o \
-	$(DOBJ)master_paneled_outputer_mod.o
+	$(DOBJ)master_paneled_outputer_mod.o \
+	$(DOBJ)exchange_abstract_mod.o \
+	$(DOBJ)partition_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

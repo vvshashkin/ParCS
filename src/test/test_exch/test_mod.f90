@@ -7,12 +7,13 @@ subroutine test_cross_halo_exchange()
 
 use mpi
 
-use grid_function_mod,    only : grid_function_t
-use exchange_mod,         only : exchange_t
-use partition_mod,        only : partition_t
-use exchange_factory_mod, only : create_2d_cross_halo_exchange
+use grid_function_mod,     only : grid_function_t
+use exchange_abstract_mod, only : exchange_t
+use exchange_halo_mod,     only : exchange_2D_halo_t
+use partition_mod,         only : partition_t
+use exchange_factory_mod,  only : create_2d_halo_exchange
 
-type(exchange_t)                   :: exch_halo
+class(exchange_t), allocatable     :: exch_halo
 type(partition_t)                  :: partition
 type(grid_function_t), allocatable :: f1(:)
 
@@ -29,7 +30,7 @@ call MPI_comm_size(mpi_comm_world , Np  , ierr)
 
 if (myid==0) print*, 'Running cross_halo_exchange test!'
 
-call partition%init(nh, nz, max(1,Np/6), Np, strategy = 'default')
+call partition%init(nh, nz, max(1,Np/6), myid, Np, strategy = 'default')
 
 !find start and end index of tiles belonging to the current proccesor
 ts = findloc(partition%proc_map, myid, dim=1)
@@ -60,46 +61,47 @@ do ind = ts, te
 end do
 
 !Init exchange
-call create_2d_cross_halo_exchange(exch_halo, partition, halo_width, myid, np)
+
+exch_halo = create_2d_halo_exchange(partition, halo_width, 'cross', myid, np)
 
 !Perform exchange
-call exch_halo%do(f1, lbound(f1,1), ubound(f1,1))
-
+call exch_halo%do(f1, lbound(f1,1),ubound(f1,1))
 
 call mpi_barrier(mpi_comm_world, ierr)
 
 err_sum = 0
+select type (exch_halo)
+class is (exchange_2D_halo_t)
+do ind = 1, exch_halo%recv_number
 
-do ind = 1, exch_halo%profile%recv_exch_num
-
-    local_tile_ind           = exch_halo%profile%recv_to_tile_ind(ind)
-    remote_tile_ind          = exch_halo%profile%recv_from_tile_ind(ind)
+    local_tile_ind           = exch_halo%recv_to_tile_ind(ind)
+    remote_tile_ind          = 1 + (exch_halo%recv_tag(ind)-local_tile_ind)/(6*partition%num_tiles)
 
     remote_tile_panel_number = partition%tile(remote_tile_ind)%panel_number
     local_tile_panel_number  = partition%tile(local_tile_ind )%panel_number
 
-    do k = exch_halo%profile%recv_ks(ind), exch_halo%profile%recv_ke(ind)
-        do j = exch_halo%profile%recv_js(ind), exch_halo%profile%recv_je(ind)
-            do i = exch_halo%profile%recv_is(ind), exch_halo%profile%recv_ie(ind)
+    do k = exch_halo%recv_ks(ind), exch_halo%recv_ke(ind)
+        do j = exch_halo%recv_js(ind), exch_halo%recv_je(ind)
+            do i = exch_halo%recv_is(ind), exch_halo%recv_ie(ind)
 
                 if (local_tile_panel_number == remote_tile_panel_number) then
                     err_sum = err_sum + abs(int(f1(local_tile_ind).p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*nh*(j-1) + nz*(i-1) + k)))
                 else
-                    if (exch_halo%profile%send_j_step(ind)==1 .and. exch_halo%profile%send_i_step(ind)==1 .and. exch_halo%profile%first_dim_index(ind)=='i') then
+                    if (exch_halo%send_j_step(ind)==1 .and. exch_halo%send_i_step(ind)==1 .and. exch_halo%first_dim_index(ind)=='i') then
                         err_sum = err_sum + abs(int(f1(local_tile_ind).p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*nh*(modulo(j-1,nh)+1-1) + nz*(modulo(i-1,nh)+1-1) + k)))
-                    else if (exch_halo%profile%send_j_step(ind)==1 .and. exch_halo%profile%send_i_step(ind)==1 .and. exch_halo%profile%first_dim_index(ind)=='j') then
+                    else if (exch_halo%send_j_step(ind)==1 .and. exch_halo%send_i_step(ind)==1 .and. exch_halo%first_dim_index(ind)=='j') then
                         err_sum = err_sum + abs(int(f1(local_tile_ind).p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*nh*(modulo(i-1,nh)+1-1) + nz*(modulo(j-1,nh)+1-1) + k)))
-                    else if (exch_halo%profile%send_j_step(ind)==1 .and. exch_halo%profile%send_i_step(ind)==-1 .and. exch_halo%profile%first_dim_index(ind)=='i') then
+                    else if (exch_halo%send_j_step(ind)==1 .and. exch_halo%send_i_step(ind)==-1 .and. exch_halo%first_dim_index(ind)=='i') then
                         err_sum = err_sum + abs(int(f1(local_tile_ind).p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*nh*(modulo(j-1,nh)+1-1) + nz*(nh-modulo(i-1,nh)-1) + k)))
-                    else if (exch_halo%profile%send_j_step(ind)==1 .and. exch_halo%profile%send_i_step(ind)==-1 .and. exch_halo%profile%first_dim_index(ind)=='j') then
+                    else if (exch_halo%send_j_step(ind)==1 .and. exch_halo%send_i_step(ind)==-1 .and. exch_halo%first_dim_index(ind)=='j') then
                         err_sum = err_sum + abs(int(f1(local_tile_ind).p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*(modulo(j-1,nh)+1-1) + nz*nh*(nh-modulo(i-1,nh)-1) + k)))
-                    else if (exch_halo%profile%send_j_step(ind)==-1 .and. exch_halo%profile%send_i_step(ind)==1 .and. exch_halo%profile%first_dim_index(ind)=='i') then
+                    else if (exch_halo%send_j_step(ind)==-1 .and. exch_halo%send_i_step(ind)==1 .and. exch_halo%first_dim_index(ind)=='i') then
                         err_sum = err_sum + abs(int(f1(local_tile_ind).p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*nh*(nh-modulo(j-1,nh)-1) + nz*(modulo(i-1,nh)+1-1) + k)))
-                    else if (exch_halo%profile%send_j_step(ind)==-1 .and. exch_halo%profile%send_i_step(ind)==1 .and. exch_halo%profile%first_dim_index(ind)=='j') then
+                    else if (exch_halo%send_j_step(ind)==-1 .and. exch_halo%send_i_step(ind)==1 .and. exch_halo%first_dim_index(ind)=='j') then
                         err_sum = err_sum + abs(int(f1(local_tile_ind).p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*(nh-modulo(j-1,nh)-1) + nz*nh*(modulo(i-1,nh)+1-1) + k)))
-                    else if (exch_halo%profile%send_j_step(ind)==-1 .and. exch_halo%profile%send_i_step(ind)==-1 .and. exch_halo%profile%first_dim_index(ind)=='i') then
+                    else if (exch_halo%send_j_step(ind)==-1 .and. exch_halo%send_i_step(ind)==-1 .and. exch_halo%first_dim_index(ind)=='i') then
                         err_sum = err_sum + abs(int(f1(local_tile_ind).p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*nh*(nh-modulo(j-1,nh)-1) + nz*(nh-modulo(i-1,nh)-1) + k)))
-                    else if (exch_halo%profile%send_j_step(ind)==-1 .and. exch_halo%profile%send_i_step(ind)==-1 .and. exch_halo%profile%first_dim_index(ind)=='j') then
+                    else if (exch_halo%send_j_step(ind)==-1 .and. exch_halo%send_i_step(ind)==-1 .and. exch_halo%first_dim_index(ind)=='j') then
                         err_sum = err_sum + abs(int(f1(local_tile_ind).p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*(nh-modulo(j-1,nh)-1) + nz*nh*(nh-modulo(i-1,nh)-1) + k)))
                     else
                         print*, 'Error!!!', 'myid=', myid
@@ -111,7 +113,9 @@ do ind = 1, exch_halo%profile%recv_exch_num
         end do
     end do
 end do
-
+class default
+    call avost('Wrong type of halo exch object!')
+end select
 call mpi_allreduce(err_sum, gl_err_sum, 1, mpi_integer, mpi_sum, mpi_comm_world, ierr)
 
 if (gl_err_sum==0) then
@@ -126,120 +130,126 @@ end subroutine test_cross_halo_exchange
 
 subroutine test_full_halo_exchange()
 
-use mpi
+    use mpi
 
-use grid_function_mod,    only : grid_function_t
-use exchange_mod,         only : exchange_t
-use partition_mod,        only : partition_t
-use exchange_factory_mod, only : create_2d_full_halo_exchange
+    use grid_function_mod,     only : grid_function_t
+    use exchange_abstract_mod, only : exchange_t
+    use exchange_halo_mod,     only : exchange_2D_halo_t
+    use partition_mod,         only : partition_t
+    use exchange_factory_mod,  only : create_2d_halo_exchange
 
-type(exchange_t)                   :: exch_halo
-type(partition_t)                  :: partition
-type(grid_function_t), allocatable :: f1(:)
+    class(exchange_t), allocatable     :: exch_halo
+    type(partition_t)                  :: partition
+    type(grid_function_t), allocatable :: f1(:)
 
-integer(kind=4)                    :: nh=100, nz=10, halo_width=50
-integer(kind=4)                    :: myid, np, ierr, code
+    integer(kind=4)                    :: nh=100, nz=10, halo_width=50
+    integer(kind=4)                    :: myid, np, ierr, code
 
-integer(kind=4) :: ts, te
-integer(kind=4) :: ind, i, j, k, err_sum, gl_err_sum
+    integer(kind=4) :: ts, te
+    integer(kind=4) :: ind, i, j, k, err_sum, gl_err_sum
 
-integer(kind=4) :: local_tile_ind, remote_tile_ind, local_tile_panel_number, remote_tile_panel_number
+    integer(kind=4) :: local_tile_ind, remote_tile_ind, local_tile_panel_number, remote_tile_panel_number
 
-call MPI_comm_rank(mpi_comm_world , myid, ierr)
-call MPI_comm_size(mpi_comm_world , Np  , ierr)
+    call MPI_comm_rank(mpi_comm_world , myid, ierr)
+    call MPI_comm_size(mpi_comm_world , Np  , ierr)
 
+    if (myid==0) print*, 'Running cross_halo_exchange test!'
 
-if (myid==0) print*, 'Running full_halo_exchange test!'
+    call partition%init(nh, nz, max(1,Np/6), myid, Np, strategy = 'default')
 
-call partition%init(nh, nz, max(1,Np/6), Np, strategy = 'default')
+    !find start and end index of tiles belonging to the current proccesor
+    ts = findloc(partition%proc_map, myid, dim=1)
+    te = findloc(partition%proc_map, myid, back = .true., dim=1)
 
-!find start and end index of tiles belonging to the current proccesor
-ts = findloc(partition%proc_map, myid, dim=1)
-te = findloc(partition%proc_map, myid, back = .true., dim=1)
+    !Init arrays
 
-!Init arrays
+    allocate(f1(ts:te))
 
-allocate(f1(ts:te))
+    do i = ts, te
 
-do i = ts, te
-    call f1(i)%init(partition%tile(i)%panel_number,           &
-                    partition%tile(i)%is, partition%tile(i)%ie, &
-                    partition%tile(i)%js, partition%tile(i)%je, &
-                    partition%tile(i)%ks, partition%tile(i)%ke, &
-                    halo_width, halo_width, 0)
-    f1(i).p(:,:,:) = huge(1.0_8)
-end do
+        call f1(i)%init(partition%tile(i)%panel_number,             &
+                        partition%tile(i)%is, partition%tile(i)%ie, &
+                        partition%tile(i)%js, partition%tile(i)%je, &
+                        partition%tile(i)%ks, partition%tile(i)%ke, &
+                        halo_width, halo_width, 0)
+        f1(i).p(:,:,:) = huge(1.0_8)
+    end do
 
-do ind = ts, te
-    do k = partition%tile(ind)%ks, partition%tile(ind)%ke
-        do j = partition%tile(ind)%js, partition%tile(ind)%je
-            do i = partition%tile(ind)%is, partition%tile(ind)%ie
-                f1(ind).p(i,j,k) =  (partition%tile(ind)%panel_number-1)*nh*nh*nz + nz*nh*(j-1) + nz*(i-1) + k
+    do ind = ts, te
+        do k = partition%tile(ind)%ks, partition%tile(ind)%ke
+            do j = partition%tile(ind)%js, partition%tile(ind)%je
+                do i = partition%tile(ind)%is, partition%tile(ind)%ie
+                    f1(ind).p(i,j,k) =  (partition%tile(ind)%panel_number-1)*nh*nh*nz + nz*nh*(j-1) + nz*(i-1) + k
+                end do
             end do
         end do
     end do
-end do
 
-!Init exchange
-call create_2d_full_halo_exchange(exch_halo, partition, halo_width, myid, np)
+    !Init exchange
 
-!Perform exchange
-call exch_halo%do(f1, lbound(f1,1), ubound(f1,1))
+    exch_halo = create_2d_halo_exchange(partition, halo_width, 'full', myid, np)
 
-call mpi_barrier(mpi_comm_world, ierr)
+    !Perform exchange
+    call exch_halo%do(f1, lbound(f1,1),ubound(f1,1))
 
-err_sum = 0
+    call mpi_barrier(mpi_comm_world, ierr)
 
-do ind = 1, exch_halo%profile%recv_exch_num
+    err_sum = 0
+    select type (exch_halo)
+    class is (exchange_2D_halo_t)
+    do ind = 1, exch_halo%recv_number
 
-    local_tile_ind           = exch_halo%profile%recv_to_tile_ind(ind)
-    remote_tile_ind          = exch_halo%profile%recv_from_tile_ind(ind)
+        local_tile_ind           = exch_halo%recv_to_tile_ind(ind)
+        remote_tile_ind          = 1 + (exch_halo%recv_tag(ind)-local_tile_ind)/(6*partition%num_tiles)
 
-    remote_tile_panel_number = partition%tile(remote_tile_ind)%panel_number
-    local_tile_panel_number  = partition%tile(local_tile_ind )%panel_number
+        remote_tile_panel_number = partition%tile(remote_tile_ind)%panel_number
+        local_tile_panel_number  = partition%tile(local_tile_ind )%panel_number
 
-    do k = exch_halo%profile%recv_ks(ind), exch_halo%profile%recv_ke(ind)
-        do j = exch_halo%profile%recv_js(ind), exch_halo%profile%recv_je(ind)
-            do i = exch_halo%profile%recv_is(ind), exch_halo%profile%recv_ie(ind)
-                if (local_tile_panel_number == remote_tile_panel_number) then
-                    err_sum = err_sum + abs(int(f1(local_tile_ind).p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*nh*(j-1) + nz*(i-1) + k)))
-                else
-                    if (exch_halo%profile%send_j_step(ind)==1 .and. exch_halo%profile%send_i_step(ind)==1 .and. exch_halo%profile%first_dim_index(ind)=='i') then
-                        err_sum = err_sum + abs(int(f1(local_tile_ind).p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*nh*(modulo(j-1,nh)+1-1) + nz*(modulo(i-1,nh)+1-1) + k)))
-                    else if (exch_halo%profile%send_j_step(ind)==1 .and. exch_halo%profile%send_i_step(ind)==1 .and. exch_halo%profile%first_dim_index(ind)=='j') then
-                        err_sum = err_sum + abs(int(f1(local_tile_ind).p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*nh*(modulo(i-1,nh)+1-1) + nz*(modulo(j-1,nh)+1-1) + k)))
-                    else if (exch_halo%profile%send_j_step(ind)==1 .and. exch_halo%profile%send_i_step(ind)==-1 .and. exch_halo%profile%first_dim_index(ind)=='i') then
-                        err_sum = err_sum + abs(int(f1(local_tile_ind).p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*nh*(modulo(j-1,nh)+1-1) + nz*(nh-modulo(i-1,nh)-1) + k)))
-                    else if (exch_halo%profile%send_j_step(ind)==1 .and. exch_halo%profile%send_i_step(ind)==-1 .and. exch_halo%profile%first_dim_index(ind)=='j') then
-                        err_sum = err_sum + abs(int(f1(local_tile_ind).p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*(modulo(j-1,nh)+1-1) + nz*nh*(nh-modulo(i-1,nh)-1) + k)))
-                    else if (exch_halo%profile%send_j_step(ind)==-1 .and. exch_halo%profile%send_i_step(ind)==1 .and. exch_halo%profile%first_dim_index(ind)=='i') then
-                        err_sum = err_sum + abs(int(f1(local_tile_ind).p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*nh*(nh-modulo(j-1,nh)-1) + nz*(modulo(i-1,nh)+1-1) + k)))
-                    else if (exch_halo%profile%send_j_step(ind)==-1 .and. exch_halo%profile%send_i_step(ind)==1 .and. exch_halo%profile%first_dim_index(ind)=='j') then
-                        err_sum = err_sum + abs(int(f1(local_tile_ind).p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*(nh-modulo(j-1,nh)-1) + nz*nh*(modulo(i-1,nh)+1-1) + k)))
-                    else if (exch_halo%profile%send_j_step(ind)==-1 .and. exch_halo%profile%send_i_step(ind)==-1 .and. exch_halo%profile%first_dim_index(ind)=='i') then
-                        err_sum = err_sum + abs(int(f1(local_tile_ind).p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*nh*(nh-modulo(j-1,nh)-1) + nz*(nh-modulo(i-1,nh)-1) + k)))
-                    else if (exch_halo%profile%send_j_step(ind)==-1 .and. exch_halo%profile%send_i_step(ind)==-1 .and. exch_halo%profile%first_dim_index(ind)=='j') then
-                        err_sum = err_sum + abs(int(f1(local_tile_ind).p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*(nh-modulo(j-1,nh)-1) + nz*nh*(nh-modulo(i-1,nh)-1) + k)))
+        do k = exch_halo%recv_ks(ind), exch_halo%recv_ke(ind)
+            do j = exch_halo%recv_js(ind), exch_halo%recv_je(ind)
+                do i = exch_halo%recv_is(ind), exch_halo%recv_ie(ind)
+
+                    if (local_tile_panel_number == remote_tile_panel_number) then
+                        err_sum = err_sum + abs(int(f1(local_tile_ind).p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*nh*(j-1) + nz*(i-1) + k)))
                     else
-                        print*, 'Error!!!', 'myid=', myid
-                        call mpi_abort(mpi_comm_world, code, ierr)
-                        stop
+                        if (exch_halo%send_j_step(ind)==1 .and. exch_halo%send_i_step(ind)==1 .and. exch_halo%first_dim_index(ind)=='i') then
+                            err_sum = err_sum + abs(int(f1(local_tile_ind).p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*nh*(modulo(j-1,nh)+1-1) + nz*(modulo(i-1,nh)+1-1) + k)))
+                        else if (exch_halo%send_j_step(ind)==1 .and. exch_halo%send_i_step(ind)==1 .and. exch_halo%first_dim_index(ind)=='j') then
+                            err_sum = err_sum + abs(int(f1(local_tile_ind).p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*nh*(modulo(i-1,nh)+1-1) + nz*(modulo(j-1,nh)+1-1) + k)))
+                        else if (exch_halo%send_j_step(ind)==1 .and. exch_halo%send_i_step(ind)==-1 .and. exch_halo%first_dim_index(ind)=='i') then
+                            err_sum = err_sum + abs(int(f1(local_tile_ind).p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*nh*(modulo(j-1,nh)+1-1) + nz*(nh-modulo(i-1,nh)-1) + k)))
+                        else if (exch_halo%send_j_step(ind)==1 .and. exch_halo%send_i_step(ind)==-1 .and. exch_halo%first_dim_index(ind)=='j') then
+                            err_sum = err_sum + abs(int(f1(local_tile_ind).p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*(modulo(j-1,nh)+1-1) + nz*nh*(nh-modulo(i-1,nh)-1) + k)))
+                        else if (exch_halo%send_j_step(ind)==-1 .and. exch_halo%send_i_step(ind)==1 .and. exch_halo%first_dim_index(ind)=='i') then
+                            err_sum = err_sum + abs(int(f1(local_tile_ind).p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*nh*(nh-modulo(j-1,nh)-1) + nz*(modulo(i-1,nh)+1-1) + k)))
+                        else if (exch_halo%send_j_step(ind)==-1 .and. exch_halo%send_i_step(ind)==1 .and. exch_halo%first_dim_index(ind)=='j') then
+                            err_sum = err_sum + abs(int(f1(local_tile_ind).p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*(nh-modulo(j-1,nh)-1) + nz*nh*(modulo(i-1,nh)+1-1) + k)))
+                        else if (exch_halo%send_j_step(ind)==-1 .and. exch_halo%send_i_step(ind)==-1 .and. exch_halo%first_dim_index(ind)=='i') then
+                            err_sum = err_sum + abs(int(f1(local_tile_ind).p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*nh*(nh-modulo(j-1,nh)-1) + nz*(nh-modulo(i-1,nh)-1) + k)))
+                        else if (exch_halo%send_j_step(ind)==-1 .and. exch_halo%send_i_step(ind)==-1 .and. exch_halo%first_dim_index(ind)=='j') then
+                            err_sum = err_sum + abs(int(f1(local_tile_ind).p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*(nh-modulo(j-1,nh)-1) + nz*nh*(nh-modulo(i-1,nh)-1) + k)))
+                        else
+                            print*, 'Error!!!', 'myid=', myid
+                            call mpi_abort(mpi_comm_world, code, ierr)
+                            stop
+                        end if
                     end if
-                end if
+                end do
             end do
         end do
     end do
-end do
+    class default
+        call avost('Wrong type of halo exch object!')
+    end select
+    call mpi_allreduce(err_sum, gl_err_sum, 1, mpi_integer, mpi_sum, mpi_comm_world, ierr)
 
-call mpi_allreduce(err_sum, gl_err_sum, 1, mpi_integer, mpi_sum, mpi_comm_world, ierr)
-
-if (gl_err_sum==0) then
-    if (myid==0) print*, 'Test passed!'
-else
-    if (myid==0) print*, 'Test not passed! Error! Abort!'
-    call mpi_abort(mpi_comm_world, code, ierr)
-    stop
-end if
+    if (gl_err_sum==0) then
+        if (myid==0) print*, 'Test passed!'
+    else
+        if (myid==0) print*, 'Test not passed! Error! Abort!'
+        call mpi_abort(mpi_comm_world, code, ierr)
+        stop
+    end if
 
 end subroutine test_full_halo_exchange
 
@@ -247,12 +257,12 @@ subroutine test_gather_exchange()
 
 use mpi
 
-use grid_function_mod,    only : grid_function_t
-use exchange_mod,         only : exchange_t
-use partition_mod,        only : partition_t
-use exchange_factory_mod, only : create_gather_exchange
+use grid_function_mod,     only : grid_function_t
+use exchange_abstract_mod, only : exchange_t
+use partition_mod,         only : partition_t
+use exchange_factory_mod,  only : create_gather_exchange
 
-type(exchange_t)                   :: exch_gather
+class(exchange_t),allocatable      :: exch_gather
 type(partition_t)                  :: partition
 type(grid_function_t), allocatable :: f1(:)
 
@@ -273,7 +283,7 @@ call MPI_comm_size(mpi_comm_world , Np  , ierr)
 
 if (myid==0) print*, 'Running gather_exchange test!'
 
-call partition%init(nh, nz, max(1,Np/6), Np, strategy = 'default')
+call partition%init(nh, nz, max(1,Np/6), myid, Np, strategy = 'default')
 
 !find start and end index of tiles belonging to the current proccesor
 ts = findloc(partition%proc_map, myid, dim=1)
@@ -315,10 +325,10 @@ do ind = ts, te
 end do
 
 !Init exchange
-call create_gather_exchange(exch_gather, partition, master_id, myid, np)
+exch_gather = create_gather_exchange(partition, master_id, myid, np)
 
 !Perform exchange
-call exch_gather%do(f1, lbound(f1,1), ubound(f1,1))
+call exch_gather%do(f1, lbound(f1,1),ubound(f1,1))
 
 call mpi_barrier(mpi_comm_world, ierr)
 

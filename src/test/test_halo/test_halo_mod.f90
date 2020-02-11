@@ -10,18 +10,18 @@ subroutine test_ecs_halo()
 
 use mpi
 
-use grid_function_mod,    only : grid_function_t
-use exchange_mod,         only : exchange_t
-use partition_mod,        only : partition_t
-use exchange_factory_mod, only : create_2d_full_halo_exchange, create_2d_cross_halo_exchange
-use mesh_factory_mod,     only : create_equiangular_mesh
-use mesh_mod,             only : mesh_t
-use ecs_halo_mod,         only : ecs_halo_t
-use ecs_halo_factory_mod, only : init_ecs_halo
+use grid_function_mod,     only : grid_function_t
+use exchange_abstract_mod, only : exchange_t
+use partition_mod,         only : partition_t
+use exchange_factory_mod,  only : create_2d_halo_exchange
+use mesh_factory_mod,      only : create_equiangular_mesh
+use mesh_mod,              only : mesh_t
+use ecs_halo_mod,          only : ecs_halo_t
+use ecs_halo_factory_mod,  only : init_ecs_halo
 use ecs_halo_vec_a_factory_mod, only : init_ecs_halo_vect
 
 
-type(exchange_t)                   :: exch_halo
+class(exchange_t),     allocatable :: exch_halo
 type(partition_t)                  :: partition
 type(mesh_t),          allocatable :: mesh(:)
 type(grid_function_t), allocatable :: f_test(:), u_test(:), v_test(:)
@@ -48,7 +48,7 @@ logical lpass, glpass
 call MPI_comm_rank(mpi_comm_world , myid, ierr)
 call MPI_comm_size(mpi_comm_world , Np  , ierr)
 
-call partition%init(nh, nz, max(1,Np/6), Np, strategy = 'default')
+call partition%init(nh, nz, max(1,Np/6), myid, Np, strategy = 'default')
 !call partition%init(nh, nz, 64, Np, strategy = 'default')
 
 !find start and end index of tiles belonging to the current proccesor
@@ -82,14 +82,13 @@ call init_vector_halo_test_fun(u_test,v_test,ts,te,partition,mesh,ex_halo_width)
 call init_vector_halo_test_fun(u_true,v_true,ts,te,partition,mesh,ex_halo_width)
 
 !Init exchange
-call create_2d_full_halo_exchange(exch_halo, partition, ex_halo_width, myid, np)
+exch_halo = create_2d_halo_exchange(partition, ex_halo_width, 'full', myid, np)
 
 !Perform exchange
-call exch_halo%do(f_test, ts, te)
-call exch_halo%do(u_test, ts, te)
-call exch_halo%do(v_test, ts, te)
+call exch_halo%do(f_test, lbound(f_test, 1), ubound(f_test, 1))
+call exch_halo%do(u_test, lbound(u_test, 1), ubound(u_test, 1))
+call exch_halo%do(v_test, lbound(v_test, 1), ubound(v_test, 1))
 
-call mpi_barrier(mpi_comm_world, ierr)
 do ind = ts, te
     call mesh(ind)%halo%interp(f_test(ind),halo_width)
     call mesh(ind)%halo_vec%interpv(u_test(ind),v_test(ind),halo_width)

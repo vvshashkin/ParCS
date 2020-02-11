@@ -14,15 +14,15 @@ for id = (panel_num-1)*np+1:panel_num*np
    js = data(id,4);
    je = data(id,5);
 %    fill([is ie ie is], [js js je je],'r', 'LineStyle','none')
-   line([is ie], [js js],'Color','k')
-   line([is is], [js je],'Color','k')
-   text(is+N/100, js+N/100, num2str(id-1))
+   line([is ie], [js js],'Color','k', 'LineWidth',2)
+   line([is is], [js je],'Color','k', 'LineWidth',2)
+   text(is+N/40, js+N/30, num2str(id-1))
    
 %    line([is ie], [je je],'Color','k')
 %    line([ie,ie], [js,je],'Color','k')
 end
-line([1 N], [N N],'Color','k')
-line([N N], [1 N],'Color','k')
+line([1 N], [N N],'Color','k', 'LineWidth',2)
+line([N N], [1 N],'Color','k', 'LineWidth',2)
 
 panel_num = 2;
 for id = (panel_num-1)*np+1:panel_num*np
@@ -30,14 +30,14 @@ for id = (panel_num-1)*np+1:panel_num*np
    ie = data(id,3)+N+0.1*N;
    js = data(id,4);
    je = data(id,5);
-   line([is ie], [js js],'Color','k')
-   line([is is], [js je],'Color','k')
-   text(is+N/100, js+N/100, num2str(id-1))
+   line([is ie], [js js],'Color','k', 'LineWidth',2)
+   line([is is], [js je],'Color','k', 'LineWidth',2)
+   text(is+N/40, js+N/30, num2str(id-1))
 %    line([is ie], [je je],'Color','k')
 %    line([ie,ie], [js,je],'Color','k')
 end
-line([1 N] +N+0.1*N, [N N],'Color','k')
-line([N N] +N+0.1*N, [1 N],'Color','k')
+line([1 N] +N+0.1*N, [N N],'Color','k', 'LineWidth',2)
+line([N N] +N+0.1*N, [1 N],'Color','k', 'LineWidth',2)
 
 panel_num = 3;
 for id = (panel_num-1)*np+1:panel_num*np
@@ -45,14 +45,14 @@ for id = (panel_num-1)*np+1:panel_num*np
    ie = data(id,3)+2*(N+0.1*N);
    js = data(id,4);
    je = data(id,5);
-   line([is ie], [js js],'Color','k')
-   line([is is], [js je],'Color','k')
-   text(is+N/100, js+N/100, num2str(id-1))
+   line([is ie], [js js],'Color','k', 'LineWidth',2)
+   line([is is], [js je],'Color','k', 'LineWidth',2)
+   text(is+N/40, js+N/30, num2str(id-1))
 %    line([is ie], [je je],'Color','k')
 %    line([ie,ie], [js,je],'Color','k')
 end
-line([1 N] +2*(N+0.1*N), [N N],'Color','k')
-line([N N] +2*(N+0.1*N), [1 N],'Color','k')
+line([1 N] +2*(N+0.1*N), [N N],'Color','k', 'LineWidth',2)
+line([N N] +2*(N+0.1*N), [1 N],'Color','k', 'LineWidth',2)
 
 panel_num = 4;
 for id = (panel_num-1)*np+1:panel_num*np
@@ -60,14 +60,14 @@ for id = (panel_num-1)*np+1:panel_num*np
    ie = data(id,3)-1*(N+0.1*N);
    js = data(id,4);
    je = data(id,5);
-   line([is ie], [js js],'Color','k')
-   line([is is], [js je],'Color','k')
-   text(is+N/100, js+N/100, num2str(id-1))   
+   line([is ie], [js js],'Color','k', 'LineWidth',2)
+   line([is is], [js je],'Color','k', 'LineWidth',2)
+   text(is+N/40, js+N/30, num2str(id-1))   
 %    line([is ie], [je je],'Color','k')
 %    line([ie,ie], [js,je],'Color','k')
 end
-line([1 N] -1*(N+0.1*N), [N N],'Color','k')
-line([N N] -1*(N+0.1*N), [1 N],'Color','k')
+line([1 N] -1*(N+0.1*N), [N N],'Color','k', 'LineWidth',2)
+line([N N] -1*(N+0.1*N), [1 N],'Color','k', 'LineWidth',2)
 
 panel_num = 5;
 for id = (panel_num-1)*np+1:panel_num*np
@@ -75,14 +75,14 @@ for id = (panel_num-1)*np+1:panel_num*np
    ie = data(id,3);%+N+0.1*N;
    js = data(id,4)-N-0.1*N;
    je = data(id,5)-N-0.1*N;
-   line([is ie], [js js],'Color','k')
-   line([is is], [js je],'Color','k')
-   text(is+N/100, js+N/100, num2str(id-1))   
+   line([is ie], [js js],'Color','k', 'LineWidth',2)
+   line([is is], [js je],'Color','k', 'LineWidth',2)
+   text(is+N/40, js+N/30, num2str(id-1))   
 %    line([is ie], [je je],'Color','k')
 %    line([ie,ie], [js,je],'Color','k')
 end
-line([1 N]             , [N N]-N-0.1*N,'Color','k')
-line([N N]             , [1 N]-N-0.1*N,'Color','k')
+line([1 N]             , [N N]-N-0.1*N,'Color','k', 'LineWidth',2)
+line([N N]             , [1 N]-N-0.1*N,'Color','k', 'LineWidth',2)
 
 panel_num = 6;
 for id = (panel_num-1)*np+1:panel_num*np
@@ -90,14 +90,14 @@ for id = (panel_num-1)*np+1:panel_num*np
    ie = data(id,3);%+N+0.1*N;
    js = data(id,4)+N+0.1*N;
    je = data(id,5)+N+0.1*N;
-   line([is ie], [js js],'Color','k')
-   line([is is], [js je],'Color','k')
-   text(is+N/100, js+N/100, num2str(id-1))   
+   line([is ie], [js js],'Color','k', 'LineWidth',2)
+   line([is is], [js je],'Color','k', 'LineWidth',2)
+   text(is+N/40, js+N/30, num2str(id-1))   
 %    line([is ie], [je je],'Color','k')
 %    line([ie,ie], [js,je],'Color','k')
 end
-line([1 N] , [N N]+N+0.1*N,'Color','k')
-line([N N] , [1 N]+N+0.1*N,'Color','k')
+line([1 N] , [N N]+N+0.1*N,'Color','k', 'LineWidth',2)
+line([N N] , [1 N]+N+0.1*N,'Color','k', 'LineWidth',2)
 
 axis([-1.2*N 3*N+3*0.1*N -N-2*0.1*N 2*N+2*0.1*N])
 
