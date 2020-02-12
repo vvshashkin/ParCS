@@ -1,4 +1,7 @@
 module container_abstract_mod
+
+implicit none
+
 !Empty abstract container-types for model state & model parameters
     type, abstract :: state_abstract_t
 

@@ -18,9 +18,35 @@ type, extends(stvec_abstract_t) :: stvec_swlin_t
     procedure, public :: dot  => dot
 end type stvec_swlin_t
 
+interface init_stvec_swlin
+    module procedure init_stvec_swlin_tiles
+    module procedure init_stvec_swlin_ints
+end interface
 contains
 
-subroutine init_stvec_swlin(new_stvec, ts, te, panel_ind, is, ie, js, je, ks, ke, halo_width)
+subroutine init_stvec_swlin_tiles(new_stvec, ts, te, tiles, halo_width)
+    use tile_mod, only : tile_t
+
+    type(stvec_swlin_t), intent(out) :: new_stvec
+    integer(kind=4),     intent(in)  :: ts, te
+    type(tile_t),        intent(in)  :: tiles(ts:te)
+    integer(kind=4),     intent(in)  :: halo_width
+
+    integer(kind=4), allocatable :: is(:), ie(:), js(:), je(:)
+    integer(kind=4), allocatable :: ks(:), ke(:), panel_ind(:)
+    integer(kind=4) ind
+
+    panel_ind = tiles(ts:te)%panel_number
+    is = tiles(ts:te)%is; ie = tiles(ts:te)%ie
+    js = tiles(ts:te)%js; je = tiles(ts:te)%je
+    ks = tiles(ts:te)%ks; ke = tiles(ts:te)%ke
+
+    call init_stvec_swlin_ints(new_stvec, ts, te, panel_ind, is, ie, js, je, ks, ke,  &
+                               halo_width)
+
+end subroutine init_stvec_swlin_tiles
+
+subroutine init_stvec_swlin_ints(new_stvec, ts, te, panel_ind, is, ie, js, je, ks, ke, halo_width)
 
     type(stvec_swlin_t), intent(out) :: new_stvec
     integer(kind=4),     intent(in)  :: ts, te
@@ -56,7 +82,7 @@ subroutine init_stvec_swlin(new_stvec, ts, te, panel_ind, is, ie, js, je, ks, ke
 
     new_stvec%init_and_alloc = .true.
 
-end subroutine init_stvec_swlin
+end subroutine init_stvec_swlin_ints
 
 subroutine add(this,other,alpha,beta)
     class(stvec_swlin_t),    intent(inout)  :: this

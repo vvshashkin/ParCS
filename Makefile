@@ -399,7 +399,11 @@ $(DOBJ)swlin_mod.o: src/models/linear_shallow_water/swlin_mod.f90 \
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)parameters_swlin_mod.o: src/models/linear_shallow_water/parameters_swlin_mod.f90 \
-	$(DOBJ)container_abstract_mod.o
+	$(DOBJ)container_abstract_mod.o \
+	$(DOBJ)partition_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)tile_mod.o \
+	$(DOBJ)mesh_factory_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

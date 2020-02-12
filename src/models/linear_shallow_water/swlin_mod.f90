@@ -1,24 +1,11 @@
 module swlin_mod
 
-use partition_mod,           only : partition_t
-use parameters_swlin_mod,    only : parameters_swlin_t
+use parameters_swlin_mod,    only : parameters_swlin_t, init_swlin_parameters
 use stvec_swlin_mod,         only : stvec_swlin_t, init_stvec_swlin
-use mesh_mod,                only : mesh_t
 use operator_swlin_mod,      only : operator_swlin_t
 use timescheme_abstract_mod, only : timescheme_abstract_t
 
 implicit none
-
-!dimensions
-integer(kind=4)            :: nx    = 128
-integer(kind=4), parameter :: nz    = 1 !shallow water!
-logical                    :: lcgrid = .true.
-namelist /dims/ nx, lcgrid
-
-!model specific constants
-real(kind=8)               :: H0    = 1e3_8
-real(kind=8)               :: dt    = 300._8
-namelist /dyn/ H0, dt
 
 !run & output controls
 integer(kind=4)            :: nstep = 10
@@ -28,15 +15,10 @@ namelist /ctr/ nstep, nzap
 !internal controls
 integer(kind=4)            :: master_id = 0
 
-integer(kind=4)            :: halo_width = 8
-type(partition_t)          :: partition
-type(stvec_swlin_t)        :: stvec
-type(mesh_t), allocatable, &
-              target       :: mesh(:)
-
-!
-type(operator_swlin_t)     :: operator
-type(parameters_swlin_t)   :: params
+!model setup
+class(parameters_swlin_t), allocatable    :: params
+type(stvec_swlin_t)                       :: stvec
+type(operator_swlin_t)                    :: operator
 class(timescheme_abstract_t), allocatable :: time_scheme
 
 contains
@@ -46,7 +28,6 @@ subroutine init_swlin_model()
     use mpi
     use cmd_args_mod,             only : cmd_arg_t, get_cmd_args
     use namelist_read_mod,        only : read_namelist_as_str
-    use mesh_factory_mod,         only : create_equiangular_mesh
     use swlin_output_mod,         only : init_swlin_output
     use swlin_initial_cond_mod,   only : set_swlin_initial_conditions
     use operator_swlin_mod,       only : init_swlin_operator
@@ -59,12 +40,10 @@ subroutine init_swlin_model()
 
     character(:), allocatable :: namelist_str
 
-    integer(kind=4) ts, te
-    integer(kind=4), allocatable :: is(:), ie(:), js(:), je(:)
-    integer(kind=4), allocatable :: ks(:), ke(:), panel_ind(:)
-    integer(kind=4) ind
-
-    type(rk4_t)                  :: ts_rk4
+!    integer(kind=4) ts, te
+!    integer(kind=4), allocatable :: is(:), ie(:), js(:), je(:)
+!    integer(kind=4), allocatable :: ks(:), ke(:), panel_ind(:)
+!    integer(kind=4) ind
 
     call MPI_comm_rank(mpi_comm_world , myid, ierr)
     call MPI_comm_size(mpi_comm_world , Np  , ierr)
@@ -76,55 +55,31 @@ subroutine init_swlin_model()
     if(nargs > 1) then
         call read_namelist_as_str(namelist_str,cmd_args(2)%str, myid, master_id = master_id)
     end if
-
     if(allocated(namelist_str)) then
-        read(namelist_str, dims)
-        read(namelist_str, dyn)
         read(namelist_str, ctr)
     end if
 
-    if(myid == master_id) then
-        print *, "---Model parameters:"
-        print *, "nx=", nx
-        print *, "H0=", H0
-        print *, "dt=", dt
-        print *, "nstep=", nstep
-        print *, "nzap=", nzap
-        print *, "lcgrid=", lcgrid
-        print *, "--------------------"
-    end if
+    call init_swlin_parameters(params, namelist_str, myid, Np, master_id)
 
-    call partition%init(nx, nz, max(1,Np/6), myid, Np, strategy = 'default')
+    !ts = params%ts; te = params%te
+    call init_stvec_swlin(stvec, params%ts, params%te, params%tiles,  &
+                          params%halo_width)
 
-    ts = findloc(partition%proc_map, myid, dim=1)
-    te = findloc(partition%proc_map, myid, back = .true., dim=1)
+    call init_swlin_output(myid, master_id, Np, params%partition)
 
-    panel_ind = partition%tile(ts:te)%panel_number
-    is = partition%tile(ts:te)%is; ie = partition%tile(ts:te)%ie
-    js = partition%tile(ts:te)%js; je = partition%tile(ts:te)%je
-    ks = partition%tile(ts:te)%ks; ke = partition%tile(ts:te)%ke
+    call set_swlin_initial_conditions(stvec, namelist_str, params%ts, params%te, &
+                                      params%mesh, myid, master_id)
 
-    call init_stvec_swlin(stvec, ts, te, panel_ind, is, ie, js,   &
-                          je, ks, ke, halo_width)
-
-    allocate(mesh(ts:te))
-
-    do ind = ts, te
-        call create_equiangular_mesh(mesh(ind), partition%tile(ind)%is, partition%tile(ind)%ie, &
-                                                partition%tile(ind)%js, partition%tile(ind)%je, &
-                                                partition%tile(ind)%ks, partition%tile(ind)%ke, &
-                                                nx, halo_width, partition%tile(ind)%panel_number)
-    end do
-    call init_swlin_output(myid, master_id, Np, partition)
-
-    call set_swlin_initial_conditions(stvec, namelist_str, ts,te, mesh(ts:te), &
-                                      myid, master_id)
-
-    operator = init_swlin_operator(ts, te, mesh(ts:te), partition, halo_width, &
-                                   master_id, myid, Np, H0, namelist_str)
-    call operator%ext_halo(stvec)
+    operator = init_swlin_operator(params, master_id, myid, Np, namelist_str)
+    call operator%ext_halo(stvec, params%ts, params%te)
 
     time_scheme = init_rk4(operator, stvec)
+
+    print *, "-----------------------------------------"
+    print *, "|", nstep, "time steps will be performed"
+    print *, "|", "output each ", nzap, "steps"
+    print *, "========================================"
+    print *, "----------execution:--------------------"
 
 end subroutine init_swlin_model
 
@@ -138,14 +93,14 @@ subroutine run_swlin_model()
     call MPI_comm_rank(mpi_comm_world , myid, ierr)
     call MPI_comm_size(mpi_comm_world , Np  , ierr)
 
-    call write_swlin(stvec, partition, 1)
+    call write_swlin(stvec, params%partition, 1)
 
     irec = 2
     do istep = 1, nstep
-        call time_scheme%step(stvec, params, dt)
+        call time_scheme%step(stvec, params, params%dt)
         if(mod(istep,nzap) == 0) then
-            call write_swlin(stvec, partition,irec)
-            call print_swlin_diag(stvec,stvec%ts, stvec%te, mesh,         &
+            call write_swlin(stvec, params%partition,irec)
+            call print_swlin_diag(stvec,params%ts, params%te, params%mesh,  &
                                   myid, master_id, istep)
             irec = irec+1
         end if
