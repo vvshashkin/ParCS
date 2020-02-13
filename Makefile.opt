@@ -117,6 +117,11 @@ $(DOBJ)operator_abstract_mod.o: src/operator_abstract_mod.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)global_diag_mod.o: src/global_diag_mod.f90 \
+	$(DOBJ)container_abstract_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)avost.o: src/avost.f90
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -383,15 +388,13 @@ $(DOBJ)swlin_initial_cond_mod.o: src/models/linear_shallow_water/swlin_initial_c
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)swlin_mod.o: src/models/linear_shallow_water/swlin_mod.f90 \
-	$(DOBJ)partition_mod.o \
 	$(DOBJ)parameters_swlin_mod.o \
 	$(DOBJ)stvec_swlin_mod.o \
-	$(DOBJ)mesh_mod.o \
 	$(DOBJ)operator_swlin_mod.o \
 	$(DOBJ)timescheme_abstract_mod.o \
+	$(DOBJ)diag_swlin_mod.o \
 	$(DOBJ)cmd_args_mod.o \
 	$(DOBJ)namelist_read_mod.o \
-	$(DOBJ)mesh_factory_mod.o \
 	$(DOBJ)swlin_output_mod.o \
 	$(DOBJ)swlin_initial_cond_mod.o \
 	$(DOBJ)rk4_mod.o
@@ -409,7 +412,16 @@ $(DOBJ)parameters_swlin_mod.o: src/models/linear_shallow_water/parameters_swlin_
 
 $(DOBJ)stvec_swlin_mod.o: src/models/linear_shallow_water/stvec_swlin_mod.f90 \
 	$(DOBJ)stvec_abstract_mod.o \
-	$(DOBJ)grid_function_mod.o
+	$(DOBJ)grid_function_mod.o \
+	$(DOBJ)tile_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)diag_swlin_mod.o: src/models/linear_shallow_water/diag_swlin_mod.f90 \
+	$(DOBJ)global_diag_mod.o \
+	$(DOBJ)stvec_swlin_mod.o \
+	$(DOBJ)parameters_swlin_mod.o \
+	$(DOBJ)container_abstract_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

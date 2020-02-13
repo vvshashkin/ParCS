@@ -4,6 +4,7 @@ use parameters_swlin_mod,    only : parameters_swlin_t, init_swlin_parameters
 use stvec_swlin_mod,         only : stvec_swlin_t, init_stvec_swlin
 use operator_swlin_mod,      only : operator_swlin_t
 use timescheme_abstract_mod, only : timescheme_abstract_t
+use diag_swlin_mod,          only : init_swlin_diag_mod
 
 implicit none
 
@@ -40,11 +41,6 @@ subroutine init_swlin_model()
 
     character(:), allocatable :: namelist_str
 
-!    integer(kind=4) ts, te
-!    integer(kind=4), allocatable :: is(:), ie(:), js(:), je(:)
-!    integer(kind=4), allocatable :: ks(:), ke(:), panel_ind(:)
-!    integer(kind=4) ind
-
     call MPI_comm_rank(mpi_comm_world , myid, ierr)
     call MPI_comm_size(mpi_comm_world , Np  , ierr)
 
@@ -61,11 +57,12 @@ subroutine init_swlin_model()
 
     call init_swlin_parameters(params, namelist_str, myid, Np, master_id)
 
-    !ts = params%ts; te = params%te
     call init_stvec_swlin(stvec, params%ts, params%te, params%tiles,  &
                           params%halo_width)
 
     call init_swlin_output(myid, master_id, Np, params%partition)
+
+    call init_swlin_diag_mod()
 
     call set_swlin_initial_conditions(stvec, namelist_str, params%ts, params%te, &
                                       params%mesh, myid, master_id)
@@ -85,7 +82,8 @@ end subroutine init_swlin_model
 
 subroutine run_swlin_model()
     use mpi
-    use swlin_output_mod,         only : write_swlin, print_swlin_diag
+    use swlin_output_mod, only : write_swlin!, print_swlin_diag
+    use diag_swlin_mod,   only : print_swlin_diag
 
     integer(kind=4) myid, Np, ierr
     integer(kind=4) istep, ind, irec
@@ -100,8 +98,7 @@ subroutine run_swlin_model()
         call time_scheme%step(stvec, params, params%dt)
         if(mod(istep,nzap) == 0) then
             call write_swlin(stvec, params%partition,irec)
-            call print_swlin_diag(stvec,params%ts, params%te, params%mesh,  &
-                                  myid, master_id, istep)
+            call print_swlin_diag(istep, stvec, params, myid, master_id)
             irec = irec+1
         end if
     end do
