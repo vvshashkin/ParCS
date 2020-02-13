@@ -26,9 +26,9 @@ subroutine print_swlin_diag(istep, stvec, model_params, myid, master_id)
 
     real(kind=8), allocatable :: hmax(:), hmin(:), mass(:)
 
-    hmax = calc_global_diag(myid, master_id, stvec, model_params, hmax_local, MPI_MAX)
-    hmin = calc_global_diag(myid, master_id, stvec, model_params, hmin_local, MPI_MIN)
-    mass = calc_global_diag(myid, master_id, stvec, model_params, mass_local, MPI_SUM)
+    hmax = calc_global_diag(myid, master_id, .false., stvec, model_params, hmax_local, MPI_MAX)
+    hmin = calc_global_diag(myid, master_id, .false., stvec, model_params, hmin_local, MPI_MIN)
+    mass = calc_global_diag(myid, master_id, .false., stvec, model_params, mass_local, MPI_SUM)
 
     if(myid==master_id) &
        print "(A,I7,A,2E15.7,A,E20.12)", "T=", istep, " H min/max=", hmin(1), hmax(1), &

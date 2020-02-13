@@ -24,21 +24,24 @@ abstract interface
         class(model_parameters_abstract_t), intent(in) :: model_params
     end function calc_integral_local_i
 
-    function calc_after_reduce_i(f) result(q)
-        real(kind=8), allocatable   :: q(:)
-        real(kind=8),    intent(in) :: f(:)
+    function calc_after_reduce_i(f, model_params) result(q)
+        import model_parameters_abstract_t
+        real(kind=8), allocatable                      :: q(:)
+        real(kind=8),                       intent(in) :: f(:)
+        class(model_parameters_abstract_t), intent(in) :: model_params
     end function calc_after_reduce_i
 end interface
 
 contains
 
-function calc_global_diag(myid, master_id, stvec, model_params, &
+function calc_global_diag(myid, master_id, lall_reduce, stvec, model_params, &
                        calc_local, mpi_reduce_op, calc_after_reduce) result(value)
 
     use mpi
 
     real(kind=8), allocatable                      :: value(:)
     integer(kind=4),                    intent(in) :: myid, master_id
+    logical,                            intent(in) :: lall_reduce
     class(state_abstract_t),            intent(in) :: stvec
     class(model_parameters_abstract_t), intent(in) :: model_params
     procedure(calc_integral_local_i),   pointer, &
@@ -55,11 +58,16 @@ function calc_global_diag(myid, master_id, stvec, model_params, &
     val_vec_size = size(f)
     allocate(reduced_f(val_vec_size))
 
-    call mpi_reduce(f,reduced_f,val_vec_size, MPI_DOUBLE, mpi_reduce_op, &
-                    master_id, MPI_COMM_WORLD, ierr)
+    if(lall_reduce) then
+        call mpi_allreduce(f,reduced_f,val_vec_size, MPI_DOUBLE, mpi_reduce_op, &
+                           MPI_COMM_WORLD, ierr)
+    else
+        call mpi_reduce(f,reduced_f,val_vec_size, MPI_DOUBLE, mpi_reduce_op, &
+                        master_id, MPI_COMM_WORLD, ierr)
+    end if
 
-    if(present(calc_after_reduce)) then
-        value = calc_after_reduce(reduced_f)
+    if(present(calc_after_reduce) .and. (myid == master_id .or. lall_reduce)) then
+        value = calc_after_reduce(reduced_f, model_params)
     else
         value = reduced_f
     end if

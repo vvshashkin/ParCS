@@ -26,6 +26,12 @@ $(DEXE)TEST_NAMELIST: $(MKDIRS) $(DOBJ)test_namelist.o \
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_NAMELIST
+$(DEXE)TEST_GLOBAL_DIAG_MAIN: $(MKDIRS) $(DOBJ)test_global_diag_main.o \
+	$(DOBJ)avost.o
+	@rm -f $(filter-out $(DOBJ)test_global_diag_main.o,$(EXESOBJ))
+	@echo $(LITEXT)
+	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
+EXES := $(EXES) TEST_GLOBAL_DIAG_MAIN
 $(DEXE)TEST_HALO_MAIN: $(MKDIRS) $(DOBJ)test_halo_main.o \
 	$(DOBJ)avost.o
 	@rm -f $(filter-out $(DOBJ)test_halo_main.o,$(EXESOBJ))
@@ -258,6 +264,22 @@ $(DOBJ)test_namelist.o: src/test/test_namelist/test_namelist.f90 \
 
 $(DOBJ)test_namelist_mod.o: src/test/test_namelist/test_namelist_mod.f90 \
 	$(DOBJ)namelist_read_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)test_global_diag_main.o: src/test/test_global_diagnostics/test_global_diag_main.f90 \
+	$(DOBJ)test_gl_diag_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)test_gl_diag_mod.o: src/test/test_global_diagnostics/test_gl_diag_mod.f90 \
+	$(DOBJ)container_abstract_mod.o \
+	$(DOBJ)partition_mod.o \
+	$(DOBJ)grid_function_mod.o \
+	$(DOBJ)tile_mod.o \
+	$(DOBJ)parameters_swlin_mod.o \
+	$(DOBJ)stvec_swlin_mod.o \
+	$(DOBJ)global_diag_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
