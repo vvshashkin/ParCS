@@ -43,7 +43,8 @@ real(kind=8) gl_inedge_corner_err, gl_inedge_corner_err_max
 real(kind=8) gl_halo_corner_err, gl_halo_corner_err_max
 integer(kind=4) num_inedge_corners, gl_num_inedge_corners
 
-logical lpass, glpass
+logical lpass
+real(kind=8), parameter :: tolerance = 0.3e-7_8
 
 call MPI_comm_rank(mpi_comm_world , myid, ierr)
 call MPI_comm_size(mpi_comm_world , Np  , ierr)
@@ -106,6 +107,9 @@ if(myid == 0) then
   print *, "inface-corner mean abs, inface-corner max, inedge-corner mean abs, inedge-corner max, halo-corner mean abs, halo-corner max"
   print '(6e15.7)', gl_inface_corner_err, gl_inface_corner_err_max, gl_inedge_corner_err, gl_inedge_corner_err_max,&
                     gl_halo_corner_err, gl_halo_corner_err_max
+
+  lpass = max(gl_inedge_corner_err_max, gl_halo_corner_err_max, &
+              gl_cross_edge_err_max) < tolerance
 end if
 call halo_err(gl_inface_err, gl_inface_err_max, gl_cross_edge_err, gl_cross_edge_err_max, &
               gl_inface_corner_err, gl_inface_corner_err_max, gl_inedge_corner_err,       &
@@ -119,6 +123,8 @@ if(myid == 0) then
   print *, "inface-corner mean abs, inface-corner max, inedge-corner mean abs, inedge-corner max, halo-corner mean abs, halo-corner max"
   print '(6e15.7)', gl_inface_corner_err, gl_inface_corner_err_max, gl_inedge_corner_err, gl_inedge_corner_err_max,&
                     gl_halo_corner_err, gl_halo_corner_err_max
+  lpass = lpass .and. max(gl_inedge_corner_err_max, gl_halo_corner_err_max, &
+                          gl_cross_edge_err_max) < tolerance
 end if
 
 call halo_err(gl_inface_err, gl_inface_err_max, gl_cross_edge_err, gl_cross_edge_err_max, &
@@ -133,6 +139,14 @@ if(myid == 0) then
   print *, "inface-corner mean abs, inface-corner max, inedge-corner mean abs, inedge-corner max, halo-corner mean abs, halo-corner max"
   print '(6e15.7)', gl_inface_corner_err, gl_inface_corner_err_max, gl_inedge_corner_err, gl_inedge_corner_err_max,&
                     gl_halo_corner_err, gl_halo_corner_err_max
+  lpass = lpass .and. max(gl_inedge_corner_err_max, gl_halo_corner_err_max, &
+                          gl_cross_edge_err_max) < tolerance
+
+  if(lpass) then
+      print *, "halo test passed"
+  else
+      print *, "halo test failed"
+  end if
 end if
 
 end subroutine test_ecs_halo
