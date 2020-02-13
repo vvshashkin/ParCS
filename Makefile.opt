@@ -436,8 +436,7 @@ $(DOBJ)swlin_output_mod.o: src/models/linear_shallow_water/swlin_output_mod.f90 
 	$(DOBJ)partition_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
 	$(DOBJ)outputer_factory_mod.o \
-	$(DOBJ)stvec_swlin_mod.o \
-	$(DOBJ)mesh_mod.o
+	$(DOBJ)stvec_swlin_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -459,6 +458,13 @@ $(DOBJ)operator_swlin_mod.o: src/models/linear_shallow_water/operator_swlin_mod.
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)mpi_paneled_outputer_mod.o: src/outputer/mpi_paneled_outputer_mod.f90 \
+	$(DOBJ)outputer_abstract_mod.o \
+	$(DOBJ)grid_function_mod.o \
+	$(DOBJ)partition_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)master_paneled_outputer_mod.o: src/outputer/master_paneled_outputer_mod.f90 \
 	$(DOBJ)outputer_abstract_mod.o \
 	$(DOBJ)partition_mod.o \
@@ -476,7 +482,8 @@ $(DOBJ)outputer_abstract_mod.o: src/outputer/outputer_abstract_mod.f90 \
 $(DOBJ)outputer_factory_mod.o: src/outputer/outputer_factory_mod.f90 \
 	$(DOBJ)master_paneled_outputer_mod.o \
 	$(DOBJ)exchange_abstract_mod.o \
-	$(DOBJ)partition_mod.o
+	$(DOBJ)partition_mod.o \
+	$(DOBJ)mpi_paneled_outputer_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
