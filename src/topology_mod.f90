@@ -16,10 +16,10 @@ implicit none
 !!            |...,,,:
 !!
 
-integer(kind=4), parameter :: ex(3,6) = reshape( (/  (/ 1, 0,  0/), &
-                                                     (/ 0, 0,  1/), &
-                                                     (/-1, 0,  0/), &
+integer(kind=4), parameter :: ex(3,6) = reshape( (/  (/-1, 0,  0/), &
                                                      (/ 0, 0, -1/), &
+                                                     (/ 1, 0,  0/), &
+                                                     (/ 0, 0,  1/), &
                                                      (/ 1, 0,  0/), &
                                                      (/ 1, 0,  0/)  /),  (/3 ,6/) )
 
@@ -28,7 +28,7 @@ integer(kind=4), parameter :: ey(3,6) = reshape( (/  (/0, 1, 0/), &
                                                      (/0, 1, 0/), &
                                                      (/0, 1, 0/), &
                                                      (/0, 0, 1/), &
-                                                     (/0, 0, 1/)    /),  (/3 ,6/) )
+                                                     (/0, 0,-1/)    /),  (/3 ,6/) )
 
 integer(kind=4), parameter :: n(3,6) = reshape( (/   (/ 0, 0,  1/), &
                                                      (/-1, 0,  0/), &
@@ -37,12 +37,12 @@ integer(kind=4), parameter :: n(3,6) = reshape( (/   (/ 0, 0,  1/), &
                                                      (/ 0, 1,  0/), &
                                                      (/ 0,-1,  0/)    /),  (/3 ,6/) )
 
-integer(kind=4), parameter ::  r(3,6) = reshape( (/  (/0, 0, 0/), &
-                                                     (/1, 0, 0/), &
+integer(kind=4), parameter ::  r(3,6) = reshape( (/  (/1, 0, 0/), &
                                                      (/1, 0, 1/), &
                                                      (/0, 0, 1/), &
                                                      (/0, 0, 0/), &
-                                                     (/0, 1, 0/)    /),  (/3 ,6/) )
+                                                     (/0, 0, 0/), &
+                                                     (/0, 1, 1/)    /),  (/3 ,6/) )
 contains
 
 subroutine transform_index(pn_out, pn_in, Npoints, i_in, j_in, i_out, j_out, i_step, j_step, first_dim_index)
