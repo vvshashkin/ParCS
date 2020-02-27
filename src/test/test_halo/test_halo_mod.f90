@@ -13,7 +13,7 @@ use mpi
 use grid_function_mod,     only : grid_function_t
 use exchange_abstract_mod, only : exchange_t
 use partition_mod,         only : partition_t
-use exchange_factory_mod,  only : create_2d_halo_exchange
+use exchange_factory_mod,  only : create_Agrid_halo_exchange
 use mesh_factory_mod,      only : create_equiangular_mesh
 use mesh_mod,              only : mesh_t
 use ecs_halo_mod,          only : ecs_halo_t
@@ -82,7 +82,7 @@ call init_vector_halo_test_fun(u_test,v_test,ts,te,partition,mesh,ex_halo_width)
 call init_vector_halo_test_fun(u_true,v_true,ts,te,partition,mesh,ex_halo_width)
 
 !Init exchange
-exch_halo = create_2d_halo_exchange(partition, ex_halo_width, 'full', myid, np)
+exch_halo = create_Agrid_halo_exchange(partition, ex_halo_width, 'full', myid, np)
 
 !Perform exchange
 call exch_halo%do(f_test, lbound(f_test, 1), ubound(f_test, 1))

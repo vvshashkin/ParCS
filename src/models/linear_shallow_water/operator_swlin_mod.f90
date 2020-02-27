@@ -38,7 +38,7 @@ function init_swlin_operator(ts, te, mesh, partition, ex_halo_width, &
                              master_id, myid, np, H0, namelist_str)    result(oper)
 
     use partition_mod,        only : partition_t
-    use exchange_factory_mod, only : create_2d_halo_exchange
+    use exchange_factory_mod, only : create_Agrid_halo_exchange
     use ecs_halo_factory_mod, only : init_ecs_halo
     use hor_difops_basic_mod, only : cl_gradient_contra_c2, cl_divergence_cgr2, &
                                      cl_gradient_0, cl_divergence_0
@@ -57,7 +57,7 @@ function init_swlin_operator(ts, te, mesh, partition, ex_halo_width, &
     oper%ts = ts; oper%te = te
     oper%mesh(ts:te) => mesh(ts:te)
 
-    oper%exch_halo = create_2d_halo_exchange(partition, ex_halo_width, 'full', myid, np)
+    oper%exch_halo = create_Agrid_halo_exchange(partition, ex_halo_width, 'full', myid, np)
 
     allocate(oper%halo(ts:te))
     do ind=ts,te
