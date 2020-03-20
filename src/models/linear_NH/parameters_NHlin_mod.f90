@@ -9,12 +9,12 @@ implicit none
 
 type, extends(model_parameters_abstract_t) :: parameters_NHlin_t
 
-    integer(kind=4)            :: nx    = 128
-    integer(kind=4)            :: nz    = 1
+    integer(kind=4)            :: nx     = 128
+    integer(kind=4)            :: nz     = 2
     logical                    :: lcgrid = .true.
 
-    real(kind=8)               :: H0    = 1e3_8
-    real(kind=8)               :: dt    = 300._8
+    real(kind=8)               :: H0     = 1e3_8
+    real(kind=8)               :: dt     = 300._8
 
     integer(kind=4)            :: halo_width = 8
 
@@ -37,12 +37,12 @@ subroutine init_NHlin_parameters(params, namelist_str, myid, Np, master_id)
     integer(kind=4),                        intent(in)  :: myid, Np, master_id
 
 
-    integer(kind=4)            :: nx
+    integer(kind=4)            :: nx, nz
     logical                    :: lcgrid
     real(kind=8)               :: H0
     real(kind=8)               :: dt
 
-    namelist /dims/ nx, lcgrid
+    namelist /dims/ nx, nz, lcgrid
     namelist /dyn/ H0, dt
 
     integer(kind=4) ind
@@ -52,6 +52,7 @@ subroutine init_NHlin_parameters(params, namelist_str, myid, Np, master_id)
     if(allocated(namelist_str)) then
         !get defaults
         nx     = params%nx
+        nz     = params%nz
         lcgrid = params%lcgrid
         H0     = params%H0
         dt     = params%dt
@@ -60,6 +61,7 @@ subroutine init_NHlin_parameters(params, namelist_str, myid, Np, master_id)
         read(namelist_str, dyn)
         !set namelist vals
         params%nx     = nx
+        params%nz     = nz
         params%lcgrid = lcgrid
         params%H0     = H0
         params%dt     = dt
@@ -87,6 +89,7 @@ subroutine init_NHlin_parameters(params, namelist_str, myid, Np, master_id)
     if(myid == master_id) then
         print *, "---Model parameters:"
         print *, "nx=", params%nx
+        print *, "nz=", params%nz
         print *, "H0=", params%H0
         print *, "dt=", params%dt
         print *, "lcgrid=", params%lcgrid

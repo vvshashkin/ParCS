@@ -47,7 +47,7 @@ function hmax_local(stvec, model_params) result(f)
     class(state_abstract_t),            intent(in) :: stvec
     class(model_parameters_abstract_t), intent(in) :: model_params
 
-    integer(kind=4) ts, te, ind, is, ie, js, je
+    integer(kind=4) ts, te, ind, is, ie, js, je, ks, ke
 
     select type(model_params)
     class is (parameters_NHlin_t)
@@ -58,12 +58,14 @@ function hmax_local(stvec, model_params) result(f)
         ts = model_params%ts; te = model_params%te
         is  = model_params%tiles(ts)%is;    ie  = model_params%tiles(ts)%ie
         js  = model_params%tiles(ts)%js;    je  = model_params%tiles(ts)%je
-        f(1) = maxval(stvec%h(ts)%p(is:ie,js:je,1))
+        ks  = model_params%tiles(ts)%ks;    ke  = model_params%tiles(ts)%ke
+        f(1) = maxval(stvec%h(ts)%p(is:ie,js:je,ks:ke))
 
         do ind = ts+1, te
             is  = model_params%tiles(ind)%is;    ie  = model_params%tiles(ind)%ie
             js  = model_params%tiles(ind)%js;    je  = model_params%tiles(ind)%je
-            f(1) = max(maxval(stvec%h(ind)%p(is:ie,js:je,1)), f(1))
+            ks  = model_params%tiles(ind)%ks;    ke  = model_params%tiles(ind)%ke
+            f(1) = max(maxval(stvec%h(ind)%p(is:ie,js:je,ks:ke)), f(1))
         end do
 
     class default
@@ -85,7 +87,7 @@ function hmin_local(stvec, model_params) result(f)
     class(state_abstract_t),            intent(in) :: stvec
     class(model_parameters_abstract_t), intent(in) :: model_params
 
-    integer(kind=4) ts, te, ind, is, ie, js, je
+    integer(kind=4) ts, te, ind, is, ie, js, je, ks, ke
 
     select type(model_params)
     class is (parameters_NHlin_t)
@@ -96,12 +98,14 @@ function hmin_local(stvec, model_params) result(f)
         ts = model_params%ts; te = model_params%te
         is  = model_params%tiles(ts)%is;    ie  = model_params%tiles(ts)%ie
         js  = model_params%tiles(ts)%js;    je  = model_params%tiles(ts)%je
+        ks  = model_params%tiles(ts)%ks;    ke  = model_params%tiles(ts)%ke
         f(1) = minval(stvec%h(ts)%p(is:ie,js:je,1))
 
         do ind = ts+1, te
             is  = model_params%tiles(ind)%is;    ie  = model_params%tiles(ind)%ie
             js  = model_params%tiles(ind)%js;    je  = model_params%tiles(ind)%je
-            f(1) = min(minval(stvec%h(ind)%p(is:ie,js:je,1)), f(1))
+            ks  = model_params%tiles(ind)%ks;    ke  = model_params%tiles(ind)%ke
+            f(1) = min(minval(stvec%h(ind)%p(is:ie,js:je,ks:ke)), f(1))
         end do
 
     class default
@@ -123,7 +127,7 @@ function mass_local(stvec, model_params) result(f)
     class(state_abstract_t),            intent(in) :: stvec
     class(model_parameters_abstract_t), intent(in) :: model_params
 
-    integer(kind=4) ts, te, ind, is, ie, js, je, i, j
+    integer(kind=4) ts, te, ind, is, ie, js, je, ks, ke, i, j, k
 
     select type(model_params)
     class is (parameters_NHlin_t)
@@ -137,9 +141,12 @@ function mass_local(stvec, model_params) result(f)
         do ind = ts, te
             is  = model_params%tiles(ind)%is;    ie  = model_params%tiles(ind)%ie
             js  = model_params%tiles(ind)%js;    je  = model_params%tiles(ind)%je
-            do j = js, je
-                do i = is, ie
-                    f(1) = f(1) + stvec%h(ind)%p(i,j,1)*model_params%mesh(ind)%G(i,j)
+            ks  = model_params%tiles(ind)%ks;    ke  = model_params%tiles(ind)%ke
+            do k = ks, ke
+                do j = js, je
+                    do i = is, ie
+                        f(1) = f(1) + stvec%h(ind)%p(i,j,k)*model_params%mesh(ind)%G(i,j)
+                    end do
                 end do
             end do
         end do

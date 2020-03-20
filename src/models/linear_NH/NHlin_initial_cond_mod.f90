@@ -52,24 +52,30 @@ subroutine set_NHlin_gauss_hill(stvec, test_case_num, ts, te, mesh)
     integer(kind=4),     intent(in)    :: ts, te
     type(mesh_t),        intent(in)    :: mesh(ts:te)
 
-    real(kind=8), parameter :: x0 = 0._8, y0 = 0._8, z0 = 1._8
-    real(kind=8), parameter :: r0 = 0.25_8
+    integer,      parameter :: KINI_MAX = 3
+    real(kind=8), parameter :: x0(KINI_MAX) = [0._8, 0._8, 1._8]
+    real(kind=8), parameter :: y0(KINI_MAX) = [0._8, 1._8, 0._8]
+    real(kind=8), parameter :: z0(KINI_MAX) = [1._8, 0._8, 0._8]
+    real(kind=8), parameter :: r0(KINI_MAX) = [0.25_8, 0.2_8, 0.15_8]
     real(kind=8), parameter :: hmax = 1.0_8
 
     integer(kind=4) ind
-    integer(kind=4) i, j
+    integer(kind=4) i, j, k
     real(kind=8) dist
 
     do ind = ts, te
         stvec%u(ind)%p(:,:,:) = 0._8
         stvec%v(ind)%p(:,:,:) = 0._8
 
-        do j = stvec%h(ind)%js, stvec%h(ind)%je
-            do i = stvec%h(ind)%is, stvec%h(ind)%ie
-                dist = acos(mesh(ind)%rhx(i,j)*x0+mesh(ind)%rhy(i,j)*y0+ &
-                                                  mesh(ind)%rhz(i,j)*z0)
+        do k = stvec%h(ind)%ks, stvec%h(ind)%ke
+            do j = stvec%h(ind)%js, stvec%h(ind)%je
+                do i = stvec%h(ind)%is, stvec%h(ind)%ie
+                    dist = acos(mesh(ind)%rhx(i,j)*x0(min(k,KINI_MAX)) + &
+                                mesh(ind)%rhy(i,j)*y0(min(k,KINI_MAX)) + &
+                                mesh(ind)%rhz(i,j)*z0(min(k,KINI_MAX)))
 
-                stvec%h(ind)%p(i,j,1) = hmax*exp(-(dist/r0)**2)
+                    stvec%h(ind)%p(i,j,k) = hmax*exp(-(dist/r0(min(k,KINI_MAX)))**2)
+                end do
             end do
         end do
 

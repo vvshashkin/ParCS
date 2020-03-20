@@ -90,7 +90,7 @@ subroutine add(this,other,alpha,beta)
     real(kind=8),            intent(in)     :: alpha, beta
 
     integer(kind=4) ts, te
-    integer(kind=4) i1, i2, j1, j2
+    integer(kind=4) i1, i2, j1, j2, k1, k2
     integer(kind=4) ind
 
 
@@ -102,12 +102,14 @@ subroutine add(this,other,alpha,beta)
             j2 = this%h(ind)%je+this%h(ind)%nvj
             i1 = this%h(ind)%is-this%h(ind)%nvi
             i2 = this%h(ind)%ie+this%h(ind)%nvi
-            this%h(ind)%p(i1:i2,j1:j2,1) = alpha*this%h(ind)%p(i1:i2,j1:j2,1) + &
-                                           beta*other%h(ind)%p(i1:i2,j1:j2,1)
-            this%u(ind)%p(i1:i2,j1:j2,1) = alpha*this%u(ind)%p(i1:i2,j1:j2,1) + &
-                                           beta*other%u(ind)%p(i1:i2,j1:j2,1)
-            this%v(ind)%p(i1:i2,j1:j2,1) = alpha*this%v(ind)%p(i1:i2,j1:j2,1) + &
-                                           beta*other%v(ind)%p(i1:i2,j1:j2,1)
+            k1 = this%h(ind)%ks
+            k2 = this%h(ind)%ke
+            this%h(ind)%p(i1:i2,j1:j2,k1:k2) = alpha*this%h(ind)%p(i1:i2,j1:j2,k1:k2) + &
+                                               beta*other%h(ind)%p(i1:i2,j1:j2,k1:k2)
+            this%u(ind)%p(i1:i2,j1:j2,k1:k2) = alpha*this%u(ind)%p(i1:i2,j1:j2,k1:k2) + &
+                                               beta*other%u(ind)%p(i1:i2,j1:j2,k1:k2)
+            this%v(ind)%p(i1:i2,j1:j2,k1:k2) = alpha*this%v(ind)%p(i1:i2,j1:j2,k1:k2) + &
+                                               beta*other%v(ind)%p(i1:i2,j1:j2,k1:k2)
         end do
     class default
         call avost("NHlin_stvec_t%add types mismatch. stop!")
@@ -122,7 +124,7 @@ subroutine copy(this,source_stvec)
     integer(kind=4), allocatable :: ks(:), ke(:), panel_ind(:)
     integer(kind=4) ts, te, halo_width
 
-    integer(kind=4) i1, i2, j1, j2
+    integer(kind=4) i1, i2, j1, j2, k1, k2
     integer(kind=4) ind
 
     select type (source_stvec)
@@ -142,9 +144,11 @@ subroutine copy(this,source_stvec)
             j2 = source_stvec%h(ind)%je+source_stvec%h(ind)%nvj
             i1 = source_stvec%h(ind)%is-source_stvec%h(ind)%nvi
             i2 = source_stvec%h(ind)%ie+source_stvec%h(ind)%nvi
-            this%h(ind)%p(i1:i2,j1:j2,1) = source_stvec%h(ind)%p(i1:i2,j1:j2,1)
-            this%u(ind)%p(i1:i2,j1:j2,1) = source_stvec%u(ind)%p(i1:i2,j1:j2,1)
-            this%v(ind)%p(i1:i2,j1:j2,1) = source_stvec%v(ind)%p(i1:i2,j1:j2,1)
+            k1 = source_stvec%h(ind)%ks
+            k2 = source_stvec%h(ind)%ke
+            this%h(ind)%p(i1:i2,j1:j2,k1:k2) = source_stvec%h(ind)%p(i1:i2,j1:j2,k1:k2)
+            this%u(ind)%p(i1:i2,j1:j2,k1:k2) = source_stvec%u(ind)%p(i1:i2,j1:j2,k1:k2)
+            this%v(ind)%p(i1:i2,j1:j2,k1:k2) = source_stvec%v(ind)%p(i1:i2,j1:j2,k1:k2)
         end do
     class default
         call avost("NHlin_stvec_t%copy types mismatch. stop!")
