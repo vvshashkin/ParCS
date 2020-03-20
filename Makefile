@@ -74,6 +74,12 @@ $(DEXE)TEST_METRIC_MAIN: $(MKDIRS) $(DOBJ)test_metric_main.o \
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_METRIC_MAIN
+$(DEXE)NHLIN: $(MKDIRS) $(DOBJ)nhlin.o \
+	$(DOBJ)avost.o
+	@rm -f $(filter-out $(DOBJ)nhlin.o,$(EXESOBJ))
+	@echo $(LITEXT)
+	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
+EXES := $(EXES) NHLIN
 $(DEXE)SWLIN: $(MKDIRS) $(DOBJ)swlin.o \
 	$(DOBJ)avost.o
 	@rm -f $(filter-out $(DOBJ)swlin.o,$(EXESOBJ))
@@ -416,6 +422,83 @@ $(DOBJ)operator_iomega_mod.o: src/models/iomega_model/operator_iomega_mod.f90 \
 	$(DOBJ)stvec_iomega_mod.o \
 	$(DOBJ)container_abstract_mod.o \
 	$(DOBJ)parameters_iomega_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)nhlin.o: src/models/linear_NH/NHlin.f90 \
+	$(DOBJ)nhlin_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)parameters_nhlin_mod.o: src/models/linear_NH/parameters_NHlin_mod.f90 \
+	$(DOBJ)container_abstract_mod.o \
+	$(DOBJ)partition_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)tile_mod.o \
+	$(DOBJ)mesh_factory_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)diag_nhlin_mod.o: src/models/linear_NH/diag_NHlin_mod.f90 \
+	$(DOBJ)global_diag_mod.o \
+	$(DOBJ)stvec_nhlin_mod.o \
+	$(DOBJ)parameters_nhlin_mod.o \
+	$(DOBJ)container_abstract_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)nhlin_output_mod.o: src/models/linear_NH/NHlin_output_mod.f90 \
+	$(DOBJ)grid_function_mod.o \
+	$(DOBJ)outputer_abstract_mod.o \
+	$(DOBJ)partition_mod.o \
+	$(DOBJ)exchange_factory_mod.o \
+	$(DOBJ)outputer_factory_mod.o \
+	$(DOBJ)stvec_nhlin_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)nhlin_mod.o: src/models/linear_NH/NHlin_mod.f90 \
+	$(DOBJ)parameters_nhlin_mod.o \
+	$(DOBJ)stvec_nhlin_mod.o \
+	$(DOBJ)operator_nhlin_mod.o \
+	$(DOBJ)timescheme_abstract_mod.o \
+	$(DOBJ)diag_nhlin_mod.o \
+	$(DOBJ)cmd_args_mod.o \
+	$(DOBJ)namelist_read_mod.o \
+	$(DOBJ)nhlin_output_mod.o \
+	$(DOBJ)nhlin_initial_cond_mod.o \
+	$(DOBJ)rk4_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)stvec_nhlin_mod.o: src/models/linear_NH/stvec_NHlin_mod.f90 \
+	$(DOBJ)stvec_abstract_mod.o \
+	$(DOBJ)grid_function_mod.o \
+	$(DOBJ)tile_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)operator_nhlin_mod.o: src/models/linear_NH/operator_NHlin_mod.f90 \
+	$(DOBJ)operator_abstract_mod.o \
+	$(DOBJ)stvec_abstract_mod.o \
+	$(DOBJ)stvec_nhlin_mod.o \
+	$(DOBJ)container_abstract_mod.o \
+	$(DOBJ)parameters_nhlin_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)exchange_abstract_mod.o \
+	$(DOBJ)ecs_halo_mod.o \
+	$(DOBJ)hor_difops_abstract_mod.o \
+	$(DOBJ)partition_mod.o \
+	$(DOBJ)exchange_factory_mod.o \
+	$(DOBJ)ecs_halo_factory_mod.o \
+	$(DOBJ)hor_difops_basic_mod.o \
+	$(DOBJ)const_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)nhlin_initial_cond_mod.o: src/models/linear_NH/NHlin_initial_cond_mod.f90 \
+	$(DOBJ)stvec_nhlin_mod.o \
+	$(DOBJ)mesh_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
