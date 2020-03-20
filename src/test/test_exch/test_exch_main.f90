@@ -1,10 +1,11 @@
 program main
 
-use test_mod, only : test_cross_halo_exchange, test_full_halo_exchange, test_gather_exchange
+use test_mod, only : test_cross_halo_exchange, test_full_halo_exchange, test_gather_exchange, test_cross_halo_vec_exchange
 use mpi
 
 call MPI_init(ierr)
 
+call test_cross_halo_vec_exchange()
 call test_cross_halo_exchange()
 call test_full_halo_exchange()
 call test_gather_exchange()

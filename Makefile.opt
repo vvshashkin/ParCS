@@ -218,10 +218,16 @@ $(DOBJ)rk4_mod.o: src/time_schemes/rk4_mod.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)exchange_vec_absctract_mod.o: src/parallel/exchange_vec_absctract_mod.f90 \
+	$(DOBJ)grid_function_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)exchange_factory_mod.o: src/parallel/exchange_factory_mod.f90 \
 	$(DOBJ)partition_mod.o \
 	$(DOBJ)tile_mod.o \
 	$(DOBJ)exchange_halo_mod.o \
+	$(DOBJ)exchange_vec_halo_mod.o \
 	$(DOBJ)topology_mod.o \
 	$(DOBJ)exchange_gather_mod.o
 	@echo $(COTEXT)
@@ -254,6 +260,13 @@ $(DOBJ)exchange_gather_mod.o: src/parallel/exchange_gather_mod.f90 \
 $(DOBJ)partition_mod.o: src/parallel/partition_mod.f90 \
 	$(DOBJ)tile_mod.o \
 	$(DOBJ)topology_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)exchange_vec_halo_mod.o: src/parallel/exchange_vec_halo_mod.f90 \
+	$(DOBJ)grid_function_mod.o \
+	$(DOBJ)exchange_vec_absctract_mod.o \
+	$(DOBJ)buffer_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -361,10 +374,13 @@ $(DOBJ)test_exch_main.o: src/test/test_exch/test_exch_main.f90 \
 
 $(DOBJ)test_mod.o: src/test/test_exch/test_mod.f90 \
 	$(DOBJ)grid_function_mod.o \
-	$(DOBJ)exchange_abstract_mod.o \
-	$(DOBJ)exchange_halo_mod.o \
+	$(DOBJ)exchange_vec_absctract_mod.o \
+	$(DOBJ)exchange_vec_halo_mod.o \
 	$(DOBJ)partition_mod.o \
-	$(DOBJ)exchange_factory_mod.o
+	$(DOBJ)exchange_factory_mod.o \
+	$(DOBJ)topology_mod.o \
+	$(DOBJ)exchange_abstract_mod.o \
+	$(DOBJ)exchange_halo_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

@@ -16,10 +16,10 @@ implicit none
 !!            |...,,,:
 !!
 
-integer(kind=4), parameter :: ex(3,6) = reshape( (/  (/ 1, 0,  0/), &
-                                                     (/ 0, 0,  1/), &
-                                                     (/-1, 0,  0/), &
+integer(kind=4), parameter :: ex(3,6) = reshape( (/  (/-1, 0,  0/), &
                                                      (/ 0, 0, -1/), &
+                                                     (/ 1, 0,  0/), &
+                                                     (/ 0, 0,  1/), &
                                                      (/ 1, 0,  0/), &
                                                      (/ 1, 0,  0/)  /),  (/3 ,6/) )
 
@@ -28,7 +28,7 @@ integer(kind=4), parameter :: ey(3,6) = reshape( (/  (/0, 1, 0/), &
                                                      (/0, 1, 0/), &
                                                      (/0, 1, 0/), &
                                                      (/0, 0, 1/), &
-                                                     (/0, 0, 1/)    /),  (/3 ,6/) )
+                                                     (/0, 0,-1/)    /),  (/3 ,6/) )
 
 integer(kind=4), parameter :: n(3,6) = reshape( (/   (/ 0, 0,  1/), &
                                                      (/-1, 0,  0/), &
@@ -37,13 +37,24 @@ integer(kind=4), parameter :: n(3,6) = reshape( (/   (/ 0, 0,  1/), &
                                                      (/ 0, 1,  0/), &
                                                      (/ 0,-1,  0/)    /),  (/3 ,6/) )
 
-integer(kind=4), parameter ::  r(3,6) = reshape( (/  (/0, 0, 0/), &
-                                                     (/1, 0, 0/), &
+integer(kind=4), parameter ::  r(3,6) = reshape( (/  (/1, 0, 0/), &
                                                      (/1, 0, 1/), &
                                                      (/0, 0, 1/), &
                                                      (/0, 0, 0/), &
-                                                     (/0, 1, 0/)    /),  (/3 ,6/) )
+                                                     (/0, 0, 0/), &
+                                                     (/0, 1, 1/)    /),  (/3 ,6/) )
 contains
+
+subroutine calc_xyz_cords(panel_ind, i, j, npoints, ix, iy, iz)
+
+    integer(kind=4), intent(in)  :: panel_ind, i, j, npoints
+    integer(kind=4), intent(out) :: ix, iy, iz
+
+    ix = (i-1)*ex(1, panel_ind) + (j-1)*ey(1, panel_ind) + (npoints-1)*r(1,panel_ind) + 1
+    iy = (i-1)*ex(2, panel_ind) + (j-1)*ey(2, panel_ind) + (npoints-1)*r(2,panel_ind) + 1
+    iz = (i-1)*ex(3, panel_ind) + (j-1)*ey(3, panel_ind) + (npoints-1)*r(3,panel_ind) + 1
+
+end subroutine calc_xyz_cords
 
 subroutine transform_index(pn_out, pn_in, Npoints, i_in, j_in, i_out, j_out, i_step, j_step, first_dim_index)
 
