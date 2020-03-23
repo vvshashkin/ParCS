@@ -118,7 +118,7 @@ subroutine act(this, vout, vin, model_params)
                 !d vec{u}/dt = -grav * nabla(h)
                 call this%grad_contra(vout%u(ind), vout%v(ind), vin%h(ind), model_params%mesh(ind), -grav)
                 !dh/dt = -H0 * nabla*u
-                call this%div(vout%h(ind),vin%u(ind),vin%v(ind), model_params%mesh(ind),-model_params%H0)
+                call this%div(vout%h(ind),vin%u(ind),vin%v(ind), model_params%mesh(ind),-model_params%HMAX)
 
             end do
 

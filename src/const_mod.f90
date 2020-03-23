@@ -5,6 +5,9 @@ real(kind=8), parameter :: pi = acos(-1._8)
 real(kind=8), parameter :: grav = 9.80616_8   !gravity acceleration m/s^2
 real(kind=8), parameter :: radz = 0.6371229d7 !Earth radius
 real(kind=8), parameter :: Day24h_sec = 24._8*3600._8 !day length in seconds
+real(kind=8), parameter :: rgaz = 0.2870597E+03_8 !dry air gas-constant
+real(kind=8), parameter :: Cp   = 3.5_8*rgaz
+real(kind=8), parameter :: Cv   = 2.5_8*rgaz
 real(kind=8)               gs_axis(3)         !geographical south pole to north pole axis (of unit length)
 
 contains
