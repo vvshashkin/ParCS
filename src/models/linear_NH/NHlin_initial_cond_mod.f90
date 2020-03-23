@@ -10,16 +10,16 @@ public :: set_NHlin_initial_conditions
 
 contains
 
-subroutine set_NHlin_initial_conditions(stvec, namelist_str, ts, te, mesh, &
+subroutine set_NHlin_initial_conditions(stvec, namelist_str, params, &
                                         myid, master_id)
 
-    use stvec_NHlin_mod, only : stvec_NHlin_t
-    use mesh_mod,        only : mesh_t
+    use stvec_NHlin_mod,      only : stvec_NHlin_t
+    use mesh_mod,             only : mesh_t
+    use parameters_NHlin_mod, only : parameters_NHlin_t
 
     type(stvec_NHlin_t),       intent(inout) :: stvec
     character(:), allocatable, intent(in)    :: namelist_str
-    integer(kind=4),           intent(in)    :: ts, te
-    type(mesh_t),              intent(in)    :: mesh(ts:te)
+    type(parameters_NHlin_t),  intent(in)    :: params
     integer(kind=4),           intent(in)    :: myid, master_id
 
     integer(kind=4) namelist_read_stat
@@ -35,52 +35,58 @@ subroutine set_NHlin_initial_conditions(stvec, namelist_str, ts, te, mesh, &
     end if
 
     if(test_case_num == 1) then
-        call set_NHlin_gauss_hill(stvec, test_case_num, ts, te, mesh)
+        call set_NHlin_gravity_wave(stvec, test_case_num, params%ts, params%te,  &
+                                    params%mesh, params%nz, params%zh, params%z)
     else
         call avost("NHlin model: unknown test case")
     end if
 
 end subroutine set_NHlin_initial_conditions
 
-subroutine set_NHlin_gauss_hill(stvec, test_case_num, ts, te, mesh)
+subroutine set_NHlin_gravity_wave(stvec, test_case_num, ts, te, mesh, nz, zh, z)
 
     use stvec_NHlin_mod, only : stvec_NHlin_t
     use mesh_mod,        only : mesh_t
+    use const_mod,       only : pi, radz
 
     type(stvec_NHlin_t), intent(inout) :: stvec
     integer(kind=4),     intent(in)    :: test_case_num
     integer(kind=4),     intent(in)    :: ts, te
     type(mesh_t),        intent(in)    :: mesh(ts:te)
+    integer(kind=4),     intent(in)    :: nz
+    real(kind=8),        intent(in)    :: zh(0:nz), z(1:nz)
 
-    integer,      parameter :: KINI_MAX = 3
-    real(kind=8), parameter :: x0(KINI_MAX) = [0._8, 0._8, 1._8]
-    real(kind=8), parameter :: y0(KINI_MAX) = [0._8, 1._8, 0._8]
-    real(kind=8), parameter :: z0(KINI_MAX) = [1._8, 0._8, 0._8]
-    real(kind=8), parameter :: r0(KINI_MAX) = [0.25_8, 0.2_8, 0.15_8]
-    real(kind=8), parameter :: hmax = 1.0_8
+    real(kind=8), parameter :: x0 = 1._8
+    real(kind=8), parameter :: y0 = 0._8
+    real(kind=8), parameter :: z0 = 0._8
+    real(kind=8), parameter :: r0 = 5000._8*125._8
+    real(kind=8), parameter :: Lz = 20e3_8
+    real(kind=8), parameter :: theta_max = 1.0_8
 
     integer(kind=4) ind
     integer(kind=4) i, j, k
     real(kind=8) dist
 
     do ind = ts, te
-        stvec%u(ind)%p(:,:,:) = 0._8
-        stvec%v(ind)%p(:,:,:) = 0._8
+        stvec%prex(ind)%p(:,:,:) = 0._8
+        stvec%u(ind)%p(:,:,:)    = 0._8
+        stvec%v(ind)%p(:,:,:)    = 0._8
+        stvec%w(ind)%p(:,:,:)    = 0._8
 
-        do k = stvec%h(ind)%ks, stvec%h(ind)%ke
-            do j = stvec%h(ind)%js, stvec%h(ind)%je
-                do i = stvec%h(ind)%is, stvec%h(ind)%ie
-                    dist = acos(mesh(ind)%rhx(i,j)*x0(min(k,KINI_MAX)) + &
-                                mesh(ind)%rhy(i,j)*y0(min(k,KINI_MAX)) + &
-                                mesh(ind)%rhz(i,j)*z0(min(k,KINI_MAX)))
+        do k = stvec%theta(ind)%ks, stvec%theta(ind)%ke
+            do j = stvec%theta(ind)%js, stvec%theta(ind)%je
+                do i = stvec%theta(ind)%is, stvec%theta(ind)%ie
+                    dist = radz*acos(mesh(ind)%rhx(i,j)*x0 + mesh(ind)%rhy(i,j)*y0 + &
+                                     mesh(ind)%rhz(i,j)*z0)
 
-                    stvec%h(ind)%p(i,j,k) = hmax*exp(-(dist/r0(min(k,KINI_MAX)))**2)
+                    stvec%theta(ind)%p(i,j,k) = theta_max*r0**2/(r0**2+dist**2) * &
+                                                sin(2._8*pi*zh(k)/Lz)
                 end do
             end do
         end do
 
     end do
 
-end subroutine set_NHlin_gauss_hill
+end subroutine set_NHlin_gravity_wave
 
 end module NHlin_initial_cond_mod

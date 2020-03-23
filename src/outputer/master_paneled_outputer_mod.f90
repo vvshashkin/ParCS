@@ -36,7 +36,8 @@ subroutine master_paneled_write(this, f, ts, te, partition, file_name, rec_num)
     real(kind=4), allocatable :: buffer(:,:,:)
     integer(kind=4) irec, reclen
     integer(kind=4) :: is, ie, js, je, ks, ke
-    integer(kind=4) :: t, i, j, k, myid, ierr
+    integer(kind=4) :: t, i, j, k, k0
+    integer(kind=4) :: myid, ierr
 
 
     call mpi_comm_rank(mpi_comm_world, myid, ierr)
@@ -63,7 +64,9 @@ subroutine master_paneled_write(this, f, ts, te, partition, file_name, rec_num)
             open(newunit=this%out_stream, file = trim(file_name), &
                  access="direct", recl = reclen)
 
-            do k = 1, partition%Nz
+            k0 = partition%tile(1)%ks
+            print *, "K0", k0
+            do k = k0, partition%Nz
                 do t = 1, partition%num_panels*partition%num_tiles
                     do j = partition%tile(t)%js, partition%tile(t)%je
                         do i = partition%tile(t)%is, partition%tile(t)%ie
@@ -72,7 +75,7 @@ subroutine master_paneled_write(this, f, ts, te, partition, file_name, rec_num)
                     end do
                 end do
 
-                write(this%out_stream, rec = (irec-1)*partition%Nz+k) buffer
+                write(this%out_stream, rec = (irec-1)*(partition%Nz-k0+1)+(k-k0+1)) buffer
             end do
             deallocate(buffer)
             close(this%out_stream)

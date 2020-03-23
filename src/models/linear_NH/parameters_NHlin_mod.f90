@@ -10,10 +10,10 @@ implicit none
 type, extends(model_parameters_abstract_t) :: parameters_NHlin_t
 
     integer(kind=4)            :: nx     = 128
-    integer(kind=4)            :: nz     = 5
+    integer(kind=4)            :: nz     = 10
     logical                    :: lcgrid = .true.
 
-    real(kind=8)               :: HMAX   = 12e3_8
+    real(kind=8)               :: HMAX   = 10e3_8
     real(kind=8)               :: dt     = 300._8
 
     integer(kind=4)            :: halo_width = 8
@@ -106,14 +106,13 @@ subroutine init_NHlin_parameters(params, namelist_str, myid, Np, master_id)
         print *, "dt     =", params%dt
         print *, "lcgrid =", params%lcgrid
         print *, "--------------------"
-        print *, "zh", params%zh
-        print *, "z", params%z
-        print *, "prex", params%prex0
-        print *, "prexdz", params%prex0dz
-        print *, "theta", params%theta0
-        print *, "thetadz", params%theta0dz
+        !print *, "zh", params%zh
+        !print *, "z", params%z
+        !print *, "prex", params%prex0
+        !print *, "prexdz", params%prex0dz
+        !print *, "theta", params%theta0
+        !print *, "thetadz", params%theta0dz
     end if
-    call avost("end of NHLIN test")
 
 end subroutine init_NHlin_parameters
 
@@ -195,6 +194,5 @@ subroutine init_vertical_ref_profiles(nz, zh, z, prex0, prex0dz, theta0, theta0d
     end function ref_thetadz
 
 end subroutine init_vertical_ref_profiles
-
 
 end module parameters_NHlin_mod

@@ -115,11 +115,15 @@ subroutine act(this, vout, vin, model_params)
 
             do ind = model_params%ts, model_params%te
 
-                !d vec{u}/dt = -grav * nabla(h)
-                call this%grad_contra(vout%u(ind), vout%v(ind), vin%h(ind), model_params%mesh(ind), -grav)
-                !dh/dt = -H0 * nabla*u
-                call this%div(vout%h(ind),vin%u(ind),vin%v(ind), model_params%mesh(ind),-model_params%HMAX)
-
+                !!d vec{u}/dt = -grav * nabla(h)
+                !call this%grad_contra(vout%u(ind), vout%v(ind), vin%h(ind), model_params%mesh(ind), -grav)
+                !!dh/dt = -H0 * nabla*u
+                !call this%div(vout%h(ind),vin%u(ind),vin%v(ind), model_params%mesh(ind),-model_params%HMAX)
+                vout%prex(ind)%p = 0._8
+                vout%u(ind)%p = 0._8
+                vout%v(ind)%p = 0._8
+                vout%w(ind)%p = 0._8
+                vout%theta(ind)%p = 0._8
             end do
 
             call this%ext_halo(vout, model_params%ts, model_params%te)
@@ -146,9 +150,9 @@ subroutine ext_halo(this, v, ts, te)
 
     integer(kind=4) ind
 
-    call this%exch_halo%do(v%h(ts:te), ts, te)
+    call this%exch_halo%do(v%prex(ts:te), ts, te)
     do ind = ts, te
-        call this%halo(ind)%interp(v%h(ind),this%op_halo_width)
+        call this%halo(ind)%interp(v%prex(ind),this%op_halo_width)
     end do
 
 end subroutine ext_halo

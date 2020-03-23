@@ -64,8 +64,7 @@ subroutine init_NHlin_model()
 
     call init_NHlin_diag_mod()
 
-    call set_NHlin_initial_conditions(stvec, namelist_str, params%ts, params%te, &
-                                      params%mesh, myid, master_id)
+    call set_NHlin_initial_conditions(stvec, namelist_str, params, myid, master_id)
 
     operator = init_NHlin_operator(params, master_id, myid, Np, namelist_str)
     call operator%ext_halo(stvec, params%ts, params%te)
@@ -92,6 +91,7 @@ subroutine run_NHlin_model()
     call MPI_comm_size(mpi_comm_world , Np  , ierr)
 
     call write_NHlin(stvec, params%partition, 1)
+    call avost("ini cond written")
 
     irec = 2
     do istep = 1, nstep

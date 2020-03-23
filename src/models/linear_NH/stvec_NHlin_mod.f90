@@ -7,9 +7,11 @@ implicit none
 
 type, extends(stvec_abstract_t) :: stvec_NHlin_t
     integer(kind=4) ts, te
-    type(grid_function_t), allocatable :: h(:)
+    type(grid_function_t), allocatable :: prex(:)
     type(grid_function_t), allocatable :: u(:)
     type(grid_function_t), allocatable :: v(:)
+    type(grid_function_t), allocatable :: w(:)
+    type(grid_function_t), allocatable :: theta(:)
     logical                            :: init_and_alloc = .false.
 
     contains
@@ -58,26 +60,39 @@ subroutine init_stvec_NHlin_ints(new_stvec, ts, te, panel_ind, is, ie, js, je, k
 
     integer ind
 
-    allocate(new_stvec%h(ts:te))
+    allocate(new_stvec%prex(ts:te))
     allocate(new_stvec%u(ts:te))
     allocate(new_stvec%v(ts:te))
+    allocate(new_stvec%w(ts:te))
+    allocate(new_stvec%theta(ts:te))
 
     new_stvec%ts = ts; new_stvec%te = te
 
     do ind = ts, te
-        call new_stvec%h(ind)%init(panel_ind(ind),is(ind), ie(ind),    &
-                                   js(ind), je(ind), ks(ind), ke(ind), &
-                                   halo_width, halo_width, 0)
-        new_stvec%h(ind)%p(:,:,:) = 0._8
+        call new_stvec%prex(ind)%init(panel_ind(ind),is(ind), ie(ind),    &
+                                      js(ind), je(ind), ks(ind), ke(ind), &
+                                      halo_width, halo_width, 0)
+        new_stvec%prex(ind)%p(:,:,:) = 0._8
+
         call new_stvec%u(ind)%init(panel_ind(ind),is(ind), ie(ind),    &
                                    js(ind), je(ind), ks(ind), ke(ind), &
                                    halo_width, halo_width, 0)
         new_stvec%u(ind)%p(:,:,:) = 0._8
+
         call new_stvec%v(ind)%init(panel_ind(ind),is(ind), ie(ind),    &
                                    js(ind), je(ind), ks(ind), ke(ind), &
                                    halo_width, halo_width, 0)
-        new_stvec%v(ind)%p(:,:,:) = 0._8
 
+        new_stvec%v(ind)%p(:,:,:) = 0._8
+        call new_stvec%w(ind)%init(panel_ind(ind),is(ind), ie(ind),     &
+                                  js(ind), je(ind), ks(ind)-1, ke(ind), &
+                                  halo_width, halo_width, 0)
+        new_stvec%w(ind)%p(:,:,:) = 0._8
+
+        call new_stvec%theta(ind)%init(panel_ind(ind),is(ind), ie(ind),     &
+                                   js(ind), je(ind), ks(ind)-1, ke(ind), &
+                                   halo_width, halo_width, 0)
+        new_stvec%theta(ind)%p(:,:,:) = 0._8
     end do
 
     new_stvec%init_and_alloc = .true.
@@ -98,18 +113,22 @@ subroutine add(this,other,alpha,beta)
     class is (stvec_NHlin_t)
         ts = this%ts; te = this%te
         do ind = ts,te
-            j1 = this%h(ind)%js-this%h(ind)%nvj
-            j2 = this%h(ind)%je+this%h(ind)%nvj
-            i1 = this%h(ind)%is-this%h(ind)%nvi
-            i2 = this%h(ind)%ie+this%h(ind)%nvi
-            k1 = this%h(ind)%ks
-            k2 = this%h(ind)%ke
-            this%h(ind)%p(i1:i2,j1:j2,k1:k2) = alpha*this%h(ind)%p(i1:i2,j1:j2,k1:k2) + &
-                                               beta*other%h(ind)%p(i1:i2,j1:j2,k1:k2)
-            this%u(ind)%p(i1:i2,j1:j2,k1:k2) = alpha*this%u(ind)%p(i1:i2,j1:j2,k1:k2) + &
-                                               beta*other%u(ind)%p(i1:i2,j1:j2,k1:k2)
-            this%v(ind)%p(i1:i2,j1:j2,k1:k2) = alpha*this%v(ind)%p(i1:i2,j1:j2,k1:k2) + &
-                                               beta*other%v(ind)%p(i1:i2,j1:j2,k1:k2)
+            j1 = this%prex(ind)%js-this%prex(ind)%nvj
+            j2 = this%prex(ind)%je+this%prex(ind)%nvj
+            i1 = this%prex(ind)%is-this%prex(ind)%nvi
+            i2 = this%prex(ind)%ie+this%prex(ind)%nvi
+            k1 = this%prex(ind)%ks
+            k2 = this%prex(ind)%ke
+            this%prex(ind)%p(i1:i2,j1:j2,k1:k2)    = alpha*this%prex(ind)%p(i1:i2,j1:j2,k1:k2)    + &
+                                                     beta*other%prex(ind)%p(i1:i2,j1:j2,k1:k2)
+            this%u(ind)%p(i1:i2,j1:j2,k1:k2)       = alpha*this%u(ind)%p(i1:i2,j1:j2,k1:k2)       + &
+                                                     beta*other%u(ind)%p(i1:i2,j1:j2,k1:k2)
+            this%v(ind)%p(i1:i2,j1:j2,k1:k2)       = alpha*this%v(ind)%p(i1:i2,j1:j2,k1:k2)       + &
+                                                     beta*other%v(ind)%p(i1:i2,j1:j2,k1:k2)
+            this%w(ind)%p(i1:i2,j1:j2,k1-1:k2)     = alpha*this%w(ind)%p(i1:i2,j1:j2,k1-1:k2)     + &
+                                                     beta*other%v(ind)%p(i1:i2,j1:j2,k1-1:k2)
+            this%theta(ind)%p(i1:i2,j1:j2,k1-1:k2) = alpha*this%theta(ind)%p(i1:i2,j1:j2,k1-1:k2) + &
+                                                     beta*other%theta(ind)%p(i1:i2,j1:j2,k1-1:k2)
         end do
     class default
         call avost("NHlin_stvec_t%add types mismatch. stop!")
@@ -131,24 +150,26 @@ subroutine copy(this,source_stvec)
     class is (stvec_NHlin_t)
         ts = source_stvec%ts; te = source_stvec%te
         if(.not. this%init_and_alloc) then
-            panel_ind = source_stvec%h(ts:te)%panel_ind
-            is = source_stvec%h(ts:te)%is; ie = source_stvec%h(ts:te)%ie
-            js = source_stvec%h(ts:te)%js; je = source_stvec%h(ts:te)%je
-            ks = source_stvec%h(ts:te)%ks; ke = source_stvec%h(ts:te)%ke
-            halo_width = max(source_stvec%h(ts)%nvi, source_stvec%h(ts)%nvj)
+            panel_ind = source_stvec%prex(ts:te)%panel_ind
+            is = source_stvec%prex(ts:te)%is; ie = source_stvec%prex(ts:te)%ie
+            js = source_stvec%prex(ts:te)%js; je = source_stvec%prex(ts:te)%je
+            ks = source_stvec%prex(ts:te)%ks; ke = source_stvec%prex(ts:te)%ke
+            halo_width = max(source_stvec%prex(ts)%nvi, source_stvec%prex(ts)%nvj)
             call init_stvec_NHlin(this, ts, te, panel_ind, is, ie, js,   &
                                   je, ks, ke, halo_width)
         end if
         do ind = ts,te
-            j1 = source_stvec%h(ind)%js-source_stvec%h(ind)%nvj
-            j2 = source_stvec%h(ind)%je+source_stvec%h(ind)%nvj
-            i1 = source_stvec%h(ind)%is-source_stvec%h(ind)%nvi
-            i2 = source_stvec%h(ind)%ie+source_stvec%h(ind)%nvi
-            k1 = source_stvec%h(ind)%ks
-            k2 = source_stvec%h(ind)%ke
-            this%h(ind)%p(i1:i2,j1:j2,k1:k2) = source_stvec%h(ind)%p(i1:i2,j1:j2,k1:k2)
-            this%u(ind)%p(i1:i2,j1:j2,k1:k2) = source_stvec%u(ind)%p(i1:i2,j1:j2,k1:k2)
-            this%v(ind)%p(i1:i2,j1:j2,k1:k2) = source_stvec%v(ind)%p(i1:i2,j1:j2,k1:k2)
+            j1 = source_stvec%prex(ind)%js-source_stvec%prex(ind)%nvj
+            j2 = source_stvec%prex(ind)%je+source_stvec%prex(ind)%nvj
+            i1 = source_stvec%prex(ind)%is-source_stvec%prex(ind)%nvi
+            i2 = source_stvec%prex(ind)%ie+source_stvec%prex(ind)%nvi
+            k1 = source_stvec%prex(ind)%ks
+            k2 = source_stvec%prex(ind)%ke
+            this%prex(ind)%p(i1:i2,j1:j2,k1:k2)    = source_stvec%prex(ind)%p(i1:i2,j1:j2,k1:k2)
+            this%u(ind)%p(i1:i2,j1:j2,k1:k2)       = source_stvec%u(ind)%p(i1:i2,j1:j2,k1:k2)
+            this%v(ind)%p(i1:i2,j1:j2,k1:k2)       = source_stvec%v(ind)%p(i1:i2,j1:j2,k1:k2)
+            this%w(ind)%p(i1:i2,j1:j2,k1-1:k2)     = source_stvec%w(ind)%p(i1:i2,j1:j2,k1:k2)
+            this%theta(ind)%p(i1:i2,j1:j2,k1-1:k2) = source_stvec%theta(ind)%p(i1:i2,j1:j2,k1:k2)
         end do
     class default
         call avost("NHlin_stvec_t%copy types mismatch. stop!")

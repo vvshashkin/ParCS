@@ -326,7 +326,9 @@ $(DOBJ)operator_iomega_mod.o: src/models/iomega_model/operator_iomega_mod.f90 \
 
 $(DOBJ)nhlin_initial_cond_mod.o: src/models/linear_NH/NHlin_initial_cond_mod.f90 \
 	$(DOBJ)stvec_nhlin_mod.o \
-	$(DOBJ)mesh_mod.o
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)parameters_nhlin_mod.o \
+	$(DOBJ)const_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -385,9 +387,9 @@ $(DOBJ)stvec_nhlin_mod.o: src/models/linear_NH/stvec_NHlin_mod.f90 \
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)nhlin_output_mod.o: src/models/linear_NH/NHlin_output_mod.f90 \
+	$(DOBJ)partition_mod.o \
 	$(DOBJ)grid_function_mod.o \
 	$(DOBJ)outputer_abstract_mod.o \
-	$(DOBJ)partition_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
 	$(DOBJ)outputer_factory_mod.o \
 	$(DOBJ)stvec_nhlin_mod.o
