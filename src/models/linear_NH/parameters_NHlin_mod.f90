@@ -17,7 +17,7 @@ type, extends(model_parameters_abstract_t) :: parameters_NHlin_t
     real(kind=8)               :: dt     = 1._8
     real(kind=8)               :: radx   = 125._8 !Earth radius reduction
 
-    integer(kind=4)            :: halo_width = 8
+    integer(kind=4)            :: halo_width = 4
 
     !domain description
     integer(kind=4)            :: ts, te
@@ -189,7 +189,6 @@ subroutine init_vertical_ref_profiles(nz, zh, z, prex0, prex0dz, theta0, theta0d
     real(8) function ref_theta(z) result(theta)
         real(8) z, temp
         theta = tconst*exp(RN**2/grav*z)
-        print *, "THETA", z, theta
     end function ref_theta
 
     real(8) function ref_thetadz(z) result(theta)

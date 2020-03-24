@@ -17,7 +17,7 @@ namelist /oper_ini/ div_op_name, grad_op_name
 
 type, extends(operator_abstract_t) :: operator_NHlin_t
 
-    integer, private               :: op_halo_width = 3
+    integer, private               :: op_halo_width = 1
 
     class(exchange_t), allocatable :: exch_halo
     type(ecs_halo_t),  allocatable :: halo(:)
@@ -57,7 +57,7 @@ function init_NHlin_operator(model_params, master_id, myid, np, namelist_str)  &
     do ind = model_params%ts, model_params%te
         oper%halo(ind) = init_ecs_halo(model_params%mesh(ind)%is, model_params%mesh(ind)%ie, &
                                        model_params%mesh(ind)%js, model_params%mesh(ind)%je, &
-                                       model_params%mesh(ind)%nx, oper%op_halo_width,&
+                                       model_params%mesh(ind)%nx, max(oper%op_halo_width,2),&
                                        model_params%mesh(ind)%hx)
     end do
 

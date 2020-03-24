@@ -113,18 +113,18 @@ subroutine add(this,other,alpha,beta)
     class is (stvec_NHlin_t)
         ts = this%ts; te = this%te
         do ind = ts,te
-            j1 = this%prex(ind)%js-this%prex(ind)%nvj
-            j2 = this%prex(ind)%je+this%prex(ind)%nvj
-            i1 = this%prex(ind)%is-this%prex(ind)%nvi
-            i2 = this%prex(ind)%ie+this%prex(ind)%nvi
+            j1 = this%prex(ind)%js-1!-this%prex(ind)%nvj
+            j2 = this%prex(ind)%je+1!+this%prex(ind)%nvj
+            i1 = this%prex(ind)%is-1!-this%prex(ind)%nvi
+            i2 = this%prex(ind)%ie+1!+this%prex(ind)%nvi
             k1 = this%prex(ind)%ks
             k2 = this%prex(ind)%ke
-            this%prex(ind)%p(i1:i2,j1:j2,k1:k2)    = alpha*this%prex(ind)%p(i1:i2,j1:j2,k1:k2)    + &
-                                                     beta*other%prex(ind)%p(i1:i2,j1:j2,k1:k2)
-            this%u(ind)%p(i1:i2,j1:j2,k1:k2)       = alpha*this%u(ind)%p(i1:i2,j1:j2,k1:k2)       + &
-                                                     beta*other%u(ind)%p(i1:i2,j1:j2,k1:k2)
-            this%v(ind)%p(i1:i2,j1:j2,k1:k2)       = alpha*this%v(ind)%p(i1:i2,j1:j2,k1:k2)       + &
-                                                     beta*other%v(ind)%p(i1:i2,j1:j2,k1:k2)
+            this%prex(ind)%p(i1-1:i2+1,j1-1:j2+1,k1:k2)    = alpha*this%prex(ind)%p(i1-1:i2+1,j1-1:j2+1,k1:k2)    + &
+                                                     beta*other%prex(ind)%p(i1-1:i2+1,j1-1:j2+1,k1:k2)
+            this%u(ind)%p(i1-1:i2,j1:j2,k1:k2)       = alpha*this%u(ind)%p(i1-1:i2,j1:j2,k1:k2)       + &
+                                                     beta*other%u(ind)%p(i1-1:i2,j1:j2,k1:k2)
+            this%v(ind)%p(i1:i2,j1-1:j2,k1:k2)       = alpha*this%v(ind)%p(i1:i2,j1-1:j2,k1:k2)       + &
+                                                     beta*other%v(ind)%p(i1:i2,j1-1:j2,k1:k2)
             this%w(ind)%p(i1:i2,j1:j2,k1-1:k2)     = alpha*this%w(ind)%p(i1:i2,j1:j2,k1-1:k2)     + &
                                                      beta*other%w(ind)%p(i1:i2,j1:j2,k1-1:k2)
             this%theta(ind)%p(i1:i2,j1:j2,k1-1:k2) = alpha*this%theta(ind)%p(i1:i2,j1:j2,k1-1:k2) + &
@@ -159,15 +159,15 @@ subroutine copy(this,source_stvec)
                                   je, ks, ke, halo_width)
         end if
         do ind = ts,te
-            j1 = source_stvec%prex(ind)%js-source_stvec%prex(ind)%nvj
-            j2 = source_stvec%prex(ind)%je+source_stvec%prex(ind)%nvj
-            i1 = source_stvec%prex(ind)%is-source_stvec%prex(ind)%nvi
-            i2 = source_stvec%prex(ind)%ie+source_stvec%prex(ind)%nvi
+            j1 = source_stvec%prex(ind)%js!-1!-source_stvec%prex(ind)%nvj
+            j2 = source_stvec%prex(ind)%je!+1!+source_stvec%prex(ind)%nvj
+            i1 = source_stvec%prex(ind)%is!-1!-source_stvec%prex(ind)%nvi
+            i2 = source_stvec%prex(ind)%ie!+1!+source_stvec%prex(ind)%nvi
             k1 = source_stvec%prex(ind)%ks
             k2 = source_stvec%prex(ind)%ke
-            this%prex(ind)%p(i1:i2,j1:j2,k1:k2)    = source_stvec%prex(ind)%p(i1:i2,j1:j2,k1:k2)
-            this%u(ind)%p(i1:i2,j1:j2,k1:k2)       = source_stvec%u(ind)%p(i1:i2,j1:j2,k1:k2)
-            this%v(ind)%p(i1:i2,j1:j2,k1:k2)       = source_stvec%v(ind)%p(i1:i2,j1:j2,k1:k2)
+            this%prex(ind)%p(i1-1:i2+1,j1-1:j2+1,k1:k2)    = source_stvec%prex(ind)%p(i1-1:i2+1,j1-1:j2+1,k1:k2)
+            this%u(ind)%p(i1-1:i2,j1:j2,k1:k2)       = source_stvec%u(ind)%p(i1-1:i2,j1:j2,k1:k2)
+            this%v(ind)%p(i1:i2,j1-1:j2,k1:k2)       = source_stvec%v(ind)%p(i1:i2,j1-1:j2,k1:k2)
             this%w(ind)%p(i1:i2,j1:j2,k1-1:k2)     = source_stvec%w(ind)%p(i1:i2,j1:j2,k1-1:k2)
             this%theta(ind)%p(i1:i2,j1:j2,k1-1:k2) = source_stvec%theta(ind)%p(i1:i2,j1:j2,k1-1:k2)
         end do

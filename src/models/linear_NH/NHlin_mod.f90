@@ -44,7 +44,7 @@ subroutine init_NHlin_model()
     call MPI_comm_rank(mpi_comm_world , myid, ierr)
     call MPI_comm_size(mpi_comm_world , Np  , ierr)
 
-    if(myid == master_id) print *, "linear shallow water model"
+    if(myid == master_id) print *, "linear non-hydrostatic model"
 
     call get_cmd_args(cmd_args, nargs)
 
