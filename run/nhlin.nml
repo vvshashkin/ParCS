@@ -1,0 +1,20 @@
+&DIMS
+    nx = 90
+    nz = 10
+/
+&DYN
+    dt   = 1.,
+    HMAX = 10d3
+/
+&CTR
+    NSTEP = 1200,
+    NZAP  = 10
+/
+
+&INI_COND
+    test_case_num = 1
+/
+&OPER_INI
+    grad_op_name = "gradient2"
+    div_op_name = "divergence2"
+/
