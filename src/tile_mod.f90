@@ -8,6 +8,7 @@ contains
     procedure, public :: init
     procedure, public :: check
     procedure, public :: print
+    procedure, public :: getind
 end type tile_t
 
 private
@@ -56,6 +57,20 @@ subroutine print(this)
                                          'js = ', trim(adjustl(js)), 'je = ', trim(adjustl(je))
 
 end subroutine print
+
+subroutine getind(this, is,ie,js,je,ks,ke,panel_number)
+    class(tile_t), intent(in) :: this
+    integer(kind=4), intent(out), optional :: is, ie, js, je, ks, ke, panel_number
+
+    if(present(is)) is = this%is
+    if(present(ie)) ie = this%ie
+    if(present(js)) js = this%js
+    if(present(je)) je = this%je
+    if(present(ks)) ks = this%ks
+    if(present(ke)) ke = this%ke
+    if(present(panel_number)) panel_number = this%panel_number
+
+end subroutine getind
 
 
 end module

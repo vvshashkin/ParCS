@@ -91,7 +91,7 @@ subroutine run_NHlin_model()
     call MPI_comm_size(mpi_comm_world , Np  , ierr)
 
     call write_NHlin(stvec, params%partition, 1)
-    call avost("ini cond written")
+    call print_NHlin_diag(0, stvec, params, myid, master_id)
 
     irec = 2
     do istep = 1, nstep

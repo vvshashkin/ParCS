@@ -36,14 +36,14 @@ subroutine set_NHlin_initial_conditions(stvec, namelist_str, params, &
 
     if(test_case_num == 1) then
         call set_NHlin_gravity_wave(stvec, test_case_num, params%ts, params%te,  &
-                                    params%mesh, params%nz, params%zh, params%z)
+                                    params%mesh, params%radx, params%nz, params%zh, params%z)
     else
         call avost("NHlin model: unknown test case")
     end if
 
 end subroutine set_NHlin_initial_conditions
 
-subroutine set_NHlin_gravity_wave(stvec, test_case_num, ts, te, mesh, nz, zh, z)
+subroutine set_NHlin_gravity_wave(stvec, test_case_num, ts, te, mesh, radx, nz, zh, z)
 
     use stvec_NHlin_mod, only : stvec_NHlin_t
     use mesh_mod,        only : mesh_t
@@ -53,13 +53,14 @@ subroutine set_NHlin_gravity_wave(stvec, test_case_num, ts, te, mesh, nz, zh, z)
     integer(kind=4),     intent(in)    :: test_case_num
     integer(kind=4),     intent(in)    :: ts, te
     type(mesh_t),        intent(in)    :: mesh(ts:te)
+    real(kind=8),        intent(in)    :: radx
     integer(kind=4),     intent(in)    :: nz
     real(kind=8),        intent(in)    :: zh(0:nz), z(1:nz)
 
     real(kind=8), parameter :: x0 = 1._8
     real(kind=8), parameter :: y0 = 0._8
     real(kind=8), parameter :: z0 = 0._8
-    real(kind=8), parameter :: r0 = 5000._8*125._8
+    real(kind=8), parameter :: r0 = 5000._8
     real(kind=8), parameter :: Lz = 20e3_8
     real(kind=8), parameter :: theta_max = 1.0_8
 
@@ -76,8 +77,8 @@ subroutine set_NHlin_gravity_wave(stvec, test_case_num, ts, te, mesh, nz, zh, z)
         do k = stvec%theta(ind)%ks, stvec%theta(ind)%ke
             do j = stvec%theta(ind)%js, stvec%theta(ind)%je
                 do i = stvec%theta(ind)%is, stvec%theta(ind)%ie
-                    dist = radz*acos(mesh(ind)%rhx(i,j)*x0 + mesh(ind)%rhy(i,j)*y0 + &
-                                     mesh(ind)%rhz(i,j)*z0)
+                    dist = radz/radx*acos(mesh(ind)%rhx(i,j)*x0 + mesh(ind)%rhy(i,j)*y0 + &
+                                          mesh(ind)%rhz(i,j)*z0)
 
                     stvec%theta(ind)%p(i,j,k) = theta_max*r0**2/(r0**2+dist**2) * &
                                                 sin(2._8*pi*zh(k)/Lz)

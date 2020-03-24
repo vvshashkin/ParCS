@@ -94,16 +94,18 @@ end function init_NHlin_operator
 
 subroutine act(this, vout, vin, model_params)
 
-    use const_mod, only : grav
+    use const_mod, only : grav, rgaz, Cp, Cv
 
     class(operator_NHlin_t),             intent(inout) :: this
     class(stvec_abstract_t),             intent(inout) :: vout !inout to enable preallocated vectors
     class(stvec_abstract_t),             intent(in)    :: vin
     class(model_parameters_abstract_t),  intent(in)    :: model_params
 
-    integer(kind=4) ind, is, ie, js, je, nvi, nvj
-    integer(kind=4) isv, iev, jsv, jev
-    integer(kind=4) mesh_isv, mesh_jsv, mesh_iev, mesh_jev, hw
+    integer(kind=4) :: ind, i, j, k
+    integer(kind=4) :: is, ie, js, je, nvi, nvj
+    integer(kind=4) :: isv, iev, jsv, jev
+    integer(kind=4) :: mesh_isv, mesh_jsv, mesh_iev, mesh_jev, hw
+    real(kind=8)    :: dwdz, w_at_p, th0p, dpdz, dp0dz
 
     select type (model_params)
     class is (parameters_NHlin_t)
@@ -115,15 +117,46 @@ subroutine act(this, vout, vin, model_params)
 
             do ind = model_params%ts, model_params%te
 
-                !!d vec{u}/dt = -grav * nabla(h)
-                !call this%grad_contra(vout%u(ind), vout%v(ind), vin%h(ind), model_params%mesh(ind), -grav)
-                !!dh/dt = -H0 * nabla*u
-                !call this%div(vout%h(ind),vin%u(ind),vin%v(ind), model_params%mesh(ind),-model_params%HMAX)
-                vout%prex(ind)%p = 0._8
-                vout%u(ind)%p = 0._8
-                vout%v(ind)%p = 0._8
-                vout%w(ind)%p = 0._8
-                vout%theta(ind)%p = 0._8
+                call model_params%partition%tile(ind)%getind(is=is,ie=ie,js=js,je=je)
+
+                call this%grad_contra(vout%u(ind), vout%v(ind), vin%prex(ind), model_params%mesh(ind), model_params%radx)
+                call this%div(vout%prex(ind),vin%u(ind),vin%v(ind), model_params%mesh(ind), model_params%radx)
+
+                do k = 1, model_params%nz
+                    do j=js,je; do i=is-1,ie
+                        vout%u(ind)%p(i,j,k) =-Cp*0.5_8*(model_params%theta0(k-1)+model_params%theta0(k))*vout%u(ind)%p(i,j,k)
+                    end do; end do
+                    do j=js-1,je; do i=is,ie
+                        vout%v(ind)%p(i,j,k) =-Cp*0.5_8*(model_params%theta0(k-1)+model_params%theta0(k))*vout%v(ind)%p(i,j,k)
+                    end do; end do
+                    do j=js,je; do i=is,ie
+                        dwdz   = (vin%w(ind)%p(i,j,k)-vin%w(ind)%p(i,j,k-1)) / model_params%dz
+                        w_at_p = 0.5_8*(vin%w(ind)%p(i,j,k)+vin%w(ind)%p(i,j,k-1))
+                        vout%prex(ind)%p(i,j,k) = -model_params%prex0(k)*rgaz/Cv*(vout%prex(ind)%p(i,j,k)+dwdz) - w_at_p*model_params%prex0dz(k)
+                    end do; end do
+                end do
+
+                vout%theta(ind)%p(is:ie,js:je,0) = 0._8
+                vout%w(ind)%p(is:ie,js:je,0) = 0._8
+                do k = 1, model_params%nz-1
+                    dp0dz = (model_params%prex0(k+1)-model_params%prex0(k)) / model_params%dz
+                    do j=js,je; do i=is,ie
+
+                        vout%theta(ind)%p(i,j,k) = -vin%w(ind)%p(i,j,k)*model_params%theta0dz(k)
+
+                        dpdz = (vin%prex(ind)%p(i,j,k+1)-vin%prex(ind)%p(i,j,k) ) / model_params%dz
+                        vout%w(ind)%p(i,j,k) =-Cp*(model_params%theta0(k)*dpdz + vin%theta(ind)%p(i,j,k)*dp0dz)
+
+                    end do; end do
+                end do
+                vout%theta(ind)%p(is:ie,js:je,model_params%nz) = 0._8
+                vout%w(ind)%p(is:ie,js:je,model_params%nz) = 0._8
+
+                !vout%prex(ind)%p = 0._8
+                !vout%u(ind)%p = 0._8
+                !vout%v(ind)%p = 0._8
+                !vout%w(ind)%p = 0._8
+                !vout%theta(ind)%p = 0._8
             end do
 
             call this%ext_halo(vout, model_params%ts, model_params%te)

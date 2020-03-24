@@ -14,7 +14,8 @@ type, extends(model_parameters_abstract_t) :: parameters_NHlin_t
     logical                    :: lcgrid = .true.
 
     real(kind=8)               :: HMAX   = 10e3_8
-    real(kind=8)               :: dt     = 300._8
+    real(kind=8)               :: dt     = 1._8
+    real(kind=8)               :: radx   = 125._8 !Earth radius reduction
 
     integer(kind=4)            :: halo_width = 8
 
@@ -48,10 +49,10 @@ subroutine init_NHlin_parameters(params, namelist_str, myid, Np, master_id)
     integer(kind=4)            :: nx, nz
     logical                    :: lcgrid
     real(kind=8)               :: HMAX
-    real(kind=8)               :: dt
+    real(kind=8)               :: dt, radx
 
     namelist /dims/ nx, nz, lcgrid
-    namelist /dyn/ HMAX, dt
+    namelist /dyn/ HMAX, dt, radx
 
     integer(kind=4) ind
 
@@ -64,6 +65,7 @@ subroutine init_NHlin_parameters(params, namelist_str, myid, Np, master_id)
         lcgrid = params%lcgrid
         HMAX   = params%HMAX
         dt     = params%dt
+        radx   = params%radx
         !update with namelist values
         read(namelist_str, dims)
         read(namelist_str, dyn)
@@ -71,8 +73,9 @@ subroutine init_NHlin_parameters(params, namelist_str, myid, Np, master_id)
         params%nx     = nx
         params%nz     = nz
         params%lcgrid = lcgrid
-        params%HMAX     = HMAX
+        params%HMAX   = HMAX
         params%dt     = dt
+        params%radx   = radx
     end if
 
     call params%partition%init(params%nx, params%nz, max(1,Np/6), myid, Np, strategy = 'default')
@@ -104,6 +107,7 @@ subroutine init_NHlin_parameters(params, namelist_str, myid, Np, master_id)
         print *, "nz     =", params%nz
         print *, "HMAX   =", params%HMAX
         print *, "dt     =", params%dt
+        print *, "radx   =", params%radx
         print *, "lcgrid =", params%lcgrid
         print *, "--------------------"
         !print *, "zh", params%zh

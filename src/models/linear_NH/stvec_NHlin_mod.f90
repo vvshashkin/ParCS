@@ -126,7 +126,7 @@ subroutine add(this,other,alpha,beta)
             this%v(ind)%p(i1:i2,j1:j2,k1:k2)       = alpha*this%v(ind)%p(i1:i2,j1:j2,k1:k2)       + &
                                                      beta*other%v(ind)%p(i1:i2,j1:j2,k1:k2)
             this%w(ind)%p(i1:i2,j1:j2,k1-1:k2)     = alpha*this%w(ind)%p(i1:i2,j1:j2,k1-1:k2)     + &
-                                                     beta*other%v(ind)%p(i1:i2,j1:j2,k1-1:k2)
+                                                     beta*other%w(ind)%p(i1:i2,j1:j2,k1-1:k2)
             this%theta(ind)%p(i1:i2,j1:j2,k1-1:k2) = alpha*this%theta(ind)%p(i1:i2,j1:j2,k1-1:k2) + &
                                                      beta*other%theta(ind)%p(i1:i2,j1:j2,k1-1:k2)
         end do
@@ -168,8 +168,8 @@ subroutine copy(this,source_stvec)
             this%prex(ind)%p(i1:i2,j1:j2,k1:k2)    = source_stvec%prex(ind)%p(i1:i2,j1:j2,k1:k2)
             this%u(ind)%p(i1:i2,j1:j2,k1:k2)       = source_stvec%u(ind)%p(i1:i2,j1:j2,k1:k2)
             this%v(ind)%p(i1:i2,j1:j2,k1:k2)       = source_stvec%v(ind)%p(i1:i2,j1:j2,k1:k2)
-            this%w(ind)%p(i1:i2,j1:j2,k1-1:k2)     = source_stvec%w(ind)%p(i1:i2,j1:j2,k1:k2)
-            this%theta(ind)%p(i1:i2,j1:j2,k1-1:k2) = source_stvec%theta(ind)%p(i1:i2,j1:j2,k1:k2)
+            this%w(ind)%p(i1:i2,j1:j2,k1-1:k2)     = source_stvec%w(ind)%p(i1:i2,j1:j2,k1-1:k2)
+            this%theta(ind)%p(i1:i2,j1:j2,k1-1:k2) = source_stvec%theta(ind)%p(i1:i2,j1:j2,k1-1:k2)
         end do
     class default
         call avost("NHlin_stvec_t%copy types mismatch. stop!")
