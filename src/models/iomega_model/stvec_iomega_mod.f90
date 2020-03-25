@@ -71,8 +71,8 @@ real(kind=8) function dot(this, other) result(dot_prod)
     select type (other)
     class is (stvec_iomega_t)
         !N-vector of complex is considered as 2N-vector of real values
-        dot_prod = sum(real(this%f(1:this%N)*other%f(1:this%N))+ &
-                       imag(this%f(1:this%N)*other%f(1:this%N)))
+        dot_prod = sum(real(this%f(1:this%N))*real(other%f(1:this%N))+ &
+                       imag(this%f(1:this%N))*imag(other%f(1:this%N)))
     class default
         stop
     end select

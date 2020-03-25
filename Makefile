@@ -7,8 +7,8 @@ DMOD    = mod/
 DEXE    = ./
 LIBS    =
 FC      = mpiifort
-OPTSC   =  -c -traceback -init=snan -init=arrays -check all -ftrapuv -module mod
-OPTSL   =  -traceback -init=snan -init=arrays -check all -ftrapuv -module mod
+OPTSC   =  -c -traceback -init=snan -init=arrays -check all -ftrapuv  -module mod
+OPTSL   =  -traceback -init=snan -init=arrays -check all -ftrapuv -lmkl_intel_lp64 -lmkl_core -lmkl_gf_lp64 -lmkl_sequential -lmkl_lapack95_lp64 -module mod
 VPATH   = $(DSRC) $(DOBJ) $(DMOD)
 MKDIRS  = $(DOBJ) $(DMOD) $(DEXE)
 LCEXES  = $(shell echo $(EXES) | tr '[:upper:]' '[:lower:]')
@@ -21,61 +21,71 @@ LITEXT  = "Assembling $@"
 
 #building rules
 $(DEXE)SWLIN: $(MKDIRS) $(DOBJ)swlin.o \
-	$(DOBJ)avost.o
+	$(DOBJ)avost.o \
+	$(DOBJ)auxhs.o
 	@rm -f $(filter-out $(DOBJ)swlin.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) SWLIN
 $(DEXE)TEST_PANELED_OUTPUT: $(MKDIRS) $(DOBJ)test_paneled_output.o \
-	$(DOBJ)avost.o
+	$(DOBJ)avost.o \
+	$(DOBJ)auxhs.o
 	@rm -f $(filter-out $(DOBJ)test_paneled_output.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_PANELED_OUTPUT
 $(DEXE)TEST_NAMELIST: $(MKDIRS) $(DOBJ)test_namelist.o \
-	$(DOBJ)avost.o
+	$(DOBJ)avost.o \
+	$(DOBJ)auxhs.o
 	@rm -f $(filter-out $(DOBJ)test_namelist.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_NAMELIST
 $(DEXE)TEST_TS: $(MKDIRS) $(DOBJ)test_ts.o \
-	$(DOBJ)avost.o
+	$(DOBJ)avost.o \
+	$(DOBJ)auxhs.o
 	@rm -f $(filter-out $(DOBJ)test_ts.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_TS
 $(DEXE)TEST_EXCH_MAIN: $(MKDIRS) $(DOBJ)test_exch_main.o \
-	$(DOBJ)avost.o
+	$(DOBJ)avost.o \
+	$(DOBJ)auxhs.o
 	@rm -f $(filter-out $(DOBJ)test_exch_main.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_EXCH_MAIN
 $(DEXE)TEST_CMD_LINE: $(MKDIRS) $(DOBJ)test_cmd_line.o \
-	$(DOBJ)avost.o
+	$(DOBJ)avost.o \
+	$(DOBJ)auxhs.o
 	@rm -f $(filter-out $(DOBJ)test_cmd_line.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_CMD_LINE
 $(DEXE)TEST_HALO_MAIN: $(MKDIRS) $(DOBJ)test_halo_main.o \
-	$(DOBJ)avost.o
+	$(DOBJ)avost.o \
+	$(DOBJ)auxhs.o
 	@rm -f $(filter-out $(DOBJ)test_halo_main.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_HALO_MAIN
 $(DEXE)TEST_MESH_MAIN: $(MKDIRS) $(DOBJ)test_mesh_main.o \
-	$(DOBJ)avost.o
+	$(DOBJ)avost.o \
+	$(DOBJ)auxhs.o
 	@rm -f $(filter-out $(DOBJ)test_mesh_main.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_MESH_MAIN
 $(DEXE)TEST_METRIC_MAIN: $(MKDIRS) $(DOBJ)test_metric_main.o \
-	$(DOBJ)avost.o
+	$(DOBJ)avost.o \
+	$(DOBJ)auxhs.o
 	@rm -f $(filter-out $(DOBJ)test_metric_main.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_METRIC_MAIN
 $(DEXE)TEST_GLOBAL_DIAG_MAIN: $(MKDIRS) $(DOBJ)test_global_diag_main.o \
-	$(DOBJ)avost.o
+	$(DOBJ)avost.o \
+	$(DOBJ)auxhs.o
 	@rm -f $(filter-out $(DOBJ)test_global_diag_main.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
@@ -244,6 +254,14 @@ $(DOBJ)exp_taylor_mod.o: src/time_schemes/exp_taylor_mod.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)exp_krylov_mod.o: src/time_schemes/exp_krylov_mod.f90 \
+	$(DOBJ)container_abstract_mod.o \
+	$(DOBJ)stvec_abstract_mod.o \
+	$(DOBJ)timescheme_abstract_mod.o \
+	$(DOBJ)operator_abstract_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)rk4_mod.o: src/time_schemes/rk4_mod.f90 \
 	$(DOBJ)container_abstract_mod.o \
 	$(DOBJ)stvec_abstract_mod.o \
@@ -270,6 +288,10 @@ $(DOBJ)hor_difops_basic_mod.o: src/differential_operators/hor_difops_basic_mod.f
 	$(DOBJ)grid_function_mod.o \
 	$(DOBJ)mesh_mod.o \
 	$(DOBJ)const_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)auxhs.o: src/aux/auxhs.f
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -430,17 +452,18 @@ $(DOBJ)test_namelist.o: src/test/test_namelist/test_namelist.f90 \
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)test_ts.o: src/test/test_time_steping/test_ts.f90 \
-	$(DOBJ)test_rk4.o
+	$(DOBJ)test_ts_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
-$(DOBJ)test_rk4.o: src/test/test_time_steping/test_rk4.f90 \
+$(DOBJ)test_ts_mod.o: src/test/test_time_steping/test_ts_mod.f90 \
 	$(DOBJ)stvec_iomega_mod.o \
 	$(DOBJ)operator_iomega_mod.o \
 	$(DOBJ)parameters_iomega_mod.o \
 	$(DOBJ)explicit_eul1_mod.o \
 	$(DOBJ)rk4_mod.o \
 	$(DOBJ)exp_taylor_mod.o \
+	$(DOBJ)exp_krylov_mod.o \
 	$(DOBJ)const_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
