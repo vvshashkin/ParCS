@@ -4,8 +4,6 @@ use global_diag_mod, only : calc_global_diag!, integral_t
 
 implicit none
 
-    !type(integral_t) hmax, hmin, mass
-
 contains
 
 subroutine init_NHlin_diag_mod()

@@ -5,6 +5,14 @@ use grid_function_mod,  only : grid_function_t
 
 implicit none
 
+type :: stencil_dep_t
+    integer(kind=4) pl, pr, pd, pu, pb, pt !needed halo_zones for prex field
+    integer(kind=4) ul, ur, ud, uu, ub, ut !needed halo_zones for u field
+    integer(kind=4) vl, vr, vd, vu, vb, vt !needed halo_zones for v field
+    integer(kind=4) tl, tr, td, tu, tb, tt !for theta field
+    integer(kind=4) wl, wr, wd, wu, wb, wt !for theta field
+end type stencil_dep_t
+
 type, extends(stvec_abstract_t) :: stvec_NHlin_t
     integer(kind=4) ts, te
     type(grid_function_t), allocatable :: prex(:)
@@ -12,12 +20,14 @@ type, extends(stvec_abstract_t) :: stvec_NHlin_t
     type(grid_function_t), allocatable :: v(:)
     type(grid_function_t), allocatable :: w(:)
     type(grid_function_t), allocatable :: theta(:)
+    type(stencil_dep_t)                :: dep
     logical                            :: init_and_alloc = .false.
 
     contains
-    procedure, public :: add  => add
-    procedure, public :: copy => copy
-    procedure, public :: dot  => dot
+    procedure, public  :: add  => add
+    procedure, public  :: copy => copy
+    procedure, public  :: dot  => dot
+    procedure, private :: get_dep_zone
 end type stvec_NHlin_t
 
 interface init_stvec_NHlin
@@ -27,12 +37,12 @@ end interface
 contains
 
 subroutine init_stvec_NHlin_tiles(new_stvec, ts, te, tiles, halo_width)
-    use tile_mod, only : tile_t
+    use tile_mod,           only : tile_t
 
-    type(stvec_NHlin_t), intent(out) :: new_stvec
-    integer(kind=4),     intent(in)  :: ts, te
-    type(tile_t),        intent(in)  :: tiles(ts:te)
-    integer(kind=4),     intent(in)  :: halo_width
+    type(stvec_NHlin_t),    intent(out) :: new_stvec
+    integer(kind=4),        intent(in)  :: ts, te
+    type(tile_t),           intent(in)  :: tiles(ts:te)
+    integer(kind=4),        intent(in)  :: halo_width
 
     integer(kind=4), allocatable :: is(:), ie(:), js(:), je(:)
     integer(kind=4), allocatable :: ks(:), ke(:), panel_ind(:)
@@ -97,6 +107,12 @@ subroutine init_stvec_NHlin_ints(new_stvec, ts, te, panel_ind, is, ie, js, je, k
 
     new_stvec%init_and_alloc = .true.
 
+    new_stvec%dep = stencil_dep_t(pl=-1, pr=1, pd=-1, pu=1, pb= 0, pt=0,  &
+                                  ul=-1, ur=0, ud= 0, uu=0, ub= 0, ut=0,  &
+                                  vl= 0, vr=0, vd=-1, vu=0, vb= 0, vt=0,  &
+                                  tl= 0, tr=0, td= 0, tu=0, tb=-1, tt=0,  &
+                                  wl= 0, wr=0, wd= 0, wu=0, wb=-1, wt=0 )
+
 end subroutine init_stvec_NHlin_ints
 
 subroutine add(this,other,alpha,beta)
@@ -113,22 +129,22 @@ subroutine add(this,other,alpha,beta)
     class is (stvec_NHlin_t)
         ts = this%ts; te = this%te
         do ind = ts,te
-            j1 = this%prex(ind)%js-1!-this%prex(ind)%nvj
-            j2 = this%prex(ind)%je+1!+this%prex(ind)%nvj
-            i1 = this%prex(ind)%is-1!-this%prex(ind)%nvi
-            i2 = this%prex(ind)%ie+1!+this%prex(ind)%nvi
-            k1 = this%prex(ind)%ks
-            k2 = this%prex(ind)%ke
-            this%prex(ind)%p(i1-1:i2+1,j1-1:j2+1,k1:k2)    = alpha*this%prex(ind)%p(i1-1:i2+1,j1-1:j2+1,k1:k2)    + &
-                                                     beta*other%prex(ind)%p(i1-1:i2+1,j1-1:j2+1,k1:k2)
-            this%u(ind)%p(i1-1:i2,j1:j2,k1:k2)       = alpha*this%u(ind)%p(i1-1:i2,j1:j2,k1:k2)       + &
-                                                     beta*other%u(ind)%p(i1-1:i2,j1:j2,k1:k2)
-            this%v(ind)%p(i1:i2,j1-1:j2,k1:k2)       = alpha*this%v(ind)%p(i1:i2,j1-1:j2,k1:k2)       + &
-                                                     beta*other%v(ind)%p(i1:i2,j1-1:j2,k1:k2)
-            this%w(ind)%p(i1:i2,j1:j2,k1-1:k2)     = alpha*this%w(ind)%p(i1:i2,j1:j2,k1-1:k2)     + &
-                                                     beta*other%w(ind)%p(i1:i2,j1:j2,k1-1:k2)
-            this%theta(ind)%p(i1:i2,j1:j2,k1-1:k2) = alpha*this%theta(ind)%p(i1:i2,j1:j2,k1-1:k2) + &
-                                                     beta*other%theta(ind)%p(i1:i2,j1:j2,k1-1:k2)
+
+            call this%get_dep_zone("prex",ind,i1,i2,j1,j2,k1,k2)
+            this%prex(ind)%p(i1:i2,j1:j2,k1:k2)  = alpha*this%prex(ind)%p(i1:i2,j1:j2,k1:k2)  + &
+                                                   beta*other%prex(ind)%p(i1:i2,j1:j2,k1:k2)
+            call this%get_dep_zone("u",ind,i1,i2,j1,j2,k1,k2)
+            this%u(ind)%p(i1:i2,j1:j2,k1:k2)     = alpha*this%u(ind)%p(i1:i2,j1:j2,k1:k2)     + &
+                                                   beta*other%u(ind)%p(i1:i2,j1:j2,k1:k2)
+            call this%get_dep_zone("v",ind,i1,i2,j1,j2,k1,k2)
+            this%v(ind)%p(i1:i2,j1:j2,k1:k2)     = alpha*this%v(ind)%p(i1:i2,j1:j2,k1:k2)     + &
+                                                   beta*other%v(ind)%p(i1:i2,j1:j2,k1:k2)
+            call this%get_dep_zone("w",ind,i1,i2,j1,j2,k1,k2)
+            this%w(ind)%p(i1:i2,j1:j2,k1:k2)     = alpha*this%w(ind)%p(i1:i2,j1:j2,k1:k2)     + &
+                                                   beta*other%w(ind)%p(i1:i2,j1:j2,k1:k2)
+            call this%get_dep_zone("theta",ind,i1,i2,j1,j2,k1,k2)
+            this%theta(ind)%p(i1:i2,j1:j2,k1:k2) = alpha*this%theta(ind)%p(i1:i2,j1:j2,k1:k2) + &
+                                                   beta*other%theta(ind)%p(i1:i2,j1:j2,k1:k2)
         end do
     class default
         call avost("NHlin_stvec_t%add types mismatch. stop!")
@@ -159,17 +175,17 @@ subroutine copy(this,source_stvec)
                                   je, ks, ke, halo_width)
         end if
         do ind = ts,te
-            j1 = source_stvec%prex(ind)%js!-1!-source_stvec%prex(ind)%nvj
-            j2 = source_stvec%prex(ind)%je!+1!+source_stvec%prex(ind)%nvj
-            i1 = source_stvec%prex(ind)%is!-1!-source_stvec%prex(ind)%nvi
-            i2 = source_stvec%prex(ind)%ie!+1!+source_stvec%prex(ind)%nvi
-            k1 = source_stvec%prex(ind)%ks
-            k2 = source_stvec%prex(ind)%ke
-            this%prex(ind)%p(i1-1:i2+1,j1-1:j2+1,k1:k2)    = source_stvec%prex(ind)%p(i1-1:i2+1,j1-1:j2+1,k1:k2)
-            this%u(ind)%p(i1-1:i2,j1:j2,k1:k2)       = source_stvec%u(ind)%p(i1-1:i2,j1:j2,k1:k2)
-            this%v(ind)%p(i1:i2,j1-1:j2,k1:k2)       = source_stvec%v(ind)%p(i1:i2,j1-1:j2,k1:k2)
-            this%w(ind)%p(i1:i2,j1:j2,k1-1:k2)     = source_stvec%w(ind)%p(i1:i2,j1:j2,k1-1:k2)
-            this%theta(ind)%p(i1:i2,j1:j2,k1-1:k2) = source_stvec%theta(ind)%p(i1:i2,j1:j2,k1-1:k2)
+            !this%dep = source%dep
+            call this%get_dep_zone("prex",ind,i1,i2,j1,j2,k1,k2)
+            this%prex(ind)%p(i1:i2,j1:j2,k1:k2)    = source_stvec%prex(ind)%p(i1:i2,j1:j2,k1:k2)
+            call this%get_dep_zone("u",ind,i1,i2,j1,j2,k1,k2)
+            this%u(ind)%p(i1:i2,j1:j2,k1:k2)       = source_stvec%u(ind)%p(i1:i2,j1:j2,k1:k2)
+            call this%get_dep_zone("v",ind,i1,i2,j1,j2,k1,k2)
+            this%v(ind)%p(i1:i2,j1:j2,k1:k2)       = source_stvec%v(ind)%p(i1:i2,j1:j2,k1:k2)
+            call this%get_dep_zone("w",ind,i1,i2,j1,j2,k1,k2)
+            this%w(ind)%p(i1:i2,j1:j2,k1:k2)     = source_stvec%w(ind)%p(i1:i2,j1:j2,k1:k2)
+            call this%get_dep_zone("theta",ind,i1,i2,j1,j2,k1,k2)
+            this%theta(ind)%p(i1:i2,j1:j2,k1:k2) = source_stvec%theta(ind)%p(i1:i2,j1:j2,k1:k2)
         end do
     class default
         call avost("NHlin_stvec_t%copy types mismatch. stop!")
@@ -190,5 +206,37 @@ real(kind=8) function dot(this, other) result(dot_prod)
     !end select
 
 end function dot
+
+subroutine get_dep_zone(this,fld,ind,i1,i2,j1,j2,k1,k2)
+    class(stvec_NHlin_t), intent(in)  :: this
+    character(*),         intent(in)  :: fld
+    integer(kind=4),      intent(in)  :: ind
+    integer(kind=4),      intent(out) :: i1,i2,j1,j2,k1,k2
+
+    if(fld == "prex") then
+        i1 = this%prex(ind)%is+this%dep%pl; i2 = this%prex(ind)%ie+this%dep%pr
+        j1 = this%prex(ind)%js+this%dep%pd; j2 = this%prex(ind)%je+this%dep%pu
+        k1 = this%prex(ind)%ks+this%dep%pb; k2 = this%prex(ind)%ke+this%dep%pt
+    else if(fld == "u") then
+        i1 = this%prex(ind)%is+this%dep%ul; i2 = this%prex(ind)%ie+this%dep%ur
+        j1 = this%prex(ind)%js+this%dep%ud; j2 = this%prex(ind)%je+this%dep%uu
+        k1 = this%prex(ind)%ks+this%dep%ub; k2 = this%prex(ind)%ke+this%dep%ut
+    else if(fld == "v") then
+        i1 = this%prex(ind)%is+this%dep%vl; i2 = this%prex(ind)%ie+this%dep%vr
+        j1 = this%prex(ind)%js+this%dep%vd; j2 = this%prex(ind)%je+this%dep%vu
+        k1 = this%prex(ind)%ks+this%dep%vb; k2 = this%prex(ind)%ke+this%dep%vt
+    else if(fld == "w") then
+        i1 = this%prex(ind)%is+this%dep%wl; i2 = this%prex(ind)%ie+this%dep%wr
+        j1 = this%prex(ind)%js+this%dep%wd; j2 = this%prex(ind)%je+this%dep%wu
+        k1 = this%prex(ind)%ks+this%dep%wb; k2 = this%prex(ind)%ke+this%dep%wt
+
+    else if(fld == "theta") then
+        i1 = this%prex(ind)%is+this%dep%tl; i2 = this%prex(ind)%ie+this%dep%tr
+        j1 = this%prex(ind)%js+this%dep%td; j2 = this%prex(ind)%je+this%dep%tu
+        k1 = this%prex(ind)%ks+this%dep%tb; k2 = this%prex(ind)%ke+this%dep%tt
+    else
+        call avost("stvec_NHlin_t%get_dep_zone unknown field" // fld // " . Exit!")
+    end if
+end subroutine get_dep_zone
 
 end module stvec_NHlin_mod
