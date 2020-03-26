@@ -27,6 +27,8 @@ type, extends(stvec_abstract_t) :: stvec_NHlin_t
     procedure, public  :: add  => add
     procedure, public  :: copy => copy
     procedure, public  :: dot  => dot
+    procedure, public  :: smult
+    procedure, public  :: norm
     procedure, private :: get_dep_zone
 end type stvec_NHlin_t
 
@@ -192,20 +194,125 @@ subroutine copy(this,source_stvec)
     end select
 end subroutine copy
 
+subroutine smult(this, alpha)
+    class(stvec_NHlin_t), intent(inout) :: this
+    real(kind=8),         intent(in)    :: alpha
+
+    integer(kind=4) ts, te!, halo_width
+    integer(kind=4) i1, i2, j1, j2, k1, k2
+    integer(kind=4) ind
+
+    ts = this%ts; te = this%te
+
+    do ind = ts, te
+        call this%get_dep_zone("prex",ind,i1,i2,j1,j2,k1,k2)
+        this%prex(ind)%p(i1:i2,j1:j2,k1:k2)  = alpha*this%prex(ind)%p(i1:i2,j1:j2,k1:k2)
+        call this%get_dep_zone("u",ind,i1,i2,j1,j2,k1,k2)
+        this%u(ind)%p(i1:i2,j1:j2,k1:k2)     = alpha*this%u(ind)%p(i1:i2,j1:j2,k1:k2)
+        call this%get_dep_zone("v",ind,i1,i2,j1,j2,k1,k2)
+        this%v(ind)%p(i1:i2,j1:j2,k1:k2)     = alpha*this%v(ind)%p(i1:i2,j1:j2,k1:k2)
+        call this%get_dep_zone("w",ind,i1,i2,j1,j2,k1,k2)
+        this%w(ind)%p(i1:i2,j1:j2,k1:k2)     = alpha*this%w(ind)%p(i1:i2,j1:j2,k1:k2)
+        call this%get_dep_zone("theta",ind,i1,i2,j1,j2,k1,k2)
+        this%theta(ind)%p(i1:i2,j1:j2,k1:k2) = alpha*this%theta(ind)%p(i1:i2,j1:j2,k1:k2)
+    end do
+
+end subroutine smult
+
 real(kind=8) function dot(this, other) result(dot_prod)
+
+    use mpi
+
     class(stvec_NHlin_t),   intent(in)     :: this
     class(stvec_abstract_t), intent(in)    :: other
 
-    dot_prod = 0._8
+    integer(kind=4) :: ind, ts, te, ierr
+    integer(kind=4) :: i1, i2, j1, j2, k1, k2
+    real(kind=8)    :: dot_prod_loc
 
-    !select type (other)
-    !class is (stvec_iomega_t)
-    !    dot_prod = sum(this%f(1:this%N)*other%f(1:this%N))
-    !class default
-    !    stop
-    !end select
+    dot_prod_loc = 0._8
+    select type (other)
+    class is (stvec_NHlin_t)
+
+    ts = this%ts; te = this%te
+    do ind = ts, te
+        call this%get_dep_zone("prex",ind,i1,i2,j1,j2,k1,k2)
+        dot_prod_loc = dot_prod_loc + &
+            sum(this%prex(ind)%p(i1:i2,j1:j2,k1:k2)*other%prex(ind)%p(i1:i2,j1:j2,k1:k2))
+
+        call this%get_dep_zone("u",ind,i1,i2,j1,j2,k1,k2)
+        dot_prod_loc = dot_prod_loc + &
+            sum(this%u(ind)%p(i1+1:i2-1,j1:j2,k1:k2)*other%u(ind)%p(i1+1:i2-1,j1:j2,k1:k2)) +&
+            0.5_8*sum(this%u(ind)%p(i1,j1:j2,k1:k2)*other%u(ind)%p(i1,j1:j2,k1:k2))         +&
+            0.5_8*sum(this%u(ind)%p(i2,j1:j2,k1:k2)*other%u(ind)%p(i2,j1:j2,k1:k2))
+
+        call this%get_dep_zone("v",ind,i1,i2,j1,j2,k1,k2)
+        dot_prod_loc = dot_prod_loc + &
+            sum(this%v(ind)%p(i1:i2,j1+1:j2-1,k1:k2)*other%v(ind)%p(i1:i2,j1+1:j2-1,k1:k2)) +&
+            0.5_8*sum(this%v(ind)%p(i1:i2,j1,k1:k2)*other%v(ind)%p(i1:i2,j1,k1:k2))  +&
+            0.5_8*sum(this%v(ind)%p(i1:i2,j2,k1:k2)*other%v(ind)%p(i1:i2,j2,k1:k2))
+
+        call this%get_dep_zone("w",ind,i1,i2,j1,j2,k1,k2)
+        dot_prod_loc = dot_prod_loc + &
+            sum(this%w(ind)%p(i1:i2,j1:j2,k1:k2)*other%w(ind)%p(i1:i2,j1:j2,k1:k2))
+
+        call this%get_dep_zone("theta",ind,i1,i2,j1,j2,k1,k2)
+        dot_prod_loc = dot_prod_loc + &
+            sum(this%theta(ind)%p(i1:i2,j1:j2,k1:k2)*other%theta(ind)%p(i1:i2,j1:j2,k1:k2))
+    end do
+
+    call mpi_allreduce(dot_prod_loc, dot_prod, 1, mpi_double, mpi_sum, mpi_comm_world, ierr)
+
+    class default
+        call avost("type mismatch in stvec_NHlin%dot")
+    end select
 
 end function dot
+
+real(kind=8) function norm(this) result(l2)
+
+    use mpi
+
+    class(stvec_NHlin_t),    intent(in)    :: this
+
+    integer(kind=4) :: ind, ts, te, ierr
+    integer(kind=4) :: i1, i2, j1, j2, k1, k2
+    real(kind=8)    :: l2_loc
+
+    l2_loc = 0._8
+
+    ts = this%ts; te = this%te
+    do ind = ts, te
+        call this%get_dep_zone("prex",ind,i1,i2,j1,j2,k1,k2)
+        l2_loc = l2_loc + &
+            sum(this%prex(ind)%p(i1:i2,j1:j2,k1:k2)**2)
+
+        call this%get_dep_zone("u",ind,i1,i2,j1,j2,k1,k2)
+        l2_loc = l2_loc + &
+            sum(this%u(ind)%p(i1+1:i2-1,j1:j2,k1:k2)**2) +&
+            0.5_8*sum(this%u(ind)%p(i1,j1:j2,k1:k2)**2)         +&
+            0.5_8*sum(this%u(ind)%p(i2,j1:j2,k1:k2)**2)
+
+        call this%get_dep_zone("v",ind,i1,i2,j1,j2,k1,k2)
+        l2_loc = l2_loc + &
+            sum(this%v(ind)%p(i1:i2,j1+1:j2-1,k1:k2)**2) +&
+            0.5_8*sum(this%v(ind)%p(i1:i2,j1,k1:k2)**2)  +&
+            0.5_8*sum(this%v(ind)%p(i1:i2,j2,k1:k2)**2)
+
+        call this%get_dep_zone("w",ind,i1,i2,j1,j2,k1,k2)
+        l2_loc = l2_loc + &
+            sum(this%w(ind)%p(i1:i2,j1:j2,k1:k2)**2)
+
+        call this%get_dep_zone("theta",ind,i1,i2,j1,j2,k1,k2)
+        l2_loc = l2_loc + &
+            sum(this%theta(ind)%p(i1:i2,j1:j2,k1:k2)**2)
+    end do
+
+    call mpi_allreduce(l2_loc, l2, 1, mpi_double, mpi_sum, mpi_comm_world, ierr)
+
+    l2 = sqrt(l2)
+    
+end function norm
 
 subroutine get_dep_zone(this,fld,ind,i1,i2,j1,j2,k1,k2)
     class(stvec_NHlin_t), intent(in)  :: this

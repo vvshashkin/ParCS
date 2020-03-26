@@ -7,8 +7,8 @@ DMOD    = mod_opt/
 DEXE    = ./
 LIBS    =
 FC      = mpiifort
-OPTSC   =  -c -traceback -init=snan -init=arrays -check all -ftrapuv  -module mod_opt
-OPTSL   =  -traceback -init=snan -init=arrays -check all -ftrapuv -lmkl_intel_lp64 -lmkl_core -lmkl_gf_lp64 -lmkl_sequential -lmkl_lapack95_lp64 -module mod_opt
+OPTSC   =  -c -traceback -O3 -ipo -module mod_opt
+OPTSL   =  -traceback -O3 -ipo -lmkl_intel_lp64 -lmkl_core -lmkl_gf_lp64 -lmkl_sequential -lmkl_lapack95_lp64 -module mod_opt
 VPATH   = $(DSRC) $(DOBJ) $(DMOD)
 MKDIRS  = $(DOBJ) $(DMOD) $(DEXE)
 LCEXES  = $(shell echo $(EXES) | tr '[:upper:]' '[:lower:]')
@@ -396,7 +396,8 @@ $(DOBJ)nhlin_mod.o: src/models/linear_NH/NHlin_mod.f90 \
 	$(DOBJ)namelist_read_mod.o \
 	$(DOBJ)nhlin_output_mod.o \
 	$(DOBJ)nhlin_initial_cond_mod.o \
-	$(DOBJ)rk4_mod.o
+	$(DOBJ)rk4_mod.o \
+	$(DOBJ)exp_krylov_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

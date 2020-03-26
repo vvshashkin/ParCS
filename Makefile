@@ -396,7 +396,8 @@ $(DOBJ)nhlin_mod.o: src/models/linear_NH/NHlin_mod.f90 \
 	$(DOBJ)namelist_read_mod.o \
 	$(DOBJ)nhlin_output_mod.o \
 	$(DOBJ)nhlin_initial_cond_mod.o \
-	$(DOBJ)rk4_mod.o
+	$(DOBJ)rk4_mod.o \
+	$(DOBJ)exp_krylov_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

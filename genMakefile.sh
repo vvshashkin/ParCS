@@ -9,7 +9,7 @@ LFLAGS_OPT=" -traceback -O3 -ipo "$LMKL
 
 FoBiS.py build -s ./src -m Makefile -compiler intel -fc "mpiifort" -lflags "$LFLAGS" -cflags "$CFLAGS"
 
-FoBiS.py build -s ./src -m Makefile.opt -compiler intel -fc "mpiifort" -lflags "$LFLAGS" -cflags "$CFLAGS" --obj_dir ./obj_opt --mod_dir ./mod_opt
+FoBiS.py build -s ./src -m Makefile.opt -compiler intel -fc "mpiifort" -lflags "$LFLAGS_OPT" -cflags "$CFLAGS_OPT" --obj_dir ./obj_opt --mod_dir ./mod_opt
 
 #build all fortran programs from src
 #please note that this is a dirty trick, we need a better solution

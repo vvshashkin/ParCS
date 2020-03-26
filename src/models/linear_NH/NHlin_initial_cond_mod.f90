@@ -57,8 +57,8 @@ subroutine set_NHlin_gravity_wave(stvec, test_case_num, ts, te, mesh, radx, nz, 
     integer(kind=4),     intent(in)    :: nz
     real(kind=8),        intent(in)    :: zh(0:nz), z(1:nz)
 
-    real(kind=8), parameter :: x0 = 1._8!/sqrt(2.0_8)
-    real(kind=8), parameter :: y0 = 0._8!1._8/sqrt(2.0_8)
+    real(kind=8), parameter :: x0 = 1._8/sqrt(2.0_8)
+    real(kind=8), parameter :: y0 = 1._8/sqrt(2.0_8)
     real(kind=8), parameter :: z0 = 0._8
     real(kind=8), parameter :: r0 = 5000._8
     real(kind=8), parameter :: Lz = 20e3_8

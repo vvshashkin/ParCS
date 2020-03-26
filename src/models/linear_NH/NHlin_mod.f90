@@ -33,6 +33,7 @@ subroutine init_NHlin_model()
     use NHlin_initial_cond_mod,   only : set_NHlin_initial_conditions
     use operator_NHlin_mod,       only : init_NHlin_operator
     use rk4_mod,                  only : rk4_t, init_rk4
+    use exp_krylov_mod,           only : exp_krylov_t, init_exp_krylov
 
     integer(kind=4) myid, Np, ierr
 
@@ -70,7 +71,8 @@ subroutine init_NHlin_model()
 
     call operator%ext_halo(stvec, params%ts, params%te)
 
-    time_scheme = init_rk4(operator, stvec)
+    !time_scheme = init_rk4(operator, stvec)
+    time_scheme = init_exp_krylov(operator, stvec, 10)
 
     print *, "-----------------------------------------"
     print *, "|", nstep, "time steps will be performed"
