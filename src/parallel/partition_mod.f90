@@ -57,6 +57,8 @@ subroutine init(this, Nh, Nz, num_tiles, myid, Np, strategy)
     this%ts = findloc(this%proc_map, myid, dim=1)
     this%te = findloc(this%proc_map, myid, back = .true., dim=1)
 
+    if(myid == 0) call this%write_to_txt('partition.txt')
+
 end subroutine init
 
 subroutine default_strategy(partition, Nh, Nz, Np)
@@ -114,8 +116,6 @@ subroutine default_strategy(partition, Nh, Nz, Np)
         s(ind) = s(ind-1) + wt(ind)
         partition%proc_map(s(ind-1)+1:s(ind)) = ind-1
     end do
-
-    call partition%write_to_txt('partition.txt')
 
 end subroutine default_strategy
 

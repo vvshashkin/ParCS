@@ -74,12 +74,13 @@ subroutine init_NHlin_model()
     !time_scheme = init_rk4(operator, stvec)
     time_scheme = init_exp_krylov(operator, stvec, 30)
 
-
-    print *, "-----------------------------------------"
-    print *, "|", nstep, "time steps will be performed"
-    print *, "|", "output each ", nzap, "steps"
-    print *, "========================================"
-    print *, "----------execution:--------------------"
+    if(myid == master_id) then
+        print *, "-----------------------------------------"
+        print *, "|", nstep, "time steps will be performed"
+        print *, "|", "output each ", nzap, "steps"
+        print *, "========================================"
+        print *, "----------execution:--------------------"
+    end if
 
 end subroutine init_NHlin_model
 
