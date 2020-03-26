@@ -12,6 +12,8 @@ type, extends(stvec_abstract_t) :: stvec_iomega_t
     procedure, public :: add  => add
     procedure, public :: copy => copy
     procedure, public :: dot  => dot
+    procedure, public :: norm
+    procedure, public :: smult
 end type stvec_iomega_t
 
 contains
@@ -68,11 +70,28 @@ real(kind=8) function dot(this, other) result(dot_prod)
 
     select type (other)
     class is (stvec_iomega_t)
-        dot_prod = sum(this%f(1:this%N)*other%f(1:this%N))
+        !N-vector of complex is considered as 2N-vector of real values
+        dot_prod = sum(real(this%f(1:this%N))*real(other%f(1:this%N))+ &
+                       imag(this%f(1:this%N))*imag(other%f(1:this%N)))
     class default
         stop
     end select
 
 end function dot
+
+real(kind=8) function norm(this) result(l2)
+    class(stvec_iomega_t), intent(in) :: this
+    !calculates norm of state vector
+    l2 = sqrt(sum(real(this%f(1:this%n))**2+imag(this%f(1:this%n))**2))
+end function norm
+
+subroutine smult(this, alpha)
+    !multiplicates state vector by scalar
+    class(stvec_iomega_t), intent(inout) :: this
+    real(kind=8),          intent(in)    :: alpha
+
+    this%f(1:this%N) = alpha*this%f(1:this%N)
+
+end subroutine smult
 
 end module stvec_iomega_mod
