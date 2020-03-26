@@ -3,12 +3,12 @@
     nz = 10
 /
 &DYN
-    dt   = 4,
+    dt   = 15.,
     HMAX = 10d3
 /
 &CTR
-    NSTEP = 240,
-    NZAP  = 2
+    NSTEP = 60,
+    NZAP  = 1
 /
 
 &INI_COND

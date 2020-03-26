@@ -72,7 +72,8 @@ subroutine init_NHlin_model()
     call operator%ext_halo(stvec, params%ts, params%te)
 
     !time_scheme = init_rk4(operator, stvec)
-    time_scheme = init_exp_krylov(operator, stvec, 10)
+    time_scheme = init_exp_krylov(operator, stvec, 30)
+
 
     print *, "-----------------------------------------"
     print *, "|", nstep, "time steps will be performed"

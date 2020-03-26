@@ -236,29 +236,28 @@ real(kind=8) function dot(this, other) result(dot_prod)
 
     ts = this%ts; te = this%te
     do ind = ts, te
-        call this%get_dep_zone("prex",ind,i1,i2,j1,j2,k1,k2)
+        i1 = this%prex(ind)%is; i2 = this%prex(ind)%ie
+        j1 = this%prex(ind)%js; j2 = this%prex(ind)%je
+        k1 = this%prex(ind)%ks; k2 = this%prex(ind)%ke
+
         dot_prod_loc = dot_prod_loc + &
             sum(this%prex(ind)%p(i1:i2,j1:j2,k1:k2)*other%prex(ind)%p(i1:i2,j1:j2,k1:k2))
 
-        call this%get_dep_zone("u",ind,i1,i2,j1,j2,k1,k2)
         dot_prod_loc = dot_prod_loc + &
-            sum(this%u(ind)%p(i1+1:i2-1,j1:j2,k1:k2)*other%u(ind)%p(i1+1:i2-1,j1:j2,k1:k2)) +&
-            0.5_8*sum(this%u(ind)%p(i1,j1:j2,k1:k2)*other%u(ind)%p(i1,j1:j2,k1:k2))         +&
+            sum(this%u(ind)%p(i1:i2-1,j1:j2,k1:k2)*other%u(ind)%p(i1:i2-1,j1:j2,k1:k2)) +&
+            0.5_8*sum(this%u(ind)%p(i1-1,j1:j2,k1:k2)*other%u(ind)%p(i1-1,j1:j2,k1:k2))         +&
             0.5_8*sum(this%u(ind)%p(i2,j1:j2,k1:k2)*other%u(ind)%p(i2,j1:j2,k1:k2))
 
-        call this%get_dep_zone("v",ind,i1,i2,j1,j2,k1,k2)
         dot_prod_loc = dot_prod_loc + &
-            sum(this%v(ind)%p(i1:i2,j1+1:j2-1,k1:k2)*other%v(ind)%p(i1:i2,j1+1:j2-1,k1:k2)) +&
-            0.5_8*sum(this%v(ind)%p(i1:i2,j1,k1:k2)*other%v(ind)%p(i1:i2,j1,k1:k2))  +&
+            sum(this%v(ind)%p(i1:i2,j1:j2-1,k1:k2)*other%v(ind)%p(i1:i2,j1:j2-1,k1:k2)) +&
+            0.5_8*sum(this%v(ind)%p(i1:i2,j1-1,k1:k2)*other%v(ind)%p(i1:i2,j1-1,k1:k2))  +&
             0.5_8*sum(this%v(ind)%p(i1:i2,j2,k1:k2)*other%v(ind)%p(i1:i2,j2,k1:k2))
 
-        call this%get_dep_zone("w",ind,i1,i2,j1,j2,k1,k2)
         dot_prod_loc = dot_prod_loc + &
-            sum(this%w(ind)%p(i1:i2,j1:j2,k1:k2)*other%w(ind)%p(i1:i2,j1:j2,k1:k2))
+            sum(this%w(ind)%p(i1:i2,j1:j2,k1-1:k2)*other%w(ind)%p(i1:i2,j1:j2,k1-1:k2))
 
-        call this%get_dep_zone("theta",ind,i1,i2,j1,j2,k1,k2)
         dot_prod_loc = dot_prod_loc + &
-            sum(this%theta(ind)%p(i1:i2,j1:j2,k1:k2)*other%theta(ind)%p(i1:i2,j1:j2,k1:k2))
+            sum(this%theta(ind)%p(i1:i2,j1:j2,k1-1:k2)*other%theta(ind)%p(i1:i2,j1:j2,k1-1:k2))
     end do
 
     call mpi_allreduce(dot_prod_loc, dot_prod, 1, mpi_double, mpi_sum, mpi_comm_world, ierr)
@@ -283,35 +282,35 @@ real(kind=8) function norm(this) result(l2)
 
     ts = this%ts; te = this%te
     do ind = ts, te
-        call this%get_dep_zone("prex",ind,i1,i2,j1,j2,k1,k2)
+
+        i1 = this%prex(ind)%is; i2 = this%prex(ind)%ie
+        j1 = this%prex(ind)%js; j2 = this%prex(ind)%je
+        k1 = this%prex(ind)%ks; k2 = this%prex(ind)%ke
+
         l2_loc = l2_loc + &
             sum(this%prex(ind)%p(i1:i2,j1:j2,k1:k2)**2)
 
-        call this%get_dep_zone("u",ind,i1,i2,j1,j2,k1,k2)
         l2_loc = l2_loc + &
-            sum(this%u(ind)%p(i1+1:i2-1,j1:j2,k1:k2)**2) +&
-            0.5_8*sum(this%u(ind)%p(i1,j1:j2,k1:k2)**2)         +&
+            sum(this%u(ind)%p(i1:i2-1,j1:j2,k1:k2)**2) +&
+            0.5_8*sum(this%u(ind)%p(i1-1,j1:j2,k1:k2)**2)         +&
             0.5_8*sum(this%u(ind)%p(i2,j1:j2,k1:k2)**2)
 
-        call this%get_dep_zone("v",ind,i1,i2,j1,j2,k1,k2)
         l2_loc = l2_loc + &
-            sum(this%v(ind)%p(i1:i2,j1+1:j2-1,k1:k2)**2) +&
-            0.5_8*sum(this%v(ind)%p(i1:i2,j1,k1:k2)**2)  +&
+            sum(this%v(ind)%p(i1:i2,j1:j2-1,k1:k2)**2) +&
+            0.5_8*sum(this%v(ind)%p(i1:i2,j1-1,k1:k2)**2)  +&
             0.5_8*sum(this%v(ind)%p(i1:i2,j2,k1:k2)**2)
 
-        call this%get_dep_zone("w",ind,i1,i2,j1,j2,k1,k2)
         l2_loc = l2_loc + &
-            sum(this%w(ind)%p(i1:i2,j1:j2,k1:k2)**2)
+            sum(this%w(ind)%p(i1:i2,j1:j2,k1-1:k2)**2)
 
-        call this%get_dep_zone("theta",ind,i1,i2,j1,j2,k1,k2)
         l2_loc = l2_loc + &
-            sum(this%theta(ind)%p(i1:i2,j1:j2,k1:k2)**2)
+            sum(this%theta(ind)%p(i1:i2,j1:j2,k1-1:k2)**2)
     end do
 
     call mpi_allreduce(l2_loc, l2, 1, mpi_double, mpi_sum, mpi_comm_world, ierr)
 
     l2 = sqrt(l2)
-    
+
 end function norm
 
 subroutine get_dep_zone(this,fld,ind,i1,i2,j1,j2,k1,k2)
