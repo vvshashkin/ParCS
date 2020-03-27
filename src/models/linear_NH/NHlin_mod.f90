@@ -72,7 +72,7 @@ subroutine init_NHlin_model()
     call operator%ext_halo(stvec, params%ts, params%te)
 
     !time_scheme = init_rk4(operator, stvec)
-    time_scheme = init_exp_krylov(operator, stvec, 30)
+    call init_exp_krylov(time_scheme, operator, stvec, 5)
 
     if(myid == master_id) then
         print *, "-----------------------------------------"

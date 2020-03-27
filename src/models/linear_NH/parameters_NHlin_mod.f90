@@ -9,7 +9,7 @@ implicit none
 
 type, extends(model_parameters_abstract_t) :: parameters_NHlin_t
 
-    integer(kind=4)            :: nx     = 128
+    integer(kind=4)            :: nx     = 90
     integer(kind=4)            :: nz     = 10
     logical                    :: lcgrid = .true.
 

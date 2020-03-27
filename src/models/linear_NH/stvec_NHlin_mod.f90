@@ -260,8 +260,8 @@ real(kind=8) function dot(this, other) result(dot_prod)
             sum(this%theta(ind)%p(i1:i2,j1:j2,k1-1:k2)*other%theta(ind)%p(i1:i2,j1:j2,k1-1:k2))
     end do
 
-    call mpi_allreduce(dot_prod_loc, dot_prod, 1, mpi_double, mpi_sum, mpi_comm_world, ierr)
-
+    !call mpi_allreduce(dot_prod_loc, dot_prod, 1, mpi_double, mpi_sum, mpi_comm_world, ierr)
+    dot_prod = dot_prod_loc
     class default
         call avost("type mismatch in stvec_NHlin%dot")
     end select
@@ -307,9 +307,9 @@ real(kind=8) function norm(this) result(l2)
             sum(this%theta(ind)%p(i1:i2,j1:j2,k1-1:k2)**2)
     end do
 
-    call mpi_allreduce(l2_loc, l2, 1, mpi_double, mpi_sum, mpi_comm_world, ierr)
-
-    l2 = sqrt(l2)
+    !call mpi_allreduce(l2_loc, l2, 1, mpi_double, mpi_sum, mpi_comm_world, ierr)
+    !l2 = sqrt(l2)
+    l2 = sqrt(l2_loc)
 
 end function norm
 
