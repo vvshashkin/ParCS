@@ -32,9 +32,7 @@ subroutine init_NHlin_model()
     use NHlin_output_mod,         only : init_NHlin_output
     use NHlin_initial_cond_mod,   only : set_NHlin_initial_conditions
     use operator_NHlin_mod,       only : init_NHlin_operator
-    use rk4_mod,                  only : rk4_t, init_rk4
-    use exp_krylov_mod,           only : exp_krylov_t, init_exp_krylov
-    use ars232_mod,               only : ars232_t, init_ars232
+    use tscheme_NHlin_mod,        only : init_tscheme_NHlin
 
     integer(kind=4) myid, Np, ierr
 
@@ -72,9 +70,7 @@ subroutine init_NHlin_model()
 
     call operator%ext_halo(stvec, params%ts, params%te)
 
-    !time_scheme = init_rk4(operator, stvec)
-    call init_ars232(time_scheme, operator, stvec)
-    !call init_exp_krylov(time_scheme, operator, stvec, 5)
+    call init_tscheme_NHlin(time_scheme,operator,params,stvec,myid,master_id,np,namelist_str)
 
     if(myid == master_id) then
         print *, "-----------------------------------------"

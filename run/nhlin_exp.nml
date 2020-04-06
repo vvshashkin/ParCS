@@ -18,3 +18,8 @@
     grad_op_name = "gradient2"
     div_op_name = "divergence2"
 /
+&TSCHEME
+    time_scheme_name = "EXP",
+    Mmax = 5,
+    iom  = 2
+/

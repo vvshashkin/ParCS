@@ -404,6 +404,7 @@ $(DOBJ)nhlin_mod.o: src/models/linear_NH/NHlin_mod.f90 \
 	$(DOBJ)namelist_read_mod.o \
 	$(DOBJ)nhlin_output_mod.o \
 	$(DOBJ)nhlin_initial_cond_mod.o \
+	$(DOBJ)tscheme_nhlin_mod.o \
 	$(DOBJ)rk4_mod.o \
 	$(DOBJ)exp_krylov_mod.o \
 	$(DOBJ)ars232_mod.o
@@ -417,6 +418,13 @@ $(DOBJ)parameters_nhlin_mod.o: src/models/linear_NH/parameters_NHlin_mod.f90 \
 	$(DOBJ)tile_mod.o \
 	$(DOBJ)mesh_factory_mod.o \
 	$(DOBJ)const_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)tscheme_nhlin_mod.o: src/models/linear_NH/tscheme_NHlin_mod.f90 \
+	$(DOBJ)timescheme_abstract_mod.o \
+	$(DOBJ)operator_nhlin_mod.o \
+	$(DOBJ)parameters_nhlin_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
