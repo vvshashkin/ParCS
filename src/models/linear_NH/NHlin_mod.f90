@@ -57,7 +57,7 @@ subroutine init_NHlin_model()
 
     call init_NHlin_parameters(params, namelist_str, myid, Np, master_id)
 
-    operator = init_NHlin_operator(params, master_id, myid, Np, namelist_str)
+    call init_NHlin_operator(operator, params, master_id, myid, Np, namelist_str)
 
     call init_stvec_NHlin(stvec, params%ts, params%te, params%tiles,  &
                           params%halo_width)

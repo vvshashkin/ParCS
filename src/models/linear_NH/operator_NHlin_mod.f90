@@ -34,8 +34,7 @@ end type operator_NHlin_t
 
 contains
 
-function init_NHlin_operator(model_params, master_id, myid, np, namelist_str)  &
-         result(oper)
+subroutine init_NHlin_operator(oper, model_params, master_id, myid, np, namelist_str)
 
     use partition_mod,        only : partition_t
     use exchange_factory_mod, only : create_Agrid_halo_exchange
@@ -43,7 +42,7 @@ function init_NHlin_operator(model_params, master_id, myid, np, namelist_str)  &
     use hor_difops_basic_mod, only : cl_gradient_contra_c2, cl_divergence_cgr2, &
                                      cl_gradient_0, cl_divergence_0
 
-    type(operator_NHlin_t)                 :: oper
+    class(operator_NHlin_t)                :: oper
     type(parameters_NHlin_t),  intent(in)  :: model_params
     integer(kind=4),           intent(in)  :: master_id, myid, np
     character(:), allocatable, intent(in)  :: namelist_str
@@ -90,7 +89,7 @@ function init_NHlin_operator(model_params, master_id, myid, np, namelist_str)  &
         print *, "--------------------------"
     end if
 
-end function init_NHlin_operator
+end subroutine init_NHlin_operator
 
 subroutine act(this, vout, vin, model_params)
 
