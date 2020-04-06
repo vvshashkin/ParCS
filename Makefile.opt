@@ -247,6 +247,14 @@ $(DOBJ)master_paneled_outputer_mod.o: src/outputer/master_paneled_outputer_mod.f
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)ars232_mod.o: src/time_schemes/ars232_mod.f90 \
+	$(DOBJ)container_abstract_mod.o \
+	$(DOBJ)stvec_abstract_mod.o \
+	$(DOBJ)timescheme_abstract_mod.o \
+	$(DOBJ)operator_abstract_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)timescheme_abstract_mod.o: src/time_schemes/timescheme_abstract_mod.f90 \
 	$(DOBJ)container_abstract_mod.o \
 	$(DOBJ)operator_abstract_mod.o
@@ -397,7 +405,8 @@ $(DOBJ)nhlin_mod.o: src/models/linear_NH/NHlin_mod.f90 \
 	$(DOBJ)nhlin_output_mod.o \
 	$(DOBJ)nhlin_initial_cond_mod.o \
 	$(DOBJ)rk4_mod.o \
-	$(DOBJ)exp_krylov_mod.o
+	$(DOBJ)exp_krylov_mod.o \
+	$(DOBJ)ars232_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
