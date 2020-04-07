@@ -25,7 +25,7 @@ subroutine init_tscheme_NHlin(time_scheme, operator, model_params, stvec, &
     integer(kind=4),              intent(in)     :: master_id, myid, np
     character(:), allocatable,    intent(in)     :: namelist_str
 
-    character(256)  :: time_scheme_name = "ARS232"
+    character(256)  :: time_scheme_name = "RK4"!"ARS232"
     integer(kind=4) :: Mmax=30, iom=2 ! for Krylov exp scheme
     type(operator_NHlin_explicit_t) :: oper_e
     type(operator_NHlin_implicit_t) :: oper_i

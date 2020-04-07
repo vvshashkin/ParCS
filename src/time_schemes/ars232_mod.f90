@@ -76,21 +76,30 @@ subroutine step_ars232(this, v0, model_params, dt)
     call this%oper_e%act(this%y1,v0,model_params)
 
     call this%r%copy(v0); call this%r%add(this%y1,1._8,ae(1,2))
-    call this%s%copy(this%r)
+    call this%oper_i%solv(ai(2,2)*dt,this%s,this%r,model_params)
     call this%oper_e%act(this%y2,this%s,model_params)
+    call this%q2%copy(this%s); call this%q2%add(this%r,1.0_8/(ai(2,2)*dt),-1.0_8/(ai(2,2)*dt))
 
     call this%r%copy(v0); call this%r%add(this%y1,1._8,ae(1,3)); call this%r%add(this%y2,1._8,ae(2,3))
-    call this%s%copy(this%r)
+                          call this%r%add(this%q2,1._8,ai(2,3))
+    call this%oper_i%solv(ai(3,3)*dt,this%s,this%r,model_params)
     call this%oper_e%act(this%y3,this%s,model_params)
+    call this%q3%copy(this%s); call this%q3%add(this%r,1.0_8/(ai(3,3)*dt),-1.0_8/(ai(3,3)*dt))
 
     call this%r%copy(v0); call this%r%add(this%y1,1._8,ae(1,4)); call this%r%add(this%y2,1._8,ae(2,4))
-                          call this%r%add(this%y3,1._8,ae(3,4))
-    call this%s%copy(this%r)
+                          call this%r%add(this%y3,1._8,ae(3,4)); call this%r%add(this%q2,1._8,ai(2,4))
+                          call this%r%add(this%q3,1._8,ai(3,4))
+    call this%oper_i%solv(ai(4,4)*dt,this%s,this%r,model_params)
     call this%oper_e%act(this%y4,this%s,model_params)
+    call this%q4%copy(this%s); call this%q4%add(this%r,1.0_8/(ai(4,4)*dt),-1.0_8/(ai(4,4)*dt))
 
     call v0%add(this%y2,1._8,b(2)*dt)
     call v0%add(this%y3,1._8,b(3)*dt)
     call v0%add(this%y4,1._8,b(4)*dt)
+    call v0%add(this%q2,1._8,b(2)*dt)
+    call v0%add(this%q3,1._8,b(3)*dt)
+    call v0%add(this%q4,1._8,b(4)*dt)
+
 
         class default
             call avost("ARS232 scheme works only with class(stvec_abstract_t)")
