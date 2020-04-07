@@ -37,6 +37,9 @@ subroutine set_NHlin_initial_conditions(stvec, namelist_str, params, &
     if(test_case_num == 1) then
         call set_NHlin_gravity_wave(stvec, test_case_num, params%ts, params%te,  &
                                     params%mesh, params%radx, params%nz, params%zh, params%z)
+    else if(test_case_num == 2) then
+        call set_NHlin_gravity_wave(stvec, test_case_num, params%ts, params%te,  &
+                                    params%mesh, 125._8, params%nz, params%zh, params%z)
     else
         call avost("NHlin model: unknown test case")
     end if

@@ -113,7 +113,7 @@ subroutine act_explicit(this, vout, vin, model_params)
         call model_params%partition%tile(ind)%getind(is=is,ie=ie,js=js,je=je)
 
         call this%grad_contra(vout%u(ind), vout%v(ind), vin%prex(ind), model_params%mesh(ind), model_params%radx)
-        call this%div(vout%prex(ind),vin%u(ind),vin%v(ind), model_params%mesh(ind), model_params%radx)
+        !call this%div(vout%prex(ind),vin%u(ind),vin%v(ind), model_params%mesh(ind), model_params%radx)
 
         do k = 1, model_params%nz
             do j=js,je; do i=is-1,ie
@@ -124,7 +124,8 @@ subroutine act_explicit(this, vout, vin, model_params)
             end do; end do
             do j=js,je; do i=is,ie
                 w_at_p = 0.5_8*(vin%w(ind)%p(i,j,k)+vin%w(ind)%p(i,j,k-1))
-                vout%prex(ind)%p(i,j,k) = -model_params%prex0(k)*rgaz/Cv*(vout%prex(ind)%p(i,j,k)) - w_at_p*model_params%prex0dz(k)
+!                vout%prex(ind)%p(i,j,k) = -model_params%prex0(k)*rgaz/Cv*(vout%prex(ind)%p(i,j,k)) - w_at_p*model_params%prex0dz(k)
+                vout%prex(ind)%p(i,j,k) = -w_at_p*model_params%prex0dz(k)
             end do; end do
         end do
 
@@ -254,10 +255,19 @@ subroutine solv_implicit(this, dt, vout, rhs, model_params)
         vout%v(ind)%p(is:ie,js-1:je,1:model_params%nz) = rhs%v(ind)%p(is:ie,js-1:je,1:model_params%nz)
         vout%theta(ind)%p(is:ie,js:je,0:model_params%nz) = rhs%theta(ind)%p(is:ie,js:je,0:model_params%nz)
 
+        call this%div(vout%prex(ind),rhs%u(ind),rhs%v(ind), model_params%mesh(ind), model_params%radx)
+        do k = 1, model_params%nz
+            do j=js,je; do i=is,ie
+                vout%prex(ind)%p(i,j,k) = rhs%prex(ind)%p(i,j,k) &
+                                         -dt*rgaz/Cv*model_params%prex0(k)*vout%prex(ind)%p(i,j,k)
+            end do; end do
+        end do
+
         vout%w(ind)%p(is:ie,js:je,0) = 0._8
         do k = 1, model_params%nz-1
             do j=js,je; do i=is,ie
-                dpdz = (rhs%prex(ind)%p(i,j,k+1)-rhs%prex(ind)%p(i,j,k) ) / model_params%dz
+                !dpdz = (rhs%prex(ind)%p(i,j,k+1)-rhs%prex(ind)%p(i,j,k) ) / model_params%dz
+                dpdz = (vout%prex(ind)%p(i,j,k+1)-vout%prex(ind)%p(i,j,k) ) / model_params%dz
                 cf1 = Cv/(rgaz*dt)
                 cf2 =-Cv/(rgaz*Cp*model_params%theta0(k)*dt**2)
                 vout%w(ind)%p(i,j,k) = cf1*dpdz+cf2*rhs%w(ind)%p(i,j,k)
@@ -270,7 +280,8 @@ subroutine solv_implicit(this, dt, vout, rhs, model_params)
         do k = 1, model_params%nz
             do j=js,je; do i=is,ie
                 dwdz   = (vout%w(ind)%p(i,j,k)-vout%w(ind)%p(i,j,k-1)) / model_params%dz
-                vout%prex(ind)%p(i,j,k) = -model_params%prex0(k)*rgaz/Cv*dwdz*dt+rhs%prex(ind)%p(i,j,k)
+!                vout%prex(ind)%p(i,j,k) = -model_params%prex0(k)*rgaz/Cv*dwdz*dt+rhs%prex(ind)%p(i,j,k)
+                vout%prex(ind)%p(i,j,k) = -model_params%prex0(k)*rgaz/Cv*dwdz*dt+vout%prex(ind)%p(i,j,k)
             end do; end do
         end do
 
