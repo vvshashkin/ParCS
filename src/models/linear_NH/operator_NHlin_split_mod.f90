@@ -265,12 +265,6 @@ subroutine solv_implicit(this, dt, vout, rhs, model_params)
         end do
         vout%w(ind)%p(is:ie,js:je,model_params%nz) = 0._8
 
-        !if(ind == 1) then
-        !    do k=1, model_params%nz-1
-        !        print *, "RHS", vout%w(ind)%p(1,1,k)
-        !    end do
-        !end if
-
         call solve_w(vout%w(ind),is,ie,js,je,model_params%nz,this%d2z,this%cwz,dt)
 
         do k = 1, model_params%nz
