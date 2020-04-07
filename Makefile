@@ -428,7 +428,8 @@ $(DOBJ)operator_nhlin_split_mod.o: src/models/linear_NH/operator_NHlin_split_mod
 	$(DOBJ)exchange_abstract_mod.o \
 	$(DOBJ)ecs_halo_mod.o \
 	$(DOBJ)hor_difops_abstract_mod.o \
-	$(DOBJ)const_mod.o
+	$(DOBJ)const_mod.o \
+	$(DOBJ)grid_function_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
