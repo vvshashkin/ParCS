@@ -19,5 +19,5 @@
     div_op_name = "divergence2"
 /
 &TSCHEME
-    time_scheme_name = "ARS232"
+    time_scheme_name = "RK4"
 /

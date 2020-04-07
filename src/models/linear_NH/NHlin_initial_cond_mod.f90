@@ -38,7 +38,7 @@ subroutine set_NHlin_initial_conditions(stvec, namelist_str, params, &
         call set_NHlin_gravity_wave(stvec, test_case_num, params%ts, params%te,  &
                                     params%mesh, params%radx, params%nz, params%zh, params%z)
     else if(test_case_num == 2) then
-        call set_NHlin_gravity_wave(stvec, test_case_num, params%ts, params%te,  &
+        call set_NHlin_gravity_wave_1km(stvec, test_case_num, params%ts, params%te,  &
                                     params%mesh, 125._8, params%nz, params%zh, params%z)
     else
         call avost("NHlin model: unknown test case")
@@ -92,5 +92,52 @@ subroutine set_NHlin_gravity_wave(stvec, test_case_num, ts, te, mesh, radx, nz, 
     end do
 
 end subroutine set_NHlin_gravity_wave
+
+subroutine set_NHlin_gravity_wave_1km(stvec, test_case_num, ts, te, mesh, radx, nz, zh, z)
+
+    use stvec_NHlin_mod, only : stvec_NHlin_t
+    use mesh_mod,        only : mesh_t
+    use const_mod,       only : pi, radz
+
+    type(stvec_NHlin_t), intent(inout) :: stvec
+    integer(kind=4),     intent(in)    :: test_case_num
+    integer(kind=4),     intent(in)    :: ts, te
+    type(mesh_t),        intent(in)    :: mesh(ts:te)
+    real(kind=8),        intent(in)    :: radx
+    integer(kind=4),     intent(in)    :: nz
+    real(kind=8),        intent(in)    :: zh(0:nz), z(1:nz)
+
+    real(kind=8), parameter :: x0 = 1._8/sqrt(2.0_8)
+    real(kind=8), parameter :: y0 = 1._8/sqrt(2.0_8)
+    real(kind=8), parameter :: z0 = 0._8
+    real(kind=8), parameter :: r0 = 5000._8
+    real(kind=8), parameter :: Lz = 2e3_8
+    real(kind=8), parameter :: theta_max = 1.0_8
+
+    integer(kind=4) ind
+    integer(kind=4) i, j, k
+    real(kind=8) dist
+
+    do ind = ts, te
+        stvec%prex(ind)%p(:,:,:) = 0._8
+        stvec%u(ind)%p(:,:,:)    = 0._8
+        stvec%v(ind)%p(:,:,:)    = 0._8
+        stvec%w(ind)%p(:,:,:)    = 0._8
+
+        do k = stvec%theta(ind)%ks, stvec%theta(ind)%ke
+            do j = stvec%theta(ind)%js, stvec%theta(ind)%je
+                do i = stvec%theta(ind)%is, stvec%theta(ind)%ie
+                    dist = radz/radx*acos(mesh(ind)%rhx(i,j)*x0 + mesh(ind)%rhy(i,j)*y0 + &
+                                          mesh(ind)%rhz(i,j)*z0)
+
+                    stvec%theta(ind)%p(i,j,k) = theta_max*r0**2/(r0**2+dist**2) * &
+                                                sin(2._8*pi*zh(k)/Lz)
+                end do
+            end do
+        end do
+
+    end do
+
+end subroutine set_NHlin_gravity_wave_1km
 
 end module NHlin_initial_cond_mod

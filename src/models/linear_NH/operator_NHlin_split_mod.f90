@@ -59,7 +59,8 @@ subroutine init_NHlin_implicit_operator(oper, model_params, master_id, myid, np,
     integer(kind=4),           intent(in)  :: master_id, myid, np
     character(:), allocatable, intent(in)  :: namelist_str
 
-    integer(kind=4) k
+    integer(kind=4) :: k
+    real(kind=8)    :: dpdz
 
     !fall back to full operator inititalization
     call init_NHlin_operator(oper, model_params, master_id, myid, np, namelist_str)
@@ -67,19 +68,31 @@ subroutine init_NHlin_implicit_operator(oper, model_params, master_id, myid, np,
     allocate(oper%d2z(-1:1,1:model_params%nz-1))
     allocate(oper%cwz(1:model_params%nz-1))
 
+    dpdz = (model_params%prex0(2)-model_params%prex0(1)) / model_params%dz
     oper%d2z(-1,1) = 0._8
-    oper%d2z(0,1) =-(model_params%prex0(1)+model_params%prex0(2)) / model_params%dz**2
+    oper%d2z(0,1) =-(model_params%prex0(1)+model_params%prex0(2)) / model_params%dz**2 +&
+                    0.5_8*Cv/rgaz*(model_params%prex0dz(2)-model_params%prex0dz(1)) / model_params%dz + &
+                    Cv/rgaz*model_params%theta0dz(1)*dpdz/model_params%theta0(1)
     oper%d2z(1,1) = (model_params%prex0(2)) / model_params%dz**2
     oper%cwz(1)   =-Cv/(Cp*rgaz*model_params%theta0(1))
     do k=2, model_params%nz-2
-        oper%d2z(-1,k) = (model_params%prex0(k)) / model_params%dz**2
-        oper%d2z( 0,k) =-(model_params%prex0(k)+model_params%prex0(k+1)) / model_params%dz**2
-        oper%d2z( 1,k) = (model_params%prex0(k+1)) / model_params%dz**2
+        dpdz = (model_params%prex0(k+1)-model_params%prex0(k)) / model_params%dz
+        oper%d2z(-1,k) = (model_params%prex0(k)) / model_params%dz**2 - &
+                          0.5_8*Cv/rgaz*model_params%prex0dz(k) / model_params%dz
+        oper%d2z( 0,k) =-(model_params%prex0(k)+model_params%prex0(k+1)) / model_params%dz**2+&
+                         0.5_8*Cv/rgaz*(model_params%prex0dz(k+1)-model_params%prex0dz(k)) / model_params%dz+ &
+                         Cv/rgaz*model_params%theta0dz(k)*dpdz/model_params%theta0(k)
+        oper%d2z( 1,k) = (model_params%prex0(k+1)) / model_params%dz**2 + &
+                         0.5_8*Cv/rgaz*model_params%prex0dz(k+1) / model_params%dz
         oper%cwz(k)    =-Cv/(Cp*rgaz*model_params%theta0(k))
     end do
     k = model_params%nz-1
-    oper%d2z(-1,k) = (model_params%prex0(k)) / model_params%dz**2
-    oper%d2z( 0,k) =-(model_params%prex0(k)+model_params%prex0(k+1)) / model_params%dz**2
+    dpdz = (model_params%prex0(k+1)-model_params%prex0(k)) / model_params%dz
+    oper%d2z(-1,k) = (model_params%prex0(k)) / model_params%dz**2 - &
+                      0.5_8*Cv/rgaz*model_params%prex0dz(k) / model_params%dz
+    oper%d2z( 0,k) =-(model_params%prex0(k)+model_params%prex0(k+1)) / model_params%dz**2+&
+                     0.5_8*Cv/rgaz*(model_params%prex0dz(k+1)-model_params%prex0dz(k)) / model_params%dz+ &
+                     Cv/rgaz*model_params%theta0dz(k)*dpdz/model_params%theta0(k)
     oper%d2z( 1,k) = 0._8
     oper%cwz(k)    =-Cv/(Cp*rgaz*model_params%theta0(k))
 
@@ -123,19 +136,19 @@ subroutine act_explicit(this, vout, vin, model_params)
                 vout%v(ind)%p(i,j,k) =-Cp*0.5_8*(model_params%theta0(k-1)+model_params%theta0(k))*vout%v(ind)%p(i,j,k)
             end do; end do
             do j=js,je; do i=is,ie
-                w_at_p = 0.5_8*(vin%w(ind)%p(i,j,k)+vin%w(ind)%p(i,j,k-1))
+!                w_at_p = 0.5_8*(vin%w(ind)%p(i,j,k)+vin%w(ind)%p(i,j,k-1))
 !                vout%prex(ind)%p(i,j,k) = -model_params%prex0(k)*rgaz/Cv*(vout%prex(ind)%p(i,j,k)) - w_at_p*model_params%prex0dz(k)
-                vout%prex(ind)%p(i,j,k) = -w_at_p*model_params%prex0dz(k)
+                vout%prex(ind)%p(i,j,k) = 0._8 !-w_at_p*model_params%prex0dz(k)
             end do; end do
         end do
 
         vout%theta(ind)%p(is:ie,js:je,0) = 0._8
         vout%w(ind)%p(is:ie,js:je,0) = 0._8
         do k = 1, model_params%nz-1
-            dp0dz = (model_params%prex0(k+1)-model_params%prex0(k)) / model_params%dz
+            !dp0dz = (model_params%prex0(k+1)-model_params%prex0(k)) / model_params%dz
             do j=js,je; do i=is,ie
-                vout%theta(ind)%p(i,j,k) = -vin%w(ind)%p(i,j,k)*model_params%theta0dz(k)
-                vout%w(ind)%p(i,j,k) =-Cp*(vin%theta(ind)%p(i,j,k)*dp0dz)
+                vout%theta(ind)%p(i,j,k) = 0._8!-vin%w(ind)%p(i,j,k)*model_params%theta0dz(k)
+                vout%w(ind)%p(i,j,k) = 0._8!-Cp*(vin%theta(ind)%p(i,j,k)*dp0dz)
             end do; end do
         end do
         vout%theta(ind)%p(is:ie,js:je,model_params%nz) = 0._8
@@ -237,7 +250,7 @@ subroutine solv_implicit(this, dt, vout, rhs, model_params)
     integer(kind=4) :: isv, iev, jsv, jev
     integer(kind=4) :: mesh_isv, mesh_jsv, mesh_iev, mesh_jev, hw
     real(kind=8)    :: dwdz, w_at_p, th0p, dpdz, dp0dz
-    real(kind=8)    :: cf1, cf2
+    real(kind=8)    :: cf1, cf2, cf3
 
     select type (model_params)
     class is (parameters_NHlin_t)
@@ -253,7 +266,7 @@ subroutine solv_implicit(this, dt, vout, rhs, model_params)
 
         vout%u(ind)%p(is-1:ie,js:je,1:model_params%nz) = rhs%u(ind)%p(is-1:ie,js:je,1:model_params%nz)
         vout%v(ind)%p(is:ie,js-1:je,1:model_params%nz) = rhs%v(ind)%p(is:ie,js-1:je,1:model_params%nz)
-        vout%theta(ind)%p(is:ie,js:je,0:model_params%nz) = rhs%theta(ind)%p(is:ie,js:je,0:model_params%nz)
+        !vout%theta(ind)%p(is:ie,js:je,0:model_params%nz) = rhs%theta(ind)%p(is:ie,js:je,0:model_params%nz)
 
         call this%div(vout%prex(ind),rhs%u(ind),rhs%v(ind), model_params%mesh(ind), model_params%radx)
         do k = 1, model_params%nz
@@ -265,12 +278,14 @@ subroutine solv_implicit(this, dt, vout, rhs, model_params)
 
         vout%w(ind)%p(is:ie,js:je,0) = 0._8
         do k = 1, model_params%nz-1
+            dp0dz = (model_params%prex0(k+1)-model_params%prex0(k)) / model_params%dz
             do j=js,je; do i=is,ie
                 !dpdz = (rhs%prex(ind)%p(i,j,k+1)-rhs%prex(ind)%p(i,j,k) ) / model_params%dz
                 dpdz = (vout%prex(ind)%p(i,j,k+1)-vout%prex(ind)%p(i,j,k) ) / model_params%dz
                 cf1 = Cv/(rgaz*dt)
                 cf2 =-Cv/(rgaz*Cp*model_params%theta0(k)*dt**2)
-                vout%w(ind)%p(i,j,k) = cf1*dpdz+cf2*rhs%w(ind)%p(i,j,k)
+                cf3 = Cv*dp0dz / (model_params%theta0(k)*rgaz*dt)
+                vout%w(ind)%p(i,j,k) = cf1*dpdz+cf2*rhs%w(ind)%p(i,j,k)+cf3*rhs%theta(ind)%p(i,j,k)
             end do; end do
         end do
         vout%w(ind)%p(is:ie,js:je,model_params%nz) = 0._8
@@ -281,10 +296,18 @@ subroutine solv_implicit(this, dt, vout, rhs, model_params)
             do j=js,je; do i=is,ie
                 dwdz   = (vout%w(ind)%p(i,j,k)-vout%w(ind)%p(i,j,k-1)) / model_params%dz
 !                vout%prex(ind)%p(i,j,k) = -model_params%prex0(k)*rgaz/Cv*dwdz*dt+rhs%prex(ind)%p(i,j,k)
-                vout%prex(ind)%p(i,j,k) = -model_params%prex0(k)*rgaz/Cv*dwdz*dt+vout%prex(ind)%p(i,j,k)
+                w_at_p = 0.5_8*(vout%w(ind)%p(i,j,k)+vout%w(ind)%p(i,j,k-1))
+!                vout%prex(ind)%p(i,j,k) = -model_params%prex0(k)*rgaz/Cv*(vout%prex(ind)%p(i,j,k)) - w_at_p*model_params%prex0dz(k)
+                vout%prex(ind)%p(i,j,k) = -model_params%prex0(k)*rgaz/Cv*dwdz*dt - w_at_p*model_params%prex0dz(k)*dt+vout%prex(ind)%p(i,j,k)
             end do; end do
         end do
-
+        vout%theta(ind)%p(is:ie,js:je,0) = 0._8
+        do k = 1, model_params%nz-1
+            do j=js,je; do i=is,ie
+                vout%theta(ind)%p(i,j,k) = -vout%w(ind)%p(i,j,k)*model_params%theta0dz(k)*dt+rhs%theta(ind)%p(i,j,k)
+            end do; end do
+        end do
+        vout%theta(ind)%p(is:ie,js:je,model_params%nz) = 0._8
     end do
 
     call this%ext_halo(vout, model_params%ts, model_params%te)
