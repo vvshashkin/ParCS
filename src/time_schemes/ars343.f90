@@ -1,4 +1,4 @@
-module ars232_mod
+module ars343_mod
 
 use container_abstract_mod,  only : state_abstract_t, model_parameters_abstract_t
 use stvec_abstract_mod,      only : stvec_abstract_t
@@ -17,7 +17,7 @@ real(kind=8), parameter :: ai(4,4) = [ [0.0,         0.0,          0.0,         
                                        [0.0,         0.2820667392, 0.4358665215, 0.0],&
                                        [0.0,         1.208496649,  -0.644363171, 0.4358665215]]
 
-type, extends(timescheme_abstract_t), public :: ars232_t
+type, extends(timescheme_abstract_t), public :: ars343_t
 
     class(operator_abstract_t), allocatable :: oper_e, oper_i
     class(stvec_abstract_t),    allocatable :: y1,y2,y3,y4
@@ -26,46 +26,46 @@ type, extends(timescheme_abstract_t), public :: ars232_t
 
 contains
 
-    procedure, public :: step => step_ars232
+    procedure, public :: step => step_ars343
 
-end type ars232_t
+end type ars343_t
 
 contains
 
-subroutine init_ars232(ts_ars232, oper_e, oper_i, v)
+subroutine init_ars343(ts_ars343, oper_e, oper_i, v)
     class(timescheme_abstract_t),   allocatable, &
-                                    intent(inout) :: ts_ars232
+                                    intent(inout) :: ts_ars343
     class(operator_abstract_t),     intent(in)    :: oper_e, oper_i
     class(stvec_abstract_t),        intent(in)    :: v !example of model state vector
 
-    allocate(ars232_t :: ts_ars232)
+    allocate(ars343_t :: ts_ars343)
 
-    select type(ts_ars232)
-        class is (ars232_t)
+    select type(ts_ars343)
+        class is (ars343_t)
 
-    ts_ars232%oper_e = oper_e
-    ts_ars232%oper_i = oper_i
+    ts_ars343%oper_e = oper_e
+    ts_ars343%oper_i = oper_i
 
     !preallocate additional state vectors
-    allocate(ts_ars232%y1, source=v)
-    allocate(ts_ars232%y2, source=v)
-    allocate(ts_ars232%y3, source=v)
-    allocate(ts_ars232%y4, source=v)
-    allocate(ts_ars232%q2, source=v)
-    allocate(ts_ars232%q3, source=v)
-    allocate(ts_ars232%q4, source=v)
-    allocate(ts_ars232%r,  source=v)
-    allocate(ts_ars232%s,  source=v)
+    allocate(ts_ars343%y1, source=v)
+    allocate(ts_ars343%y2, source=v)
+    allocate(ts_ars343%y3, source=v)
+    allocate(ts_ars343%y4, source=v)
+    allocate(ts_ars343%q2, source=v)
+    allocate(ts_ars343%q3, source=v)
+    allocate(ts_ars343%q4, source=v)
+    allocate(ts_ars343%r,  source=v)
+    allocate(ts_ars343%s,  source=v)
 
     class default
-        call avost("type mismatch in init_ars232")
+        call avost("type mismatch in init_ars343")
     end select
 
-end subroutine init_ars232
+end subroutine init_ars343
 
-subroutine step_ars232(this, v0, model_params, dt)
+subroutine step_ars343(this, v0, model_params, dt)
 
-    class(ars232_t),                    intent(inout) :: this
+    class(ars343_t),                    intent(inout) :: this
     class(state_abstract_t),            intent(inout) :: v0
     class(model_parameters_abstract_t), intent(in)    :: model_params
     real(kind=8),                       intent(in)    :: dt
@@ -102,9 +102,9 @@ subroutine step_ars232(this, v0, model_params, dt)
 
 
         class default
-            call avost("ARS232 scheme works only with class(stvec_abstract_t)")
+            call avost("ARS343 scheme works only with class(stvec_abstract_t)")
     end select
 
-end subroutine step_ars232
+end subroutine step_ars343
 
-end module ars232_mod
+end module ars343_mod

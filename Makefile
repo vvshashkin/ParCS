@@ -247,16 +247,16 @@ $(DOBJ)master_paneled_outputer_mod.o: src/outputer/master_paneled_outputer_mod.f
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
-$(DOBJ)ars232_mod.o: src/time_schemes/ars232_mod.f90 \
+$(DOBJ)timescheme_abstract_mod.o: src/time_schemes/timescheme_abstract_mod.f90 \
 	$(DOBJ)container_abstract_mod.o \
-	$(DOBJ)stvec_abstract_mod.o \
-	$(DOBJ)timescheme_abstract_mod.o \
 	$(DOBJ)operator_abstract_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
-$(DOBJ)timescheme_abstract_mod.o: src/time_schemes/timescheme_abstract_mod.f90 \
+$(DOBJ)ars343.o: src/time_schemes/ars343.f90 \
 	$(DOBJ)container_abstract_mod.o \
+	$(DOBJ)stvec_abstract_mod.o \
+	$(DOBJ)timescheme_abstract_mod.o \
 	$(DOBJ)operator_abstract_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -441,7 +441,7 @@ $(DOBJ)tscheme_nhlin_mod.o: src/models/linear_NH/tscheme_NHlin_mod.f90 \
 	$(DOBJ)stvec_nhlin_mod.o \
 	$(DOBJ)rk4_mod.o \
 	$(DOBJ)exp_krylov_mod.o \
-	$(DOBJ)ars232_mod.o
+	$(DOBJ)ars343.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
