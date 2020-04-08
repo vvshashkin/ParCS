@@ -7,8 +7,8 @@
     HMAX = 10d3
 /
 &CTR
-    NSTEP = 1200,
-    NZAP  = 10
+    NSTEP = 3600,
+    NZAP  = 100
 /
 
 &INI_COND

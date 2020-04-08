@@ -37,16 +37,16 @@ subroutine init_tscheme_NHlin(time_scheme, operator, model_params, stvec, &
     end if
 
     if(trim(time_scheme_name) == "RK4") then
-        print *, "Using RK4 time stepping scheme"
+        if(myid == master_id) print *, "Using RK4 time stepping scheme"
         time_scheme = init_rk4(operator, stvec)
     else if(trim(time_scheme_name) == "ARS232") then
-        print *, "Using ARS232 time stepping scheme"
+        if(myid == master_id) print *, "Using ARS232 time stepping scheme"
         call init_NHlin_explicit_operator(oper_e, model_params, master_id, myid, Np, namelist_str)
         call init_NHlin_implicit_operator(oper_i, model_params, master_id, myid, Np, namelist_str)
         call init_ars232(time_scheme, oper_e, oper_i, stvec)
     else if(trim(time_scheme_name) == "EXP") then
         print '(A,I5,A,I4)', "Using Krylov exponential time stepping scheme, Mmax=", Mmax, ", iom=", iom
-        call init_exp_krylov(time_scheme, operator, stvec, 5)
+        if(myid == master_id) call init_exp_krylov(time_scheme, operator, stvec, Mmax, iom)
     else
         call avost("init_tscheme_NHlin: time scheme " // trim(time_scheme_name) // &
                                              " is unknown or not implemented")
