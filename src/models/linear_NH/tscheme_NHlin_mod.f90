@@ -45,8 +45,9 @@ subroutine init_tscheme_NHlin(time_scheme, operator, model_params, stvec, &
         call init_NHlin_implicit_operator(oper_i, model_params, master_id, myid, Np, namelist_str)
         call init_ars343(time_scheme, oper_e, oper_i, stvec)
     else if(trim(time_scheme_name) == "EXP") then
-        print '(A,I5,A,I4)', "Using Krylov exponential time stepping scheme, Mmax=", Mmax, ", iom=", iom
-        if(myid == master_id) call init_exp_krylov(time_scheme, operator, stvec, Mmax, iom)
+        if(myid == master_id) &
+            print '(A,I5,A,I4)', "Using Krylov exponential time stepping scheme, Mmax=", Mmax, ", iom=", iom
+        call init_exp_krylov(time_scheme, operator, stvec, Mmax, iom)
     else
         call avost("init_tscheme_NHlin: time scheme " // trim(time_scheme_name) // &
                                              " is unknown or not implemented")
