@@ -42,7 +42,9 @@ subroutine init_tscheme_NHlin(time_scheme, operator, model_params, stvec, &
     else if(trim(time_scheme_name) == "ARS343") then
         if(myid == master_id) print *, "Using ARS343 time stepping scheme"
         call init_NHlin_explicit_operator(oper_e, model_params, master_id, myid, Np, namelist_str)
+        oper_e%exch_halo = operator%exch_halo
         call init_NHlin_implicit_operator(oper_i, model_params, master_id, myid, Np, namelist_str)
+        oper_i%exch_halo = operator%exch_halo
         call init_ars343(time_scheme, oper_e, oper_i, stvec)
     else if(trim(time_scheme_name) == "EXP") then
         if(myid == master_id) &
