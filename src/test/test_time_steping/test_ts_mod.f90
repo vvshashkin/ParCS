@@ -5,21 +5,22 @@ implicit none
 contains
 
 subroutine test_rk4()
-    use stvec_iomega_mod,      only: stvec_iomega_t, init_stvec_iomega
-    use operator_iomega_mod,   only: operator_iomega_t
-    use parameters_iomega_mod, only: parameters_iomega_t, init_iomega_params
-    use explicit_Eul1_mod,     only: explicit_Eul1_t, init_expl_Eul1_ts
-    use rk4_mod,               only: rk4_t, init_rk4
-    use exp_taylor_mod,        only: exp_taylor_t, init_exp_taylor
-    use exp_krylov_mod,        only: exp_krylov_t, init_exp_krylov
-    use const_mod,             only: pi, Day24h_sec
+    use stvec_iomega_mod,         only: stvec_iomega_t, init_stvec_iomega
+    use operator_iomega_mod,      only: operator_iomega_t
+    use parameters_iomega_mod,    only: parameters_iomega_t, init_iomega_params
+    use timescheme_abstract_mod,  only : timescheme_abstract_t
+    use explicit_Eul1_mod,        only: explicit_Eul1_t, init_expl_Eul1_ts
+    use rk4_mod,                  only: rk4_t, init_rk4
+    use exp_taylor_mod,           only: exp_taylor_t, init_exp_taylor
+    use exp_krylov_mod,           only: exp_krylov_t, init_exp_krylov
+    use const_mod,                only: pi, Day24h_sec
     type(stvec_iomega_t) v1, v2, v3, v4
     type(operator_iomega_t) oper
     type(parameters_iomega_t), allocatable :: model_params
     type(explicit_Eul1_t) ts_exEul
     type(rk4_t) ts_rk4
     type(exp_taylor_t) ts_exp_taylor
-    type(exp_krylov_t) ts_exp_krylov
+    class(timescheme_abstract_t), allocatable :: ts_exp_krylov
     integer, parameter :: N = 10
     real(kind=8), parameter :: dt = 6._8*3600._8
     complex(kind=8) omega(N), ftrue1(N), ftrue_rk4(N), ftrue_exp(N)
@@ -56,7 +57,7 @@ subroutine test_rk4()
     ts_exp_taylor = init_exp_taylor(oper, v3, tolerance)
     call ts_exp_taylor%step(v3, model_params, dt)
 
-    ts_exp_krylov = init_exp_krylov(oper, v3, 2*N)
+    call init_exp_krylov(ts_exp_krylov, oper, v3, 2*N)
     call ts_exp_krylov%step(v4, model_params, dt)
 
     call ifpassed(v1%f, ftrue1,    tolerance, "Explicit Eulerian")
