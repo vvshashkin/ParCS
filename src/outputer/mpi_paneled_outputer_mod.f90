@@ -1,7 +1,7 @@
 module mpi_paneled_outputer_mod
 
 use outputer_abstract_mod, only : outputer_t
-use grid_function_mod,     only : grid_function_t
+use grid_field_mod,        only : grid_field_t
 use partition_mod,         only : partition_t
 use mpi
 
@@ -21,15 +21,14 @@ end type mpi_paneled_outputer_t
 
 contains
 
-subroutine mpi_io_write(this, f, ts, te, partition, file_name, rec_num)
+subroutine mpi_io_write(this, f, partition, file_name, rec_num)
 
-    class(mpi_paneled_outputer_t),    intent(inout) :: this
-    integer(kind=4),                  intent(in)    :: ts, te
-    type(grid_function_t),            intent(inout) :: f(ts:te)
-    type(partition_t),                intent(in)    :: partition
-    character(*),                     intent(in)    :: file_name
-    integer(kind=4),                  intent(in), &
-                                      optional      :: rec_num
+    class(mpi_paneled_outputer_t), intent(inout) :: this
+    type(grid_field_t),            intent(inout) :: f
+    type(partition_t),             intent(in)    :: partition
+    character(*),                  intent(in)    :: file_name
+    integer(kind=4),               intent(in), &
+                                   optional      :: rec_num
 
     real(kind=4), allocatable :: buf(:,:,:,:)
     integer(kind=mpi_offset_kind) :: disp
@@ -45,7 +44,7 @@ subroutine mpi_io_write(this, f, ts, te, partition, file_name, rec_num)
     call mpi_file_open(mpi_comm_world, file_name, &
         MPI_MODE_WRONLY + MPI_MODE_CREATE, file_info, file_handle, ierr)
 
-    do t = ts, te
+    do t = partition%ts, partition%te
 
         disp = int((irec-1)*this%record_disp,kind=mpi_offset_kind)
 
@@ -56,7 +55,7 @@ subroutine mpi_io_write(this, f, ts, te, partition, file_name, rec_num)
         ks = partition%tile(t)%ks; ke = partition%tile(t)%ke
 
         allocate(buf(is:ie,js:je,1,ks:ke))
-        buf(is:ie,js:je,1,ks:ke) = real(f(t).p(is:ie,js:je,ks:ke),4)
+        buf(is:ie,js:je,1,ks:ke) = real(f%block(t)%p(is:ie,js:je,ks:ke),4)
 
         call MPI_File_write(file_handle, buf, 1, this%type_local(t), mpi_status_ignore, ierr)
 

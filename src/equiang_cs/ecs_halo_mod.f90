@@ -54,11 +54,11 @@ contains
 
 subroutine ecs_ext_halo(this, f, halo_width)
 !interpolate source face values at halo zones to target face virtual points
-use grid_function_mod, only: grid_function_t
+use grid_field_mod, only: block_t
 
-class(ecs_halo_t),     intent(in)    :: this
-type(grid_function_t), intent(inout) :: f
-integer(kind=4),       intent(in)    :: halo_width
+class(ecs_halo_t), intent(in)    :: this
+type(block_t),     intent(inout) :: f
+integer(kind=4),   intent(in)    :: halo_width
 
 !local
 integer(kind=4) n, thw, ihw
@@ -443,15 +443,5 @@ print *, "exit"
 call mpi_finalize(ierr)
 stop
 end subroutine halo_avost
-
-
-subroutine ecs_ext_halo_vect(this, u, v)
-!interpolate source face values at halo zones to target face virtual points
-use grid_function_mod, only: grid_function_t
-
-class(ecs_halo_t),     intent(in)    :: this
-type(grid_function_t), intent(inout) :: u, v
-
-end subroutine ecs_ext_halo_vect
 
 end module ecs_halo_mod

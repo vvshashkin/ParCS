@@ -1,6 +1,6 @@
 module exchange_gather_mod
 
-use grid_function_mod,     only : grid_function_t
+use grid_field_mod,        only : grid_field_t
 use exchange_abstract_mod, only : exchange_t
 use buffer_mod,            only : buffer_t, pack_to_buf, unpack_from_buf
 use mpi
@@ -12,7 +12,6 @@ type, extends(exchange_t), public :: exchange_gather_t
     type(buffer_t), allocatable :: send_buff(:), recv_buff(:)
 
     integer(kind=4) :: mpi_message_type = mpi_real8
-
 
     integer(kind=4) :: master_id
     integer(kind=4) :: recv_number, send_number
@@ -38,11 +37,10 @@ end type exchange_gather_t
 
 contains
 
-subroutine do_gather_exchange(this, f, ts, te)
+subroutine do_gather_exchange(this, f)
 
     class(exchange_gather_t), intent(inout) :: this
-    integer(kind=4),          intent(in)    :: ts, te
-    type(grid_function_t),    intent(inout) :: f(ts:te)
+    type(grid_field_t),       intent(inout) :: f
 
     integer(kind=4) :: ierr, myid
     integer(kind=4) :: i, ind, ind_recv
@@ -67,7 +65,7 @@ subroutine do_gather_exchange(this, f, ts, te)
         do ind = 1, this%recv_number
             call mpi_waitany(this%recv_number, this%mpi_recv_req, i, mpi_status_ignore, ierr)
 
-            call unpack_from_buf(f(this%recv_to_tile_ind(i)), &
+            call unpack_from_buf(f%block(this%recv_to_tile_ind(i)), &
                  this%recv_buff(i)%p,              &
                  this%recv_is(i), this%recv_ie(i), &
                  this%recv_js(i), this%recv_je(i), &
@@ -80,7 +78,7 @@ subroutine do_gather_exchange(this, f, ts, te)
         this%mpi_send_req = MPI_REQUEST_NULL
 
         do i = 1, this%send_number
-            call pack_to_buf(f(this%send_from_tile_ind(i)), &
+            call pack_to_buf(f%block(this%send_from_tile_ind(i)), &
                  this%send_buff(i)%p,              &
                  this%send_is(i), this%send_ie(i), &
                  this%send_js(i), this%send_je(i), &

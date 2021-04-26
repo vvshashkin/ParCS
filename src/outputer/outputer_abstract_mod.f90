@@ -1,7 +1,7 @@
 module outputer_abstract_mod
 
-use grid_function_mod, only : grid_function_t
-use partition_mod,     only : partition_t
+use grid_field_mod, only : grid_field_t
+use partition_mod,  only : partition_t
 
 implicit none
 
@@ -18,11 +18,10 @@ contains
 end type outputer_t
 
 abstract interface
-    subroutine write_proc(this, f, ts, te, partition, file_name, rec_num)
-        import outputer_t, grid_function_t, partition_t
+    subroutine write_proc(this, f, partition, file_name, rec_num)
+        import outputer_t, grid_field_t, partition_t
         class(outputer_t),     intent(inout) :: this
-        integer(kind=4),       intent(in)    :: ts, te
-        type(grid_function_t), intent(inout) :: f(ts:te)
+        type(grid_field_t),    intent(inout) :: f
         type(partition_t),     intent(in)    :: partition
         character(*),          intent(in)    :: file_name
         integer(kind=4),       intent(in), &

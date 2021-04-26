@@ -1,17 +1,13 @@
 module buffer_mod
 
-use grid_function_mod, only : grid_function_t
+use grid_field_mod, only : block_t
 
 implicit none
 
 type, public :: buffer_t
-
     real(kind=8), allocatable :: p(:)
-
 contains
-
     procedure, public :: init
-
 end type buffer_t
 
 contains
@@ -27,7 +23,7 @@ end subroutine init
 
 subroutine unpack_from_buf(f, buf, is, ie, js, je, ks, ke, pts_num)
 
-    type(grid_function_t), intent(inout) :: f
+    type(block_t),         intent(inout) :: f
     integer(kind=4),       intent(in)    :: pts_num
     real(kind=8),          intent(inout) :: buf(pts_num)
     integer(kind=4),       intent(in)    :: is, ie, js, je, ks, ke
@@ -40,7 +36,7 @@ subroutine unpack_from_buf(f, buf, is, ie, js, je, ks, ke, pts_num)
         do j = js, je
             do i = is, ie
                 idx = idx + 1
-                f.p(i,j,k) = buf(idx)
+                f%p(i,j,k) = buf(idx)
             end do
         end do
     end do
@@ -51,12 +47,12 @@ end subroutine unpack_from_buf
 
 subroutine pack_to_buf(f, buf, is, ie, js, je, ks, ke, first_dim_index, send_i_step, send_j_step, pts_num)
 
-    type(grid_function_t), intent(in)    :: f
-    integer(kind=4),       intent(in)    :: pts_num
-    real(kind=8),          intent(inout) :: buf(pts_num)
-    integer(kind=4),       intent(in)    :: is, ie, js, je, ks, ke
-    integer(kind=4),       intent(in)    :: send_i_step, send_j_step
-    character(len=1),      intent(in)    :: first_dim_index
+    type(block_t),    intent(in)    :: f
+    integer(kind=4),  intent(in)    :: pts_num
+    real(kind=8),     intent(inout) :: buf(pts_num)
+    integer(kind=4),  intent(in)    :: is, ie, js, je, ks, ke
+    integer(kind=4),  intent(in)    :: send_i_step, send_j_step
+    character(len=1), intent(in)    :: first_dim_index
 
     integer(kind=4) :: ind, i, j ,k, idx
 
@@ -68,7 +64,7 @@ subroutine pack_to_buf(f, buf, is, ie, js, je, ks, ke, first_dim_index, send_i_s
                 do j = js, je
                     do i = is, ie
                         idx = idx + 1
-                        buf(idx) = f.p(i,j,k)
+                        buf(idx) = f%p(i,j,k)
                     end do
                 end do
             end do
@@ -77,7 +73,7 @@ subroutine pack_to_buf(f, buf, is, ie, js, je, ks, ke, first_dim_index, send_i_s
                 do j = js, je
                     do i =ie,  is, -1
                         idx = idx + 1
-                        buf(idx) = f.p(i,j,k)
+                        buf(idx) = f%p(i,j,k)
                     end do
                 end do
             end do
@@ -86,7 +82,7 @@ subroutine pack_to_buf(f, buf, is, ie, js, je, ks, ke, first_dim_index, send_i_s
                 do j = je, js, -1
                     do i = is, ie
                         idx = idx + 1
-                        buf(idx) = f.p(i,j,k)
+                        buf(idx) = f%p(i,j,k)
                     end do
                 end do
             end do
@@ -95,7 +91,7 @@ subroutine pack_to_buf(f, buf, is, ie, js, je, ks, ke, first_dim_index, send_i_s
                 do j = je, js, -1
                     do i =ie,  is, -1
                         idx = idx + 1
-                        buf(idx) = f.p(i,j,k)
+                        buf(idx) = f%p(i,j,k)
                     end do
                 end do
             end do
@@ -108,7 +104,7 @@ subroutine pack_to_buf(f, buf, is, ie, js, je, ks, ke, first_dim_index, send_i_s
                 do i = is, ie
                     do j = js, je
                         idx = idx + 1
-                        buf(idx) = f.p(i,j,k)
+                        buf(idx) = f%p(i,j,k)
                     end do
                 end do
             end do
@@ -117,7 +113,7 @@ subroutine pack_to_buf(f, buf, is, ie, js, je, ks, ke, first_dim_index, send_i_s
                 do i =ie,  is, -1
                     do j = js, je
                         idx = idx + 1
-                        buf(idx) = f.p(i,j,k)
+                        buf(idx) = f%p(i,j,k)
                     end do
                 end do
             end do
@@ -126,7 +122,7 @@ subroutine pack_to_buf(f, buf, is, ie, js, je, ks, ke, first_dim_index, send_i_s
                 do i = is, ie
                     do j = je, js, -1
                         idx = idx + 1
-                        buf(idx) = f.p(i,j,k)
+                        buf(idx) = f%p(i,j,k)
                     end do
                 end do
             end do
@@ -135,7 +131,7 @@ subroutine pack_to_buf(f, buf, is, ie, js, je, ks, ke, first_dim_index, send_i_s
                 do i =ie,  is, -1
                     do j = je, js, -1
                         idx = idx + 1
-                        buf(idx) = f.p(i,j,k)
+                        buf(idx) = f%p(i,j,k)
                     end do
                 end do
             end do
@@ -150,10 +146,10 @@ subroutine pack_to_buf(f, buf, is, ie, js, je, ks, ke, first_dim_index, send_i_s
 end subroutine pack_to_buf
 subroutine unpack_from_buf_vec(u, v, buf, is, ie, js, je, ks, ke, pts_num)
 
-    type(grid_function_t), intent(inout) :: u, v
-    integer(kind=4),       intent(in)    :: pts_num
-    real(kind=8),          intent(inout) :: buf(2*pts_num)
-    integer(kind=4),       intent(in)    :: is, ie, js, je, ks, ke
+    type(block_t),   intent(inout) :: u, v
+    integer(kind=4), intent(in)    :: pts_num
+    real(kind=8),    intent(inout) :: buf(2*pts_num)
+    integer(kind=4), intent(in)    :: is, ie, js, je, ks, ke
 
     integer(kind=4) :: ind, i, j ,k, idx
 
@@ -163,8 +159,8 @@ subroutine unpack_from_buf_vec(u, v, buf, is, ie, js, je, ks, ke, pts_num)
         do j = js, je
             do i = is, ie
                 idx = idx + 1
-                u.p(i,j,k) = buf(idx)
-                v.p(i,j,k) = buf(idx+pts_num)
+                u%p(i,j,k) = buf(idx)
+                v%p(i,j,k) = buf(idx+pts_num)
             end do
         end do
     end do
@@ -174,12 +170,12 @@ subroutine unpack_from_buf_vec(u, v, buf, is, ie, js, je, ks, ke, pts_num)
 end subroutine unpack_from_buf_vec
 subroutine pack_to_buf_vec(u, v, buf, is, ie, js, je, ks, ke, first_dim_index, send_i_step, send_j_step, pts_num)
 
-    type(grid_function_t), intent(in)    :: u, v
-    integer(kind=4),       intent(in)    :: pts_num
-    real(kind=8),          intent(inout) :: buf(2*pts_num)
-    integer(kind=4),       intent(in)    :: is, ie, js, je, ks, ke
-    integer(kind=4),       intent(in)    :: send_i_step, send_j_step
-    character(len=1),      intent(in)    :: first_dim_index
+    type(block_t),    intent(in)    :: u, v
+    integer(kind=4),  intent(in)    :: pts_num
+    real(kind=8),     intent(inout) :: buf(2*pts_num)
+    integer(kind=4),  intent(in)    :: is, ie, js, je, ks, ke
+    integer(kind=4),  intent(in)    :: send_i_step, send_j_step
+    character(len=1), intent(in)    :: first_dim_index
 
     integer(kind=4) :: ind, i, j ,k, idx
 
@@ -191,8 +187,8 @@ subroutine pack_to_buf_vec(u, v, buf, is, ie, js, je, ks, ke, first_dim_index, s
                 do j = js, je
                     do i = is, ie
                         idx = idx + 1
-                        buf(idx)         = u.p(i,j,k)
-                        buf(idx+pts_num) = v.p(i,j,k)
+                        buf(idx)         = u%p(i,j,k)
+                        buf(idx+pts_num) = v%p(i,j,k)
                     end do
                 end do
             end do
@@ -201,8 +197,8 @@ subroutine pack_to_buf_vec(u, v, buf, is, ie, js, je, ks, ke, first_dim_index, s
                 do j = js, je
                     do i =ie,  is, -1
                         idx = idx + 1
-                        buf(idx)         = -u.p(i,j,k)
-                        buf(idx+pts_num) =  v.p(i,j,k)
+                        buf(idx)         = -u%p(i,j,k)
+                        buf(idx+pts_num) =  v%p(i,j,k)
                     end do
                 end do
             end do
@@ -211,8 +207,8 @@ subroutine pack_to_buf_vec(u, v, buf, is, ie, js, je, ks, ke, first_dim_index, s
                 do j = je, js, -1
                     do i = is, ie
                         idx = idx + 1
-                        buf(idx)         =  u.p(i,j,k)
-                        buf(idx+pts_num) = -v.p(i,j,k)
+                        buf(idx)         =  u%p(i,j,k)
+                        buf(idx+pts_num) = -v%p(i,j,k)
                     end do
                 end do
             end do
@@ -221,8 +217,8 @@ subroutine pack_to_buf_vec(u, v, buf, is, ie, js, je, ks, ke, first_dim_index, s
                 do j = je, js, -1
                     do i =ie,  is, -1
                         idx = idx + 1
-                        buf(idx)         = -u.p(i,j,k)
-                        buf(idx+pts_num) = -v.p(i,j,k)
+                        buf(idx)         = -u%p(i,j,k)
+                        buf(idx+pts_num) = -v%p(i,j,k)
                     end do
                 end do
             end do
@@ -235,8 +231,8 @@ subroutine pack_to_buf_vec(u, v, buf, is, ie, js, je, ks, ke, first_dim_index, s
                 do i = is, ie
                     do j = js, je
                         idx = idx + 1
-                        buf(idx)         = v.p(i,j,k)
-                        buf(idx+pts_num) = u.p(i,j,k)
+                        buf(idx)         = v%p(i,j,k)
+                        buf(idx+pts_num) = u%p(i,j,k)
                     end do
                 end do
             end do
@@ -245,8 +241,8 @@ subroutine pack_to_buf_vec(u, v, buf, is, ie, js, je, ks, ke, first_dim_index, s
                 do i =ie,  is, -1
                     do j = js, je
                         idx = idx + 1
-                        buf(idx)         =  v.p(i,j,k)
-                        buf(idx+pts_num) = -u.p(i,j,k)
+                        buf(idx)         =  v%p(i,j,k)
+                        buf(idx+pts_num) = -u%p(i,j,k)
                     end do
                 end do
             end do
@@ -255,8 +251,8 @@ subroutine pack_to_buf_vec(u, v, buf, is, ie, js, je, ks, ke, first_dim_index, s
                 do i = is, ie
                     do j = je, js, -1
                         idx = idx + 1
-                        buf(idx)         = -v.p(i,j,k)
-                        buf(idx+pts_num) =  u.p(i,j,k)
+                        buf(idx)         = -v%p(i,j,k)
+                        buf(idx+pts_num) =  u%p(i,j,k)
                     end do
                 end do
             end do
@@ -265,8 +261,8 @@ subroutine pack_to_buf_vec(u, v, buf, is, ie, js, je, ks, ke, first_dim_index, s
                 do i =ie,  is, -1
                     do j = je, js, -1
                         idx = idx + 1
-                        buf(idx)         = -v.p(i,j,k)
-                        buf(idx+pts_num) = -u.p(i,j,k)
+                        buf(idx)         = -v%p(i,j,k)
+                        buf(idx+pts_num) = -u%p(i,j,k)
                     end do
                 end do
             end do

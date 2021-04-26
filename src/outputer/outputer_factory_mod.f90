@@ -1,5 +1,7 @@
 module outputer_factory_mod
 
+use grid_field_factory_mod, only : create_grid_field
+
 implicit none
 
 contains
@@ -22,9 +24,10 @@ function create_master_paneled_outputer(master_id, gather_exch, partition) resul
     call mpi_comm_rank(mpi_comm_world, myid, ierr)
 
     if (myid == master_id) then
-        allocate(outputer%buf(1:partition%num_tiles*partition%num_panels))
+
+        allocate(outputer%buf%block(1:partition%num_tiles*partition%num_panels))
         do i=1, partition%num_tiles*partition%num_panels
-            call outputer%buf(i)%init( &
+            call outputer%buf%block(i)%init( &
                  partition%tile(i)%panel_number,      &
                  partition%tile(i)%is,                &
                  partition%tile(i)%ie,                &

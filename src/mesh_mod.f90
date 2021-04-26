@@ -1,5 +1,4 @@
 module mesh_mod
-use halo_mod, only : halo_t, halo_vec_t
 implicit none
 
 type, public :: mesh_t
@@ -20,8 +19,6 @@ type, public :: mesh_t
     real(kind=8), allocatable    :: Gu(:,:)                        !the same at u-points
     real(kind=8), allocatable    :: Gv(:,:)                        !the same at v-points
     real(kind=8)                 :: hx !horizontal grid step
-    class(halo_t), allocatable       :: halo
-    class(halo_vec_t), allocatable   :: halo_vec
 
 contains
 

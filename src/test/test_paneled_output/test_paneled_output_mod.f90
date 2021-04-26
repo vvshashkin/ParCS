@@ -66,7 +66,8 @@ subroutine test_case_1(outputer, partition, class_name)
 
     use mpi
 
-    use grid_function_mod,           only : grid_function_t
+    use grid_field_mod,              only : grid_field_t
+    use grid_field_factory_mod,      only : create_grid_field
     use partition_mod,               only : partition_t
     use outputer_abstract_mod,       only : outputer_t
     use mesh_mod,                    only : mesh_t
@@ -76,7 +77,8 @@ subroutine test_case_1(outputer, partition, class_name)
     type(partition_t), intent(in)      :: partition
     character(*),      intent(in)      :: class_name
 
-    type(grid_function_t), allocatable :: f1(:)
+    type(grid_field_t) :: f
+
     type(mesh_t), allocatable          :: mesh(:)
     type(mesh_t)                       :: mesh_global
 
@@ -88,7 +90,7 @@ subroutine test_case_1(outputer, partition, class_name)
 
     integer(kind=4) :: myid, np, ierr, code
     integer(kind=4) :: ts, te, ntiles
-    integer(kind=4) :: ind, i, j, k
+    integer(kind=4) :: ind, t, i, j, k
 
     real(kind=4), allocatable :: bufcheck(:,:,:,:), bufin(:,:,:,:)
     real(kind=4)  err
@@ -106,16 +108,6 @@ subroutine test_case_1(outputer, partition, class_name)
 
     nh=partition%Nh; nz=partition%Nz
 
-    allocate(f1(ts:te))
-    do i = ts, te
-        call f1(i)%init(partition%tile(i)%panel_number,             &
-                        partition%tile(i)%is, partition%tile(i)%ie, &
-                        partition%tile(i)%js, partition%tile(i)%je, &
-                        partition%tile(i)%ks, partition%tile(i)%ke, &
-                        halo_width, halo_width, 0)
-        f1(i).p = huge(1.0_8)
-    end do
-
     allocate(mesh(ts:te))
     do i = ts, te
         call create_equiangular_mesh(mesh(i), partition%tile(i)%is, partition%tile(i)%ie, &
@@ -124,18 +116,20 @@ subroutine test_case_1(outputer, partition, class_name)
                                      nh, halo_width, partition%tile(i)%panel_number)
     end do
 
-    do ind = ts, te
-        do j = partition%tile(ind)%js, partition%tile(ind)%je
-            do i = partition%tile(ind)%is, partition%tile(ind)%ie
-                f1(ind).p(i,j,1) =  mesh(ind)%rhx(i,j)
-                f1(ind).p(i,j,2) =  mesh(ind)%rhy(i,j)
-                f1(ind).p(i,j,3) =  mesh(ind)%rhz(i,j)
+    call create_grid_field(f, halo_width, 0, mesh, partition)
+
+    do t = ts, te
+        f%block(t)%p = huge(1.0_8)
+        do j = partition%tile(t)%js, partition%tile(t)%je
+            do i = partition%tile(t)%is, partition%tile(t)%ie
+                f%block(t)%p(i,j,1) =  mesh(t)%rhx(i,j)
+                f%block(t)%p(i,j,2) =  mesh(t)%rhy(i,j)
+                f%block(t)%p(i,j,3) =  mesh(t)%rhz(i,j)
             end do
         end do
     end do
 
-
-    call outputer%write(f1(ts:te), ts, te, partition, file_name)
+    call outputer%write(f, partition, file_name)
 
     call mpi_barrier(mpi_comm_world, ierr)
 

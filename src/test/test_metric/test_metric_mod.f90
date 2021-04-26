@@ -8,17 +8,17 @@ subroutine test_metric()
 
 use mpi
 
-use grid_function_mod,     only : grid_function_t
-use exchange_abstract_mod, only : exchange_t
-use partition_mod,         only : partition_t
-use exchange_factory_mod,  only : create_Agrid_halo_exchange
-use mesh_factory_mod,      only : create_equiangular_mesh
-use mesh_mod,              only : mesh_t
+use grid_field_mod,         only : grid_field_t
+use grid_field_factory_mod, only : create_grid_field
+use exchange_abstract_mod,  only : exchange_t
+use partition_mod,          only : partition_t
+use exchange_factory_mod,   only : create_Agrid_halo_exchange
+use mesh_factory_mod,       only : create_equiangular_mesh
+use mesh_mod,               only : mesh_t
 
 class(exchange_t),     allocatable :: exch_halo
 type(partition_t)                  :: partition
-type(grid_function_t), allocatable :: f1(:)
-type(grid_function_t), allocatable :: f2(:)
+type(grid_field_t)                 :: f1, f2
 type(mesh_t),          allocatable :: mesh(:)
 
 integer(kind=4), parameter         :: nh=16, nz=3, halo_width=1
@@ -51,8 +51,8 @@ call mpi_barrier(mpi_comm_world, ierr)
 call partition%init(nh, nz, max(1,Np/6), myid, Np, strategy = 'default')
 
 !find start and end index of tiles belonging to the current proccesor
-ts = findloc(partition%proc_map, myid, dim=1)
-te = findloc(partition%proc_map, myid, back = .true., dim=1)
+ts = partition%ts
+te = partition%te
 
 allocate(mesh(ts:te))
 lsymm_check = .true.
@@ -73,46 +73,32 @@ end if
 
 !Init arrays
 
-allocate(f1(ts:te))
-allocate(f2(ts:te))
-
-do i = ts, te
-
-    call f1(i)%init(partition%tile(i)%panel_number,             &
-                    partition%tile(i)%is, partition%tile(i)%ie, &
-                    partition%tile(i)%js, partition%tile(i)%je, &
-                    partition%tile(i)%ks, partition%tile(i)%ke, &
-                    halo_width, halo_width, 0)
-    call f2(i)%init(partition%tile(i)%panel_number,             &
-                    partition%tile(i)%is, partition%tile(i)%ie, &
-                    partition%tile(i)%js, partition%tile(i)%je, &
-                    partition%tile(i)%ks, partition%tile(i)%ke, &
-                    halo_width, halo_width, 0)
-end do
+call create_grid_field(f1, halo_width, 0, partition)
+call create_grid_field(f2, halo_width, 0, partition)
 
 do ind = ts, te
      ifc = partition%tile(ind)%panel_number
-     f1(ind).p(:,:,1) = mesh(ind)%rhx(:,:)
-     f1(ind).p(:,:,2) = mesh(ind)%rhy(:,:)
-     f1(ind).p(:,:,3) = mesh(ind)%rhz(:,:)
-     f2(ind).p(:,:,:) = f1(ind).p(:,:,:)
+     f1%block(ind)%p(:,:,1) = mesh(ind)%rhx(:,:)
+     f1%block(ind)%p(:,:,2) = mesh(ind)%rhy(:,:)
+     f1%block(ind)%p(:,:,3) = mesh(ind)%rhz(:,:)
+     f2%block(ind)%p(:,:,:) = f1%block(ind)%p(:,:,:)
 end do
 
 !Init exchange
 exch_halo = create_Agrid_halo_exchange(partition, halo_width, 'full', myid, np)
 
 !Perform exchange
-call exch_halo%do(f1, lbound(f1, 1), ubound(f1, 1))
+call exch_halo%do(f1)
 
 lcross_edge_xyz = .true.
 do ind = ts, te
-    zq = f1(ind)%p(1:nh,0,:); zp = f2(ind)%p(1:nh,0,:)
+    zq = f1%block(ind)%p(1:nh,0,:); zp = f2%block(ind)%p(1:nh,0,:)
     lcross_edge_xyz = lcross_edge_xyz .and. cross_edge_xyz_check(zq,zp,nh)
-    zq = f1(ind)%p(1:nh,nh+1,:); zp = f2(ind)%p(1:nh,nh+1,:)
+    zq = f1%block(ind)%p(1:nh,nh+1,:); zp = f2%block(ind)%p(1:nh,nh+1,:)
     lcross_edge_xyz = lcross_edge_xyz .and. cross_edge_xyz_check(zq,zp,nh)
-    zq = f1(ind)%p(0,1:nh,:); zp = f2(ind)%p(0,1:nh,:)
+    zq = f1%block(ind)%p(0,1:nh,:); zp = f2%block(ind)%p(0,1:nh,:)
     lcross_edge_xyz = lcross_edge_xyz .and. cross_edge_xyz_check(zq,zp,nh)
-    zq = f1(ind)%p(nh+1,1:nh,:); zp = f2(ind)%p(nh+1,1:nh,:)
+    zq = f1%block(ind)%p(nh+1,1:nh,:); zp = f2%block(ind)%p(nh+1,1:nh,:)
     lcross_edge_xyz = lcross_edge_xyz .and. cross_edge_xyz_check(zq,zp,nh)
 end do
 

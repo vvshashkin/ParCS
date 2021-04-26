@@ -2,7 +2,7 @@ module master_paneled_outputer_mod
 
 use outputer_abstract_mod, only : outputer_t
 use partition_mod,         only : partition_t
-use grid_function_mod,     only : grid_function_t
+use grid_field_mod,        only : grid_field_t
 use exchange_abstract_mod, only : exchange_t
 use mpi
 
@@ -10,10 +10,10 @@ use mpi
 
 type, public, extends(outputer_t) :: master_paneled_outputer_t
 
-    class(exchange_t)    , allocatable :: gather_exch
-    type(grid_function_t), allocatable :: buf(:)
-    integer(kind=4)                    :: master_id
-    integer(kind=4)                    :: rec_num = 1
+    class(exchange_t) , allocatable :: gather_exch
+    type(grid_field_t)              :: buf
+    integer(kind=4)                 :: master_id
+    integer(kind=4)                 :: rec_num = 1
 
 contains
 
@@ -23,11 +23,10 @@ end type master_paneled_outputer_t
 
 contains
 
-subroutine master_paneled_write(this, f, ts, te, partition, file_name, rec_num)
+subroutine master_paneled_write(this, f, partition, file_name, rec_num)
 
     class(master_paneled_outputer_t), intent(inout) :: this
-    integer(kind=4),                  intent(in)    :: ts, te
-    type(grid_function_t),            intent(inout) :: f(ts:te)
+    type(grid_field_t),               intent(inout) :: f
     type(partition_t),                intent(in)    :: partition
     character(*),                     intent(in)    :: file_name
     integer(kind=4),                  intent(in), &
@@ -47,11 +46,11 @@ subroutine master_paneled_write(this, f, ts, te, partition, file_name, rec_num)
             ks = partition%tile(t)%ks; ke = partition%tile(t)%ke
             js = partition%tile(t)%js; je = partition%tile(t)%je
             is = partition%tile(t)%is; ie = partition%tile(t)%ie
-            this%buf(t)%p(is:ie,js:je,ks:ke) = f(t)%p(is:ie,js:je,ks:ke)
+            this%buf%block(t)%p(is:ie,js:je,ks:ke) = f%block(t)%p(is:ie,js:je,ks:ke)
         end do
-        call this%gather_exch%do(this%buf,lbound(this%buf,1), ubound(this%buf,1))
+        call this%gather_exch%do(this%buf)
     else
-        call this%gather_exch%do(f,ts,te)
+        call this%gather_exch%do(f)
     end if
 
     if (myid == this%master_id) then
@@ -65,12 +64,12 @@ subroutine master_paneled_write(this, f, ts, te, partition, file_name, rec_num)
                  access="direct", recl = reclen)
 
             k0 = partition%tile(1)%ks
-            print *, "K0", k0
+            print *, "K0, 4to eto???????????????????????????????????", k0 !!!?????????????????????????
             do k = k0, partition%Nz
                 do t = 1, partition%num_panels*partition%num_tiles
                     do j = partition%tile(t)%js, partition%tile(t)%je
                         do i = partition%tile(t)%is, partition%tile(t)%ie
-                            buffer(i,j,partition%tile(t)%panel_number) = real(this%buf(t)%p(i,j,k),4)
+                            buffer(i,j,partition%tile(t)%panel_number) = real(this%buf%block(t)%p(i,j,k),4)
                         end do
                     end do
                 end do

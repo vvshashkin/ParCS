@@ -36,10 +36,10 @@ contains
 
 subroutine ext_halo_vec_a_ecs(this, u, v, halo_width)
 !interpolate source face vectors at halo zones to target face virtual points
-use grid_function_mod, only: grid_function_t
+use grid_field_mod, only: block_t
 
 class(ecs_halo_vec_t), intent(in)    :: this
-type(grid_function_t), intent(inout) :: u, v
+type(block_t),         intent(inout) :: u, v
 integer(kind=4),       intent(in)    :: halo_width
 !locals
 integer(kind=4) i, j, k, ks, ke

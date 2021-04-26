@@ -2,7 +2,8 @@ module test_gl_diag_mod
 
 use container_abstract_mod, only : state_abstract_t, model_parameters_abstract_t
 use partition_mod,          only : partition_t
-use grid_function_mod,      only : grid_function_t
+use grid_field_mod,         only : grid_field_t
+use grid_field_factory_mod, only : create_grid_field
 use tile_mod,               only : tile_t
 
 implicit none
@@ -15,7 +16,7 @@ type, extends(model_parameters_abstract_t) :: diag_test_param_t
 end type diag_test_param_t
 
 type, extends(state_abstract_t) :: diag_test_state_t
-    type(grid_function_t), allocatable :: gf(:)
+    type(grid_field_t) :: gf
 end type diag_test_state_t
 
 contains
@@ -56,7 +57,9 @@ subroutine test_gl_diag()
     params%tiles(params%ts:params%te) = params%partition%tile(params%ts:params%te)
 
     !Init state
-    allocate(state%gf(params%ts:params%te))
+
+    call create_grid_field(state%gf, halo_width, 0, params%partition)
+
     do ind = params%ts, params%te
 
         panel_ind = params%tiles(ind)%panel_number
@@ -64,12 +67,10 @@ subroutine test_gl_diag()
         js = params%tiles(ind)%js;     je = params%tiles(ind)%je
         ks = params%tiles(ind)%ks;     ke = params%tiles(ind)%ke
 
-        call state%gf(ind)%init(panel_ind,is, ie, js, je, ks, ke, &
-                                halo_width, halo_width, 0)
         do k=ks, ke
             do j=js, je
                 do i = is, ie
-                    state%gf(ind)%p(i,j,k) = (-1._8)**(k*i)
+                    state%gf%block(ind)%p(i,j,k) = (-1._8)**(k*i)
                 end do
             end do
         end do
@@ -136,8 +137,8 @@ function sum_local(stvec, model_params) result(f)
             do k=1, nz
                 do j = js, je
                     do i = is, ie
-                        f(2*k-1) = f(2*k-1) + stvec%gf(ind)%p(i,j,k)
-                        f(2*k)   = f(2*k)   + stvec%gf(ind)%p(i,j,k)**2
+                        f(2*k-1) = f(2*k-1) + stvec%gf%block(ind)%p(i,j,k)
+                        f(2*k)   = f(2*k)   + stvec%gf%block(ind)%p(i,j,k)**2
                     end do
                 end do
             end do
