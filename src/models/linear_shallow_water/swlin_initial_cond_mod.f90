@@ -61,15 +61,15 @@ subroutine set_swlin_gauss_hill(stvec, test_case_num, ts, te, mesh)
     real(kind=8) dist
 
     do ind = ts, te
-        stvec%u(ind)%p(:,:,:) = 0._8
-        stvec%v(ind)%p(:,:,:) = 0._8
+        stvec%u%block(ind)%p(:,:,:) = 0._8
+        stvec%v%block(ind)%p(:,:,:) = 0._8
 
-        do j = stvec%h(ind)%js, stvec%h(ind)%je
-            do i = stvec%h(ind)%is, stvec%h(ind)%ie
+        do j = stvec%h%block(ind)%js, stvec%h%block(ind)%je
+            do i = stvec%h%block(ind)%is, stvec%h%block(ind)%ie
                 dist = acos(mesh(ind)%rhx(i,j)*x0+mesh(ind)%rhy(i,j)*y0+ &
                                                   mesh(ind)%rhz(i,j)*z0)
 
-                stvec%h(ind)%p(i,j,1) = hmax*exp(-(dist/r0)**2)
+                stvec%h%block(ind)%p(i,j,1) = hmax*exp(-(dist/r0)**2)
             end do
         end do
 

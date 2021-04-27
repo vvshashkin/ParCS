@@ -1,7 +1,7 @@
 module swlin_mod
 
 use parameters_swlin_mod,    only : parameters_swlin_t, init_swlin_parameters
-use stvec_swlin_mod,         only : stvec_swlin_t, init_stvec_swlin
+use stvec_swlin_mod,         only : stvec_swlin_t
 use operator_swlin_mod,      only : operator_swlin_t
 use timescheme_abstract_mod, only : timescheme_abstract_t
 use diag_swlin_mod,          only : init_swlin_diag_mod
@@ -27,12 +27,13 @@ contains
 subroutine init_swlin_model()
 
     use mpi
-    use cmd_args_mod,             only : cmd_arg_t, get_cmd_args
-    use namelist_read_mod,        only : read_namelist_as_str
-    use swlin_output_mod,         only : init_swlin_output
-    use swlin_initial_cond_mod,   only : set_swlin_initial_conditions
-    use operator_swlin_mod,       only : init_swlin_operator
-    use rk4_mod,                  only : rk4_t, init_rk4
+    use cmd_args_mod,               only : cmd_arg_t, get_cmd_args
+    use namelist_read_mod,          only : read_namelist_as_str
+    use swlin_output_mod,           only : init_swlin_output
+    use swlin_initial_cond_mod,     only : set_swlin_initial_conditions
+    use swlin_operator_factory_mod, only : create_swlin_operator
+    use stvec_swlin_factory_mod,    only : create_stvec_swlin
+    use rk4_mod,                    only : rk4_t, init_rk4
 
     integer(kind=4) myid, Np, ierr
 
@@ -57,8 +58,7 @@ subroutine init_swlin_model()
 
     call init_swlin_parameters(params, namelist_str, myid, Np, master_id)
 
-    call init_stvec_swlin(stvec, params%ts, params%te, params%tiles,  &
-                          params%halo_width)
+    call create_stvec_swlin(stvec,  params%halo_width, params%partition)
 
     call init_swlin_output(myid, master_id, Np, params%partition)
 
@@ -67,7 +67,7 @@ subroutine init_swlin_model()
     call set_swlin_initial_conditions(stvec, namelist_str, params%ts, params%te, &
                                       params%mesh, myid, master_id)
 
-    operator = init_swlin_operator(params, master_id, myid, Np, namelist_str)
+    call create_swlin_operator(operator, params, master_id, myid, Np, namelist_str)
     call operator%ext_halo(stvec, params%ts, params%te)
 
     time_scheme = init_rk4(operator, stvec)

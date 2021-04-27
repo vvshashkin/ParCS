@@ -34,13 +34,9 @@ subroutine write_swlin(stvec, partition, rec_num)
     type(partition_t),   intent(in)    :: partition
     integer(kind=4),     intent(in)    :: rec_num
 
-    integer(kind=4) :: ts, te
-
-    ts = partition%ts; te = partition%te
-
-    call outputer%write(stvec%h(ts:te), ts, te, partition, "h.dat", rec_num)
-    call outputer%write(stvec%u(ts:te), ts, te, partition, "u.dat", rec_num)
-    call outputer%write(stvec%v(ts:te), ts, te, partition, "v.dat", rec_num)
+    call outputer%write(stvec%h, partition, "h.dat", rec_num)
+    call outputer%write(stvec%u, partition, "u.dat", rec_num)
+    call outputer%write(stvec%v, partition, "v.dat", rec_num)
 
 end subroutine write_swlin
 
