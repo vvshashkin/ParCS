@@ -4,26 +4,24 @@ implicit none
 type, public :: mesh_t
 
     integer(kind=4) :: is, ie, js, je, ks, ke
-    integer(kind=4) :: nx                     !global horizontal grid dimension
-    integer(kind=4) :: panel_ind
+!    integer(kind=4) :: nx                     !global horizontal grid dimension
+!    integer(kind=4) :: panel_ind
     integer(kind=4) :: halo_width
 
     real(kind=8), allocatable    :: rhx(:,:), rhy(:,:), rhz(:,:) !cartesian coordinates of mesh points
-    real(kind=8), allocatable    :: acov(:,:,:), bcov(:,:,:)       !cartesian coordinates of covariant vecs at mesh points
-    real(kind=8), allocatable    :: actv(:,:,:), bctv(:,:,:)       !cartesian coordinates of contravariant vecs at mesh points
-    real(kind=8), allocatable    :: Q(:,:,:)                       !metric tensor at mesh-points
-    real(kind=8), allocatable    :: QI(:,:,:)                      !inverse metric tensor at mesh-points
-    real(kind=8), allocatable    :: QIu(:,:,:)                     !the same at u-flux-points
-    real(kind=8), allocatable    :: QIv(:,:,:)                     !the same at v-flux-points
-    real(kind=8), allocatable    :: G(:,:)                         !sqrt of metric tensor det at mesh-points
-    real(kind=8), allocatable    :: Gu(:,:)                        !the same at u-points
-    real(kind=8), allocatable    :: Gv(:,:)                        !the same at v-points
-    real(kind=8)                 :: hx !horizontal grid step
+    real(kind=8), allocatable    :: acov(:,:,:), bcov(:,:,:)     !cartesian coordinates of covariant vecs at mesh points
+    real(kind=8), allocatable    :: actv(:,:,:), bctv(:,:,:)     !cartesian coordinates of contravariant vecs at mesh points
+    real(kind=8), allocatable    :: Q(:,:,:)                     !metric tensor at mesh-points
+    real(kind=8), allocatable    :: QI(:,:,:)                    !inverse metric tensor at mesh-points
+    real(kind=8), allocatable    :: G(:,:)                       !sqrt of metric tensor det at mesh-points
+    real(kind=8)                 :: hx                           !horizontal grid step
+    real(kind=8)                 :: i_0, j_0                     !determines shift of the first grid point from the boundary
+    real(kind=8)                 :: alpha_0, beta_0              !determines coord start
 
 contains
 
     procedure, public :: init => init_mesh
-
+    procedure, public :: get_alpha, get_beta
 end type mesh_t
 
 contains
@@ -43,11 +41,7 @@ subroutine init_mesh(this, is, ie, js, je, ks, ke, halo_width)
     allocate(this%bctv(3, is-halo_width : ie+halo_width , js-halo_width : je+halo_width))
     allocate(this%Q(3, is-halo_width : ie+halo_width , js-halo_width : je+halo_width)) !3 elements of 2x2 matrix are stored due to symmetricity
     allocate(this%QI(3, is-halo_width : ie+halo_width , js-halo_width : je+halo_width))! -'-'-
-    allocate(this%QIu(3, is-halo_width-1 : ie+halo_width , js-halo_width : je+halo_width))!
-    allocate(this%QIv(3, is-halo_width : ie+halo_width , js-halo_width-1 : je+halo_width))!
     allocate(this%G(is-halo_width : ie+halo_width , js-halo_width : je+halo_width))
-    allocate(this%Gu(is-halo_width-1 : ie+halo_width, js-halo_width : je+halo_width))
-    allocate(this%Gv(is-halo_width : ie+halo_width, js-halo_width-1 : je+halo_width))
 
     this%is = is
     this%ie = ie
@@ -59,5 +53,27 @@ subroutine init_mesh(this, is, ie, js, je, ks, ke, halo_width)
     this%halo_width = halo_width
 
 end subroutine init_mesh
+
+pure function get_alpha(this, i) result(alpha)
+
+    class(mesh_t),   intent(in) :: this
+    integer(kind=4), intent(in) :: i
+
+    real(kind=8) :: alpha
+
+    alpha = this%alpha_0 + (i-this%i_0)*this%hx
+
+end function get_alpha
+
+pure function get_beta(this, j) result(beta)
+
+    class(mesh_t),   intent(in) :: this
+    integer(kind=4), intent(in) :: j
+
+    real(kind=8) :: beta
+
+    beta = this%beta_0 + (j-this%j_0)*this%hx
+
+end function get_beta
 
 end module mesh_mod
