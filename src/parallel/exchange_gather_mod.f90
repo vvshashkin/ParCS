@@ -65,7 +65,7 @@ subroutine do_gather_exchange(this, f)
         do ind = 1, this%recv_number
             call mpi_waitany(this%recv_number, this%mpi_recv_req, i, mpi_status_ignore, ierr)
 
-            call unpack_from_buf(f%block(this%recv_to_tile_ind(i)), &
+            call unpack_from_buf(f%tile(this%recv_to_tile_ind(i)), &
                  this%recv_buff(i)%p,              &
                  this%recv_is(i), this%recv_ie(i), &
                  this%recv_js(i), this%recv_je(i), &
@@ -78,7 +78,7 @@ subroutine do_gather_exchange(this, f)
         this%mpi_send_req = MPI_REQUEST_NULL
 
         do i = 1, this%send_number
-            call pack_to_buf(f%block(this%send_from_tile_ind(i)), &
+            call pack_to_buf(f%tile(this%send_from_tile_ind(i)), &
                  this%send_buff(i)%p,              &
                  this%send_is(i), this%send_ie(i), &
                  this%send_js(i), this%send_je(i), &

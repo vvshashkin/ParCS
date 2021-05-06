@@ -54,8 +54,8 @@ subroutine test_cross_halo_vec_exchange()
         do k = partition%tile(t)%ks, partition%tile(t)%ke
             do j = partition%tile(t)%js, partition%tile(t)%je
                 do i = partition%tile(t)%is, partition%tile(t)%ie
-                    u%block(t)%p(i,j,k) =  (partition%tile(t)%panel_number-1)*nh*nh*nz + nz*nh*(j-1) + nz*(i-1) + k
-                    v%block(t)%p(i,j,k) =  (partition%tile(t)%panel_number-1)*nh*nh*nz + nz*nh*(j-1) + nz*(i-1) + k + partition%num_panels*nh*nh*nz
+                    u%tile(t)%p(i,j,k) =  (partition%tile(t)%panel_number-1)*nh*nh*nz + nz*nh*(j-1) + nz*(i-1) + k
+                    v%tile(t)%p(i,j,k) =  (partition%tile(t)%panel_number-1)*nh*nh*nz + nz*nh*(j-1) + nz*(i-1) + k + partition%num_panels*nh*nh*nz
                 end do
             end do
         end do
@@ -83,17 +83,17 @@ subroutine test_cross_halo_vec_exchange()
             do j = exch_vec_halo%recv_js(ind), exch_vec_halo%recv_je(ind)
                 do i = exch_vec_halo%recv_is(ind), exch_vec_halo%recv_ie(ind)
                     if (local_tile_panel_number == remote_tile_panel_number) then
-                        err_sum = err_sum + abs(int(u%block(local_tile_ind)%p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*nh*(j-1) + nz*(i-1) + k)))
+                        err_sum = err_sum + abs(int(u%tile(local_tile_ind)%p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*nh*(j-1) + nz*(i-1) + k)))
                     else
                         call transform_index(remote_tile_panel_number, local_tile_panel_number, nh, i, j, i_out, j_out, i_step, j_step, first_dim_index)
                         if (first_dim_index == "i") then
                             u_remote = i_step*((remote_tile_panel_number-1)*nh*nh*nz + nz*nh*(j_out-1) + nz*(i_out-1) + k)
                             v_remote = j_step*((remote_tile_panel_number-1)*nh*nh*nz + nz*nh*(j_out-1) + nz*(i_out-1) + k + partition%num_panels*nh*nh*nz)
-                            err_sum = err_sum + abs(int(u%block(local_tile_ind)%p(i,j,k) - u_remote)) + abs(int(v%block(local_tile_ind)%p(i,j,k) - v_remote))
+                            err_sum = err_sum + abs(int(u%tile(local_tile_ind)%p(i,j,k) - u_remote)) + abs(int(v%tile(local_tile_ind)%p(i,j,k) - v_remote))
                         else
                             v_remote = i_step*((remote_tile_panel_number-1)*nh*nh*nz + nz*nh*(j_out-1) + nz*(i_out-1) + k)
                             u_remote = j_step*((remote_tile_panel_number-1)*nh*nh*nz + nz*nh*(j_out-1) + nz*(i_out-1) + k + partition%num_panels*nh*nh*nz)
-                            err_sum = err_sum + abs(int(u%block(local_tile_ind)%p(i,j,k) - u_remote)) + abs(int(v%block(local_tile_ind)%p(i,j,k) - v_remote))
+                            err_sum = err_sum + abs(int(u%tile(local_tile_ind)%p(i,j,k) - u_remote)) + abs(int(v%tile(local_tile_ind)%p(i,j,k) - v_remote))
                         end if
                     end if
                 end do
@@ -160,7 +160,7 @@ subroutine test_cross_halo_exchange()
         do k = partition%tile(t)%ks, partition%tile(t)%ke
             do j = partition%tile(t)%js, partition%tile(t)%je
                 do i = partition%tile(t)%is, partition%tile(t)%ie
-                    f%block(t)%p(i,j,k) = (partition%tile(t)%panel_number-1)*nh*nh*nz + nz*nh*(j-1) + nz*(i-1) + k
+                    f%tile(t)%p(i,j,k) = (partition%tile(t)%panel_number-1)*nh*nh*nz + nz*nh*(j-1) + nz*(i-1) + k
                 end do
             end do
         end do
@@ -190,10 +190,10 @@ subroutine test_cross_halo_exchange()
             do j = exch_halo%recv_js(ind), exch_halo%recv_je(ind)
                 do i = exch_halo%recv_is(ind), exch_halo%recv_ie(ind)
                     if (local_tile_panel_number == remote_tile_panel_number) then
-                        err_sum = err_sum + abs(int(f%block(local_tile_ind)%p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*nh*(j-1) + nz*(i-1) + k)))
+                        err_sum = err_sum + abs(int(f%tile(local_tile_ind)%p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*nh*(j-1) + nz*(i-1) + k)))
                     else
                         call transform_index(remote_tile_panel_number, local_tile_panel_number, nh, i, j, i_out, j_out, i_step, j_step, first_dim_index)
-                            err_sum = err_sum + abs(int(f%block(local_tile_ind)%p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*nh*(j_out-1) + nz*(i_out-1) + k)))
+                            err_sum = err_sum + abs(int(f%tile(local_tile_ind)%p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*nh*(j_out-1) + nz*(i_out-1) + k)))
                     end if
                 end do
             end do
@@ -253,7 +253,7 @@ subroutine test_full_halo_exchange()
         do k = partition%tile(t)%ks, partition%tile(t)%ke
             do j = partition%tile(t)%js, partition%tile(t)%je
                 do i = partition%tile(t)%is, partition%tile(t)%ie
-                    f%block(t)%p(i,j,k) =  (partition%tile(t)%panel_number-1)*nh*nh*nz + nz*nh*(j-1) + nz*(i-1) + k
+                    f%tile(t)%p(i,j,k) =  (partition%tile(t)%panel_number-1)*nh*nh*nz + nz*nh*(j-1) + nz*(i-1) + k
                 end do
             end do
         end do
@@ -282,24 +282,24 @@ subroutine test_full_halo_exchange()
                 do i = exch_halo%recv_is(ind), exch_halo%recv_ie(ind)
 
                     if (local_tile_panel_number == remote_tile_panel_number) then
-                        err_sum = err_sum + abs(int(f%block(local_tile_ind)%p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*nh*(j-1) + nz*(i-1) + k)))
+                        err_sum = err_sum + abs(int(f%tile(local_tile_ind)%p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*nh*(j-1) + nz*(i-1) + k)))
                     else
                         if (exch_halo%send_j_step(ind)==1 .and. exch_halo%send_i_step(ind)==1 .and. exch_halo%first_dim_index(ind)=='i') then
-                            err_sum = err_sum + abs(int(f%block(local_tile_ind)%p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*nh*(modulo(j-1,nh)+1-1) + nz*(modulo(i-1,nh)+1-1) + k)))
+                            err_sum = err_sum + abs(int(f%tile(local_tile_ind)%p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*nh*(modulo(j-1,nh)+1-1) + nz*(modulo(i-1,nh)+1-1) + k)))
                         else if (exch_halo%send_j_step(ind)==1 .and. exch_halo%send_i_step(ind)==1 .and. exch_halo%first_dim_index(ind)=='j') then
-                            err_sum = err_sum + abs(int(f%block(local_tile_ind)%p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*nh*(modulo(i-1,nh)+1-1) + nz*(modulo(j-1,nh)+1-1) + k)))
+                            err_sum = err_sum + abs(int(f%tile(local_tile_ind)%p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*nh*(modulo(i-1,nh)+1-1) + nz*(modulo(j-1,nh)+1-1) + k)))
                         else if (exch_halo%send_j_step(ind)==1 .and. exch_halo%send_i_step(ind)==-1 .and. exch_halo%first_dim_index(ind)=='i') then
-                            err_sum = err_sum + abs(int(f%block(local_tile_ind)%p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*nh*(modulo(j-1,nh)+1-1) + nz*(nh-modulo(i-1,nh)-1) + k)))
+                            err_sum = err_sum + abs(int(f%tile(local_tile_ind)%p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*nh*(modulo(j-1,nh)+1-1) + nz*(nh-modulo(i-1,nh)-1) + k)))
                         else if (exch_halo%send_j_step(ind)==1 .and. exch_halo%send_i_step(ind)==-1 .and. exch_halo%first_dim_index(ind)=='j') then
-                            err_sum = err_sum + abs(int(f%block(local_tile_ind)%p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*(modulo(j-1,nh)+1-1) + nz*nh*(nh-modulo(i-1,nh)-1) + k)))
+                            err_sum = err_sum + abs(int(f%tile(local_tile_ind)%p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*(modulo(j-1,nh)+1-1) + nz*nh*(nh-modulo(i-1,nh)-1) + k)))
                         else if (exch_halo%send_j_step(ind)==-1 .and. exch_halo%send_i_step(ind)==1 .and. exch_halo%first_dim_index(ind)=='i') then
-                            err_sum = err_sum + abs(int(f%block(local_tile_ind)%p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*nh*(nh-modulo(j-1,nh)-1) + nz*(modulo(i-1,nh)+1-1) + k)))
+                            err_sum = err_sum + abs(int(f%tile(local_tile_ind)%p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*nh*(nh-modulo(j-1,nh)-1) + nz*(modulo(i-1,nh)+1-1) + k)))
                         else if (exch_halo%send_j_step(ind)==-1 .and. exch_halo%send_i_step(ind)==1 .and. exch_halo%first_dim_index(ind)=='j') then
-                            err_sum = err_sum + abs(int(f%block(local_tile_ind)%p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*(nh-modulo(j-1,nh)-1) + nz*nh*(modulo(i-1,nh)+1-1) + k)))
+                            err_sum = err_sum + abs(int(f%tile(local_tile_ind)%p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*(nh-modulo(j-1,nh)-1) + nz*nh*(modulo(i-1,nh)+1-1) + k)))
                         else if (exch_halo%send_j_step(ind)==-1 .and. exch_halo%send_i_step(ind)==-1 .and. exch_halo%first_dim_index(ind)=='i') then
-                            err_sum = err_sum + abs(int(f%block(local_tile_ind)%p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*nh*(nh-modulo(j-1,nh)-1) + nz*(nh-modulo(i-1,nh)-1) + k)))
+                            err_sum = err_sum + abs(int(f%tile(local_tile_ind)%p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*nh*(nh-modulo(j-1,nh)-1) + nz*(nh-modulo(i-1,nh)-1) + k)))
                         else if (exch_halo%send_j_step(ind)==-1 .and. exch_halo%send_i_step(ind)==-1 .and. exch_halo%first_dim_index(ind)=='j') then
-                            err_sum = err_sum + abs(int(f%block(local_tile_ind)%p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*(nh-modulo(j-1,nh)-1) + nz*nh*(nh-modulo(i-1,nh)-1) + k)))
+                            err_sum = err_sum + abs(int(f%tile(local_tile_ind)%p(i,j,k) - ((remote_tile_panel_number-1)*nh*nh*nz + nz*(nh-modulo(j-1,nh)-1) + nz*nh*(nh-modulo(i-1,nh)-1) + k)))
                         else
                             print*, 'Error!!!', 'myid=', myid
                             call mpi_abort(mpi_comm_world, code, ierr)
@@ -363,14 +363,14 @@ te = partition%te
 !Init arrays
 
 if (myid == master_id) then
-    allocate(f%block(1:6*partition%num_tiles))
+    allocate(f%tile(1:6*partition%num_tiles))
     do i = 1, 6*partition%num_tiles
-        call f%block(i)%init(partition%tile(i)%panel_number,             &
+        call f%tile(i)%init(partition%tile(i)%panel_number,             &
                         partition%tile(i)%is, partition%tile(i)%ie, &
                         partition%tile(i)%js, partition%tile(i)%je, &
                         partition%tile(i)%ks, partition%tile(i)%ke, &
                         halo_width, halo_width, 0)
-        f%block(i)%p = huge(1.0_8)
+        f%tile(i)%p = huge(1.0_8)
     end do
 else
     call create_grid_field(f, halo_width, 0, partition)
@@ -380,7 +380,7 @@ do t = ts, te
     do k = partition%tile(t)%ks, partition%tile(t)%ke
         do j = partition%tile(t)%js, partition%tile(t)%je
             do i = partition%tile(t)%is, partition%tile(t)%ie
-                f%block(t)%p(i,j,k) =  (partition%tile(t)%panel_number-1)*nh*nh*nz + nz*nh*(j-1) + nz*(i-1) + k
+                f%tile(t)%p(i,j,k) =  (partition%tile(t)%panel_number-1)*nh*nh*nz + nz*nh*(j-1) + nz*(i-1) + k
             end do
         end do
     end do
@@ -400,7 +400,7 @@ if (myid == master_id) then
         do k = partition%tile(ind)%ks, partition%tile(ind)%ke
             do j = partition%tile(ind)%js, partition%tile(ind)%je
                 do i = partition%tile(ind)%is, partition%tile(ind)%ie
-                    err_sum = err_sum + abs(f%block(ind)%p(i,j,k) - ((partition%tile(ind)%panel_number-1)*nh*nh*nz + nz*nh*(j-1) + nz*(i-1) + k))
+                    err_sum = err_sum + abs(f%tile(ind)%p(i,j,k) - ((partition%tile(ind)%panel_number-1)*nh*nh*nz + nz*nh*(j-1) + nz*(i-1) + k))
                 end do
             end do
         end do

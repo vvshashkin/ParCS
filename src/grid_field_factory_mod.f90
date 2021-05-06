@@ -1,31 +1,29 @@
 module grid_field_factory_mod
 
 use grid_field_mod, only : grid_field_t
-use partition_mod,  only : partition_t
+use mesh_mod,       only : mesh_t
 
 implicit none
 
 contains
 
-subroutine create_grid_field(grid_field, halo_width_xy, halo_width_z, partition)
+subroutine create_grid_field(grid_field, halo_width_xy, halo_width_z, mesh)
 
     type(grid_field_t), intent(out) :: grid_field
     integer(kind=4),    intent(in)  :: halo_width_xy, halo_width_z
 
-    type(partition_t),  intent(in)  :: partition
+    type(mesh_t),  intent(in)  :: mesh
 
     integer(kind=4) :: t
 
-    allocate(grid_field%block(partition%ts:partition%te))
+    allocate(grid_field%tile(mesh%ts:mesh%te))
 
-    do t = partition%ts, partition%te
-        call grid_field%block(t)%init(partition%tile(t)%panel_number, &
-                        partition%tile(t)%is, partition%tile(t)%ie  , &
-                        partition%tile(t)%js, partition%tile(t)%je  , &
-                        partition%tile(t)%ks, partition%tile(t)%ke  , &
-                        halo_width_xy, halo_width_xy, halo_width_z)
+    do t = mesh%ts, mesh%te
+        call grid_field%tile(t)%init(mesh%tile(t)%is, mesh%tile(t)%ie, &
+                                     mesh%tile(t)%js, mesh%tile(t)%je, &
+                                     mesh%tile(t)%ks, mesh%tile(t)%ke, &
+                                     halo_width_xy, halo_width_xy, halo_width_z)
     end do
-
 
 end subroutine create_grid_field
 

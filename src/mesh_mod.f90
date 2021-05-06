@@ -2,6 +2,12 @@ module mesh_mod
 implicit none
 
 type, public :: mesh_t
+    type(tile_mesh_t), allocatable :: tile(:)
+    integer(kind=4) :: ts, te
+contains
+end type mesh_t
+
+type, public :: tile_mesh_t
 
     integer(kind=4) :: is, ie, js, je, ks, ke
 !    integer(kind=4) :: nx                     !global horizontal grid dimension
@@ -20,17 +26,17 @@ type, public :: mesh_t
 
 contains
 
-    procedure, public :: init => init_mesh
+    procedure, public :: init => init_tile_mesh
     procedure, public :: get_alpha, get_beta
-end type mesh_t
+end type tile_mesh_t
 
 contains
 
-subroutine init_mesh(this, is, ie, js, je, ks, ke, halo_width)
+subroutine init_tile_mesh(this, is, ie, js, je, ks, ke, halo_width)
 
-    class(mesh_t),   intent(out) :: this
-    integer(kind=4), intent(in)  :: is, ie, js, je, ks, ke
-    integer(kind=4), intent(in)  :: halo_width
+    class(tile_mesh_t), intent(out) :: this
+    integer(kind=4),    intent(in)  :: is, ie, js, je, ks, ke
+    integer(kind=4),    intent(in)  :: halo_width
 
     allocate(this%rhx(is-halo_width : ie+halo_width , js-halo_width : je+halo_width))
     allocate(this%rhy(is-halo_width : ie+halo_width , js-halo_width : je+halo_width))
@@ -52,12 +58,12 @@ subroutine init_mesh(this, is, ie, js, je, ks, ke, halo_width)
 
     this%halo_width = halo_width
 
-end subroutine init_mesh
+end subroutine init_tile_mesh
 
 pure function get_alpha(this, i) result(alpha)
 
-    class(mesh_t),   intent(in) :: this
-    integer(kind=4), intent(in) :: i
+    class(tile_mesh_t), intent(in) :: this
+    integer(kind=4),    intent(in) :: i
 
     real(kind=8) :: alpha
 
@@ -67,8 +73,8 @@ end function get_alpha
 
 pure function get_beta(this, j) result(beta)
 
-    class(mesh_t),   intent(in) :: this
-    integer(kind=4), intent(in) :: j
+    class(tile_mesh_t), intent(in) :: this
+    integer(kind=4),    intent(in) :: j
 
     real(kind=8) :: beta
 

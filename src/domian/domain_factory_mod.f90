@@ -7,28 +7,29 @@ implicit none
 
 contains
 
-subroutine create_ecs_global_domain(domain, nh, nz)
+subroutine create_ecs_global_domain(domain, hor_grid_type, nh, nz)
 
-    use mesh_factory_mod, only : create_equiangular_mesh
+    use mesh_factory_mod,    only : create_equiangular_mesh
+    use parcomm_factory_mod, only : create_parcomm
 
-    type(domain_t),  intent(out) :: domain
-    integer(kind=4), intent(in)  :: nh, nz
+    type(domain_t),   intent(out) :: domain
+    character(len=*), intent(in)  :: hor_grid_type
+    integer(kind=4),  intent(in)  :: nh, nz
 
-    integer(kind=4) :: halo_width, myid, np, ts, te, ierr
+    integer(kind=4) :: halo_width
 
     halo_width = 8
 
-    call MPI_comm_rank(mpi_comm_world , myid, ierr)
-    call MPI_comm_size(mpi_comm_world , Np  , ierr)
+    call create_parcomm(domain%parcomm)
 
-    call domain%partition%init(nh, nz, max(1,Np/6), myid, Np, strategy = 'default')
+    ! call MPI_comm_rank(mpi_comm_world , myid, ierr)
+    ! call MPI_comm_size(mpi_comm_world , Np  , ierr)
 
-    ts = domain%partition%ts
-    te = domain%partition%te
+    call domain%partition%init(nh, nz, max(1,domain%parcomm%np/6), domain%parcomm%myid, domain%parcomm%Np, strategy = 'default')
 
-    call create_equiangular_mesh(domain%mesh_p, domain%partition, halo_width, 'C', 'p')
-    call create_equiangular_mesh(domain%mesh_u, domain%partition, halo_width, 'C', 'u')
-    call create_equiangular_mesh(domain%mesh_v, domain%partition, halo_width, 'C', 'v')
+    call create_equiangular_mesh(domain%mesh_p, domain%partition, halo_width, hor_grid_type, 'p')
+    call create_equiangular_mesh(domain%mesh_u, domain%partition, halo_width, hor_grid_type, 'u')
+    call create_equiangular_mesh(domain%mesh_v, domain%partition, halo_width, hor_grid_type, 'v')
 
 end subroutine create_ecs_global_domain
 

@@ -1,6 +1,6 @@
 module buffer_mod
 
-use grid_field_mod, only : block_t
+use grid_field_mod, only : tile_array_t
 
 implicit none
 
@@ -23,10 +23,10 @@ end subroutine init
 
 subroutine unpack_from_buf(f, buf, is, ie, js, je, ks, ke, pts_num)
 
-    type(block_t),         intent(inout) :: f
-    integer(kind=4),       intent(in)    :: pts_num
-    real(kind=8),          intent(inout) :: buf(pts_num)
-    integer(kind=4),       intent(in)    :: is, ie, js, je, ks, ke
+    type(tile_array_t), intent(inout) :: f
+    integer(kind=4),    intent(in)    :: pts_num
+    real(kind=8),       intent(inout) :: buf(pts_num)
+    integer(kind=4),    intent(in)    :: is, ie, js, je, ks, ke
 
     integer(kind=4) :: ind, i, j ,k, idx
 
@@ -47,12 +47,12 @@ end subroutine unpack_from_buf
 
 subroutine pack_to_buf(f, buf, is, ie, js, je, ks, ke, first_dim_index, send_i_step, send_j_step, pts_num)
 
-    type(block_t),    intent(in)    :: f
-    integer(kind=4),  intent(in)    :: pts_num
-    real(kind=8),     intent(inout) :: buf(pts_num)
-    integer(kind=4),  intent(in)    :: is, ie, js, je, ks, ke
-    integer(kind=4),  intent(in)    :: send_i_step, send_j_step
-    character(len=1), intent(in)    :: first_dim_index
+    type(tile_array_t),    intent(in)    :: f
+    integer(kind=4),       intent(in)    :: pts_num
+    real(kind=8),          intent(inout) :: buf(pts_num)
+    integer(kind=4),       intent(in)    :: is, ie, js, je, ks, ke
+    integer(kind=4),       intent(in)    :: send_i_step, send_j_step
+    character(len=1),      intent(in)    :: first_dim_index
 
     integer(kind=4) :: ind, i, j ,k, idx
 
@@ -146,10 +146,10 @@ subroutine pack_to_buf(f, buf, is, ie, js, je, ks, ke, first_dim_index, send_i_s
 end subroutine pack_to_buf
 subroutine unpack_from_buf_vec(u, v, buf, is, ie, js, je, ks, ke, pts_num)
 
-    type(block_t),   intent(inout) :: u, v
-    integer(kind=4), intent(in)    :: pts_num
-    real(kind=8),    intent(inout) :: buf(2*pts_num)
-    integer(kind=4), intent(in)    :: is, ie, js, je, ks, ke
+    type(tile_array_t),   intent(inout) :: u, v
+    integer(kind=4),      intent(in)    :: pts_num
+    real(kind=8),         intent(inout) :: buf(2*pts_num)
+    integer(kind=4),      intent(in)    :: is, ie, js, je, ks, ke
 
     integer(kind=4) :: ind, i, j ,k, idx
 
@@ -170,12 +170,12 @@ subroutine unpack_from_buf_vec(u, v, buf, is, ie, js, je, ks, ke, pts_num)
 end subroutine unpack_from_buf_vec
 subroutine pack_to_buf_vec(u, v, buf, is, ie, js, je, ks, ke, first_dim_index, send_i_step, send_j_step, pts_num)
 
-    type(block_t),    intent(in)    :: u, v
-    integer(kind=4),  intent(in)    :: pts_num
-    real(kind=8),     intent(inout) :: buf(2*pts_num)
-    integer(kind=4),  intent(in)    :: is, ie, js, je, ks, ke
-    integer(kind=4),  intent(in)    :: send_i_step, send_j_step
-    character(len=1), intent(in)    :: first_dim_index
+    type(tile_array_t),    intent(in)    :: u, v
+    integer(kind=4),       intent(in)    :: pts_num
+    real(kind=8),          intent(inout) :: buf(2*pts_num)
+    integer(kind=4),       intent(in)    :: is, ie, js, je, ks, ke
+    integer(kind=4),       intent(in)    :: send_i_step, send_j_step
+    character(len=1),      intent(in)    :: first_dim_index
 
     integer(kind=4) :: ind, i, j ,k, idx
 
