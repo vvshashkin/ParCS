@@ -3,7 +3,6 @@ implicit none
 
 type, public :: tile_t
     integer(kind=4) :: is, ie, js, je, ks, ke
-    integer(kind=4) :: panel_number
 contains
     procedure, public :: init
     procedure, public :: check
@@ -31,15 +30,14 @@ end subroutine init
 
 subroutine check(this)
     class(tile_t), intent(in) :: this
-    logical :: passed
+    logical :: is_test_passed
 
-    passed = .true.
-    if (this%ie<this%is) passed = .false.
-    if (this%je<this%js) passed = .false.
-    if (this%ke<this%ks) passed = .false.
-    if (this%panel_number<1 .or. this%panel_number>6) passed = .false.
+    is_test_passed = .true.
+    if (this%ie<this%is) is_test_passed = .false.
+    if (this%je<this%js) is_test_passed = .false.
+    if (this%ke<this%ks) is_test_passed = .false.
 
-    if (not(passed)) then
+    if (not(is_test_passed)) then
         print*, 'Error in tile_mod!!!'
     end if
 
@@ -47,20 +45,18 @@ end subroutine check
 
 subroutine print(this)
     class(tile_t), intent(in) :: this
-    character(len=1000) :: is, ie, js, je, panel_number
+    character(len=1000) :: is, ie, js, je
     write(is,*) this%is; write(ie,*) this%ie
     write(js,*) this%js; write(je,*) this%je
-    write(panel_number,*) this%panel_number
     print*, ''
-    print*, 'Panel number = ', trim(adjustl(panel_number))
     print '(2(1x,a, a), /, 2(1x,a, a))', 'is = ', trim(adjustl(is)), 'ie = ', trim(adjustl(ie)), &
                                          'js = ', trim(adjustl(js)), 'je = ', trim(adjustl(je))
 
 end subroutine print
 
-subroutine getind(this, is,ie,js,je,ks,ke,panel_number)
+subroutine getind(this, is,ie,js,je,ks,ke)
     class(tile_t), intent(in) :: this
-    integer(kind=4), intent(out), optional :: is, ie, js, je, ks, ke, panel_number
+    integer(kind=4), intent(out), optional :: is, ie, js, je, ks, ke
 
     if(present(is)) is = this%is
     if(present(ie)) ie = this%ie
@@ -68,7 +64,6 @@ subroutine getind(this, is,ie,js,je,ks,ke,panel_number)
     if(present(je)) je = this%je
     if(present(ks)) ks = this%ks
     if(present(ke)) ke = this%ke
-    if(present(panel_number)) panel_number = this%panel_number
 
 end subroutine getind
 

@@ -9,7 +9,8 @@ implicit none
 contains
 function create_symm_halo_exchange(partition, parcomm, halo_width, halo_type) result(exchange)
 
-    use exchange_halo_mod,    only : exchange_2D_halo_t
+    use exchange_halo_mod, only : exchange_2D_halo_t
+    use topology_mod,      only : transform_tile_coords, find_basis_orientation
 
     type(partition_t), target, intent(in)    :: partition
 
@@ -36,6 +37,7 @@ function create_symm_halo_exchange(partition, parcomm, halo_width, halo_type) re
     character(len=1), dimension((partition%num_panels*partition%num_tiles)**2) :: &
                       first_dim_index
 
+    type(tile_t) :: temp_tile, halo_tile
 
     integer(kind=4) :: local_ind, remote_ind, exch_num, ind,ts ,te
     logical :: is_intersection
@@ -52,13 +54,24 @@ function create_symm_halo_exchange(partition, parcomm, halo_width, halo_type) re
 
     do local_ind = 1, partition%num_panels*partition%num_tiles
 
-        if (partition%proc_map(local_ind) /= myid) cycle
+        if (partition%proc_map(local_ind) /= parcomm%myid) cycle
 
         local_tile => partition%tile(local_ind)
 
         do remote_ind = 1, partition%num_panels*partition%num_tiles
 
             remote_tile => partition%tile(remote_ind)
+
+            call find_basis_orientation(partition%panel_map(local_ind), remote_tile%panel_map(remote_ind), &
+                                        send_i_step(exch_num+1), send_j_step(exch_num+1), first_dim_index(exch_num+1) )
+
+            call transform_tile_coords(partition%panel_map(local_ind),  local_tile, &
+                                       partition%panel_map(remote_ind), temp_tile, &
+                                       partition%nh, partition%nh)
+
+            call find_tiles_halo_intersection(tile_1, halo_width_1, tile_2, halo_width_2, tile_3)
+
+
 
             select case (halo_type)
 
@@ -155,6 +168,735 @@ function create_symm_halo_exchange(partition, parcomm, halo_width, halo_type) re
 
 
 end function create_symm_halo_exchange
+
+subroutine find_tiles_halo_intersection(tile1, halo_width1, tile2, halo_type, out_tile, is_intersect)
+
+    type(tile_t),     intent(in) :: tile1, tile2
+    integer(kind=4),  intent(in) :: halo_width1
+    character(len=*), intent(in) :: halo_type
+
+    type(tile_t),    intent(out) :: out_tile
+    logical,         intent(out) :: is_intersect
+
+    is_intersect = .true.
+
+    if (halo_type=='full') then
+        out_tile%is = max(tile1%is-halo_width1, tile2%is)
+        out_tile%ie = min(tile1%ie+halo_width1, tile2%ie)
+
+        out_tile%js = max(tile1%js-halo_width1, tile2%js)
+        out_tile%je = min(tile1%je+halo_width1, tile2%je)
+
+        if ((out_tile%is<=out_tile%ie) .and. (out_tile%js<=out_tile%je)) return
+
+    else if (halo_type == 'cross') then
+
+    else
+        print*, 'Error! Wrong halo_type!'
+        stop
+    end if
+
+    is_intersect = .false.
+
+end subroutine find_tiles_halo_intersection
+
+function create_u_halo_exchange(partition, halo_width, halo_type, myid, np ) result(exchange)
+
+        use exchange_u_halo_mod,    only : exchange_u_halo_t
+
+        type(partition_t), target, intent(in)    :: partition
+
+        integer(kind=4), intent(in) :: halo_width
+        character(*),    intent(in) :: halo_type
+        integer(kind=4), intent(in) :: myid, np
+
+        type(exchange_u_halo_t), allocatable :: exchange
+
+        type(tile_t), pointer :: local_tile, remote_tile
+
+        integer(kind=4),  dimension((partition%num_panels*partition%num_tiles)**2) :: &
+                          recv_is, recv_ie, recv_js, recv_je, recv_ks, recv_ke, &
+                          send_is, send_ie, send_js, send_je, send_ks, send_ke
+        integer(kind=4),  dimension((partition%num_panels*partition%num_tiles)**2) :: &
+                          send_to_proc_id, recv_from_proc_id   , &
+                          recv_to_tile_ind , &
+                          send_from_tile_ind, &
+                          send_tag, recv_tag
+        integer(kind=4),  dimension((partition%num_panels*partition%num_tiles)**2) :: &
+                          send_pts_num, recv_pts_num
+        integer(kind=4),  dimension((partition%num_panels*partition%num_tiles)**2) :: &
+                          send_i_step, send_j_step
+        character(len=1), dimension((partition%num_panels*partition%num_tiles)**2) :: &
+                          first_dim_index
+        integer(kind=4) :: local_ind, remote_ind, exch_num, ind,ts ,te, send_ind, recv_ind
+        logical :: is_intersection
+
+        if (halo_width > partition%Nh) then
+            write(*,*) 'Error! Halo is too wide! Abort!'
+            stop
+        end if
+
+        ts = partition%ts
+        te = partition%te
+
+        send_ind = 0; recv_ind = 0;
+
+        do local_ind = 1, partition%num_panels*partition%num_tiles
+
+            if (partition%proc_map(local_ind) /= myid) cycle
+
+            local_tile => partition%tile(local_ind)
+
+            do remote_ind = 1, partition%num_panels*partition%num_tiles
+
+                remote_tile => partition%tile(remote_ind)
+
+                select case (halo_type)
+
+                case('cross')
+                    call find_cross_halo_send_u(                            &
+                         local_tile, remote_tile, halo_width, partition%Nh, &
+                         is_intersection                                  , &
+                         send_is(send_ind + 1), send_ie(send_ind + 1)     , &
+                         send_js(send_ind + 1), send_je(send_ind + 1)     , &
+                         send_i_step(send_ind+1), send_j_step(send_ind+1) , &
+                         first_dim_index(send_ind+1)   )
+                 case default
+                     call avost("Wrong halo_type in create_Agrid_halo_exchange function! Stop!")
+                 end select
+
+                if (is_intersection) then
+
+                     send_ind = send_ind + 1
+
+                     send_from_tile_ind(send_ind) = local_ind
+
+                     send_ks(send_ind) = local_tile%ks
+                     send_ke(send_ind) = local_tile%ke
+
+                     send_pts_num(send_ind) = (send_ie(send_ind) - send_is(send_ind) + 1)* &
+                                              (send_je(send_ind) - send_js(send_ind) + 1)* &
+                                              (send_ke(send_ind) - send_ks(send_ind) + 1)
+
+                     send_to_proc_id  (send_ind) = partition%proc_map(remote_ind)
+                     send_tag(send_ind) = partition%num_panels*partition%num_tiles*(local_ind -1) + remote_ind
+
+                end if
+
+                select case (halo_type)
+
+                case('cross')
+                    call find_cross_halo_recv_u(local_tile, remote_tile, halo_width, partition%Nh, &
+                                                is_intersection                                  , &
+                                                recv_is(recv_ind + 1), recv_ie(recv_ind + 1)     , &
+                                                recv_js(recv_ind + 1), recv_je(recv_ind + 1)     )
+                case default
+                    call avost("Wrong halo_type in create_Agrid_halo_exchange function! Stop!")
+                end select
+
+                if (is_intersection) then
+                    recv_ind = recv_ind + 1
+
+                    recv_to_tile_ind  (recv_ind) = local_ind
+
+                    recv_ks(recv_ind) = remote_tile%ks
+                    recv_ke(recv_ind) = remote_tile%ke
+
+                    recv_pts_num(recv_ind) = (recv_ie(recv_ind) - recv_is(recv_ind) + 1)* &
+                                             (recv_je(recv_ind) - recv_js(recv_ind) + 1)* &
+                                             (recv_ke(recv_ind) - recv_ks(recv_ind) + 1)
+                    recv_from_proc_id(recv_ind) = partition%proc_map(remote_ind)
+                    recv_tag(recv_ind) = partition%num_panels*partition%num_tiles*(remote_ind-1) + local_ind
+
+                end if
+
+            end do
+
+        end do
+
+        allocate(exchange, source = exchange_u_halo_t(             &
+                send_is            = send_is(1:send_ind),          &
+                send_ie            = send_ie(1:send_ind),          &
+                send_js            = send_js(1:send_ind),          &
+                send_je            = send_je(1:send_ind),          &
+                send_ks            = send_ks(1:send_ind),          &
+                send_ke            = send_ke(1:send_ind),          &
+                recv_is            = recv_is(1:recv_ind),          &
+                recv_ie            = recv_ie(1:recv_ind),          &
+                recv_js            = recv_js(1:recv_ind),          &
+                recv_je            = recv_je(1:recv_ind),          &
+                recv_ks            = recv_ks(1:recv_ind),          &
+                recv_ke            = recv_ke(1:recv_ind),          &
+                send_i_step        = send_i_step(1:send_ind),      &
+                send_j_step        = send_j_step(1:send_ind),      &
+                first_dim_index    = first_dim_index(1:send_ind),  &
+                recv_to_tile_ind   = recv_to_tile_ind(1:recv_ind),    &
+                send_from_tile_ind = send_from_tile_ind(1:send_ind),    &
+                send_to_proc_id    = send_to_proc_id(1:send_ind),     &
+                recv_from_proc_id  = recv_from_proc_id(1:recv_ind),     &
+                send_points_num    = send_pts_num(1:send_ind),     &
+                recv_points_num    = recv_pts_num(1:recv_ind),     &
+                send_tag           = send_tag(1:send_ind),         &
+                recv_tag           = recv_tag(1:recv_ind),         &
+                send_number        = send_ind                ,     &
+                recv_number        = recv_ind, &
+                ts                 = ts, &
+                te                 = te) )
+
+        ! call exchange%profile%check()
+        !
+        allocate(exchange%send_buff(send_ind)   , exchange%recv_buff(recv_ind)   )
+        allocate(exchange%mpi_send_req(send_ind), exchange%mpi_recv_req(recv_ind))
+        do ind = 1, send_ind
+            call exchange%send_buff(ind)%init(send_pts_num(ind))
+        end do
+        do ind = 1, recv_ind
+            call exchange%recv_buff(ind)%init(recv_pts_num(ind))
+        end do
+
+end function create_u_halo_exchange
+subroutine find_cross_halo_send_u(l_tile, r_tile, halo_width, nh, is_intersection, &
+                                          send_is, send_ie, send_js, send_je,      &
+                                          i_step, j_step, first_dim)
+
+    use topology_mod, only : transform_index
+    use mpi
+
+    type(tile_t),     intent(in)  :: l_tile, r_tile
+    integer(kind=4),  intent(in)  :: halo_width, nh
+    logical,          intent(out) :: is_intersection
+    integer(kind=4),  intent(out) :: send_is, send_ie, send_js, send_je
+    integer(kind=4),  intent(out) :: i_step, j_step
+    character(len=1), intent(out) :: first_dim
+
+    integer(kind=4) :: is_r, ie_r, js_r, je_r
+    integer(kind=4) :: is_l, ie_l, js_l, je_l
+    integer(kind=4) :: i(4), j(4)
+    integer(kind=4) :: s_halo_x, s_halo_y
+    integer(kind=4) :: myid, ierr
+    is_intersection = .true.
+
+    s_halo_x = halo_width; s_halo_y = halo_width
+
+    is_r = r_tile%is; ie_r = r_tile%ie;
+    js_r = r_tile%js; je_r = r_tile%je;
+
+    is_l = l_tile%is; ie_l = l_tile%ie
+    js_l = l_tile%js; je_l = l_tile%je
+
+    if (ie_r == nh) ie_r = nh+1 !send to remote u points
+
+    call mpi_comm_rank(mpi_comm_world, myid, ierr)
+
+    if (l_tile%panel_number == r_tile%panel_number) then
+        i_step = 1
+        j_step = 1
+        first_dim = 'i'
+    else
+        call transform_index(r_tile%panel_number, is_r, js_r, nh, nh, l_tile%panel_number, i(1), j(1), i_step, j_step, first_dim)
+    end if
+
+    if (first_dim == 'i') then
+    ! u to u points exchange case
+
+        if (ie_l == nh) ie_l = nh+1 !send local u points
+
+        if (l_tile%panel_number /= r_tile%panel_number) then
+            call transform_index(r_tile%panel_number, is_r, js_r, nh+1, nh, l_tile%panel_number, i(1), j(1))
+            call transform_index(r_tile%panel_number, is_r, je_r, nh+1, nh, l_tile%panel_number, i(2), j(2))
+            call transform_index(r_tile%panel_number, ie_r, js_r, nh+1, nh, l_tile%panel_number, i(3), j(3))
+            call transform_index(r_tile%panel_number, ie_r, je_r, nh+1, nh, l_tile%panel_number, i(4), j(4), i_step, j_step, first_dim)
+
+            is_r = minval(i); ie_r = maxval(i)
+            js_r = minval(j); je_r = maxval(j)
+
+            !if tiles belong to different panels then halo is wider due to edge u-points
+            s_halo_x = halo_width + 1
+
+        end if
+
+    end if
+    if (first_dim == 'j') then
+    ! v to u points exchange case
+
+        if (je_l == nh) je_l = nh+1 !send local v points
+
+        if (l_tile%panel_number /= r_tile%panel_number) then
+            call transform_index(r_tile%panel_number, is_r, js_r, nh, nh+1, l_tile%panel_number, i(1), j(1))
+            call transform_index(r_tile%panel_number, is_r, je_r, nh, nh+1, l_tile%panel_number, i(2), j(2))
+            call transform_index(r_tile%panel_number, ie_r, js_r, nh, nh+1, l_tile%panel_number, i(3), j(3))
+            call transform_index(r_tile%panel_number, ie_r, je_r, nh, nh+1, l_tile%panel_number, i(4), j(4), i_step, j_step, first_dim)
+
+            is_r = minval(i); ie_r = maxval(i)
+            js_r = minval(j); je_r = maxval(j)
+
+            !if tiles belong to different panels then halo is wider due to edge v-points
+            s_halo_y = halo_width + 1
+        end if
+    end if
+
+
+    !left send halo
+    send_is = max(is_l, ie_r+1); send_ie = min(ie_l, ie_r+s_halo_x)
+    send_js = max(js_l, js_r  ); send_je = min(je_l, je_r         )
+
+    if ( (send_is<=send_ie) .and. (send_js<=send_je) ) return
+
+    !right send halo
+    send_is = max(is_l, is_r - s_halo_x); send_ie = min(ie_l, is_r - 1)
+    send_js = max(js_l, js_r           ); send_je = min(je_l, je_r    )
+
+    if ( (send_is<=send_ie) .and. (send_js<=send_je) ) return
+
+    !bottom send halo
+    send_is = max(is_l, is_r    ); send_ie = min(ie_l, ie_r           )
+    send_js = max(js_l, je_r + 1); send_je = min(je_l, je_r + s_halo_y)
+
+    if ( (send_is<=send_ie) .and. (send_js<=send_je) ) return
+
+    !top send halo
+    send_is = max(is_l, is_r           ); send_ie = min(ie_l, ie_r    )
+    send_js = max(js_l, js_r - s_halo_y); send_je = min(je_l, js_r - 1)
+
+    if ( (send_is<=send_ie) .and. (send_js<=send_je) ) return
+
+    is_intersection = .false.
+
+end subroutine find_cross_halo_send_u
+subroutine find_cross_halo_recv_u(l_tile, r_tile, halo_width, nh, is_intersection, &
+                                          recv_is, recv_ie, recv_js, recv_je)
+
+    use topology_mod, only : transform_index
+    use mpi
+
+    type(tile_t),     intent(in)  :: l_tile, r_tile
+    integer(kind=4),  intent(in)  :: halo_width, nh
+    logical,          intent(out) :: is_intersection
+    integer(kind=4),  intent(out) :: recv_is, recv_ie, recv_js, recv_je
+
+    integer(kind=4)  :: i_step, j_step
+    character(len=1) :: first_dim
+
+    integer(kind=4) :: is_r, ie_r, js_r, je_r
+    integer(kind=4) :: is_l, ie_l, js_l, je_l
+    integer(kind=4) :: i(4), j(4)
+    integer(kind=4) :: r_halo_x, r_halo_y
+    integer(kind=4) :: myid, ierr
+    is_intersection = .true.
+
+    r_halo_x = halo_width; r_halo_y = halo_width
+
+    is_r = r_tile%is; ie_r = r_tile%ie;
+    js_r = r_tile%js; je_r = r_tile%je;
+
+    is_l = l_tile%is; ie_l = l_tile%ie
+    js_l = l_tile%js; je_l = l_tile%je
+
+    call mpi_comm_rank(mpi_comm_world, myid, ierr)
+
+    if (l_tile%panel_number == r_tile%panel_number) then
+        i_step = 1
+        j_step = 1
+        first_dim = 'i'
+    else
+        call transform_index(r_tile%panel_number, is_r, js_r, nh, nh, l_tile%panel_number, i(1), j(1), i_step, j_step, first_dim)
+    end if
+
+    if (first_dim == 'i') then
+    !u to u points exchange case
+        !there are nh+1 u-points in i direction
+        if (ie_r == nh) ie_r = nh+1
+        if (ie_l == nh) ie_l = nh+1
+    end if
+    if (first_dim == 'j') then
+    ! u to v points exchange case
+        if (je_r == nh) je_r = nh+1
+        if (ie_l == nh) ie_l = nh+1
+    end if
+
+    if (l_tile%panel_number /= r_tile%panel_number) then
+        call transform_index(r_tile%panel_number, is_r, js_r, nh+1, nh, l_tile%panel_number, i(1), j(1))
+        call transform_index(r_tile%panel_number, is_r, je_r, nh+1, nh, l_tile%panel_number, i(2), j(2))
+        call transform_index(r_tile%panel_number, ie_r, js_r, nh+1, nh, l_tile%panel_number, i(3), j(3))
+        call transform_index(r_tile%panel_number, ie_r, je_r, nh+1, nh, l_tile%panel_number, i(4), j(4))
+
+        is_r = minval(i); ie_r = maxval(i)
+        js_r = minval(j); je_r = maxval(j)
+
+        !if tiles belong to different panels then halo is wider due to edge u-points
+        r_halo_x = halo_width + 1
+    end if
+
+    !left recv halo
+    recv_is = max(is_l-r_halo_x, is_r); recv_ie = min(is_l-1, ie_r)
+    recv_js = max(js_l         , js_r); recv_je = min(je_l  , je_r)
+
+    if ( (recv_is<=recv_ie) .and. (recv_js<=recv_je) ) return
+
+    !right recv halo
+    recv_is = max(ie_l+1, is_r); recv_ie = min(ie_l+r_halo_x, ie_r)
+    recv_js = max(js_l  , js_r); recv_je = min(je_l         , je_r)
+
+    if ( (recv_is<=recv_ie) .and. (recv_js<=recv_je) ) return
+
+    !bottom recv halo
+    recv_is = max(is_l         , is_r); recv_ie = min(ie_l       , ie_r)
+    recv_js = max(js_l-r_halo_y, js_r); recv_je = min(l_tile%js-1, je_r)
+
+    if ( (recv_is<=recv_ie) .and. (recv_js<=recv_je) ) return
+
+    !top recv halo
+    recv_is = max(is_l  , is_r); recv_ie = min(ie_l         , ie_r)
+    recv_js = max(je_l+1, js_r); recv_je = min(je_l+r_halo_y, je_r)
+
+    if ( (recv_is<=recv_ie) .and. (recv_js<=recv_je) ) return
+
+    is_intersection = .false.
+
+end subroutine find_cross_halo_recv_u
+function create_v_halo_exchange(partition, halo_width, halo_type, myid, np ) result(exchange)
+
+        use exchange_v_halo_mod,    only : exchange_v_halo_t
+
+        type(partition_t), target, intent(in)    :: partition
+
+        integer(kind=4), intent(in) :: halo_width
+        character(*),    intent(in) :: halo_type
+        integer(kind=4), intent(in) :: myid, np
+
+        type(exchange_v_halo_t), allocatable :: exchange
+
+        type(tile_t), pointer :: local_tile, remote_tile
+
+        integer(kind=4),  dimension((partition%num_panels*partition%num_tiles)**2) :: &
+                          recv_is, recv_ie, recv_js, recv_je, recv_ks, recv_ke, &
+                          send_is, send_ie, send_js, send_je, send_ks, send_ke
+        integer(kind=4),  dimension((partition%num_panels*partition%num_tiles)**2) :: &
+                          send_to_proc_id, recv_from_proc_id   , &
+                          recv_to_tile_ind , &
+                          send_from_tile_ind, &
+                          send_tag, recv_tag
+        integer(kind=4),  dimension((partition%num_panels*partition%num_tiles)**2) :: &
+                          send_pts_num, recv_pts_num
+        integer(kind=4),  dimension((partition%num_panels*partition%num_tiles)**2) :: &
+                          send_i_step, send_j_step
+        character(len=1), dimension((partition%num_panels*partition%num_tiles)**2) :: &
+                          first_dim_index
+        integer(kind=4) :: local_ind, remote_ind, exch_num, ind,ts ,te, send_ind, recv_ind
+        logical :: is_intersection
+
+        if (halo_width > partition%Nh) then
+            write(*,*) 'Error! Halo is too wide! Abort!'
+            stop
+        end if
+
+        ts = partition%ts
+        te = partition%te
+
+        send_ind = 0; recv_ind = 0;
+
+        do local_ind = 1, partition%num_panels*partition%num_tiles
+            if (partition%proc_map(local_ind) /= myid) cycle
+            local_tile => partition%tile(local_ind)
+            do remote_ind = 1, partition%num_panels*partition%num_tiles
+                remote_tile => partition%tile(remote_ind)
+
+                select case (halo_type)
+
+                case('cross')
+                    call find_cross_halo_send_v(                            &
+                         local_tile, remote_tile, halo_width, partition%Nh, &
+                         is_intersection                                  , &
+                         send_is(send_ind + 1), send_ie(send_ind + 1)     , &
+                         send_js(send_ind + 1), send_je(send_ind + 1)     , &
+                         send_i_step(send_ind+1), send_j_step(send_ind+1) , &
+                         first_dim_index(send_ind+1)   )
+                 case default
+                     call avost("Wrong halo_type in create_Agrid_halo_exchange function! Stop!")
+                 end select
+
+                if (is_intersection) then
+                     send_ind = send_ind + 1
+                     send_from_tile_ind(send_ind) = local_ind
+
+                     send_ks(send_ind) = local_tile%ks
+                     send_ke(send_ind) = local_tile%ke
+
+                     send_pts_num(send_ind) = (send_ie(send_ind) - send_is(send_ind) + 1)* &
+                                              (send_je(send_ind) - send_js(send_ind) + 1)* &
+                                              (send_ke(send_ind) - send_ks(send_ind) + 1)
+
+                     send_to_proc_id  (send_ind) = partition%proc_map(remote_ind)
+                     send_tag(send_ind) = partition%num_panels*partition%num_tiles*(local_ind -1) + remote_ind
+                end if
+
+                select case (halo_type)
+
+                case('cross')
+                    call find_cross_halo_recv_v(local_tile, remote_tile, halo_width, partition%Nh, &
+                                                is_intersection                                  , &
+                                                recv_is(recv_ind + 1), recv_ie(recv_ind + 1)     , &
+                                                recv_js(recv_ind + 1), recv_je(recv_ind + 1)     )
+                case default
+                    call avost("Wrong halo_type in create_Agrid_halo_exchange function! Stop!")
+                end select
+
+                if (is_intersection) then
+                    recv_ind = recv_ind + 1
+
+                    recv_to_tile_ind  (recv_ind) = local_ind
+
+                    recv_ks(recv_ind) = remote_tile%ks
+                    recv_ke(recv_ind) = remote_tile%ke
+
+                    recv_pts_num(recv_ind) = (recv_ie(recv_ind) - recv_is(recv_ind) + 1)* &
+                                             (recv_je(recv_ind) - recv_js(recv_ind) + 1)* &
+                                             (recv_ke(recv_ind) - recv_ks(recv_ind) + 1)
+                    recv_from_proc_id(recv_ind) = partition%proc_map(remote_ind)
+                    recv_tag(recv_ind) = partition%num_panels*partition%num_tiles*(remote_ind-1) + local_ind
+                end if
+            end do
+        end do
+
+        allocate(exchange, source = exchange_v_halo_t(             &
+                send_is            = send_is(1:send_ind),          &
+                send_ie            = send_ie(1:send_ind),          &
+                send_js            = send_js(1:send_ind),          &
+                send_je            = send_je(1:send_ind),          &
+                send_ks            = send_ks(1:send_ind),          &
+                send_ke            = send_ke(1:send_ind),          &
+                recv_is            = recv_is(1:recv_ind),          &
+                recv_ie            = recv_ie(1:recv_ind),          &
+                recv_js            = recv_js(1:recv_ind),          &
+                recv_je            = recv_je(1:recv_ind),          &
+                recv_ks            = recv_ks(1:recv_ind),          &
+                recv_ke            = recv_ke(1:recv_ind),          &
+                send_i_step        = send_i_step(1:send_ind),      &
+                send_j_step        = send_j_step(1:send_ind),      &
+                first_dim_index    = first_dim_index(1:send_ind),  &
+                recv_to_tile_ind   = recv_to_tile_ind(1:recv_ind),    &
+                send_from_tile_ind = send_from_tile_ind(1:send_ind),    &
+                send_to_proc_id    = send_to_proc_id(1:send_ind),     &
+                recv_from_proc_id  = recv_from_proc_id(1:recv_ind),     &
+                send_points_num    = send_pts_num(1:send_ind),     &
+                recv_points_num    = recv_pts_num(1:recv_ind),     &
+                send_tag           = send_tag(1:send_ind),         &
+                recv_tag           = recv_tag(1:recv_ind),         &
+                send_number        = send_ind                ,     &
+                recv_number        = recv_ind, &
+                ts                 = ts, &
+                te                 = te) )
+
+        allocate(exchange%send_buff(send_ind)   , exchange%recv_buff(recv_ind)   )
+        allocate(exchange%mpi_send_req(send_ind), exchange%mpi_recv_req(recv_ind))
+        do ind = 1, send_ind
+            call exchange%send_buff(ind)%init(send_pts_num(ind))
+        end do
+        do ind = 1, recv_ind
+            call exchange%recv_buff(ind)%init(recv_pts_num(ind))
+        end do
+
+end function create_v_halo_exchange
+subroutine find_cross_halo_send_v(l_tile, r_tile, halo_width, nh, is_intersection, &
+                                          send_is, send_ie, send_js, send_je,      &
+                                          i_step, j_step, first_dim)
+
+    use topology_mod, only : transform_index
+    use mpi
+
+    type(tile_t),     intent(in)  :: l_tile, r_tile
+    integer(kind=4),  intent(in)  :: halo_width, nh
+    logical,          intent(out) :: is_intersection
+    integer(kind=4),  intent(out) :: send_is, send_ie, send_js, send_je
+    integer(kind=4),  intent(out) :: i_step, j_step
+    character(len=1), intent(out) :: first_dim
+
+    integer(kind=4) :: is_r, ie_r, js_r, je_r
+    integer(kind=4) :: is_l, ie_l, js_l, je_l
+    integer(kind=4) :: i(4), j(4)
+    integer(kind=4) :: s_halo_x, s_halo_y
+    integer(kind=4) :: myid, ierr
+    is_intersection = .true.
+
+    s_halo_x = halo_width; s_halo_y = halo_width
+
+    is_r = r_tile%is; ie_r = r_tile%ie;
+    js_r = r_tile%js; je_r = r_tile%je;
+
+    is_l = l_tile%is; ie_l = l_tile%ie
+    js_l = l_tile%js; je_l = l_tile%je
+
+    if (je_r == nh) je_r = nh+1 !send to remote v points
+
+    call mpi_comm_rank(mpi_comm_world, myid, ierr)
+
+    if (l_tile%panel_number == r_tile%panel_number) then
+        i_step = 1
+        j_step = 1
+        first_dim = 'i'
+    else
+        call transform_index(r_tile%panel_number, is_r, js_r, nh, nh, l_tile%panel_number, i(1), j(1), i_step, j_step, first_dim)
+    end if
+
+    if (first_dim == 'i') then
+    ! v to v points exchange case
+
+        if (je_l == nh) je_l = nh+1 !send local v points
+
+        if (l_tile%panel_number /= r_tile%panel_number) then
+            call transform_index(r_tile%panel_number, is_r, js_r, nh, nh+1, l_tile%panel_number, i(1), j(1))
+            call transform_index(r_tile%panel_number, is_r, je_r, nh, nh+1, l_tile%panel_number, i(2), j(2))
+            call transform_index(r_tile%panel_number, ie_r, js_r, nh, nh+1, l_tile%panel_number, i(3), j(3))
+            call transform_index(r_tile%panel_number, ie_r, je_r, nh, nh+1, l_tile%panel_number, i(4), j(4), i_step, j_step, first_dim)
+
+            is_r = minval(i); ie_r = maxval(i)
+            js_r = minval(j); je_r = maxval(j)
+
+            !if tiles belong to different panels then halo is wider due to edge v-points
+            s_halo_y = halo_width + 1
+
+        end if
+
+    end if
+    if (first_dim == 'j') then
+    ! u to v points exchange case
+
+        if (ie_l == nh) ie_l = nh+1 !send local u points
+
+        if (l_tile%panel_number /= r_tile%panel_number) then
+            call transform_index(r_tile%panel_number, is_r, js_r, nh+1, nh, l_tile%panel_number, i(1), j(1))
+            call transform_index(r_tile%panel_number, is_r, je_r, nh+1, nh, l_tile%panel_number, i(2), j(2))
+            call transform_index(r_tile%panel_number, ie_r, js_r, nh+1, nh, l_tile%panel_number, i(3), j(3))
+            call transform_index(r_tile%panel_number, ie_r, je_r, nh+1, nh, l_tile%panel_number, i(4), j(4), i_step, j_step, first_dim)
+
+            is_r = minval(i); ie_r = maxval(i)
+            js_r = minval(j); je_r = maxval(j)
+
+            !if tiles belong to different panels then halo is wider due to edge u-points
+            s_halo_x = halo_width + 1
+        end if
+    end if
+
+
+    !left send halo
+    send_is = max(is_l, ie_r+1); send_ie = min(ie_l, ie_r+s_halo_x)
+    send_js = max(js_l, js_r  ); send_je = min(je_l, je_r         )
+
+    if ( (send_is<=send_ie) .and. (send_js<=send_je) ) return
+
+    !right send halo
+    send_is = max(is_l, is_r - s_halo_x); send_ie = min(ie_l, is_r - 1)
+    send_js = max(js_l, js_r           ); send_je = min(je_l, je_r    )
+
+    if ( (send_is<=send_ie) .and. (send_js<=send_je) ) return
+
+    !bottom send halo
+    send_is = max(is_l, is_r    ); send_ie = min(ie_l, ie_r           )
+    send_js = max(js_l, je_r + 1); send_je = min(je_l, je_r + s_halo_y)
+
+    if ( (send_is<=send_ie) .and. (send_js<=send_je) ) return
+
+    !top send halo
+    send_is = max(is_l, is_r           ); send_ie = min(ie_l, ie_r    )
+    send_js = max(js_l, js_r - s_halo_y); send_je = min(je_l, js_r - 1)
+
+    if ( (send_is<=send_ie) .and. (send_js<=send_je) ) return
+
+    is_intersection = .false.
+
+end subroutine find_cross_halo_send_v
+subroutine find_cross_halo_recv_v(l_tile, r_tile, halo_width, nh, is_intersection, &
+                                          recv_is, recv_ie, recv_js, recv_je)
+
+    use topology_mod, only : transform_index
+    use mpi
+
+    type(tile_t),     intent(in)  :: l_tile, r_tile
+    integer(kind=4),  intent(in)  :: halo_width, nh
+    logical,          intent(out) :: is_intersection
+    integer(kind=4),  intent(out) :: recv_is, recv_ie, recv_js, recv_je
+
+    integer(kind=4)  :: i_step, j_step
+    character(len=1) :: first_dim
+
+    integer(kind=4) :: is_r, ie_r, js_r, je_r
+    integer(kind=4) :: is_l, ie_l, js_l, je_l
+    integer(kind=4) :: i(4), j(4)
+    integer(kind=4) :: r_halo_x, r_halo_y
+    integer(kind=4) :: myid, ierr
+    is_intersection = .true.
+
+    r_halo_x = halo_width; r_halo_y = halo_width
+
+    is_r = r_tile%is; ie_r = r_tile%ie;
+    js_r = r_tile%js; je_r = r_tile%je;
+
+    is_l = l_tile%is; ie_l = l_tile%ie
+    js_l = l_tile%js; je_l = l_tile%je
+
+    if (je_l == nh) je_l = nh+1 ! recieve v-points
+
+    call mpi_comm_rank(mpi_comm_world, myid, ierr)
+
+    if (l_tile%panel_number == r_tile%panel_number) then
+        i_step = 1
+        j_step = 1
+        first_dim = 'i'
+    else
+        call transform_index(r_tile%panel_number, is_r, js_r, nh, nh, l_tile%panel_number, i(1), j(1), i_step, j_step, first_dim)
+    end if
+
+    if (first_dim == 'i') then
+    !v to v points exchange case
+        !there are nh+1 v-points in j direction
+        if (je_r == nh) je_r = nh+1
+    end if
+    if (first_dim == 'j') then
+    ! u to v points exchange case
+        !there are nh+1 u-points in i direction
+        if (ie_r == nh) ie_r = nh+1
+    end if
+
+    if (l_tile%panel_number /= r_tile%panel_number) then
+        call transform_index(r_tile%panel_number, is_r, js_r, nh, nh+1, l_tile%panel_number, i(1), j(1))
+        call transform_index(r_tile%panel_number, is_r, je_r, nh, nh+1, l_tile%panel_number, i(2), j(2))
+        call transform_index(r_tile%panel_number, ie_r, js_r, nh, nh+1, l_tile%panel_number, i(3), j(3))
+        call transform_index(r_tile%panel_number, ie_r, je_r, nh, nh+1, l_tile%panel_number, i(4), j(4))
+
+        is_r = minval(i); ie_r = maxval(i)
+        js_r = minval(j); je_r = maxval(j)
+
+        !if tiles belong to different panels then halo is wider due to edge v-points
+        r_halo_y = halo_width + 1
+    end if
+
+    !left recv halo
+    recv_is = max(is_l-r_halo_x, is_r); recv_ie = min(is_l-1, ie_r)
+    recv_js = max(js_l         , js_r); recv_je = min(je_l  , je_r)
+
+    if ( (recv_is<=recv_ie) .and. (recv_js<=recv_je) ) return
+
+    !right recv halo
+    recv_is = max(ie_l+1, is_r); recv_ie = min(ie_l+r_halo_x, ie_r)
+    recv_js = max(js_l  , js_r); recv_je = min(je_l         , je_r)
+
+    if ( (recv_is<=recv_ie) .and. (recv_js<=recv_je) ) return
+
+    !bottom recv halo
+    recv_is = max(is_l         , is_r); recv_ie = min(ie_l       , ie_r)
+    recv_js = max(js_l-r_halo_y, js_r); recv_je = min(l_tile%js-1, je_r)
+
+    if ( (recv_is<=recv_ie) .and. (recv_js<=recv_je) ) return
+
+    !top recv halo
+    recv_is = max(is_l  , is_r); recv_ie = min(ie_l         , ie_r)
+    recv_js = max(je_l+1, js_r); recv_je = min(je_l+r_halo_y, je_r)
+
+    if ( (recv_is<=recv_ie) .and. (recv_js<=recv_je) ) return
+
+    is_intersection = .false.
+
+end subroutine find_cross_halo_recv_v
 function create_Agrid_halo_exchange(partition, halo_width, halo_type, myid, np ) result(exchange)
 
     use exchange_halo_mod,    only : exchange_2D_halo_t

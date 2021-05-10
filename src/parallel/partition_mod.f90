@@ -6,6 +6,7 @@ implicit none
 type, public :: partition_t
     type(tile_t),    allocatable :: tile(:)     !array of partition tiles
     integer(kind=4), allocatable :: proc_map(:) !determine belonging of the tile to the specific processor
+    integer(kind=4), allocatable :: panel_map(:)!determine belonging of the tile to the specific panel
     integer(kind=4)              :: Nh, Nz      !number of grid points in x/y, z direction for the one panel
     integer(kind=4)              :: num_tiles   !number of tiles in the partition
     integer(kind=4)              :: num_panels  !
@@ -103,7 +104,8 @@ subroutine default_strategy(partition, Nh, Nz, Np)
                 ks = 1
                 ke = Nz
 
-                call partition%tile(ind)%init(is, ie, js, je, ks, ke, panel_ind)
+                partition%panel_map(ind) = panel_ind
+                call partition%tile(ind)%init(is, ie, js, je, ks, ke)
 
             end do
         end do
