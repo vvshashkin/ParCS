@@ -1,6 +1,7 @@
 module mesh_factory_mod
 
 use mesh_mod, only : mesh_t
+use tile_mod, only : tile_t
 
 implicit none
 
@@ -16,8 +17,8 @@ subroutine create_equiangular_mesh(mesh, partition, halo_width, staggering_type,
 
     use partition_mod, only : partition_t
 
-    type(mesh_t),      intent(out) :: mesh
-    type(partition_t), intent(in)  :: partition
+    type(partition_t), target, intent(in)  :: partition
+    type(mesh_t),              intent(out) :: mesh
 
     integer(kind=4),  intent(in)   :: halo_width
     character(len=*), intent(in)   :: staggering_type, points_type
@@ -26,43 +27,29 @@ subroutine create_equiangular_mesh(mesh, partition, halo_width, staggering_type,
     real(kind=8) :: alpha, beta, x, y, z, r
     real(kind=8) :: xyz(3)
 
+    type(tile_t), pointer :: tile(:)
+
     real(kind=8) :: i_0, j_0, alpha_0, beta_0
 
     alpha_0 = -0.25_8*pi
     beta_0  = -0.25_8*pi
 
-    select case(staggering_type)
-    case('A')
-        i_0 = 0.5_8
-        j_0 = 0.5_8
-        nx = partition%nh
-        ny = partition%nh
-    case('C')
-        select case(points_type)
-        case('p')
-            i_0 = 0.5_8
-            j_0 = 0.5_8
-            nx = partition%nh
-            ny = partition%nh
-        case('u')
-            i_0 = 0.0_8
-            j_0 = 0.5_8
-            nx = partition%nh+1
-            ny = partition%nh
-        case('v')
-            i_0 = 0.5_8
-            j_0 = 0.0_8
-            nx = partition%nh
-            ny = partition%nh+1
-        case default
-            print*, 'Error! Wrong points_type! Abort!'
-            stop
-        end select
+    i_0 = 0.5_8
+    j_0 = 0.5_8
+
+    select case(points_type)
+    case('p')
+        tile => partition%tile
+    case('u')
+        if (staggering_type=='C') i_0 = 0.0_8
+        tile => partition%tile_u
+    case('v')
+        if (staggering_type=='C') j_0 = 0.0_8
+        tile => partition%tile_v
     case default
-        print*, 'Error! Wrong staggering_type! Abort!'
+        print*, 'Error! Wrong points_type! Abort!'
         stop
     end select
-
 
     ts = partition%ts
     te = partition%te
@@ -73,19 +60,14 @@ subroutine create_equiangular_mesh(mesh, partition, halo_width, staggering_type,
 
     do t = ts, te
 
-        ks = partition%tile(t)%ks; ke = partition%tile(t)%ke;
-
-        js = partition%tile(t)%js; je = partition%tile(t)%je;
-        if (je == partition%nh .and. ny == partition%nh+1) je = ny
-
-        is = partition%tile(t)%is; ie = partition%tile(t)%ie;
-        if (ie == partition%nh .and. nx == partition%nh+1) ie = nx
+        ks = tile(t)%ks; ke = tile(t)%ke
+        js = tile(t)%js; je = tile(t)%je;
+        is = tile(t)%is; ie = tile(t)%ie;
 
         nh = partition%nh
 
         call mesh%tile(t)%init(is, ie, js, je, ks, ke, halo_width)
 
-        ! mesh(t)%panel_ind = partition%tile(t)%panel_number
         mesh%tile(t)%hx = 0.5_8 * pi / (real(nh, 8))
 
         mesh%tile(t)%i_0 = i_0
@@ -107,10 +89,13 @@ subroutine create_equiangular_mesh(mesh, partition, halo_width, staggering_type,
                 !curvilinear system basis vectors
                 xyz = ecs_acov_proto(alpha,beta)
                 mesh%tile(t)%acov(1:3,i,j) = ecs_proto2face(xyz, partition%panel_map(t))
+
                 xyz = ecs_bcov_proto(alpha,beta)
                 mesh%tile(t)%bcov(1:3,i,j) = ecs_proto2face(xyz, partition%panel_map(t))
+
                 xyz = ecs_actv_proto(alpha,beta)
                 mesh%tile(t)%actv(1:3,i,j) = ecs_proto2face(xyz, partition%panel_map(t))
+
                 xyz = ecs_bctv_proto(alpha,beta)
                 mesh%tile(t)%bctv(1:3,i,j) = ecs_proto2face(xyz, partition%panel_map(t))
 
