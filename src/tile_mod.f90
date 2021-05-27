@@ -14,15 +14,15 @@ private
 
 contains
 
-subroutine init(this, is, ie, js, je, ks, ke, panel_number)
+subroutine init(this, is, ie, js, je, ks, ke)
     class(tile_t), intent(inout) :: this
-    integer(kind=4), intent(in) :: is, ie, js, je, ks, ke, panel_number
+    integer(kind=4), intent(in) :: is, ie, js, je, ks, ke
 
     this%is = is; this%ie = ie
     this%js = js; this%je = je
     this%ks = ks; this%ke = ke
 
-    this%panel_number = panel_number
+    ! this%panel_number = panel_number
 
     call this%check()
 

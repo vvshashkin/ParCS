@@ -11,6 +11,7 @@ contains
     procedure, public :: get_mpi_rank
     procedure, public :: get_mpi_proc_number
     procedure, public :: barrier
+    procedure, public :: print
 end type parcomm_t
 
 contains
@@ -41,5 +42,14 @@ subroutine barrier(this)
     call mpi_barrier(this%comm_w, ierr)
 
 end subroutine barrier
+
+subroutine print(this, message)
+
+    class(parcomm_t), intent(in) :: this
+    character(len=*), intent(in) :: message
+
+    if (this%myid == 0) print*, message
+
+end subroutine print
 
 end module parcomm_mod

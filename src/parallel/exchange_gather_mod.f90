@@ -3,6 +3,7 @@ module exchange_gather_mod
 use grid_field_mod,        only : grid_field_t
 use exchange_abstract_mod, only : exchange_t
 use buffer_mod,            only : buffer_t, pack_to_buf, unpack_from_buf
+use parcomm_mod,           only : parcomm_t
 use mpi
 
 implicit none
@@ -31,15 +32,17 @@ type, extends(exchange_t), public :: exchange_gather_t
 
 contains
 
-    procedure, public:: do => do_gather_exchange
+    procedure, public:: do     => do_gather_exchange
+    procedure, public:: do_vec => do_gather_exchange_vec
 
 end type exchange_gather_t
 
 contains
 
-subroutine do_gather_exchange(this, f)
+subroutine do_gather_exchange(this, f, parcomm)
 
     class(exchange_gather_t), intent(inout) :: this
+    type(parcomm_t),          intent(in)    :: parcomm
     type(grid_field_t),       intent(inout) :: f
 
     integer(kind=4) :: ierr, myid
@@ -104,4 +107,16 @@ subroutine do_gather_exchange(this, f)
     end if
 
 end subroutine do_gather_exchange
+subroutine do_gather_exchange_vec(this, u, v, parcomm)
+
+    class(exchange_gather_t), intent(inout) :: this
+    type(parcomm_t),          intent(in)    :: parcomm
+    type(grid_field_t),       intent(inout) :: u, v
+
+    integer(kind=4) :: code, ierr
+
+    call parcomm%print('Gather vec exchange is not implemented :(. Abort!')
+    call mpi_abort(parcomm%comm_w, 111, ierr)
+
+end subroutine do_gather_exchange_vec
 end module exchange_gather_mod

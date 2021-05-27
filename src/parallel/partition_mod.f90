@@ -13,8 +13,8 @@ type, public :: partition_t
     integer(kind=4)              :: ts, te      ! start and end index of the tiles belonging to the specific processor
 contains
     procedure, public :: init
-    procedure, public :: write_to_txt
-    procedure, public :: write_to_txt_3d
+    ! procedure, public :: write_to_txt
+    ! procedure, public :: write_to_txt_3d
 end type partition_t
 
 contains
@@ -36,11 +36,12 @@ subroutine init(this, Nh, Nz, num_tiles, myid, Np, strategy)
 
     allocate(this%tile(num_panels*num_tiles))
     allocate(this%proc_map(num_panels*num_tiles))
+    allocate(this%panel_map(num_panels*num_tiles))
     this%num_tiles = num_tiles
     this%Nh = Nh
     this%Nz = Nz
 
-    if (Np>6*num_tiles) then
+    if (Np>num_panels*num_tiles) then
         print*, 'Error!!! Number of tiles is less than number of processors!!!'
         stop
     end if
@@ -58,7 +59,7 @@ subroutine init(this, Nh, Nz, num_tiles, myid, Np, strategy)
     this%ts = findloc(this%proc_map, myid, dim=1)
     this%te = findloc(this%proc_map, myid, back = .true., dim=1)
 
-    if(myid == 0) call this%write_to_txt('partition.txt')
+    ! if(myid == 0) call this%write_to_txt('partition.txt')
 
 end subroutine init
 
@@ -121,46 +122,46 @@ subroutine default_strategy(partition, Nh, Nz, Np)
 
 end subroutine default_strategy
 
-subroutine write_to_txt(this, filename)
-    class(partition_t), intent(in) :: this
-    character(*),       intent(in) :: filename
-
-    integer(kind=4) :: ind
-
-    open(120, file=filename)
-
-    do ind = 1, size(this%tile,1)
-        write(120,*) this%tile(ind)%panel_number, this%tile(ind)%is, this%tile(ind)%ie &
-                                           , this%tile(ind)%js, this%tile(ind)%je, this%proc_map(ind)
-    end do
-
-    close(120)
-
-end subroutine
-subroutine write_to_txt_3d(this, filename)
-
-    use topology_mod, only : ex, ey, r
-
-    class(partition_t), intent(in) :: this
-    character(*),       intent(in) :: filename
-
-    integer(kind=4) :: ind, xyz_s(1:3), xyz_e(1:3)
-
-    open(120, file=filename)
-
-    do ind = 1, size(this%tile,1)
-
-        xyz_s(1:3) = r(1:3,this%tile(ind)%panel_number)*this%Nh + (this%tile(ind)%is-1)*ex(1:3, this%tile(ind)%panel_number) + &
-                                                             (this%tile(ind)%js-1)*ey(1:3, this%tile(ind)%panel_number)
-        xyz_e(1:3) = r(1:3,this%tile(ind)%panel_number)*this%Nh + (this%tile(ind)%ie-1)*ex(1:3, this%tile(ind)%panel_number) + &
-                                                             (this%tile(ind)%je-1)*ey(1:3, this%tile(ind)%panel_number)
-
-        write(120,'(8I4)') this%tile(ind)%panel_number, xyz_s(1), xyz_e(1), xyz_s(2), xyz_e(2), xyz_s(3), xyz_e(3), this%proc_map(ind)
-    end do
-
-    close(120)
-
-end subroutine write_to_txt_3d
+! subroutine write_to_txt(this, filename)
+!     class(partition_t), intent(in) :: this
+!     character(*),       intent(in) :: filename
+!
+!     integer(kind=4) :: ind
+!
+!     open(120, file=filename)
+!
+!     do ind = 1, size(this%tile,1)
+!         write(120,*) this%tile(ind)%panel_number, this%tile(ind)%is, this%tile(ind)%ie &
+!                                            , this%tile(ind)%js, this%tile(ind)%je, this%proc_map(ind)
+!     end do
+!
+!     close(120)
+!
+! end subroutine
+! subroutine write_to_txt_3d(this, filename)
+!
+!     use topology_mod, only : ex, ey, r
+!
+!     class(partition_t), intent(in) :: this
+!     character(*),       intent(in) :: filename
+!
+!     integer(kind=4) :: ind, xyz_s(1:3), xyz_e(1:3)
+!
+!     open(120, file=filename)
+!
+!     do ind = 1, size(this%tile,1)
+!
+!         xyz_s(1:3) = r(1:3,this%tile(ind)%panel_number)*this%Nh + (this%tile(ind)%is-1)*ex(1:3, this%tile(ind)%panel_number) + &
+!                                                              (this%tile(ind)%js-1)*ey(1:3, this%tile(ind)%panel_number)
+!         xyz_e(1:3) = r(1:3,this%tile(ind)%panel_number)*this%Nh + (this%tile(ind)%ie-1)*ex(1:3, this%tile(ind)%panel_number) + &
+!                                                              (this%tile(ind)%je-1)*ey(1:3, this%tile(ind)%panel_number)
+!
+!         write(120,'(8I4)') this%tile(ind)%panel_number, xyz_s(1), xyz_e(1), xyz_s(2), xyz_e(2), xyz_s(3), xyz_e(3), this%proc_map(ind)
+!     end do
+!
+!     close(120)
+!
+! end subroutine write_to_txt_3d
 
 subroutine partition_1d(Np, N, work)
     integer(kind=4), intent(in)  :: Np, N

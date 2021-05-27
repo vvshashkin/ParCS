@@ -22,9 +22,6 @@ subroutine create_ecs_global_domain(domain, hor_grid_type, nh, nz)
 
     call create_parcomm(domain%parcomm)
 
-    ! call MPI_comm_rank(mpi_comm_world , myid, ierr)
-    ! call MPI_comm_size(mpi_comm_world , Np  , ierr)
-
     call domain%partition%init(nh, nz, max(1,domain%parcomm%np/6), domain%parcomm%myid, domain%parcomm%Np, strategy = 'default')
 
     call create_equiangular_mesh(domain%mesh_p, domain%partition, halo_width, hor_grid_type, 'p')

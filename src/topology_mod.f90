@@ -191,46 +191,54 @@ subroutine transform_tile_coords( pn_source, source_tile, &
     integer(kind=4) :: ex_ex, ex_ey, ex_r, ey_ex, ey_ey, ey_r
     logical :: is_opposite, is_right, is_left, is_bottom, is_top
 
-    is_right    = (dot_product(ex(1:3,pn_out), n(1:3,pn_in)) == -1)
-    is_left     = (dot_product(ex(1:3,pn_out), n(1:3,pn_in)) ==  1)
-    is_bottom   = (dot_product(ey(1:3,pn_out), n(1:3,pn_in)) ==  1)
-    is_top      = (dot_product(ey(1:3,pn_out), n(1:3,pn_in)) == -1)
-    is_opposite = (dot_product( n(1:3,pn_out), n(1:3,pn_in)) == -1)
+    if (pn_source == pn_target) then
+        target_tile = source_tile
+        return
+    end if
+
+    is_right    = (dot_product(ex(1:3,pn_target), n(1:3,pn_source)) == -1)
+    is_left     = (dot_product(ex(1:3,pn_target), n(1:3,pn_source)) ==  1)
+    is_bottom   = (dot_product(ey(1:3,pn_target), n(1:3,pn_source)) ==  1)
+    is_top      = (dot_product(ey(1:3,pn_target), n(1:3,pn_source)) == -1)
+    is_opposite = (dot_product( n(1:3,pn_target), n(1:3,pn_source)) == -1)
 
     if (is_right) then
-        ex_local = n (1:3, pn_out)
-        ey_local = ey(1:3, pn_out)
-        r_local  = r (1:3, pn_out) + ex(1:3, pn_out)
+        ex_local = n (1:3, pn_target)
+        ey_local = ey(1:3, pn_target)
+        r_local  = r (1:3, pn_target) + ex(1:3, pn_target)
         shift = [nx,0]
     else if (is_left) then
-        ex_local = -n (1:3, pn_out)
-        ey_local =  ey(1:3, pn_out)
-        r_local  =  r (1:3, pn_out) - ex_local(1:3)
+        ex_local = -n (1:3, pn_target)
+        ey_local =  ey(1:3, pn_target)
+        r_local  =  r (1:3, pn_target) - ex_local(1:3)
         shift = [-nx,0]
     else if (is_bottom) then
-        ex_local =  ex(1:3, pn_out)
-        ey_local = -n(1:3, pn_out)
-        r_local  =  r (1:3, pn_out) + n(1:3, pn_out)
+        ex_local =  ex(1:3, pn_target)
+        ey_local =  -n(1:3, pn_target)
+        r_local  =  r (1:3, pn_target) + n(1:3, pn_target)
         shift = [0,-ny]
     else if (is_top) then
-        ex_local =  ex(1:3, pn_out)
-        ey_local =  n(1:3, pn_out)
-        r_local  =  r(1:3, pn_out) +ey(1:3,pn_out)
+        ex_local =  ex(1:3, pn_target)
+        ey_local =   n(1:3, pn_target)
+        r_local  =   r(1:3, pn_target) +ey(1:3,pn_target)
         shift = [0, ny]
     else if (is_opposite) then
-        ex_local = -ex(1:3, pn_out)
-        ey_local =  ey(1:3, pn_out)
-        r_local  =  r (1:3, pn_out) + ex(1:3, pn_out) + n(1:3, pn_out)
+        ex_local = -ex(1:3, pn_target)
+        ey_local =  ey(1:3, pn_target)
+        r_local  =  r (1:3, pn_target) + ex(1:3, pn_target) + n(1:3, pn_target)
         shift = [2*nx,0]
     end if
 
-    ex_ex = dot_product(ex(1:3, pn_in), ex_local(1:3))
-    ex_ey = dot_product(ey(1:3, pn_in), ex_local(1:3))
-    ex_r  = dot_product(r(1:3, pn_in) - r_local(1:3), ex_local(1:3))
+    ex_ex = dot_product(ex(1:3, pn_source), ex_local(1:3))
+    ex_ey = dot_product(ey(1:3, pn_source), ex_local(1:3))
+    ex_r  = dot_product( r(1:3, pn_source) - r_local(1:3), ex_local(1:3))
 
-    ey_ex = dot_product(ex(1:3, pn_in), ey_local(1:3))
-    ey_ey = dot_product(ey(1:3, pn_in), ey_local(1:3))
-    ey_r  = dot_product(r(1:3, pn_in) - r_local(1:3), ey_local(1:3))
+    ey_ex = dot_product(ex(1:3, pn_source), ey_local(1:3))
+    ey_ey = dot_product(ey(1:3, pn_source), ey_local(1:3))
+    ey_r  = dot_product( r(1:3, pn_source) - r_local(1:3), ey_local(1:3))
+
+    target_tile%ks = source_tile%ks
+    target_tile%ke = source_tile%ke
 
     target_tile%is = (source_tile%is-1)*ex_ex + (source_tile%js-1)*ex_ey + (nx-1)*ex_r + 1 + shift(1)
     target_tile%js = (source_tile%is-1)*ey_ex + (source_tile%js-1)*ey_ey + (ny-1)*ey_r + 1 + shift(2)
@@ -251,11 +259,18 @@ subroutine find_basis_orientation( pn_source, pn_target, i_step, j_step, first_d
     integer(kind=4) :: ex_ex, ex_ey, ey_ex, ey_ey
     logical :: is_opposite, is_right, is_left, is_bottom, is_top
 
-    is_right    = (dot_product(ex(1:3,pn_out), n(1:3,pn_source)) == -1)
-    is_left     = (dot_product(ex(1:3,pn_out), n(1:3,pn_source)) ==  1)
-    is_bottom   = (dot_product(ey(1:3,pn_out), n(1:3,pn_source)) ==  1)
-    is_top      = (dot_product(ey(1:3,pn_out), n(1:3,pn_source)) == -1)
-    is_opposite = (dot_product( n(1:3,pn_out), n(1:3,pn_source)) == -1)
+    if (pn_source == pn_target) then
+        first_dim_index = 'i'
+        i_step = 1
+        j_step = 1
+        return
+    end if
+
+    is_right    = (dot_product(ex(1:3,pn_target), n(1:3,pn_source)) == -1)
+    is_left     = (dot_product(ex(1:3,pn_target), n(1:3,pn_source)) ==  1)
+    is_bottom   = (dot_product(ey(1:3,pn_target), n(1:3,pn_source)) ==  1)
+    is_top      = (dot_product(ey(1:3,pn_target), n(1:3,pn_source)) == -1)
+    is_opposite = (dot_product( n(1:3,pn_target), n(1:3,pn_source)) == -1)
 
     if (is_right) then
         ex_local = n (1:3, pn_target)

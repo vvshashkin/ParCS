@@ -2,7 +2,10 @@ module exchange_halo_mod
 
 use grid_field_mod,        only : grid_field_t
 use exchange_abstract_mod, only : exchange_t
-use buffer_mod,            only : buffer_t, pack_to_buf, unpack_from_buf
+use buffer_mod,            only : buffer_t, pack_to_buf, unpack_from_buf, &
+                                  pack_to_buf_vec, unpack_from_buf_vec
+use tile_mod,              only : tile_t
+use parcomm_mod,           only : parcomm_t
 use mpi
 
 implicit none
@@ -22,25 +25,24 @@ type, extends(exchange_t), public :: exchange_2D_halo_t
     integer(kind=4), allocatable, dimension(:) :: send_to_proc_id, recv_from_proc_id
     integer(kind=4), allocatable, dimension(:) :: send_tag, recv_tag
 
-    integer(kind=4), allocatable, dimension(:) :: send_is, send_ie, send_js, send_je, send_ks, send_ke
-    integer(kind=4), allocatable, dimension(:) :: recv_is, recv_ie, recv_js, recv_je, recv_ks, recv_ke
-
-    integer(kind=4) :: ts, te
+    type(tile_t), allocatable :: recv_tile(:), send_tile(:)
 
     integer(kind=4),  allocatable :: send_i_step(:), send_j_step(:)
     character(len=1), allocatable :: first_dim_index(:)
 
 contains
 
-    procedure, public:: do => do_halo_exchange
+    procedure, public:: do     => do_halo_exchange
+    procedure, public:: do_vec => do_halo_exchange_vec
 
 end type exchange_2D_halo_t
 
 contains
 
-subroutine do_halo_exchange(this, f)
+subroutine do_halo_exchange(this, f, parcomm)
 
     class(exchange_2D_halo_t), intent(inout) :: this
+    type(parcomm_t),           intent(in)    :: parcomm
     type(grid_field_t),        intent(inout) :: f
 
     integer(kind=4) :: ierr, myid
@@ -54,8 +56,8 @@ subroutine do_halo_exchange(this, f)
                        this%recv_points_num(i),    &
                        this%mpi_message_type,      &
                        this%recv_from_proc_id(i),  &
-                       this%recv_tag(i),   &
-                       mpi_comm_world,             &
+                       this%recv_tag(i),           &
+                       parcomm%comm_w,             &
                        this%mpi_recv_req(i),       &
                        ierr)
     end do
@@ -63,9 +65,9 @@ subroutine do_halo_exchange(this, f)
     do i = 1, this%send_number
         call pack_to_buf(f%tile(this%send_from_tile_ind(i)), &
              this%send_buff(i)%p,              &
-             this%send_is(i), this%send_ie(i), &
-             this%send_js(i), this%send_je(i), &
-             this%send_ks(i), this%send_ke(i), &
+             this%send_tile(i)%is, this%send_tile(i)%ie, &
+             this%send_tile(i)%js, this%send_tile(i)%je, &
+             this%send_tile(i)%ks, this%send_tile(i)%ke, &
              this%first_dim_index(i),          &
              this%send_i_step(i),              &
              this%send_j_step(i),              &
@@ -78,7 +80,7 @@ subroutine do_halo_exchange(this, f)
                        this%mpi_message_type,    &
                        this%send_to_proc_id(i),  &
                        this%send_tag(i),         &
-                       mpi_comm_world,           &
+                       parcomm%comm_w,           &
                        this%mpi_send_req(i),     &
                        ierr )
     end do
@@ -88,9 +90,9 @@ subroutine do_halo_exchange(this, f)
 
         call unpack_from_buf(f%tile(this%recv_to_tile_ind(i)), &
              this%recv_buff(i)%p,              &
-             this%recv_is(i), this%recv_ie(i), &
-             this%recv_js(i), this%recv_je(i), &
-             this%recv_ks(i), this%recv_ke(i), &
+             this%recv_tile(i)%is, this%recv_tile(i)%ie, &
+             this%recv_tile(i)%js, this%recv_tile(i)%je, &
+             this%recv_tile(i)%ks, this%recv_tile(i)%ke, &
              this%recv_points_num(i) )
 
     end do
@@ -98,5 +100,69 @@ subroutine do_halo_exchange(this, f)
     call mpi_waitall(this%send_number, this%mpi_send_req, mpi_statuses_ignore, ierr)
 
 end subroutine do_halo_exchange
+subroutine do_halo_exchange_vec(this, u, v, parcomm)
 
+    class(exchange_2D_halo_t), intent(inout) :: this
+    type(parcomm_t),           intent(in)    :: parcomm
+    type(grid_field_t),        intent(inout) :: u, v
+
+    integer(kind=4) :: ierr
+    integer(kind=4) :: i, ind, ind_recv
+
+    this%mpi_send_req = MPI_REQUEST_NULL
+    this%mpi_recv_req = MPI_REQUEST_NULL
+
+    do i = 1, this%recv_number
+        call MPI_irecv(this%recv_buff(i)%p,        &
+                       2*this%recv_points_num(i),  &
+                       this%mpi_message_type,      &
+                       this%recv_from_proc_id(i),  &
+                       this%recv_tag(i),           &
+                       parcomm%comm_w,             &
+                       this%mpi_recv_req(i),       &
+                       ierr)
+    end do
+
+    do i = 1, this%send_number
+        call pack_to_buf_vec(                     &
+             u%tile(this%send_from_tile_ind(i)), &
+             v%tile(this%send_from_tile_ind(i)), &
+             this%send_buff(i)%p,              &
+             this%send_tile(i)%is, this%send_tile(i)%ie, &
+             this%send_tile(i)%js, this%send_tile(i)%je, &
+             this%send_tile(i)%ks, this%send_tile(i)%ke, &
+             this%first_dim_index(i),          &
+             this%send_i_step(i),              &
+             this%send_j_step(i),              &
+             this%send_points_num(i) )
+    end do
+
+    do i = 1, this%send_number
+        call MPI_isend(this%send_buff(i)%p,      &
+                       2*this%send_points_num(i),  &
+                       this%mpi_message_type,    &
+                       this%send_to_proc_id(i),  &
+                       this%send_tag(i),         &
+                       parcomm%comm_w,           &
+                       this%mpi_send_req(i),     &
+                       ierr )
+    end do
+
+    do ind = 1, this%recv_number
+        call mpi_waitany(this%recv_number, this%mpi_recv_req, i, mpi_status_ignore, ierr)
+
+        call unpack_from_buf_vec(               &
+             u%tile(this%recv_to_tile_ind(i)), &
+             v%tile(this%recv_to_tile_ind(i)), &
+             this%recv_buff(i)%p,               &
+             this%recv_tile(i)%is, this%recv_tile(i)%ie, &
+             this%recv_tile(i)%js, this%recv_tile(i)%je, &
+             this%recv_tile(i)%ks, this%recv_tile(i)%ke, &
+             this%recv_points_num(i) )
+
+    end do
+
+    call mpi_waitall(this%send_number, this%mpi_send_req, mpi_statuses_ignore, ierr)
+
+end subroutine do_halo_exchange_vec
 end module exchange_halo_mod
