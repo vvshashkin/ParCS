@@ -1,6 +1,15 @@
-module topology_mod
+module cubed_sphere_topology_mod
 
-implicit none
+use topology_mod, only: topology_t
+
+type, extends(topology_t) :: cubed_sphere_topology_t
+
+contains
+    procedure :: init                   => init_cs_topology
+    procedure :: transform_tile_coords  => transform_tile_coords
+    procedure :: transform_index        => transform_index
+    procedure :: find_basis_orientation => find_basis_orientation
+end type cubed_sphere_topology_t
 
 !!             ......
 !!            |      :
@@ -45,6 +54,17 @@ integer(kind=4), parameter ::  r(3,6) = reshape( (/  (/1, 0, 0/), &
                                                      (/0, 1, 1/)    /),  (/3 ,6/) )
 contains
 
+subroutine init_cs_topology(this)
+    class(cubed_sphere_topology_t), intent(inout) :: this
+
+    this%npanels = 6
+    this%ex = ex
+    this%ex = ey
+    this%n  = n
+    this%r  = r
+
+end
+
 subroutine calc_xyz_cords(panel_ind, i, j, npoints, ix, iy, iz)
 
     integer(kind=4), intent(in)  :: panel_ind, i, j, npoints
@@ -56,8 +76,9 @@ subroutine calc_xyz_cords(panel_ind, i, j, npoints, ix, iy, iz)
 
 end subroutine calc_xyz_cords
 
-subroutine transform_index(pn_out, pn_in, Npoints, i_in, j_in, i_out, j_out, i_step, j_step, first_dim_index)
+subroutine transform_index(topology,pn_out, pn_in, Npoints, i_in, j_in, i_out, j_out, i_step, j_step, first_dim_index)
 
+    class(cubed_sphere_topology_t), intent(in) :: topology
     integer(kind=4),  intent(in)            :: pn_out, pn_in, Npoints, i_in, j_in
     integer(kind=4),  intent(out)           :: i_out , j_out
     integer(kind=4),  intent(out), optional :: i_step, j_step  !Determines descending or ascending order of loop
@@ -174,13 +195,14 @@ subroutine transform_index(pn_out, pn_in, Npoints, i_in, j_in, i_out, j_out, i_s
     end if
 
 end subroutine transform_index
-subroutine transform_tile_coords( pn_source, source_tile, &
+subroutine transform_tile_coords( topology, pn_source, source_tile, &
                                   pn_target, target_tile, &
                                   nx, ny)
 
     use tile_mod, only : tile_t
 
     !transform tile coords at source panel to coords at target panel
+    class(cubed_sphere_topology_t), intent(in) :: topology
     integer(kind=4), intent(in)  :: pn_source, pn_target ! index of source and target panels
     type(tile_t), intent(in)  :: source_tile ! tile coords at source panel
     type(tile_t), intent(out) :: target_tile ! tile coords at target panel
@@ -247,9 +269,10 @@ subroutine transform_tile_coords( pn_source, source_tile, &
     target_tile%je = (source_tile%ie-1)*ey_ex + (source_tile%je-1)*ey_ey + (ny-1)*ey_r + 1 + shift(2)
 
 end subroutine transform_tile_coords
-subroutine find_basis_orientation( pn_source, pn_target, i_step, j_step, first_dim_index )
+subroutine find_basis_orientation( topology, pn_source, pn_target, i_step, j_step, first_dim_index )
 
     !transform tile coords at source panel to coords at target panel
+    class(cubed_sphere_topology_t), intent(in) :: topology
     integer(kind=4), intent(in)  :: pn_source, pn_target ! index of source and target panels
 
     integer(kind=4),  intent(out), optional :: i_step, j_step  !Determines descending or ascending order of loop
@@ -306,4 +329,5 @@ subroutine find_basis_orientation( pn_source, pn_target, i_step, j_step, first_d
     end if
 
 end subroutine find_basis_orientation
-end module topology_mod
+
+end module cubed_sphere_topology_mod

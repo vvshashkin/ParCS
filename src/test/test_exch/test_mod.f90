@@ -122,7 +122,7 @@ subroutine test_A_halo_exchange()
     use mpi
 
     use domain_mod,             only : domain_t
-    use domain_factory_mod,     only : create_ecs_global_domain
+    use domain_factory_mod,     only : create_domain
     use exchange_abstract_mod,  only : exchange_t
     use exchange_halo_mod,      only : exchange_2D_halo_t
     use partition_mod,          only : partition_t
@@ -145,7 +145,7 @@ subroutine test_A_halo_exchange()
 
     real(kind=8) :: u_remote, v_remote
 
-    call create_ecs_global_domain(domain, 'A', nh, nz)
+    call create_domain(domain, "cube", 'A', nh, nz)
 
     call domain%parcomm%print('Running cross_halo_exchange test!')
 
@@ -199,7 +199,7 @@ subroutine test_A_halo_exchange()
     if (gl_err_sum==0) then
         call domain%parcomm%print('Test passed!')
     else
-        call domain%parcomm%print('Test not passed! Error! Abort!')
+        call domain%parcomm%print('Test failed! Error! Abort!')
         call mpi_abort(mpi_comm_world, code, ierr)
         stop
     end if

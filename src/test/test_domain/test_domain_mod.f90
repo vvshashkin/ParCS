@@ -9,7 +9,7 @@ contains
 
 subroutine test_domain()
 
-    use domain_factory_mod,     only : create_ecs_global_domain
+    use domain_factory_mod,     only : create_domain
     use grid_field_factory_mod, only : create_grid_field
 
     type(domain_t) :: domain
@@ -18,7 +18,7 @@ subroutine test_domain()
     integer(kind=4)  :: nh=100, nz=10, halo_width=50
     character(len=1) :: hor_grid_type = 'C'
 
-    call create_ecs_global_domain(domain, hor_grid_type, nh, nz)
+    call create_domain(domain, "cube", hor_grid_type, nh, nz)
 
     call create_grid_field(f , 2, 0, domain%mesh_p)
     call create_grid_field(f2, 2, 0, domain%mesh_p)

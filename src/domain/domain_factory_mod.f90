@@ -1,18 +1,21 @@
 module domain_factory_mod
 
 use domain_mod, only : domain_t
+use topology_factory_mod,      only: init_topology
+use cubed_sphere_topology_mod, only: cubed_sphere_topology_t
 use mpi
 
 implicit none
 
 contains
 
-subroutine create_ecs_global_domain(domain, staggering_type, nh, nz)
+subroutine create_domain(domain, topology_type, staggering_type, nh, nz)
 
     use mesh_factory_mod,    only : create_equiangular_mesh
     use parcomm_factory_mod, only : create_parcomm
 
     type(domain_t),   intent(out) :: domain
+    character(len=*), intent(in)  :: topology_type
     character(len=*), intent(in)  :: staggering_type
     integer(kind=4),  intent(in)  :: nh, nz
 
@@ -20,6 +23,8 @@ subroutine create_ecs_global_domain(domain, staggering_type, nh, nz)
 
 !have to be passed as an argument in future
     halo_width = 8
+
+    domain%topology = init_topology(topology_type)
 
     call create_parcomm(domain%parcomm)
 
@@ -30,6 +35,6 @@ subroutine create_ecs_global_domain(domain, staggering_type, nh, nz)
     call create_equiangular_mesh(domain%mesh_u, domain%partition, halo_width, staggering_type, 'u')
     call create_equiangular_mesh(domain%mesh_v, domain%partition, halo_width, staggering_type, 'v')
 
-end subroutine create_ecs_global_domain
+end subroutine create_domain
 
 end module domain_factory_mod
