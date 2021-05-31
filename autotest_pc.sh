@@ -8,7 +8,8 @@ test_res_long="test_long.txt"
 
 srcdir=src
 genmake=genMakefile.sh
-makecmd="make all"
+makecmd="make -k all" # -k to compile & test all that is compileable at the moment
+                      # despite of the some test's compilation is failed
 
 pref="atest"
 suff="pc"
@@ -73,4 +74,3 @@ msgall ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 msgall "tests completed, please see results in " $test_res_dir"/"$test_res_short", "$test_res_dir"/"$test_res_long
 
 cleanexit
-
