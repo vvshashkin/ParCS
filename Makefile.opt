@@ -231,6 +231,19 @@ $(DOBJ)exchange_gather_mod.o: src/parallel/exchange_gather_mod.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)metric_mod.o: src/metric/metric_mod.f90
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)metric_factory_mod.o: src/metric/metric_factory_mod.f90 \
+	$(DOBJ)metric_mod.o \
+	$(DOBJ)topology_mod.o \
+	$(DOBJ)cubed_sphere_topology_mod.o \
+	$(DOBJ)ecs_metric_mod.o \
+	$(DOBJ)ecs_metric_factory_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)outputer_factory_mod.o: src/outputer/outputer_factory_mod.f90 \
 	$(DOBJ)grid_field_factory_mod.o \
 	$(DOBJ)master_paneled_outputer_mod.o \
@@ -311,6 +324,8 @@ $(DOBJ)domain_factory_mod.o: src/domain/domain_factory_mod.f90 \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)topology_factory_mod.o \
 	$(DOBJ)cubed_sphere_topology_mod.o \
+	$(DOBJ)metric_mod.o \
+	$(DOBJ)metric_factory_mod.o \
 	$(DOBJ)mesh_factory_mod.o \
 	$(DOBJ)parcomm_factory_mod.o
 	@echo $(COTEXT)
@@ -353,7 +368,14 @@ $(DOBJ)topology_mod.o: src/topology/topology_mod.f90 \
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)topology_factory_mod.o: src/topology/topology_factory_mod.f90 \
-	$(DOBJ)topology_mod.o
+	$(DOBJ)topology_mod.o \
+	$(DOBJ)cubed_sphere_topology_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)ecs_metric_mod.o: src/equiang_cs/ecs_metric_mod.f90 \
+	$(DOBJ)metric_mod.o \
+	$(DOBJ)cubed_sphere_topology_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -388,6 +410,14 @@ $(DOBJ)ecs_halo_vec_a_mod.o: src/equiang_cs/ecs_halo_vec_a_mod.f90 \
 $(DOBJ)ecs_halo_mod.o: src/equiang_cs/ecs_halo_mod.f90 \
 	$(DOBJ)halo_mod.o \
 	$(DOBJ)grid_field_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)ecs_metric_factory_mod.o: src/equiang_cs/ecs_metric_factory_mod.f90 \
+	$(DOBJ)cubed_sphere_topology_mod.o \
+	$(DOBJ)metric_mod.o \
+	$(DOBJ)ecs_metric_mod.o \
+	$(DOBJ)const_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

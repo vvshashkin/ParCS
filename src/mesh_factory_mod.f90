@@ -7,7 +7,7 @@ implicit none
 
 contains
 
-subroutine create_equiangular_mesh(mesh, partition, halo_width, staggering_type, points_type)
+subroutine create_mesh(mesh, partition, halo_width, staggering_type, points_type)
     use const_mod,            only: pi
     use ecs_geometry_mod,     only: ecs_ab2xyz_proto, ecs_proto2face,       &
                                     ecs_acov_proto, ecs_bcov_proto,         &
@@ -107,7 +107,7 @@ subroutine create_equiangular_mesh(mesh, partition, halo_width, staggering_type,
     end do
 
 
-end subroutine create_equiangular_mesh
+end subroutine create_mesh
 
 
 end module mesh_factory_mod
