@@ -5,6 +5,7 @@ type, public :: tile_t
     integer(kind=4) :: is, ie, js, je, ks, ke
 contains
     procedure, public :: init
+    procedure, public :: get_points_num
     procedure, public :: check
     procedure, public :: print
     procedure, public :: getind
@@ -42,6 +43,17 @@ subroutine check(this)
     end if
 
 end subroutine check
+
+pure function get_points_num(this) result(points_num)
+
+    class(tile_t), intent(in) :: this
+    integer(kind=4) :: points_num
+
+    points_num = (this%ke - this%ks + 1)* &
+                 (this%je - this%js + 1)* &
+                 (this%ie - this%is + 1)
+
+end function get_points_num
 
 subroutine print(this)
     class(tile_t), intent(in) :: this

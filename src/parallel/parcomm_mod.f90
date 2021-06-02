@@ -11,6 +11,7 @@ contains
     procedure, public :: get_mpi_rank
     procedure, public :: get_mpi_proc_number
     procedure, public :: barrier
+    procedure, public :: abort
     procedure, public :: print
 end type parcomm_t
 
@@ -42,6 +43,18 @@ subroutine barrier(this)
     call mpi_barrier(this%comm_w, ierr)
 
 end subroutine barrier
+
+subroutine abort(this, error_message)
+
+    class(parcomm_t), intent(in) :: this
+    character(len=*), intent(in) :: error_message
+
+    integer(kind=4) :: code, ierr
+
+    call this%print(error_message)
+    call mpi_abort(this%comm_w, code, ierr)
+
+end subroutine abort
 
 subroutine print(this, message)
 

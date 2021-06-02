@@ -79,12 +79,12 @@ subroutine init(this, Nh, Nz, num_tiles, myid, Np, staggering_type, strategy)
         this%ny_u = this%nh
         this%nx_v = this%nh
         this%ny_v = this%nh+1
-    do t = 1, this%num_panels*this%num_tiles
-        this%tile_u(t) = this%tile(t)
-        this%tile_v(t) = this%tile(t)
-        if (this%tile_u(t)%ie == this%nh) this%tile_u(t)%ie = this%nx_u
-        if (this%tile_v(t)%je == this%nh) this%tile_v(t)%je = this%ny_v
-    end do
+        do t = 1, this%num_panels*this%num_tiles
+            this%tile_u(t) = this%tile(t)
+            this%tile_v(t) = this%tile(t)
+            if (this%tile_u(t)%ie == this%nh) this%tile_u(t)%ie = this%nx_u
+            if (this%tile_v(t)%je == this%nh) this%tile_v(t)%je = this%ny_v
+        end do
     else
         print*, 'Unknown staggering_type in partition initialization. Stop'
         stop
