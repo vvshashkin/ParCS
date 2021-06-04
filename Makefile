@@ -115,11 +115,6 @@ $(DOBJ)global_diag_mod.o: src/global_diag_mod.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
-$(DOBJ)topology_mod.o: src/topology_mod.f90 \
-	$(DOBJ)tile_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
 $(DOBJ)grid_field_mod.o: src/grid_field_mod.f90 \
 	$(DOBJ)mesh_mod.o
 	@echo $(COTEXT)
@@ -199,6 +194,15 @@ $(DOBJ)partition_mod.o: src/parallel/partition_mod.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)exchange_halo_c_mod.o: src/parallel/exchange_halo_C_mod.f90 \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)exchange_abstract_mod.o \
+	$(DOBJ)buffer_mod.o \
+	$(DOBJ)tile_mod.o \
+	$(DOBJ)parcomm_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)parcomm_factory_mod.o: src/parallel/parcomm_factory_mod.f90 \
 	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
@@ -210,6 +214,7 @@ $(DOBJ)exchange_factory_mod.o: src/parallel/exchange_factory_mod.f90 \
 	$(DOBJ)tile_mod.o \
 	$(DOBJ)exchange_halo_mod.o \
 	$(DOBJ)topology_mod.o \
+	$(DOBJ)exchange_halo_c_mod.o \
 	$(DOBJ)exchange_gather_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -362,6 +367,11 @@ $(DOBJ)auxhs.o: src/aux/auxhs.f
 
 $(DOBJ)cubed_sphere_topology_mod.o: src/topology/cubed_sphere_topology_mod.f90 \
 	$(DOBJ)topology_mod.o \
+	$(DOBJ)tile_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)topology_mod.o: src/topology/topology_mod.f90 \
 	$(DOBJ)tile_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -704,7 +714,8 @@ $(DOBJ)test_mod.o: src/test/test_exch/test_mod.f90 \
 	$(DOBJ)exchange_halo_mod.o \
 	$(DOBJ)partition_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
-	$(DOBJ)topology_mod.o
+	$(DOBJ)topology_mod.o \
+	$(DOBJ)exchange_halo_c_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
