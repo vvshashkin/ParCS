@@ -156,9 +156,8 @@ $(DOBJ)const_mod.o: src/const_mod.f90
 $(DOBJ)mesh_factory_mod.o: src/mesh_factory_mod.f90 \
 	$(DOBJ)mesh_mod.o \
 	$(DOBJ)tile_mod.o \
-	$(DOBJ)const_mod.o \
-	$(DOBJ)ecs_geometry_mod.o \
-	$(DOBJ)partition_mod.o
+	$(DOBJ)partition_mod.o \
+	$(DOBJ)metric_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

@@ -36,9 +36,9 @@ subroutine create_domain(domain, topology_type, staggering_type, nh, nz)
     call domain%partition%init(nh, nz, max(1,domain%parcomm%np/6), domain%parcomm%myid, domain%parcomm%Np, &
                                 staggering_type, strategy = 'default')
 
-    call create_mesh(domain%mesh_p, domain%partition, halo_width, staggering_type, 'p')
-    call create_mesh(domain%mesh_u, domain%partition, halo_width, staggering_type, 'u')
-    call create_mesh(domain%mesh_v, domain%partition, halo_width, staggering_type, 'v')
+    call create_mesh(domain%mesh_p, domain%partition, metric, halo_width, staggering_type, 'p')
+    call create_mesh(domain%mesh_u, domain%partition, metric, halo_width, staggering_type, 'u')
+    call create_mesh(domain%mesh_v, domain%partition, metric, halo_width, staggering_type, 'v')
 
 end subroutine create_domain
 
