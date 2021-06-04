@@ -115,6 +115,11 @@ $(DOBJ)global_diag_mod.o: src/global_diag_mod.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)topology_mod.o: src/topology_mod.f90 \
+	$(DOBJ)tile_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)grid_field_mod.o: src/grid_field_mod.f90 \
 	$(DOBJ)mesh_mod.o
 	@echo $(COTEXT)
@@ -357,11 +362,6 @@ $(DOBJ)auxhs.o: src/aux/auxhs.f
 
 $(DOBJ)cubed_sphere_topology_mod.o: src/topology/cubed_sphere_topology_mod.f90 \
 	$(DOBJ)topology_mod.o \
-	$(DOBJ)tile_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
-$(DOBJ)topology_mod.o: src/topology/topology_mod.f90 \
 	$(DOBJ)tile_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
