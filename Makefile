@@ -757,8 +757,16 @@ $(DOBJ)test_mesh_mod.o: src/test/test_mesh/test_mesh_mod.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)test_metric_class_mod.o: src/test/test_metric/test_metric_class_mod.f90 \
+	$(DOBJ)metric_mod.o \
+	$(DOBJ)metric_factory_mod.o \
+	$(DOBJ)topology_mod.o \
+	$(DOBJ)topology_factory_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)test_metric_main.o: src/test/test_metric/test_metric_main.f90 \
-	$(DOBJ)test_metric_mod.o
+	$(DOBJ)test_metric_class_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

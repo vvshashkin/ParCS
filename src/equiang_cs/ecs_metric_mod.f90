@@ -9,7 +9,6 @@ implicit none
 type, extends(metric_t) :: ecs_metric_t
     class(cubed_sphere_topology_t), allocatable :: topology
     real(kind=8) :: rotation_matrix(3,3) ! R^T*R must be I
-    real(kind=8) :: sphere_r
 contains
     procedure :: point_r => ecs_point_r
     procedure :: a1      => ecs_a1
@@ -115,11 +114,6 @@ function ecs_vector(this,panel_ind,vector_type,x,y) result(r)
 
     r = ecs_proto2realface(this%topology,this%rotation_matrix,panel_ind,r)
 
-    if(vector_type == "b1" .or. vector_type == "b2") then
-        r = r/this%sphere_r
-    else
-        r = r*this%sphere_r
-    end if
 end function ecs_vector
 
 function ecs_point_r_proto(alpha,beta) result(r)
@@ -215,7 +209,6 @@ function ecs_Q(this,panel_ind,x,y) result(Q)
     Q(2) =-(1._8+ta**2)*(1._8+tb**2)*ta*tb/sigm**4
     Q(3) = (1._8+ta**2)*(1._8+tb**2)**2/sigm**4
 
-    Q = Q*this%sphere_r**2
 end function ecs_Q
 
 function ecs_QI(this,panel_ind,x,y) result(QI)
@@ -236,7 +229,6 @@ function ecs_QI(this,panel_ind,x,y) result(QI)
     Qi(2) = sigm**2*ta*tb / ((1+ta**2)*(1+tb**2))
     Qi(3) = sigm**2 / (1._8+tb**2)
 
-    QI(1:3) = QI(1:3) / this%sphere_r**2
 end function ecs_QI
 
 function ecs_G(this,panel_ind,x,y) result(G)
@@ -251,7 +243,7 @@ function ecs_G(this,panel_ind,x,y) result(G)
     ta = tan(y);   tb = tan(x)
     sigm = sqrt(1._8+ta**2+tb**2)
 
-    G = (1._8+ta**2)*(1._8+tb**2) / sigm**3 * this%sphere_r**2
+    G = (1._8+ta**2)*(1._8+tb**2) / sigm**3 
 end function ecs_G
 
 end module ecs_metric_mod

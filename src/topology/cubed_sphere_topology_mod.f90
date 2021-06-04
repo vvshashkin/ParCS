@@ -59,7 +59,7 @@ subroutine init_cs_topology(this)
 
     this%npanels = 6
     this%ex = ex
-    this%ex = ey
+    this%ey = ey
     this%n  = n
     this%r  = r
 

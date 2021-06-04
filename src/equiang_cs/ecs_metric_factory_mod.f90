@@ -28,9 +28,9 @@ subroutine create_ecs_metric(topology, metric, sphere_r, rotation_matrix)
         metric%topology = topology
 
         if(present(sphere_r)) then
-            metric%sphere_r = sphere_r
+            metric%a = sphere_r
         else
-            metric%sphere_r = radz
+            metric%a = radz
         end if
 
         if(present(rotation_matrix)) then

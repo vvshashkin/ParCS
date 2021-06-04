@@ -4,6 +4,7 @@ implicit none
 
 !Abstract type to aquire horizontal grid characteristics from panel coordinates
 type, abstract :: metric_t
+    real(kind=8) a      ! projection scale factor (radius of the sphere in the case of equiangular cubed sphere)
     real(kind=8) x0, y0 ! lower bound of panel coordinates
     real(kind=8) x1, y1 ! upper bound of panel coordinates
 
