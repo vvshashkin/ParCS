@@ -30,6 +30,8 @@ subroutine test_domain()
 
     print*, domain%mesh_u%tile(domain%mesh_u%ts)%ie
 
+    print *, "domain test passed"
+
 end subroutine test_domain
 
 end module test_domain_mod

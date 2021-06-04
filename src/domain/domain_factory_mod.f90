@@ -29,7 +29,7 @@ subroutine create_domain(domain, topology_type, staggering_type, nh, nz)
 
     domain%topology = init_topology(topology_type)
 
-    call create_metric(domain%topology,"ecs", metric)
+    call create_metric(metric,domain%topology,"ecs")
 
     call create_parcomm(domain%parcomm)
 

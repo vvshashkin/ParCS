@@ -30,7 +30,7 @@ subroutine test_metric_class(topology_type,metric_type)
     logical :: is_correct = .true.
 
     topology = init_topology(topology_type)
-    call create_metric(topology, metric_type, metric)
+    call create_metric(metric, topology, metric_type)
 
     npanels = topology%npanels
     alpha0 = metric%alpha0

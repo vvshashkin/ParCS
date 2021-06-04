@@ -4,7 +4,7 @@ implicit none
 
 contains
 
-subroutine create_ecs_metric(topology, metric, sphere_r, rotation_matrix)
+subroutine create_ecs_metric(metric, topology, sphere_r, rotation_matrix)
     use cubed_sphere_topology_mod, only : cubed_sphere_topology_t
     use metric_mod,                only : metric_t
     use ecs_metric_mod,            only : ecs_metric_t

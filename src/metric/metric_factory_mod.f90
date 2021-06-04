@@ -7,7 +7,7 @@ implicit none
 
 contains
 
-subroutine create_metric(topology,metric_type,metric)
+subroutine create_metric(metric,topology,metric_type)
     use cubed_sphere_topology_mod, only : cubed_sphere_topology_t
     use ecs_metric_mod,            only : ecs_metric_t
     use ecs_metric_factory_mod,    only : create_ecs_metric
@@ -20,7 +20,7 @@ subroutine create_metric(topology,metric_type,metric)
     case("ecs")
         select type(topology)
         class is (cubed_sphere_topology_t)
-            call create_ecs_metric(topology, metric)
+            call create_ecs_metric(metric,topology)
         class default
             call avost("incorrect topology class in metric_factory_mod " // &
                        "while initializing ecs metric")
