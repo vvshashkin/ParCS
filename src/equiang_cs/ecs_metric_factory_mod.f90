@@ -18,19 +18,19 @@ subroutine create_ecs_metric(topology, metric, sphere_r, rotation_matrix)
     real(kind=8) rotation_matrix_local(3,3)
 
     allocate(ecs_metric_t :: metric)
-    metric%x0 =-0.25*pi
-    metric%y0 =-0.25*pi
-    metric%x1 = 0.25*pi
-    metric%y1 = 0.25*pi
+    metric%alpha0 =-0.25*pi
+    metric%beta0  =-0.25*pi
+    metric%alpha1 = 0.25*pi
+    metric%beta1  = 0.25*pi
 
     select type(metric)
     class is (ecs_metric_t)
         metric%topology = topology
 
         if(present(sphere_r)) then
-            metric%a = sphere_r
+            metric%scale = sphere_r
         else
-            metric%a = radz
+            metric%scale = radz
         end if
 
         if(present(rotation_matrix)) then
@@ -42,6 +42,8 @@ subroutine create_ecs_metric(topology, metric, sphere_r, rotation_matrix)
                                                         (/3,3/))
         end if
     class default
+        !hardly can imagine conditions to jump in this branch
+        !because of allocate(ecs_metric_t :: metric) above
         call avost("strange mistake in create_ecs_metric")
     end select
 end

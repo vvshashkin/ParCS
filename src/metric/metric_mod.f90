@@ -4,9 +4,9 @@ implicit none
 
 !Abstract type to aquire horizontal grid characteristics from panel coordinates
 type, abstract :: metric_t
-    real(kind=8) a      ! projection scale factor (radius of the sphere in the case of equiangular cubed sphere)
-    real(kind=8) x0, y0 ! lower bound of panel coordinates
-    real(kind=8) x1, y1 ! upper bound of panel coordinates
+    real(kind=8) scale      ! projection scale factor (radius of the sphere in the case of equiangular cubed sphere)
+    real(kind=8) alpha0, beta0 ! lower bound of panel coordinates
+    real(kind=8) alpha1, beta1 ! upper bound of panel coordinates
 
 contains
 
@@ -24,27 +24,27 @@ contains
 end type metric_t
 
 abstract interface
-    function vector_cart(this,panel_ind, x, y) result(r)
+    function vector_cart(this,panel_ind, alpha, beta) result(r)
         import metric_t
         class(metric_t), intent(in) :: this
         integer(kind=4), intent(in) :: panel_ind
-        real(kind=8),    intent(in) :: x, y
+        real(kind=8),    intent(in) :: alpha, beta
         real(kind=8)                :: r(3)
     end function vector_cart
 
-    function symtensor2(this,panel_ind,x,y) result(Q)
+    function symtensor2(this,panel_ind,alpha,beta) result(Q)
         import metric_t
         class(metric_t), intent(in) :: this
         integer(kind=4), intent(in) :: panel_ind
-        real(kind=8),    intent(in) :: x, y
+        real(kind=8),    intent(in) :: alpha, beta
         real(kind=8)                :: Q(3)
     end
 
-    function tensor0(this,panel_ind,x,y) result(G)
+    function tensor0(this,panel_ind,alpha,beta) result(G)
         import metric_t
         class(metric_t), intent(in) :: this
         integer(kind=4), intent(in) :: panel_ind
-        real(kind=8),    intent(in) :: x, y
+        real(kind=8),    intent(in) :: alpha, beta
         real(kind=8)                :: G
     end
 end interface

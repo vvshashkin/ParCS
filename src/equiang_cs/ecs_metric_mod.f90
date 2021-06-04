@@ -45,69 +45,69 @@ function ecs_proto2realface(topology,rotation_matrix,panel_ind,r) result(r1)
     r1(3) = sum(rotation_matrix(1:3,3)*rtemp(1:3))
 end function ecs_proto2realface
 
-function ecs_point_r(this,panel_ind,x,y) result(r)
+function ecs_point_r(this,panel_ind,alpha,beta) result(r)
     class(ecs_metric_t), intent(in) :: this
     integer(kind=4),     intent(in) :: panel_ind
-    real(kind=8),        intent(in) :: x, y
+    real(kind=8),        intent(in) :: alpha, beta
     real(kind=8)                    :: r(3)
 
-    r = ecs_vector(this,panel_ind,"r",x,y)
+    r = ecs_vector(this,panel_ind,"r",alpha,beta)
 end function ecs_point_r
 
-function ecs_a1(this,panel_ind,x,y) result(a1)
+function ecs_a1(this,panel_ind,alpha,beta) result(a1)
     class(ecs_metric_t), intent(in) :: this
     integer(kind=4),     intent(in) :: panel_ind
-    real(kind=8),        intent(in) :: x, y
+    real(kind=8),        intent(in) :: alpha, beta
     real(kind=8)                    :: a1(3)
 
-    a1 = ecs_vector(this,panel_ind,"a1",x,y)
+    a1 = ecs_vector(this,panel_ind,"a1",alpha, beta)
 end function ecs_a1
 
-function ecs_a2(this,panel_ind,x,y) result(a2)
+function ecs_a2(this,panel_ind,alpha,beta) result(a2)
     class(ecs_metric_t), intent(in) :: this
     integer(kind=4),     intent(in) :: panel_ind
-    real(kind=8),        intent(in) :: x, y
+    real(kind=8),        intent(in) :: alpha, beta
     real(kind=8)                    :: a2(3)
 
-    a2 = ecs_vector(this,panel_ind,"a2",x,y)
+    a2 = ecs_vector(this,panel_ind,"a2",alpha,beta)
 end function ecs_a2
 
-function ecs_b1(this,panel_ind,x,y) result(b1)
+function ecs_b1(this,panel_ind,alpha,beta) result(b1)
     class(ecs_metric_t), intent(in) :: this
     integer(kind=4),     intent(in) :: panel_ind
-    real(kind=8),        intent(in) :: x, y
+    real(kind=8),        intent(in) :: alpha, beta
     real(kind=8)                    :: b1(3)
 
-    b1 = ecs_vector(this,panel_ind,"b1",x,y)
+    b1 = ecs_vector(this,panel_ind,"b1",alpha,beta)
 end function ecs_b1
 
-function ecs_b2(this,panel_ind,x,y) result(b2)
+function ecs_b2(this,panel_ind,alpha,beta) result(b2)
     class(ecs_metric_t), intent(in) :: this
     integer(kind=4),     intent(in) :: panel_ind
-    real(kind=8),        intent(in) :: x, y
+    real(kind=8),        intent(in) :: alpha,beta
     real(kind=8)                    :: b2(3)
 
-    b2 = ecs_vector(this,panel_ind,"b2",x,y)
+    b2 = ecs_vector(this,panel_ind,"b2",alpha,beta)
 end function ecs_b2
 
-function ecs_vector(this,panel_ind,vector_type,x,y) result(r)
+function ecs_vector(this,panel_ind,vector_type,alpha,beta) result(r)
     class(ecs_metric_t), intent(in) :: this
     integer(kind=4),     intent(in) :: panel_ind
     character(len=*),    intent(in) :: vector_type
-    real(kind=8),        intent(in) :: x, y
+    real(kind=8),        intent(in) :: alpha,beta
     real(kind=8)                    :: r(3)
 
     select case(vector_type)
     case("r")
-        r = ecs_point_r_proto(x,y)
+        r = ecs_point_r_proto(alpha,beta)
     case("a1")
-        r = ecs_a1_proto(x,y)
+        r = ecs_a1_proto(alpha,beta)
     case("a2")
-        r = ecs_a2_proto(x,y)
+        r = ecs_a2_proto(alpha,beta)
     case("b1")
-        r = ecs_b1_proto(x,y)
+        r = ecs_b1_proto(alpha,beta)
     case("b2")
-        r = ecs_b2_proto(x,y)
+        r = ecs_b2_proto(alpha,beta)
     case default
         call avost("unknown vector type " // vector_type // " in ecs_metric_mod")
     end select
@@ -191,18 +191,18 @@ function ecs_b2_proto(alpha,beta) result(b2)
 
 end function ecs_b2_proto
 
-function ecs_Q(this,panel_ind,x,y) result(Q)
+function ecs_Q(this,panel_ind,alpha,beta) result(Q)
     !Calculate metric tensor
     !Q = |a1*a1  a1*a2| = |Q(1) Q(2)|
     !    |a1*a2  a2*a2|   |Q(2) Q(3)|
     class(ecs_metric_t), intent(in) :: this
     integer(kind=4),     intent(in) :: panel_ind
-    real(kind=8),        intent(in) :: x, y
+    real(kind=8),        intent(in) :: alpha, beta
     real(kind=8)                    :: Q(3)
     !local
     real(kind=8) ta, tb, sigm
 
-    ta = tan(x);   tb = tan(y)
+    ta = tan(alpha);   tb = tan(beta)
     sigm = sqrt(1._8+ta**2+tb**2)
 
     Q(1) = (1._8+ta**2)**2*(1._8+tb**2)/sigm**4
@@ -211,18 +211,18 @@ function ecs_Q(this,panel_ind,x,y) result(Q)
 
 end function ecs_Q
 
-function ecs_QI(this,panel_ind,x,y) result(QI)
+function ecs_QI(this,panel_ind, alpha, beta) result(QI)
     !Calculate inverse metric tensor
     !QI = inv |a1*a1  a1*a2| = |QI(1) QI(2)|
     !         |a1*a2  a2*a2|   |QI(2) QI(3)|
     class(ecs_metric_t), intent(in) :: this
     integer(kind=4),     intent(in) :: panel_ind
-    real(kind=8),        intent(in) :: x, y
+    real(kind=8),        intent(in) :: alpha,beta
     real(kind=8)                    :: QI(3)
     !local
     real(kind=8) ta, tb, sigm
 
-    ta = tan(x);   tb = tan(y)
+    ta = tan(alpha);   tb = tan(beta)
     sigm = sqrt(1._8+ta**2+tb**2)
 
     Qi(1) = sigm**2 / (1._8+ta**2)
@@ -231,19 +231,19 @@ function ecs_QI(this,panel_ind,x,y) result(QI)
 
 end function ecs_QI
 
-function ecs_G(this,panel_ind,x,y) result(G)
+function ecs_G(this,panel_ind,alpha,beta) result(G)
     !Compute sqrt of metric tensor
     class(ecs_metric_t), intent(in) :: this
     integer(kind=4),     intent(in) :: panel_ind
-    real(kind=8),        intent(in) :: x, y
+    real(kind=8),        intent(in) :: alpha, beta
     real(kind=8)                    :: G
     !local
     real(kind=8) ta,tb,sigm
 
-    ta = tan(y);   tb = tan(x)
+    ta = tan(alpha);   tb = tan(beta)
     sigm = sqrt(1._8+ta**2+tb**2)
 
-    G = (1._8+ta**2)*(1._8+tb**2) / sigm**3 
+    G = (1._8+ta**2)*(1._8+tb**2) / sigm**3
 end function ecs_G
 
 end module ecs_metric_mod

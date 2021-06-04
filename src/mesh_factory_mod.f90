@@ -21,14 +21,13 @@ subroutine create_mesh(mesh, partition, metric, halo_width, staggering_type, poi
 
     integer(kind=4) :: t, pind, i, j, k, ts, te, is, ie, js, je, ks, ke, nh, nx, ny
     real(kind=8) :: alpha, beta, vec(3)
-    !real(kind=8) :: xyz(3)
 
     type(tile_t), pointer :: tile(:)
 
     real(kind=8) :: i_0, j_0, alpha_0, beta_0
 
-    alpha_0 = metric%x0
-    beta_0  = metric%y0
+    alpha_0 = metric%alpha0
+    beta_0  = metric%beta0
 
     i_0 = 0.5_8
     j_0 = 0.5_8
@@ -54,6 +53,8 @@ subroutine create_mesh(mesh, partition, metric, halo_width, staggering_type, poi
     mesh%ts = ts
     mesh%te = te
 
+    mesh%scale = metric%scale
+
     do t = ts, te
 
         ks = tile(t)%ks; ke = tile(t)%ke
@@ -65,7 +66,7 @@ subroutine create_mesh(mesh, partition, metric, halo_width, staggering_type, poi
 
         call mesh%tile(t)%init(is, ie, js, je, ks, ke, halo_width)
 
-        mesh%tile(t)%hx = (metric%x1-metric%x0)/real(nh,8)
+        mesh%tile(t)%hx = (metric%alpha1-metric%beta0)/real(nh,8)
 
         mesh%tile(t)%i_0 = i_0
         mesh%tile(t)%j_0 = j_0
@@ -80,14 +81,14 @@ subroutine create_mesh(mesh, partition, metric, halo_width, staggering_type, poi
 
                 vec = metric%point_r(pind,alpha,beta)
 
-                mesh%tile(t)%rhx(i,j) = vec(1)
-                mesh%tile(t)%rhy(i,j) = vec(2)
-                mesh%tile(t)%rhz(i,j) = vec(3)
+                mesh%tile(t)%rx(i,j) = vec(1)
+                mesh%tile(t)%ry(i,j) = vec(2)
+                mesh%tile(t)%rz(i,j) = vec(3)
 
-                mesh%tile(t)%acov(1:3,i,j) = metric%a1(pind,alpha,beta)
-                mesh%tile(t)%bcov(1:3,i,j) = metric%a2(pind,alpha,beta)
-                mesh%tile(t)%actv(1:3,i,j) = metric%b1(pind,alpha,beta)
-                mesh%tile(t)%bctv(1:3,i,j) = metric%b2(pind,alpha,beta)
+                mesh%tile(t)%a1(1:3,i,j) = metric%a1(pind,alpha,beta)
+                mesh%tile(t)%a2(1:3,i,j) = metric%a2(pind,alpha,beta)
+                mesh%tile(t)%b1(1:3,i,j) = metric%b1(pind,alpha,beta)
+                mesh%tile(t)%b2(1:3,i,j) = metric%b2(pind,alpha,beta)
 
                 mesh%tile(t)%Q (1:3,i,j) = metric%Q(pind,alpha, beta)
                 mesh%tile(t)%Qi(1:3,i,j) = metric%QI(pind,alpha, beta)
