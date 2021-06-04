@@ -24,22 +24,22 @@ subroutine create_mesh(mesh, partition, metric, halo_width, staggering_type, poi
 
     type(tile_t), pointer :: tile(:)
 
-    real(kind=8) :: i_0, j_0, alpha_0, beta_0
+    real(kind=8) :: shift_i, shift_j, alpha_0, beta_0
 
     alpha_0 = metric%alpha0
     beta_0  = metric%beta0
 
-    i_0 = 0.5_8
-    j_0 = 0.5_8
+    shift_i = 0.5_8
+    shift_j = 0.5_8
 
     select case(points_type)
     case('p')
         tile => partition%tile
     case('u')
-        if (staggering_type=='C') i_0 = 0.0_8
+        if (staggering_type=='C') shift_i = 0.0_8
         tile => partition%tile_u
     case('v')
-        if (staggering_type=='C') j_0 = 0.0_8
+        if (staggering_type=='C') shift_j = 0.0_8
         tile => partition%tile_v
     case default
         print*, 'Error! Wrong points_type! Abort!'
@@ -68,14 +68,15 @@ subroutine create_mesh(mesh, partition, metric, halo_width, staggering_type, poi
 
         mesh%tile(t)%hx = (metric%alpha1-metric%beta0)/real(nh,8)
 
-        mesh%tile(t)%i_0 = i_0
-        mesh%tile(t)%j_0 = j_0
+        mesh%tile(t)%shift_i = shift_i
+        mesh%tile(t)%shift_j = shift_j
 
         mesh%tile(t)%alpha_0 = alpha_0
         mesh%tile(t)%beta_0  = beta_0
 
         do j = js - halo_width, je + halo_width
             beta = mesh%tile(t)%get_beta(j)
+
             do i = is - halo_width, ie + halo_width
                 alpha = mesh%tile(t)%get_alpha(i)
 

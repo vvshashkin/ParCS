@@ -2,6 +2,9 @@ module test_metric_class_mod
 
 implicit none
 
+private
+public :: test_metric_class
+
 real(kind=8), parameter :: test_tolerace = 3e-15_8
 
 contains

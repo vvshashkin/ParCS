@@ -776,16 +776,16 @@ $(DOBJ)test_metric_class_mod.o: src/test/test_metric/test_metric_class_mod.f90 \
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)test_metric_main.o: src/test/test_metric/test_metric_main.f90 \
+	$(DOBJ)test_metric_mod.o \
 	$(DOBJ)test_metric_class_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)test_metric_mod.o: src/test/test_metric/test_metric_mod.f90 \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)domain_factory_mod.o \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)grid_field_factory_mod.o \
-	$(DOBJ)exchange_abstract_mod.o \
-	$(DOBJ)partition_mod.o \
-	$(DOBJ)exchange_factory_mod.o \
 	$(DOBJ)mesh_factory_mod.o \
 	$(DOBJ)mesh_mod.o \
 	$(DOBJ)topology_mod.o
