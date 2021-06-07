@@ -130,11 +130,6 @@ $(DOBJ)operator_abstract_mod.o: src/operator_abstract_mod.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
-$(DOBJ)halo_mod.o: src/halo_mod.f90 \
-	$(DOBJ)grid_field_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
 $(DOBJ)avost.o: src/avost.f90
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -280,6 +275,28 @@ $(DOBJ)master_paneled_outputer_mod.o: src/outputer/master_paneled_outputer_mod.f
 	$(DOBJ)partition_mod.o \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)exchange_abstract_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)halo_mod.o: src/halo/halo_mod.f90 \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)parcomm_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)halo_factory_mod.o: src/halo/halo_factory_mod.f90 \
+	$(DOBJ)halo_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)halo_a_default_mod.o \
+	$(DOBJ)exchange_factory_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)halo_a_default_mod.o: src/halo/halo_A_default_mod.f90 \
+	$(DOBJ)halo_mod.o \
+	$(DOBJ)exchange_halo_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -740,6 +757,16 @@ $(DOBJ)test_halo_main.o: src/test/test_halo/test_halo_main.f90 \
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)test_halo_mod.o: src/test/test_halo/test_halo_mod.f90 \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)domain_factory_mod.o \
+	$(DOBJ)halo_mod.o \
+	$(DOBJ)halo_factory_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)grid_field_factory_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)test_ecs_halo_mod.o: src/test/test_halo/test_ecs_halo_mod.f90 \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)mesh_mod.o \
 	$(DOBJ)partition_mod.o \
@@ -784,11 +811,12 @@ $(DOBJ)test_metric_main.o: src/test/test_metric/test_metric_main.f90 \
 $(DOBJ)test_metric_mod.o: src/test/test_metric/test_metric_mod.f90 \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)domain_factory_mod.o \
+	$(DOBJ)topology_mod.o \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)grid_field_factory_mod.o \
 	$(DOBJ)mesh_factory_mod.o \
 	$(DOBJ)mesh_mod.o \
-	$(DOBJ)topology_mod.o
+	$(DOBJ)tile_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

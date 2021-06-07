@@ -1,11 +1,14 @@
-program test_halo_ecs
+program test_halo_main
 
-use test_halo_mod, only : test_ecs_halo
+!use test_ecs_halo_mod, only : test_ecs_halo
+use test_halo_mod, only : test_halo
+
 use mpi
 
 call MPI_init(ierr)
 
-call test_ecs_halo
+call test_halo()
+!call test_ecs_halo
 
 call mpi_barrier(mpi_comm_world, ierr)
 call mpi_finalize(ierr)

@@ -1,6 +1,7 @@
 module halo_mod
 
 use grid_field_mod, only : grid_field_t
+use parcomm_mod,    only : parcomm_t
 
 implicit none
 
@@ -15,18 +16,20 @@ type, abstract :: halo_vec_t
 end type halo_vec_t
 
 interface
-    subroutine get_halo_scalar(this,f,halo_width)
-        import halo_t, grid_field_t
-        class(halo_t),       intent(in)    :: this
+    subroutine get_halo_scalar(this,f,parcomm,halo_width)
+        import halo_t, grid_field_t, parcomm_t
+        class(halo_t),       intent(inout) :: this
         class(grid_field_t), intent(inout) :: f
-        integer(kind=4),     intent(in)    :: max_halo_width
+        type(parcomm_t),     intent(in)    :: parcomm
+        integer(kind=4),     intent(in)    :: halo_width
     end subroutine get_halo_scalar
 
-    subroutine get_halo_vector(this,u,v,halo_width)
-        import halo_vec_t, grid_field_t
-        class(halo_vec_t),   intent(in)    :: this
+    subroutine get_halo_vector(this,u,v,parcomm,halo_width)
+        import halo_vec_t, grid_field_t, parcomm_t
+        class(halo_vec_t),   intent(inout) :: this
         class(grid_field_t), intent(inout) :: u, v
-        integer(kind=4),     intent(in)    :: max_halo_width
+        type(parcomm_t),     intent(in)    :: parcomm
+        integer(kind=4),     intent(in)    :: halo_width
     end subroutine get_halo_vector
 end interface
 
