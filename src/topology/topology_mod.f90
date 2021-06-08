@@ -187,11 +187,18 @@ subroutine transform_tile_coords( pn_source, source_tile, &
     type(tile_t),    intent(out) :: target_tile ! tile coords at target panel
     integer(kind=4), intent(in)  :: nx, ny !number of points along dimensions
 
+    integer(kind=4) is, ie, js, je
+
     call transform_index(pn_source, source_tile%is, source_tile%js, &
-                         pn_target, target_tile%is, target_tile%js, Nx, Ny)
+                         pn_target, is, js, Nx, Ny)
 
     call transform_index(pn_source, source_tile%ie, source_tile%je, &
-                         pn_target, target_tile%ie, target_tile%je, Nx, Ny)
+                         pn_target, ie, je, Nx, Ny)
+
+    target_tile%is = min(is,ie)
+    target_tile%ie = max(is,ie)
+    target_tile%js = min(js,je)
+    target_tile%je = max(js,je)
 
     target_tile%ks = source_tile%ks
     target_tile%ke = source_tile%ke

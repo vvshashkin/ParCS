@@ -762,7 +762,10 @@ $(DOBJ)test_halo_mod.o: src/test/test_halo/test_halo_mod.f90 \
 	$(DOBJ)halo_mod.o \
 	$(DOBJ)halo_factory_mod.o \
 	$(DOBJ)grid_field_mod.o \
-	$(DOBJ)grid_field_factory_mod.o
+	$(DOBJ)grid_field_factory_mod.o \
+	$(DOBJ)exchange_abstract_mod.o \
+	$(DOBJ)exchange_halo_mod.o \
+	$(DOBJ)exchange_factory_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
