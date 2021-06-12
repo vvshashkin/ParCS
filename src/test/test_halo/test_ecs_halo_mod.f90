@@ -19,12 +19,12 @@ subroutine test_ecs_halo()
     use halo_mod,                   only : halo_t
     use halo_factory_mod,           only : create_halo_procedure
 
-!    use ecs_halo_mod,               only : ecs_halo_t
+    use ecs_halo_mod,               only : ecs_halo_t
 !    use ecs_halo_vec_a_mod,         only : ecs_halo_vec_t
 !    use ecs_halo_factory_mod,       only : init_ecs_halo
 !    use ecs_halo_vec_a_factory_mod, only : init_ecs_halo_vect
 
-    integer(kind=4), parameter         :: nh=128, nz=3, halo_width=3, ex_halo_width=8
+    integer(kind=4), parameter         :: nh=128, nz=3, halo_width=2, ex_halo_width=8
 
     type(domain_t)             :: domain
     type(grid_field_t)         :: f_test, u_test, v_test
@@ -49,7 +49,7 @@ subroutine test_ecs_halo()
 
     call create_domain(domain, "cube", 'A', nh, nz)
 
-    call create_halo_procedure(halo,domain,halo_width,"A_default")
+    call create_halo_procedure(halo,domain,halo_width,"ECS_O")
 
     call create_grid_field(f_test, ex_halo_width, 0, domain%mesh_p)
     call create_grid_field(f_true, ex_halo_width, 0, domain%mesh_p)
