@@ -263,17 +263,17 @@ subroutine find_basis_orientation( pn_source, pn_target, i_step, j_step, first_d
     end if
 
 end subroutine find_basis_orientation
-subroutine get_real_panel_coords(i_in, j_in, pn_in, nx, ny, i_out, j_out, pn_out, is_succeed)
+subroutine get_real_panel_coords(i_in, j_in, pn_in, nx, ny, i_out, j_out, pn_out)
 
     integer(kind=4), intent(in)  :: i_in,  j_in,  pn_in, nx, ny
     integer(kind=4), intent(out) :: i_out, j_out, pn_out
-    logical,         intent(out) :: is_succeed
 
     logical :: is_x_left, is_x_right, is_x_center, &
                is_y_top, is_y_bottom, is_y_center, &
                is_right, is_left, is_top, is_bottom, is_center
 
-    is_succeed = .true.
+   integer(kind=4)  :: i_step, j_step
+   character(len=1) :: first_dim_index
 
     is_x_left   = (i_in >= 1-nx .and. i_in <= 0)
     is_x_center = (i_in >= 1    .and. i_in <= nx)
@@ -298,12 +298,17 @@ subroutine get_real_panel_coords(i_in, j_in, pn_in, nx, ny, i_out, j_out, pn_out
     end do
 
     if (pn_out == 7) then
-        is_succeed = .false.
-        return
+        print*, 'Something wrong in get_real_panel_coords! Stop!'
+        stop
     end if
 
-    call transform_index(pn_in, i_in, j_in, pn_out, i_out, j_out, nx, ny)
+    call find_basis_orientation(pn_in, pn_out, i_step, j_step, first_dim_index)
 
+    if (first_dim_index=='i') then
+        call transform_index(pn_in, i_in, j_in, pn_out, i_out, j_out, nx, ny)
+    else
+        call transform_index(pn_in, i_in, j_in, pn_out, i_out, j_out, ny, nx)
+    end if
 end subroutine get_real_panel_coords
 
 
