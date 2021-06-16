@@ -116,7 +116,6 @@ contains
 !     contains
 !
 ! end subroutine test_cross_halo_vec_exchange
-
 subroutine test_A_halo_exchange()
 
     use mpi
@@ -127,7 +126,7 @@ subroutine test_A_halo_exchange()
     use exchange_halo_mod,      only : exchange_2D_halo_t
     use partition_mod,          only : partition_t
     use exchange_factory_mod,   only : create_symm_halo_exchange_A
-    use topology_mod,           only : transform_index, find_basis_orientation
+    use topology_mod,           only : transform_index, find_basis_orientation, get_real_panel_coords
 
     type(domain_t) :: domain
 
@@ -140,22 +139,33 @@ subroutine test_A_halo_exchange()
     integer(kind=4) :: ind, t, i, j, k, err_sum, gl_err_sum
 
     integer(kind=4)  :: local_tile_ind, remote_tile_ind, local_tile_panel_number, remote_tile_panel_number
-    integer(kind=4)  :: i_out, j_out, i_step, j_step
+    integer(kind=4)  :: i_out, j_out, i_step, j_step, i1, j1, p1, pn
     character(len=1) :: first_dim_index
 
     real(kind=8) :: u_remote, v_remote, f_remote
 
+    logical :: is_succeed
+
+#define __fun1(i,j,k,pn) ((pn-1)*nh*nh*nz + nz*nh*(j-1) + nz*(i-1) + k)
+#define __fun2(i,j,k,pn) ((pn-1)*nh*nh*nz + nh*nh*(k-1) + nh*(j-1) + i)
+
     call create_domain(domain, "cube", 'A', nh, nz)
 
-    call domain%parcomm%print('Running cross_halo_exchange test!')
+    call domain%parcomm%print('Running A-grid halo exchange test!')
 
     call create_grid_field(f, halo_width, 0, domain%mesh_p)
 
-    do t = domain%mesh_p%ts, domain%mesh_p%te
+
+    ts = domain%partition%ts
+    te = domain%partition%te
+
+    do t = ts, te
+        f%tile(t)%p = huge(1.0_8)
+        pn = domain%partition%panel_map(t)
         do k = domain%mesh_p%tile(t)%ks, domain%mesh_p%tile(t)%ke
             do j = domain%mesh_p%tile(t)%js, domain%mesh_p%tile(t)%je
                 do i = domain%mesh_p%tile(t)%is, domain%mesh_p%tile(t)%ie
-                    f%tile(t)%p(i,j,k) = (domain%partition%panel_map(t)-1)*nh*nh*nz + nz*nh*(j-1) + nz*(i-1) + k
+                    f%tile(t)%p(i,j,k) =  __fun1(i,j,k,pn)
                 end do
             end do
         end do
@@ -168,58 +178,51 @@ subroutine test_A_halo_exchange()
     call exch_halo%do(f, domain%parcomm)
 
     err_sum = 0
-    select type (exch_halo)
-    class is (exchange_2D_halo_t)
-    do ind = 1, exch_halo%recv_number
 
-        local_tile_ind           = exch_halo%recv_to_tile_ind(ind)
-        remote_tile_ind          = 1 + (exch_halo%recv_tag(ind)-local_tile_ind)/(domain%partition%num_panels*domain%partition%num_tiles)
-
-        remote_tile_panel_number = domain%partition%panel_map(remote_tile_ind)
-        local_tile_panel_number  = domain%partition%panel_map(local_tile_ind)
-
-        do k = exch_halo%recv_tile(ind)%ks, exch_halo%recv_tile(ind)%ke
-            do j = exch_halo%recv_tile(ind)%js, exch_halo%recv_tile(ind)%je
-                do i = exch_halo%recv_tile(ind)%is, exch_halo%recv_tile(ind)%ie
-                    call transform_index(local_tile_panel_number , i    , j    ,       &
-                                         remote_tile_panel_number, i_out, j_out, nh, nh)
-                    f_remote = ((remote_tile_panel_number-1)*nh*nh*nz + nz*nh*(j_out-1) + nz*(i_out-1) + k)
-                    err_sum = err_sum + abs(int(f%tile(local_tile_ind)%p(i,j,k) - f_remote))
+    do t = ts, te
+        do k = domain%mesh_p%tile(t)%ks, domain%mesh_p%tile(t)%ke
+            do j = domain%mesh_p%tile(t)%js-halo_width, domain%mesh_p%tile(t)%je+halo_width
+                do i = domain%mesh_p%tile(t)%is-halo_width, domain%mesh_p%tile(t)%ie+halo_width
+                    call get_real_panel_coords(i, j, domain%partition%panel_map(t), nh, nh, i1, j1, p1, is_succeed)
+                    if (is_succeed) then
+                        f_remote = __fun1(i1,j1,k,p1)
+                        err_sum = err_sum + abs(int(f%tile(t)%p(i,j,k) - f_remote))
+                    end if
                 end do
             end do
         end do
     end do
-    class default
-        call avost('Wrong type of halo exch object!')
-    end select
+
     call mpi_allreduce(err_sum, gl_err_sum, 1, mpi_integer, mpi_sum, mpi_comm_world, ierr)
 
     if (gl_err_sum==0) then
-        call domain%parcomm%print('Test passed!')
+        call domain%parcomm%print('Scalar exchange test passed!')
     else
-        call domain%parcomm%print('Test failed! Error! Abort!')
-        call mpi_abort(mpi_comm_world, code, ierr)
-        stop
+        call domain%parcomm%abort('Scalar exchange test failed! Error! Abort!')
     end if
 
     call create_grid_field(u, halo_width, 0, domain%mesh_u)
     call create_grid_field(v, halo_width, 0, domain%mesh_v)
 
 
-    do t = domain%mesh_u%ts, domain%mesh_u%te
+    do t = ts, te
+        pn = domain%partition%panel_map(t)
+        u%tile(t)%p = huge(1.0_8)
         do k = domain%mesh_u%tile(t)%ks, domain%mesh_u%tile(t)%ke
             do j = domain%mesh_u%tile(t)%js, domain%mesh_u%tile(t)%je
                 do i = domain%mesh_u%tile(t)%is, domain%mesh_u%tile(t)%ie
-                    u%tile(t)%p(i,j,k) =  (domain%partition%panel_map(t)-1)*nh*nh*nz + nz*nh*(j-1) + nz*(i-1) + k
+                    u%tile(t)%p(i,j,k) =  __fun1(i,j,k,pn)
                 end do
             end do
         end do
     end do
-    do t = domain%mesh_v%ts, domain%mesh_v%te
+    do t = ts, te
+        pn = domain%partition%panel_map(t)
+        v%tile(t)%p = huge(1.0_8)
         do k = domain%mesh_v%tile(t)%ks, domain%mesh_v%tile(t)%ke
             do j = domain%mesh_v%tile(t)%js, domain%mesh_v%tile(t)%je
                 do i = domain%mesh_v%tile(t)%is, domain%mesh_v%tile(t)%ie
-                    v%tile(t)%p(i,j,k) =  (domain%partition%panel_map(t)-1)*nh*nh*nz + nz*nh*(j-1) + nz*(i-1) + k + domain%partition%num_panels*nh*nh*nz
+                    v%tile(t)%p(i,j,k) =  __fun2(i,j,k,pn)
                 end do
             end do
         end do
@@ -227,47 +230,40 @@ subroutine test_A_halo_exchange()
 
     call exch_halo%do_vec(u, v, domain%parcomm)
 
-        err_sum = 0
-        select type (exch_halo)
-        class is (exchange_2D_halo_t)
-        do ind = 1, exch_halo%recv_number
-
-            local_tile_ind  = exch_halo%recv_to_tile_ind(ind)
-            remote_tile_ind = 1 + (exch_halo%recv_tag(ind)-local_tile_ind)/(domain%partition%num_panels*domain%partition%num_tiles)
-
-            remote_tile_panel_number = domain%partition%panel_map(remote_tile_ind)
-            local_tile_panel_number  = domain%partition%panel_map(local_tile_ind )
-
-            do k = exch_halo%recv_tile(ind)%ks, exch_halo%recv_tile(ind)%ke
-                do j = exch_halo%recv_tile(ind)%js, exch_halo%recv_tile(ind)%je
-                    do i = exch_halo%recv_tile(ind)%is, exch_halo%recv_tile(ind)%ie
-                        call transform_index(local_tile_panel_number , i    , j    ,       &
-                                             remote_tile_panel_number, i_out, j_out, nh, nh)
-                        call find_basis_orientation(local_tile_panel_number, remote_tile_panel_number, i_step, j_step, first_dim_index)
+    do t = ts, te
+        pn = domain%partition%panel_map(t)
+        do k = domain%mesh_p%tile(t)%ks, domain%mesh_p%tile(t)%ke
+            do j = domain%mesh_p%tile(t)%js-halo_width, domain%mesh_p%tile(t)%je+halo_width
+                do i = domain%mesh_p%tile(t)%is-halo_width, domain%mesh_p%tile(t)%ie+halo_width
+                    call get_real_panel_coords(i, j, domain%partition%panel_map(t), nh, nh, i1, j1, p1, is_succeed)
+                    if (is_succeed) then
+                        call find_basis_orientation(pn, p1, i_step, j_step, first_dim_index)
                         if (first_dim_index == "i") then
-                            u_remote = i_step*((remote_tile_panel_number-1)*nh*nh*nz + nz*nh*(j_out-1) + nz*(i_out-1) + k)
-                            v_remote = j_step*((remote_tile_panel_number-1)*nh*nh*nz + nz*nh*(j_out-1) + nz*(i_out-1) + k + domain%partition%num_panels*nh*nh*nz)
+                            u_remote = i_step*__fun1(i1,j1,k,p1)
+                            v_remote = j_step*__fun2(i1,j1,k,p1)
                         else
-                            v_remote = i_step*((remote_tile_panel_number-1)*nh*nh*nz + nz*nh*(j_out-1) + nz*(i_out-1) + k)
-                            u_remote = j_step*((remote_tile_panel_number-1)*nh*nh*nz + nz*nh*(j_out-1) + nz*(i_out-1) + k + domain%partition%num_panels*nh*nh*nz)
+                            u_remote = j_step*__fun2(i1,j1,k,p1)
+                            v_remote = i_step*__fun1(i1,j1,k,p1)
                         end if
-                        err_sum = err_sum + abs(int(u%tile(local_tile_ind)%p(i,j,k) - u_remote)) + abs(int(v%tile(local_tile_ind)%p(i,j,k) - v_remote))
-                    end do
+                        err_sum = err_sum + abs(int(u%tile(t)%p(i,j,k) - u_remote)) + abs(int(v%tile(t)%p(i,j,k) - v_remote))
+                    end if
                 end do
             end do
         end do
-        class default
-            call avost('Wrong type of vec halo exch object!')
-        end select
-        call mpi_allreduce(err_sum, gl_err_sum, 1, mpi_integer, mpi_sum, domain%parcomm%comm_w, ierr)
+    end do
 
-        if (gl_err_sum==0) then
-            call domain%parcomm%print('Test passed!')
-        else
-            call domain%parcomm%abort('Test not passed! Error! Abort!')
-        end if
+    call mpi_allreduce(err_sum, gl_err_sum, 1, mpi_integer, mpi_sum, domain%parcomm%comm_w, ierr)
+
+    if (gl_err_sum==0) then
+        call domain%parcomm%print('Vector exchange test passed!')
+    else
+        call domain%parcomm%abort('Vector exchange test not passed! Error! Abort!')
+    end if
+
+#undef __fun1, __fun2
 
 end subroutine test_A_halo_exchange
+
 subroutine test_halo_u_exchange()
 
     use mpi
