@@ -263,4 +263,49 @@ subroutine find_basis_orientation( pn_source, pn_target, i_step, j_step, first_d
     end if
 
 end subroutine find_basis_orientation
+subroutine get_real_panel_coords(i_in, j_in, pn_in, nx, ny, i_out, j_out, pn_out, is_succeed)
+
+    integer(kind=4), intent(in)  :: i_in,  j_in,  pn_in, nx, ny
+    integer(kind=4), intent(out) :: i_out, j_out, pn_out
+    logical,         intent(out) :: is_succeed
+
+    logical :: is_x_left, is_x_right, is_x_center, &
+               is_y_top, is_y_bottom, is_y_center, &
+               is_right, is_left, is_top, is_bottom, is_center
+
+    is_succeed = .true.
+
+    is_x_left   = (i_in >= 1-nx .and. i_in <= 0)
+    is_x_center = (i_in >= 1    .and. i_in <= nx)
+    is_x_right  = (i_in >= 1+nx .and. i_in <= 2*nx)
+
+    is_y_bottom = (j_in >= 1-ny .and. j_in <= 0)
+    is_y_center = (j_in >= 1    .and. j_in <= ny)
+    is_y_top    = (j_in >= 1+ny .and. j_in <= 2*ny)
+
+    is_right  = (is_x_right  .and. is_y_center)
+    is_left   = (is_x_left   .and. is_y_center)
+    is_top    = (is_x_center .and. is_y_top   )
+    is_bottom = (is_x_center .and. is_y_bottom)
+    is_center = (is_x_center .and. is_y_center)
+
+    do pn_out = 1, 6
+        if (is_right  .and. dot_product(ex(1:3,pn_in), n(1:3,pn_out)) == -1) exit
+        if (is_left   .and. dot_product(ex(1:3,pn_in), n(1:3,pn_out)) ==  1) exit
+        if (is_bottom .and. dot_product(ey(1:3,pn_in), n(1:3,pn_out)) ==  1) exit
+        if (is_top    .and. dot_product(ey(1:3,pn_in), n(1:3,pn_out)) == -1) exit
+        if (is_center .and. pn_in == pn_out) exit
+    end do
+
+    if (pn_out == 7) then
+        is_succeed = .false.
+        return
+    end if
+
+    call transform_index(pn_in, i_in, j_in, pn_out, i_out, j_out, nx, ny)
+
+end subroutine get_real_panel_coords
+
+
+
 end module topology_mod
