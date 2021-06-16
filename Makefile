@@ -7,8 +7,8 @@ DMOD    = mod/
 DEXE    = ./
 LIBS    =
 FC      = mpiifort
-OPTSC   =  -c -traceback -init=snan -init=arrays -check all -ftrapuv  -module mod
-OPTSL   =  -traceback -init=snan -init=arrays -check all -ftrapuv -lmkl_intel_lp64 -lmkl_core -lmkl_gf_lp64 -lmkl_sequential -lmkl_lapack95_lp64 -module mod
+OPTSC   =  -c -traceback -init=snan -init=arrays -check all -ftrapuv -fpp -module mod
+OPTSL   =  -traceback -init=snan -init=arrays -check all -ftrapuv -fpp -lmkl_intel_lp64 -lmkl_core -lmkl_gf_lp64 -lmkl_sequential -lmkl_lapack95_lp64 -module mod
 VPATH   = $(DSRC) $(DOBJ) $(DMOD)
 MKDIRS  = $(DOBJ) $(DMOD) $(DEXE)
 LCEXES  = $(shell echo $(EXES) | tr '[:upper:]' '[:lower:]')
