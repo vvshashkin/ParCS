@@ -123,7 +123,8 @@ $(DOBJ)global_diag_mod.o: src/global_diag_mod.f90 \
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)grid_field_mod.o: src/grid_field_mod.f90 \
-	$(DOBJ)mesh_mod.o
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

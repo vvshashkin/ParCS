@@ -5,7 +5,7 @@ implicit none
 private
 public :: test_grid_field
 
-real(kind=8), parameter :: a=0.1_8,b=1000.0_8,c=123.456_8
+!real(kind=8), parameter :: a=0.1_8,b=1000.0_8,c=123.456_8
 
 abstract interface
     real(kind=8) function fxyzh(x,y,z,h) result(f)
@@ -29,22 +29,36 @@ subroutine test_grid_field()
 
     integer(kind=4)  :: t, i, j, k
 
+    logical :: is_passed
+
     call create_domain(domain, "cube", hor_grid_type, nh, nz)
 
     call create_grid_field(f1, halo_width, 0, domain%mesh_p)
-    call create_grid_field(f2, halo_width, 0, domain%mesh_p)
-    call create_grid_field(f3, halo_width, 0, domain%mesh_p)
-
-    call init_grid_field_fxyz(f1,domain%mesh_p,fx)
     f2 = f1%create_similar(domain%mesh_p)
     f3 = f1%create_similar(domain%mesh_p)
+
+    call init_grid_field_fxyz(f1,domain%mesh_p,fx)
+    call init_grid_field_fxyz(f2,domain%mesh_p,fy)
+    call init_grid_field_fxyz(f3,domain%mesh_p,fz)
 
     f4 = f1%copy(domain%mesh_p)
     call f4%update(f1, -1.0_8, domain%mesh_p)
 
+    is_passed = (f4%algebraic_norm2(domain%mesh_p,domain%parcomm)==0.0_8)
 
-    print *, f1%algebraic_norm2(domain%mesh_p,domain%parcomm)
-    print *, f4%algebraic_norm2(domain%mesh_p,domain%parcomm)
+    call f4%assign(0.0_8,domain%mesh_p)
+    call f4%update(f2,10.0_8,domain%mesh_p)
+    call f4%update(f3,0.1_8,domain%mesh_p)
+    call f1%assign(f2,-10.0_8,f3,-0.1_8,domain%mesh_p)
+    call f4%assign(f4,1.0_8,f1,1.0_8,domain%mesh_p)
+
+    is_passed = is_passed .and. (f4%algebraic_norm2(domain%mesh_p,domain%parcomm)==0.0_8)
+
+    if(is_passed) then
+        call domain%parcomm%print("grid_field test passed")
+    else
+        call domain%parcomm%print("grid_field test failed")
+    end if
 
     !call f1%assign(1.0_8, domain%mesh_p)
     !call f2%assign(1.0_8, domain%mesh_p)
@@ -54,7 +68,6 @@ subroutine test_grid_field()
 
     !call f%update(f2, 1.0_8, domain%mesh_p)
 
-    print *, "grid_field test passed"
 end subroutine test_grid_field
 
 real(kind=8) function fx(x,y,z,h) result(f)
