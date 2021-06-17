@@ -83,6 +83,13 @@ $(DEXE)TEST_HALO_MAIN: $(MKDIRS) $(DOBJ)test_halo_main.o \
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_HALO_MAIN
+$(DEXE)TEST_GRID_FIELD: $(MKDIRS) $(DOBJ)test_grid_field.o \
+	$(DOBJ)avost.o \
+	$(DOBJ)auxhs.o
+	@rm -f $(filter-out $(DOBJ)test_grid_field.o,$(EXESOBJ))
+	@echo $(LITEXT)
+	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
+EXES := $(EXES) TEST_GRID_FIELD
 $(DEXE)TEST_MESH_MAIN: $(MKDIRS) $(DOBJ)test_mesh_main.o \
 	$(DOBJ)avost.o \
 	$(DOBJ)auxhs.o
@@ -780,6 +787,20 @@ $(DOBJ)test_ecs_halo_mod.o: src/test/test_halo/test_ecs_halo_mod.f90 \
 	$(DOBJ)halo_mod.o \
 	$(DOBJ)halo_factory_mod.o \
 	$(DOBJ)ecs_halo_mod.o \
+	$(DOBJ)mesh_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)test_grid_field.o: src/test/test_grid_field/test_grid_field.f90 \
+	$(DOBJ)test_grid_field_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)test_grid_field_mod.o: src/test/test_grid_field/test_grid_field_mod.f90 \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)domain_factory_mod.o \
+	$(DOBJ)grid_field_factory_mod.o \
 	$(DOBJ)mesh_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@

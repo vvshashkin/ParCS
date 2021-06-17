@@ -14,6 +14,9 @@ contains
     procedure, public :: assign_s1v1 => assign_grid_field_s1v1
     procedure, public :: assign_s1   => assign_grid_field_s1
     generic :: assign => assign_s1v1, assign_s1
+    procedure, public :: copy => copy_grid_field
+    procedure, public :: create_similar => create_similar_grid_field
+    procedure, public :: algebraic_norm2 => compute_grid_field_algebraic_norm2
     ! procedure, public :: init => grid_field_init
 end type grid_field_t
 
@@ -32,9 +35,104 @@ contains
     procedure, public :: assign_s1v1 => tile_field_assign_s1v1!v = s1*v1
     !assign -- generic procedure for v = ... operations
     generic :: assign => assign_s1v1, assign_s1
+
+    procedure, public :: algebraic_norm2 => compute_tile_field_algebraic_norm2
 end type tile_field_t
 
 contains
+
+function compute_grid_field_algebraic_norm2(this, mesh, parcomm) result(norm2)
+        use parcomm_mod, only : parcomm_t
+        use mpi
+
+        class(grid_field_t), intent(in)  :: this
+        type(mesh_t),        intent(in)  :: mesh
+        type(parcomm_t),     intent(in)  :: parcomm
+        real(kind=8)                     :: norm2
+
+        real(kind=8) :: local_norm2
+        integer(kind=4) :: t
+        integer(kind=4) :: ierr
+
+        local_norm2 = 0.0
+
+        do t = mesh%ts, mesh%te
+            local_norm2 = local_norm2 + this%tile(t)%algebraic_norm2(mesh%tile(t))
+        end do
+
+        call mpi_allreduce(local_norm2, norm2, 1, mpi_double, mpi_sum, parcomm%comm_w, ierr)
+        norm2 = sqrt(norm2)
+end function compute_grid_field_algebraic_norm2
+
+function compute_tile_field_algebraic_norm2(this, mesh) result(norm2)
+        use parcomm_mod, only : parcomm_t
+
+        class(tile_field_t), intent(in)  :: this
+        type(tile_mesh_t),   intent(in)  :: mesh
+        real(kind=8)                     :: norm2
+
+        integer(kind=4) :: i, j, k
+
+        norm2 = 0.0_8
+
+        do k = mesh%ks, mesh%ke
+            do j = mesh%js, mesh%je
+                do i = mesh%is, mesh%ie
+                    norm2 = norm2 + this%p(i,j,k)**2
+                end do
+            end do
+        end do
+end function compute_tile_field_algebraic_norm2
+
+function create_similar_grid_field(this, mesh) result(grid_field)
+
+    class(grid_field_t), intent(in)  :: this
+    type(mesh_t),        intent(in)  :: mesh
+    type(grid_field_t)               :: grid_field
+
+
+    integer(kind=4) :: t
+
+    allocate(grid_field%tile(mesh%ts:mesh%te))
+
+    do t = mesh%ts, mesh%te
+
+        call grid_field%tile(t)%init(this%tile(t)%is, this%tile(t)%ie, &
+                                     this%tile(t)%js, this%tile(t)%je, &
+                                     this%tile(t)%ks, this%tile(t)%ke, &
+                                     this%tile(t)%nvi, this%tile(t)%nvj, this%tile(t)%nvk)
+    end do
+
+end function create_similar_grid_field
+
+function copy_grid_field(this, mesh) result(grid_field)
+
+    class(grid_field_t), intent(in)  :: this
+    type(mesh_t),        intent(in)  :: mesh
+    type(grid_field_t)               :: grid_field
+
+    integer(kind=4) :: t, i, j, k
+
+    allocate(grid_field%tile(mesh%ts:mesh%te))
+
+    do t = mesh%ts, mesh%te
+
+        call grid_field%tile(t)%init(this%tile(t)%is, this%tile(t)%ie, &
+                                     this%tile(t)%js, this%tile(t)%je, &
+                                     this%tile(t)%ks, this%tile(t)%ke, &
+                                     this%tile(t)%nvi, this%tile(t)%nvj, this%tile(t)%nvk)
+
+        do k = this%tile(t)%ks,this%tile(t)%ke
+            do j = this%tile(t)%js,this%tile(t)%je
+                do i = this%tile(t)%is,this%tile(t)%ie
+                    grid_field%tile(t)%p(i,j,k) = this%tile(t)%p(i,j,k)
+                end do
+            end do
+        end do
+
+    end do
+
+end function copy_grid_field
 
 subroutine tile_field_init(this, is, ie, js, je, ks, ke, nvi, nvj, nvk)
 

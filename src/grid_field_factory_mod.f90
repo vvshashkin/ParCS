@@ -18,6 +18,9 @@ subroutine create_grid_field(grid_field, halo_width_xy, halo_width_z, mesh)
 
     allocate(grid_field%tile(mesh%ts:mesh%te))
 
+    !grid_field%ts = mesh%ts
+    !grid_field%te = mesh%te
+
     do t = mesh%ts, mesh%te
         call grid_field%tile(t)%init(mesh%tile(t)%is, mesh%tile(t)%ie, &
                                      mesh%tile(t)%js, mesh%tile(t)%je, &
