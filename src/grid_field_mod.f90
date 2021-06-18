@@ -24,7 +24,7 @@ end type grid_field_t
 type, public :: tile_field_t
     real(kind=8), allocatable  :: p(:,:,:)
 !    integer(kind=4)            :: panel_ind ! index of grid panel hosted the tile_field
-    integer(kind=4)            :: is, ie, js, je, ks, ke, nvi, nvj, nvk ! p-array bounds
+    integer(kind=4)            :: is, ie, js, je, ks, ke ! p-array bounds
 contains
     procedure, public :: init => tile_field_init
 
@@ -86,43 +86,41 @@ function compute_tile_field_algebraic_norm2(this, mesh) result(norm2)
         end do
 end function compute_tile_field_algebraic_norm2
 
-function create_similar_grid_field(this, mesh) result(grid_field)
+function create_similar_grid_field(this) result(grid_field)
 
     class(grid_field_t), intent(in)  :: this
-    type(mesh_t),        intent(in)  :: mesh
+    !type(mesh_t),        intent(in)  :: mesh
     type(grid_field_t)               :: grid_field
 
 
     integer(kind=4) :: t
 
-    allocate(grid_field%tile(mesh%ts:mesh%te))
+    allocate(grid_field%tile(this%ts:this%te))
 
-    do t = mesh%ts, mesh%te
+    do t = this%ts, this%te
 
         call grid_field%tile(t)%init(this%tile(t)%is, this%tile(t)%ie, &
                                      this%tile(t)%js, this%tile(t)%je, &
-                                     this%tile(t)%ks, this%tile(t)%ke, &
-                                     this%tile(t)%nvi, this%tile(t)%nvj, this%tile(t)%nvk)
+                                     this%tile(t)%ks, this%tile(t)%ke)
     end do
 
 end function create_similar_grid_field
 
-function copy_grid_field(this, mesh) result(grid_field)
+function copy_grid_field(this) result(grid_field)
 
     class(grid_field_t), intent(in)  :: this
-    type(mesh_t),        intent(in)  :: mesh
+    !type(mesh_t),        intent(in)  :: mesh
     type(grid_field_t)               :: grid_field
 
     integer(kind=4) :: t, i, j, k
 
-    allocate(grid_field%tile(mesh%ts:mesh%te))
+    allocate(grid_field%tile(this%ts:this%te))
 
-    do t = mesh%ts, mesh%te
+    do t = this%ts, this%te
 
         call grid_field%tile(t)%init(this%tile(t)%is, this%tile(t)%ie, &
                                      this%tile(t)%js, this%tile(t)%je, &
-                                     this%tile(t)%ks, this%tile(t)%ke, &
-                                     this%tile(t)%nvi, this%tile(t)%nvj, this%tile(t)%nvk)
+                                     this%tile(t)%ks, this%tile(t)%ke)
 
         do k = this%tile(t)%ks,this%tile(t)%ke
             do j = this%tile(t)%js,this%tile(t)%je
@@ -136,39 +134,35 @@ function copy_grid_field(this, mesh) result(grid_field)
 
 end function copy_grid_field
 
-subroutine tile_field_init(this, is, ie, js, je, ks, ke, nvi, nvj, nvk)
+subroutine tile_field_init(this, is, ie, js, je, ks, ke)
 
     class(tile_field_t),  intent(out) :: this
-    integer(kind=4),      intent(in)  :: is, ie, js, je, ks, ke, nvi, nvj, nvk
+    integer(kind=4),      intent(in)  :: is, ie, js, je, ks, ke
 
-    if (is>ie .or. js>je .or. ks>ke .or. nvi<0 .or. nvj<0 .or. nvk<0) then
+    if (is>ie .or. js>je .or. ks>ke) then
         print*, 'Error! Problem with grid function initialization! Abort!'
         stop
     end if
 
-    allocate( this%p(is-nvi : ie+nvi, js-nvj : je+nvj, ks-nvk : ke+nvk) )
+    allocate( this%p(is : ie, js : je, ks : ke) )
 
     this%is = is; this%ie = ie
     this%js = js; this%je = je
     this%ks = ks; this%ke = ke
 
-    this%nvi = nvi
-    this%nvj = nvj
-    this%nvk = nvk
-
 end subroutine tile_field_init
 
-subroutine update_grid_field_s1v1(this, f1, scalar1, mesh)
+subroutine update_grid_field_s1v1(this, scalar1, f1, mesh)
 
     class(grid_field_t), intent(inout) :: this
-    type(grid_field_t),  intent(in)    :: f1
     real(kind=8),        intent(in)    :: scalar1
+    type(grid_field_t),  intent(in)    :: f1
     type(mesh_t),        intent(in)    :: mesh
 
     integer(kind=4) :: t
 
     do t = mesh%ts, mesh%te
-        call this%tile(t)%update(f1%tile(t), scalar1, mesh%tile(t))
+        call this%tile(t)%update(scalar1, f1%tile(t), mesh%tile(t))
     end do
 
 end subroutine update_grid_field_s1v1
@@ -187,41 +181,41 @@ subroutine assign_grid_field_s1(this, scalar1, mesh)
 
 end subroutine assign_grid_field_s1
 
-subroutine assign_grid_field_s1v1(this, f1, scalar1, mesh)
+subroutine assign_grid_field_s1v1(this, scalar1, f1, mesh)
 
     class(grid_field_t), intent(inout) :: this
-    type(grid_field_t),  intent(in)    :: f1
     real(kind=8),        intent(in)    :: scalar1
+    type(grid_field_t),  intent(in)    :: f1
     type(mesh_t),        intent(in)    :: mesh
 
     integer(kind=4) :: t
 
     do t = mesh%ts, mesh%te
-        call this%tile(t)%assign(f1%tile(t), scalar1, mesh%tile(t))
+        call this%tile(t)%assign(scalar1, f1%tile(t), mesh%tile(t))
     end do
 
 end subroutine assign_grid_field_s1v1
 
-subroutine assign_grid_field_s1v1s2v2(this, f1, scalar1, f2, scalar2, mesh)
+subroutine assign_grid_field_s1v1s2v2(this, scalar1, f1, scalar2, f2, mesh)
 
     class(grid_field_t), intent(inout) :: this
-    type(grid_field_t),  intent(in)    :: f1, f2
     real(kind=8),        intent(in)    :: scalar1, scalar2
+    type(grid_field_t),  intent(in)    :: f1, f2
     type(mesh_t),        intent(in)    :: mesh
 
     integer(kind=4) :: t
 
     do t = mesh%ts, mesh%te
-        call this%tile(t)%assign(f1%tile(t), scalar1, f2%tile(t), scalar2, mesh%tile(t))
+        call this%tile(t)%assign(scalar1, f1%tile(t), scalar2, f2%tile(t), mesh%tile(t))
     end do
 
 end subroutine assign_grid_field_s1v1s2v2
 
-subroutine tile_field_update_s1v1(this, a1, scalar1, mesh)
+subroutine tile_field_update_s1v1(this, scalar1, v1, mesh)
 
     class(tile_field_t), intent(inout) :: this
-    type(tile_field_t),  intent(in)    :: a1
     real(kind=8),        intent(in)    :: scalar1
+    type(tile_field_t),  intent(in)    :: v1
     type(tile_mesh_t),   intent(in)    :: mesh
 
     integer(kind=4) :: k, j, i
@@ -229,17 +223,17 @@ subroutine tile_field_update_s1v1(this, a1, scalar1, mesh)
     do k = mesh%ks, mesh%ke
         do j = mesh%js, mesh%je
             do i = mesh%is, mesh%ie
-                this%p(i,j,k) = this%p(i,j,k) + scalar1*a1%p(i,j,k)
+                this%p(i,j,k) = this%p(i,j,k) + scalar1*v1%p(i,j,k)
             end do
         end do
     end do
 
 end subroutine tile_field_update_s1v1
-subroutine tile_field_assign_s1v1(this, a1, scalar1, mesh)
+subroutine tile_field_assign_s1v1(this, scalar1, v1, mesh)
 
     class(tile_field_t), intent(inout) :: this
-    type(tile_field_t),  intent(in)    :: a1
     real(kind=8),        intent(in)    :: scalar1
+    type(tile_field_t),  intent(in)    :: v1
     type(tile_mesh_t),   intent(in)    :: mesh
 
     integer(kind=4) :: k, j, i
@@ -247,17 +241,17 @@ subroutine tile_field_assign_s1v1(this, a1, scalar1, mesh)
     do k = mesh%ks, mesh%ke
         do j = mesh%js, mesh%je
             do i = mesh%is, mesh%ie
-                this%p(i,j,k) = scalar1*a1%p(i,j,k)
+                this%p(i,j,k) = scalar1*v1%p(i,j,k)
             end do
         end do
     end do
 
 end subroutine tile_field_assign_s1v1
-subroutine tile_field_assign_s1v1s2v2(this, a1, scalar1, a2, scalar2, mesh)
+subroutine tile_field_assign_s1v1s2v2(this, scalar1, v1, scalar2, v2, mesh)
 
     class(tile_field_t), intent(inout) :: this
-    type(tile_field_t),  intent(in)    :: a1, a2
     real(kind=8),        intent(in)    :: scalar1, scalar2
+    type(tile_field_t),  intent(in)    :: v1, v2
     type(tile_mesh_t),   intent(in)    :: mesh
 
     integer(kind=4) :: k, j, i
@@ -265,7 +259,7 @@ subroutine tile_field_assign_s1v1s2v2(this, a1, scalar1, a2, scalar2, mesh)
     do k = mesh%ks, mesh%ke
         do j = mesh%js, mesh%je
             do i = mesh%is, mesh%ie
-                this%p(i,j,k) = scalar1*a1%p(i,j,k)+scalar2*a2%p(i,j,k)
+                this%p(i,j,k) = scalar1*v1%p(i,j,k)+scalar2*v2%p(i,j,k)
             end do
         end do
     end do

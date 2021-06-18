@@ -34,23 +34,23 @@ subroutine test_grid_field()
     call create_domain(domain, "cube", hor_grid_type, nh, nz)
 
     call create_grid_field(f1, halo_width, 0, domain%mesh_p)
-    f2 = f1%create_similar(domain%mesh_p)
-    f3 = f1%create_similar(domain%mesh_p)
+    f2 = f1%create_similar()
+    f3 = f1%create_similar()
 
     call init_grid_field_fxyz(f1,domain%mesh_p,fx)
     call init_grid_field_fxyz(f2,domain%mesh_p,fy)
     call init_grid_field_fxyz(f3,domain%mesh_p,fz)
 
-    f4 = f1%copy(domain%mesh_p)
-    call f4%update(f1, -1.0_8, domain%mesh_p)
+    f4 = f1%copy()
+    call f4%update(-1.0_8, f1, domain%mesh_p)
 
     is_passed = (f4%algebraic_norm2(domain%mesh_p,domain%parcomm)==0.0_8)
 
     call f4%assign(0.0_8,domain%mesh_p)
-    call f4%update(f2,10.0_8,domain%mesh_p)
-    call f4%update(f3,0.1_8,domain%mesh_p)
-    call f1%assign(f2,-10.0_8,f3,-0.1_8,domain%mesh_p)
-    call f4%assign(f4,1.0_8,f1,1.0_8,domain%mesh_p)
+    call f4%update(10.0_8,f2,domain%mesh_p)
+    call f4%update(0.1_8,f3,domain%mesh_p)
+    call f1%assign(-10.0_8,f2,-0.1_8,f3,domain%mesh_p)
+    call f4%assign(1.0_8,f4,1.0_8,f1,domain%mesh_p)
 
     is_passed = is_passed .and. (f4%algebraic_norm2(domain%mesh_p,domain%parcomm)==0.0_8)
 
@@ -59,14 +59,6 @@ subroutine test_grid_field()
     else
         call domain%parcomm%print("grid_field test failed")
     end if
-
-    !call f1%assign(1.0_8, domain%mesh_p)
-    !call f2%assign(1.0_8, domain%mesh_p)
-    !call f3%assign(1.0_8, domain%mesh_p)
-    !do t = f1%ts, f1%te
-    !end do
-
-    !call f%update(f2, 1.0_8, domain%mesh_p)
 
 end subroutine test_grid_field
 
