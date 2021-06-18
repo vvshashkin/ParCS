@@ -8,12 +8,13 @@ type, public :: grid_field_t
     integer(kind=4)                 :: ts, te ! tile_field_t-array bounds
     type(tile_field_t), allocatable :: tile(:)
 contains
-    procedure, public :: update_s1v1 => update_grid_field_s1v1
-    generic :: update => update_s1v1
+    procedure, public :: update_s1v1 => update_grid_field_s1v1 !v = v + s1*v1
+    procedure, public :: update_s1v1s2v2 => update_grid_field_s1v1s2v2 !v = v + s1*v1+s2*v2
+    generic :: update => update_s1v1, update_s1v1s2v2
 
-    procedure, public :: assign_s1v1       => assign_grid_field_s1v1
-    procedure, public :: assign_s1         => assign_grid_field_s1
-    procedure, public :: assign_s1v1s2v2   => assign_grid_field_s1v1s2v2
+    procedure, public :: assign_s1v1       => assign_grid_field_s1v1 !v = s1*v1
+    procedure, public :: assign_s1         => assign_grid_field_s1 !v = s1
+    procedure, public :: assign_s1v1s2v2   => assign_grid_field_s1v1s2v2 !v = s1*v1+s2*v2
     generic :: assign => assign_s1v1, assign_s1, assign_s1v1s2v2
     procedure, public :: copy => copy_grid_field
     procedure, public :: create_similar => create_similar_grid_field
@@ -29,8 +30,9 @@ contains
     procedure, public :: init => tile_field_init
 
     procedure, public :: update_s1v1 => tile_field_update_s1v1!v = v + s1*v1
+    procedure, public :: update_s1v1s2v2 => tile_field_update_s1v1s2v2!v = v + s1*v1+s2*v2
     !update -- generic procedure for v = v + ... operations
-    generic :: update => update_s1v1
+    generic :: update => update_s1v1, update_s1v1s2v2
 
     procedure, public :: assign_s1       => tile_field_assign_s1  !v = s1
     procedure, public :: assign_s1v1     => tile_field_assign_s1v1!v = s1*v1
@@ -167,6 +169,21 @@ subroutine update_grid_field_s1v1(this, scalar1, f1, mesh)
 
 end subroutine update_grid_field_s1v1
 
+subroutine update_grid_field_s1v1s2v2(this, scalar1, f1, scalar2, f2, mesh)
+
+    class(grid_field_t), intent(inout) :: this
+    real(kind=8),        intent(in)    :: scalar1, scalar2
+    type(grid_field_t),  intent(in)    :: f1, f2
+    type(mesh_t),        intent(in)    :: mesh
+
+    integer(kind=4) :: t
+
+    do t = mesh%ts, mesh%te
+        call this%tile(t)%update(scalar1, f1%tile(t), scalar2, f2%tile(t), mesh%tile(t))
+    end do
+
+end subroutine update_grid_field_s1v1s2v2
+
 subroutine assign_grid_field_s1(this, scalar1, mesh)
 
     class(grid_field_t), intent(inout) :: this
@@ -229,6 +246,26 @@ subroutine tile_field_update_s1v1(this, scalar1, v1, mesh)
     end do
 
 end subroutine tile_field_update_s1v1
+
+subroutine tile_field_update_s1v1s2v2(this, scalar1, v1, scalar2, v2, mesh)
+
+    class(tile_field_t), intent(inout) :: this
+    real(kind=8),        intent(in)    :: scalar1, scalar2
+    type(tile_field_t),  intent(in)    :: v1, v2
+    type(tile_mesh_t),   intent(in)    :: mesh
+
+    integer(kind=4) :: k, j, i
+
+    do k = mesh%ks, mesh%ke
+        do j = mesh%js, mesh%je
+            do i = mesh%is, mesh%ie
+                this%p(i,j,k) = this%p(i,j,k)+scalar1*v1%p(i,j,k)+scalar2*v2%p(i,j,k)
+            end do
+        end do
+    end do
+
+end subroutine tile_field_update_s1v1s2v2
+
 subroutine tile_field_assign_s1v1(this, scalar1, v1, mesh)
 
     class(tile_field_t), intent(inout) :: this
@@ -247,6 +284,7 @@ subroutine tile_field_assign_s1v1(this, scalar1, v1, mesh)
     end do
 
 end subroutine tile_field_assign_s1v1
+
 subroutine tile_field_assign_s1v1s2v2(this, scalar1, v1, scalar2, v2, mesh)
 
     class(tile_field_t), intent(inout) :: this
@@ -265,6 +303,7 @@ subroutine tile_field_assign_s1v1s2v2(this, scalar1, v1, scalar2, v2, mesh)
     end do
 
 end subroutine tile_field_assign_s1v1s2v2
+
 subroutine tile_field_assign_s1(this, scalar1, mesh)
 
     class(tile_field_t), intent(inout) :: this

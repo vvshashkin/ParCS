@@ -54,6 +54,11 @@ subroutine test_grid_field()
 
     is_passed = is_passed .and. (f4%algebraic_norm2(domain%mesh_p,domain%parcomm)==0.0_8)
 
+    call f4%assign(20.0_8,f2,0.1_8,f3,domain%mesh_p)
+    call f4%update(2.0_8,f1,0.1_8,f3,domain%mesh_p)
+
+    is_passed = is_passed .and. (f4%algebraic_norm2(domain%mesh_p,domain%parcomm)<1e-16_8*6*nh**2)
+
     if(is_passed) then
         call domain%parcomm%print("grid_field test passed")
     else
