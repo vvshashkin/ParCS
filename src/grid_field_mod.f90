@@ -19,6 +19,7 @@ contains
     procedure, public :: copy => copy_grid_field
     procedure, public :: create_similar => create_similar_grid_field
     procedure, public :: algebraic_norm2 => compute_grid_field_algebraic_norm2
+    procedure, public :: algebraic_dot   => compute_grid_field_algebraic_dot
     ! procedure, public :: init => grid_field_init
 end type grid_field_t
 
@@ -41,52 +42,28 @@ contains
     generic :: assign => assign_s1v1, assign_s1, assign_s1v1s2v2
 
     procedure, public :: algebraic_norm2 => compute_tile_field_algebraic_norm2
+    procedure, public :: algebraic_dot => compute_tile_field_algebraic_dot
 end type tile_field_t
 
 contains
 
-function compute_grid_field_algebraic_norm2(this, mesh, parcomm) result(norm2)
-        use parcomm_mod, only : parcomm_t
-        use mpi
+subroutine tile_field_init(this, is, ie, js, je, ks, ke)
 
-        class(grid_field_t), intent(in)  :: this
-        type(mesh_t),        intent(in)  :: mesh
-        type(parcomm_t),     intent(in)  :: parcomm
-        real(kind=8)                     :: norm2
+    class(tile_field_t),  intent(out) :: this
+    integer(kind=4),      intent(in)  :: is, ie, js, je, ks, ke
 
-        real(kind=8) :: local_norm2
-        integer(kind=4) :: t
-        integer(kind=4) :: ierr
+    if (is>ie .or. js>je .or. ks>ke) then
+        print*, 'Error! Problem with grid function initialization! Abort!'
+        stop
+    end if
 
-        local_norm2 = 0.0
+    allocate( this%p(is : ie, js : je, ks : ke) )
 
-        do t = mesh%ts, mesh%te
-            local_norm2 = local_norm2 + this%tile(t)%algebraic_norm2(mesh%tile(t))
-        end do
+    this%is = is; this%ie = ie
+    this%js = js; this%je = je
+    this%ks = ks; this%ke = ke
 
-        call mpi_allreduce(local_norm2, norm2, 1, mpi_double, mpi_sum, parcomm%comm_w, ierr)
-        norm2 = sqrt(norm2)
-end function compute_grid_field_algebraic_norm2
-
-function compute_tile_field_algebraic_norm2(this, mesh) result(norm2)
-        use parcomm_mod, only : parcomm_t
-
-        class(tile_field_t), intent(in)  :: this
-        type(tile_mesh_t),   intent(in)  :: mesh
-        real(kind=8)                     :: norm2
-
-        integer(kind=4) :: i, j, k
-
-        norm2 = 0.0_8
-
-        do k = mesh%ks, mesh%ke
-            do j = mesh%js, mesh%je
-                do i = mesh%is, mesh%ie
-                    norm2 = norm2 + this%p(i,j,k)**2
-                end do
-            end do
-        end do
-end function compute_tile_field_algebraic_norm2
+end subroutine tile_field_init
 
 function create_similar_grid_field(this) result(grid_field)
 
@@ -136,23 +113,92 @@ function copy_grid_field(this) result(grid_field)
 
 end function copy_grid_field
 
-subroutine tile_field_init(this, is, ie, js, je, ks, ke)
+function compute_grid_field_algebraic_norm2(this, mesh, parcomm) result(norm2)
+        use parcomm_mod, only : parcomm_t
+        use mpi
 
-    class(tile_field_t),  intent(out) :: this
-    integer(kind=4),      intent(in)  :: is, ie, js, je, ks, ke
+        class(grid_field_t), intent(in)  :: this
+        type(mesh_t),        intent(in)  :: mesh
+        type(parcomm_t),     intent(in)  :: parcomm
+        real(kind=8)                     :: norm2
 
-    if (is>ie .or. js>je .or. ks>ke) then
-        print*, 'Error! Problem with grid function initialization! Abort!'
-        stop
-    end if
+        real(kind=8) :: local_norm2
+        integer(kind=4) :: t
+        integer(kind=4) :: ierr
 
-    allocate( this%p(is : ie, js : je, ks : ke) )
+        local_norm2 = 0.0
 
-    this%is = is; this%ie = ie
-    this%js = js; this%je = je
-    this%ks = ks; this%ke = ke
+        do t = mesh%ts, mesh%te
+            local_norm2 = local_norm2 + this%tile(t)%algebraic_norm2(mesh%tile(t))
+        end do
 
-end subroutine tile_field_init
+        call mpi_allreduce(local_norm2, norm2, 1, mpi_double, mpi_sum, parcomm%comm_w, ierr)
+        norm2 = sqrt(norm2)
+end function compute_grid_field_algebraic_norm2
+
+function compute_tile_field_algebraic_norm2(this, mesh) result(norm2)
+        use parcomm_mod, only : parcomm_t
+
+        class(tile_field_t), intent(in)  :: this
+        type(tile_mesh_t),   intent(in)  :: mesh
+        real(kind=8)                     :: norm2
+
+        integer(kind=4) :: i, j, k
+
+        norm2 = 0.0_8
+
+        do k = mesh%ks, mesh%ke
+            do j = mesh%js, mesh%je
+                do i = mesh%is, mesh%ie
+                    norm2 = norm2 + this%p(i,j,k)**2
+                end do
+            end do
+        end do
+end function compute_tile_field_algebraic_norm2
+
+function compute_grid_field_algebraic_dot(this, other, mesh, parcomm) result(dot_product)
+        use parcomm_mod, only : parcomm_t
+        use mpi
+
+        class(grid_field_t), intent(in)  :: this
+        type(grid_field_t),  intent(in)  :: other
+        type(mesh_t),        intent(in)  :: mesh
+        type(parcomm_t),     intent(in)  :: parcomm
+        real(kind=8)                     :: dot_product
+
+        real(kind=8) :: local_dot
+        integer(kind=4) :: t
+        integer(kind=4) :: ierr
+
+        local_dot = 0.0
+
+        do t = mesh%ts, mesh%te
+            local_dot = local_dot + this%tile(t)%algebraic_dot(other%tile(t),mesh%tile(t))
+        end do
+
+        call mpi_allreduce(local_dot, dot_product, 1, mpi_double, mpi_sum, parcomm%comm_w, ierr)
+end function compute_grid_field_algebraic_dot
+
+function compute_tile_field_algebraic_dot(this, other, mesh) result(dot_product)
+        use parcomm_mod, only : parcomm_t
+
+        class(tile_field_t), intent(in)  :: this
+        type(tile_field_t),  intent(in)  :: other
+        type(tile_mesh_t),   intent(in)  :: mesh
+        real(kind=8)                     :: dot_product
+
+        integer(kind=4) :: i, j, k
+
+        dot_product = 0.0_8
+
+        do k = mesh%ks, mesh%ke
+            do j = mesh%js, mesh%je
+                do i = mesh%is, mesh%ie
+                    dot_product = dot_product + this%p(i,j,k)*other%p(i,j,k)
+                end do
+            end do
+        end do
+end function compute_tile_field_algebraic_dot
 
 subroutine update_grid_field_s1v1(this, scalar1, f1, mesh)
 
