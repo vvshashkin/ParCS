@@ -71,6 +71,7 @@ subroutine test_A_halo_exchange()
     err_sum = 0
 
     do t = ts, te
+        pn = domain%partition%panel_map(t)
         do k = domain%mesh_p%tile(t)%ks, domain%mesh_p%tile(t)%ke
             do j = domain%mesh_p%tile(t)%js-halo_width, domain%mesh_p%tile(t)%je+halo_width
                 is = domain%mesh_p%tile(t)%is-halo_width
@@ -80,7 +81,7 @@ subroutine test_A_halo_exchange()
                     ie = min(ie,domain%partition%nh)
                 end if
                 do i = is, ie
-                    call get_real_panel_coords(i, j, domain%partition%panel_map(t), nh, nh, i1, j1, p1)
+                    call get_real_panel_coords(i, j,pn, nh, nh, i1, j1, p1)
                     f_remote = __fun1(i1,j1,k,p1)
                     err_sum = err_sum + abs(int(f%tile(t)%p(i,j,k) - f_remote))
                 end do
@@ -129,6 +130,7 @@ subroutine test_A_halo_exchange()
 
 !In case of A grid mesh_p = mesh_u = mesh_v
     do t = ts, te
+        pn = domain%partition%panel_map(t)
         do k = domain%mesh_p%tile(t)%ks, domain%mesh_p%tile(t)%ke
             do j = domain%mesh_p%tile(t)%js-halo_width, domain%mesh_p%tile(t)%je+halo_width
                 is = domain%mesh_p%tile(t)%is-halo_width
@@ -138,7 +140,7 @@ subroutine test_A_halo_exchange()
                     ie = min(ie,domain%partition%nh)
                 end if
                 do i = is, ie
-                    call get_real_panel_coords(i, j, domain%partition%panel_map(t), nh, nh, i1, j1, p1)
+                    call get_real_panel_coords(i, j, pn, nh, nh, i1, j1, p1)
                     call find_basis_orientation(pn, p1, i_step, j_step, first_dim_index)
                     if (first_dim_index == "i") then
                         u_remote = i_step*__fun1(i1,j1,k,p1)
@@ -251,7 +253,7 @@ subroutine test_halo_vec_C_exchange()
                     ie = min(ie,nh+1)
                 end if
                 do i = is, ie
-                    call get_real_panel_coords(i, j, domain%partition%panel_map(t), nh+1, nh, i1, j1, p1)
+                    call get_real_panel_coords(i, j, pn, nh+1, nh, i1, j1, p1)
                     call find_basis_orientation(pn, p1, i_step, j_step, first_dim_index)
                     if (first_dim_index == "i") then
                         u_remote = i_step*__fun1(i1,j1,k,p1)
@@ -279,7 +281,7 @@ subroutine test_halo_vec_C_exchange()
                     ie = min(ie,nh)
                 end if
                 do i = is, ie
-                    call get_real_panel_coords(i, j, domain%partition%panel_map(t), nh, nh+1, i1, j1, p1)
+                    call get_real_panel_coords(i, j, pn, nh, nh+1, i1, j1, p1)
                     call find_basis_orientation(pn, p1, i_step, j_step, first_dim_index)
                     if (first_dim_index == "i") then
                         v_remote = j_step*__fun2(i1,j1,k,p1)
@@ -390,7 +392,7 @@ subroutine test_halo_u_exchange()
                     ie = min(ie,nh+1)
                 end if
                 do i = is, ie
-                    call get_real_panel_coords(i, j, domain%partition%panel_map(t), nh+1, nh, i1, j1, p1)
+                    call get_real_panel_coords(i, j, pn, nh+1, nh, i1, j1, p1)
                     call find_basis_orientation(pn, p1, i_step, j_step, first_dim_index)
                     if (first_dim_index == "i") then
                         u_remote = i_step*__fun1(i1,j1,k,p1)
@@ -501,7 +503,7 @@ subroutine test_halo_v_exchange()
                     ie = min(ie,nh)
                 end if
                 do i = is, ie
-                    call get_real_panel_coords(i, j, domain%partition%panel_map(t), nh, nh+1, i1, j1, p1)
+                    call get_real_panel_coords(i, j, pn, nh, nh+1, i1, j1, p1)
                     call find_basis_orientation(pn, p1, i_step, j_step, first_dim_index)
                     if (first_dim_index == "i") then
                         v_remote = j_step*__fun2(i1,j1,k,p1)
