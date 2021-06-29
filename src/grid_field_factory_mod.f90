@@ -18,11 +18,13 @@ subroutine create_grid_field(grid_field, halo_width_xy, halo_width_z, mesh)
 
     allocate(grid_field%tile(mesh%ts:mesh%te))
 
+    grid_field%ts = mesh%ts
+    grid_field%te = mesh%te
+
     do t = mesh%ts, mesh%te
-        call grid_field%tile(t)%init(mesh%tile(t)%is, mesh%tile(t)%ie, &
-                                     mesh%tile(t)%js, mesh%tile(t)%je, &
-                                     mesh%tile(t)%ks, mesh%tile(t)%ke, &
-                                     halo_width_xy, halo_width_xy, halo_width_z)
+        call grid_field%tile(t)%init(mesh%tile(t)%is-halo_width_xy, mesh%tile(t)%ie+halo_width_xy, &
+                                     mesh%tile(t)%js-halo_width_xy, mesh%tile(t)%je+halo_width_xy, &
+                                     mesh%tile(t)%ks-halo_width_z,  mesh%tile(t)%ke+halo_width_z)
     end do
 
 end subroutine create_grid_field

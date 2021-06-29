@@ -25,7 +25,8 @@
 
 module ecs_halo_mod
 
-use halo_mod, only : halo_t
+use halo_mod,          only : halo_t
+use exchange_halo_mod, only : exchange_t
 
 implicit none
 
@@ -33,6 +34,18 @@ implicit none
 !multiple halo-interpolators for multiple grids (for geometric MG-solver)
 
 type, extends(halo_t) :: ecs_halo_t
+
+    integer(kind=4)                    :: ts, te
+    class(exchange_t),     allocatable :: exch_halo
+    type(ecs_tile_halo_t), allocatable :: tile(:)
+
+    contains
+
+    procedure :: get_halo_scalar => get_ecs_halo
+
+end type
+
+type ecs_tile_halo_t
   integer(kind=4) n          !number of real grid points along cubed-sphere face edge
   integer(kind=4) halo_width !number of rows in halo-zone
   integer(kind=4) wsx, wex     !starting and ending index of interpolation weights x-edges
@@ -46,19 +59,38 @@ type, extends(halo_t) :: ecs_halo_t
   integer(kind=4), allocatable :: indy(:,:) !interpolation stencil base point index, edgws along x-axis
 
   contains
-  procedure, public :: interp  => ecs_ext_halo
+  procedure, public :: interp  => ext_ecs_tile_halo
 
-end type ecs_halo_t
+end type ecs_tile_halo_t
 
 contains
 
-subroutine ecs_ext_halo(this, f, halo_width)
-!interpolate source face values at halo zones to target face virtual points
-use grid_field_mod, only: block_t
 
-class(ecs_halo_t), intent(in)    :: this
-type(block_t),     intent(inout) :: f
-integer(kind=4),   intent(in)    :: halo_width
+subroutine get_ecs_halo(this,f,parcomm,halo_width)
+    use grid_field_mod, only : grid_field_t
+    use parcomm_mod,    only : parcomm_t
+
+    class(ecs_halo_t),        intent(inout) :: this
+    class(grid_field_t),      intent(inout) :: f
+    type(parcomm_t),          intent(in)    :: parcomm
+    integer(kind=4),          intent(in)    :: halo_width
+
+    integer(kind=4) t
+
+    call this%exch_halo%do(f, parcomm)
+
+    do t=this%ts,this%te
+        call this%tile(t)%interp(f%tile(t),halo_width)
+    end do
+end subroutine get_ecs_halo
+
+subroutine ext_ecs_tile_halo(this, f, halo_width)
+!interpolate source face values at halo zones to target face virtual points
+use grid_field_mod, only : tile_field_t
+
+class(ecs_tile_halo_t), intent(in)    :: this
+type(tile_field_t),     intent(inout) :: f
+integer(kind=4),        intent(in)    :: halo_width
 
 !local
 integer(kind=4) n, thw, ihw
@@ -115,7 +147,7 @@ end if
 
 call ecs_halo_corners_put(f%p,isv,iev,jsv,jev,klev,zf_csp,n,lcorn,ihw)
 
-end subroutine ecs_ext_halo
+end subroutine ext_ecs_tile_halo
 
 !corner procedures for halo-zones
 !currently interpolates only left/right values in first halo row

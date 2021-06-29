@@ -7,8 +7,8 @@ DMOD    = mod/
 DEXE    = ./
 LIBS    =
 FC      = mpiifort
-OPTSC   =  -c -traceback -init=snan -init=arrays -check all -ftrapuv  -module mod
-OPTSL   =  -traceback -init=snan -init=arrays -check all -ftrapuv -lmkl_intel_lp64 -lmkl_core -lmkl_gf_lp64 -lmkl_sequential -lmkl_lapack95_lp64 -module mod
+OPTSC   =  -c -traceback -init=snan -init=arrays -check all -ftrapuv -fpp -module mod
+OPTSL   =  -traceback -init=snan -init=arrays -check all -ftrapuv -fpp -lmkl_intel_lp64 -lmkl_core -lmkl_gf_lp64 -lmkl_sequential -lmkl_lapack95_lp64 -module mod
 VPATH   = $(DSRC) $(DOBJ) $(DMOD)
 MKDIRS  = $(DOBJ) $(DMOD) $(DEXE)
 LCEXES  = $(shell echo $(EXES) | tr '[:upper:]' '[:lower:]')
@@ -83,6 +83,13 @@ $(DEXE)TEST_HALO_MAIN: $(MKDIRS) $(DOBJ)test_halo_main.o \
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_HALO_MAIN
+$(DEXE)TEST_GRID_FIELD: $(MKDIRS) $(DOBJ)test_grid_field.o \
+	$(DOBJ)avost.o \
+	$(DOBJ)auxhs.o
+	@rm -f $(filter-out $(DOBJ)test_grid_field.o,$(EXESOBJ))
+	@echo $(LITEXT)
+	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
+EXES := $(EXES) TEST_GRID_FIELD
 $(DEXE)TEST_MESH_MAIN: $(MKDIRS) $(DOBJ)test_mesh_main.o \
 	$(DOBJ)avost.o \
 	$(DOBJ)auxhs.o
@@ -116,7 +123,8 @@ $(DOBJ)global_diag_mod.o: src/global_diag_mod.f90 \
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)grid_field_mod.o: src/grid_field_mod.f90 \
-	$(DOBJ)mesh_mod.o
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -192,6 +200,7 @@ $(DOBJ)partition_mod.o: src/parallel/partition_mod.f90 \
 $(DOBJ)exchange_halo_c_mod.o: src/parallel/exchange_halo_C_mod.f90 \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)exchange_abstract_mod.o \
+	$(DOBJ)exchange_halo_mod.o \
 	$(DOBJ)buffer_mod.o \
 	$(DOBJ)tile_mod.o \
 	$(DOBJ)parcomm_mod.o
@@ -287,6 +296,7 @@ $(DOBJ)halo_mod.o: src/halo/halo_mod.f90 \
 $(DOBJ)halo_factory_mod.o: src/halo/halo_factory_mod.f90 \
 	$(DOBJ)halo_mod.o \
 	$(DOBJ)domain_mod.o \
+	$(DOBJ)ecs_halo_factory_mod.o \
 	$(DOBJ)halo_a_default_mod.o \
 	$(DOBJ)exchange_factory_mod.o
 	@echo $(COTEXT)
@@ -412,7 +422,9 @@ $(DOBJ)ecs_geometry_mod.o: src/equiang_cs/ecs_geometry_mod.f90 \
 
 $(DOBJ)ecs_halo_factory_mod.o: src/equiang_cs/ecs_halo_factory_mod.f90 \
 	$(DOBJ)ecs_halo_mod.o \
-	$(DOBJ)mesh_mod.o \
+	$(DOBJ)halo_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)exchange_factory_mod.o \
 	$(DOBJ)const_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -435,7 +447,9 @@ $(DOBJ)ecs_halo_vec_a_mod.o: src/equiang_cs/ecs_halo_vec_a_mod.f90 \
 
 $(DOBJ)ecs_halo_mod.o: src/equiang_cs/ecs_halo_mod.f90 \
 	$(DOBJ)halo_mod.o \
-	$(DOBJ)grid_field_mod.o
+	$(DOBJ)exchange_halo_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -752,6 +766,7 @@ $(DOBJ)test_cmd_line.o: src/test/test_cmd_line/test_cmd_line.f90 \
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)test_halo_main.o: src/test/test_halo/test_halo_main.f90 \
+	$(DOBJ)test_ecs_halo_mod.o \
 	$(DOBJ)test_halo_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -762,26 +777,33 @@ $(DOBJ)test_halo_mod.o: src/test/test_halo/test_halo_mod.f90 \
 	$(DOBJ)halo_mod.o \
 	$(DOBJ)halo_factory_mod.o \
 	$(DOBJ)grid_field_mod.o \
-	$(DOBJ)grid_field_factory_mod.o \
-	$(DOBJ)exchange_abstract_mod.o \
-	$(DOBJ)exchange_halo_mod.o \
-	$(DOBJ)exchange_factory_mod.o
+	$(DOBJ)grid_field_factory_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)test_ecs_halo_mod.o: src/test/test_halo/test_ecs_halo_mod.f90 \
 	$(DOBJ)grid_field_mod.o \
-	$(DOBJ)mesh_mod.o \
-	$(DOBJ)partition_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)domain_factory_mod.o \
 	$(DOBJ)grid_field_factory_mod.o \
-	$(DOBJ)exchange_abstract_mod.o \
-	$(DOBJ)exchange_factory_mod.o \
-	$(DOBJ)mesh_factory_mod.o \
+	$(DOBJ)halo_mod.o \
+	$(DOBJ)halo_factory_mod.o \
 	$(DOBJ)ecs_halo_mod.o \
-	$(DOBJ)ecs_halo_vec_a_mod.o \
-	$(DOBJ)ecs_halo_factory_mod.o \
-	$(DOBJ)ecs_halo_vec_a_factory_mod.o \
-	$(DOBJ)grid_function_mod.o
+	$(DOBJ)mesh_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)test_grid_field.o: src/test/test_grid_field/test_grid_field.f90 \
+	$(DOBJ)test_grid_field_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)test_grid_field_mod.o: src/test/test_grid_field/test_grid_field_mod.f90 \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)domain_factory_mod.o \
+	$(DOBJ)grid_field_factory_mod.o \
+	$(DOBJ)mesh_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

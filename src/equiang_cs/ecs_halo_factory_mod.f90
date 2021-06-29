@@ -4,28 +4,65 @@
 !   / source  /
 !  / /^b     /
 ! / +-->a   /
-!/_________/     ^z  
+!/_________/     ^z
 !|         |     |  /^y
 !|  ^b     |     | /
 !|  | targ |     |/
 !|  +-->a  |     +------->x
 !|_________|
 module ecs_halo_factory_mod
-use ecs_halo_mod, only : ecs_halo_t
+use ecs_halo_mod, only : ecs_halo_t, ecs_tile_halo_t
 
 implicit none
 
 private
-public   :: init_ecs_halo
+public   :: create_ecs_o_scalar_halo
 
 contains
 
-type(ecs_halo_t) function init_ecs_halo(is,ie,js,je,nx,halo_width,hx) result(halo)
-use mesh_mod,  only : mesh_t
+subroutine create_ecs_o_scalar_halo(halo_out,domain,halo_width)
+    use halo_mod,           only : halo_t
+    use domain_mod,         only : domain_t
+    use exchange_factory_mod,   only : create_symm_halo_exchange_A
+
+    class(halo_t), allocatable, intent(out) :: halo_out
+    class(domain_t),            intent(in)  :: domain
+    integer(kind=4),            intent(in)  :: halo_width
+
+    !locals
+    type(ecs_halo_t), allocatable :: halo
+    integer(kind=4) :: ex_halo_width
+    integer(kind=4) :: ts, te, is,ie, js, je, nh, t
+    real(kind=8)    :: hx
+
+    allocate(halo)
+    ex_halo_width = 8
+    halo%exch_halo = create_symm_halo_exchange_A(domain%partition, domain%parcomm, ex_halo_width, 'full')
+
+    ts = domain%partition%ts
+    te = domain%partition%te
+    nh = domain%partition%nh
+    halo%ts = ts
+    halo%te = te
+    allocate(halo%tile(ts:te))
+
+    do t=ts,te
+        hx = domain%mesh_p%tile(t)%hx
+        call domain%partition%tile(t)%getind(is,ie,js,je)
+        call init_ecs_tile_halo(halo%tile(t),is,ie,js,je,nh,halo_width,hx)
+    end do
+
+    call move_alloc(halo, halo_out)
+
+end subroutine create_ecs_o_scalar_halo
+
+subroutine init_ecs_tile_halo(halo, is,ie,js,je,nx,halo_width,hx)
 
 integer(kind=4), intent(in) :: is,ie,js,je,nx
 integer(kind=4), intent(in) :: halo_width
 real(kind=8),    intent(in) :: hx
+
+type(ecs_tile_halo_t), intent(out) :: halo
 
 halo%n = nx
 halo%halo_width = halo_width
@@ -55,7 +92,7 @@ if(halo%lhalo(3) .or. halo%lhalo(4)) then
     call init_halo_interp(halo%wy, halo%indy, hx, halo%wsy, halo%wey, halo_width)
 end if
 
-end function init_ecs_halo
+end subroutine init_ecs_tile_halo
 
 subroutine init_halo_interp(w, ind, dxa, i1, i2, hw)
 use const_mod, only : pi

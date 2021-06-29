@@ -26,7 +26,7 @@ subroutine test_domain()
     call  f%assign(1.0_8, domain%mesh_p)
     call f2%assign(1.0_8, domain%mesh_p)
 
-    call f%update(f2, 1.0_8, domain%mesh_p)
+    call f%update(1.0_8, f2, domain%mesh_p)
 
     print*, domain%mesh_u%tile(domain%mesh_u%ts)%ie
 

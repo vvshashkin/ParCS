@@ -7,6 +7,7 @@ contains
 subroutine create_halo_procedure(halo,domain,halo_width,halo_type)
     use halo_mod,   only : halo_t
     use domain_mod, only : domain_t
+    use ecs_halo_factory_mod, only : create_ecs_o_scalar_halo
 
     class(halo_t), allocatable, intent(out) :: halo
     class(domain_t),            intent(in)  :: domain
@@ -15,6 +16,8 @@ subroutine create_halo_procedure(halo,domain,halo_width,halo_type)
 
     if(halo_type=="A_default") then
         call create_A_default_halo_procedure(halo,domain,halo_width)
+    else if(halo_type == "ECS_O") then
+        call create_ecs_o_scalar_halo(halo,domain,halo_width)
     else
         call domain%parcomm%abort("unknown halo_type in create_halo_procedure: "// &
                                    halo_type)
