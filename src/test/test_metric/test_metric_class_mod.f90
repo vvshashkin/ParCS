@@ -13,7 +13,7 @@ subroutine test_metric_class(topology_type,metric_type)
     use metric_mod,           only : metric_t
     use metric_factory_mod,   only : create_metric
     use topology_mod,         only : topology_t
-    use topology_factory_mod, only : init_topology
+    use topology_factory_mod, only : create_topology
 
     character(len=*), intent(in) :: topology_type, metric_type
 
@@ -29,7 +29,7 @@ subroutine test_metric_class(topology_type,metric_type)
     real(kind=8) alpha, beta, alpha0, beta0, da, db
     logical :: is_correct = .true.
 
-    topology = init_topology(topology_type)
+    topology = create_topology(topology_type)
     call create_metric(metric, topology, metric_type)
 
     npanels = topology%npanels
