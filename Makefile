@@ -200,6 +200,7 @@ $(DOBJ)partition_mod.o: src/parallel/partition_mod.f90 \
 $(DOBJ)exchange_halo_c_mod.o: src/parallel/exchange_halo_C_mod.f90 \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)exchange_abstract_mod.o \
+	$(DOBJ)exchange_halo_mod.o \
 	$(DOBJ)buffer_mod.o \
 	$(DOBJ)tile_mod.o \
 	$(DOBJ)parcomm_mod.o
