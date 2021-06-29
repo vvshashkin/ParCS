@@ -1,10 +1,10 @@
 module domain_factory_mod
 
-use domain_mod, only : domain_t
-use topology_factory_mod,      only: init_topology
-use cubed_sphere_topology_mod, only: cubed_sphere_topology_t
-use metric_mod, only : metric_t
-use metric_factory_mod, only : create_metric
+use domain_mod,                only : domain_t
+use topology_factory_mod,      only : create_topology
+use cubed_sphere_topology_mod, only : cubed_sphere_topology_t
+use metric_mod,                only : metric_t
+use metric_factory_mod,        only : create_metric
 use mpi
 
 implicit none
@@ -27,7 +27,7 @@ subroutine create_domain(domain, topology_type, staggering_type, nh, nz)
 !have to be passed as an argument in future
     halo_width = 8
 
-    domain%topology = init_topology(topology_type)
+    domain%topology = create_topology(topology_type)
 
     call create_metric(metric,domain%topology,"ecs")
 

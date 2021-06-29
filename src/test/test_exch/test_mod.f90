@@ -17,7 +17,6 @@ subroutine test_A_halo_exchange()
     use exchange_halo_mod,      only : exchange_2D_halo_t
     use partition_mod,          only : partition_t
     use exchange_factory_mod,   only : create_symm_halo_exchange_A
-    use topology_mod,           only : transform_index, find_basis_orientation, get_real_panel_coords
 
     type(domain_t) :: domain
 
@@ -63,7 +62,8 @@ subroutine test_A_halo_exchange()
     end do
 
     !Init exchange
-    exch_halo = create_symm_halo_exchange_A(domain%partition, domain%parcomm, halo_width, 'full')
+    exch_halo = create_symm_halo_exchange_A( &
+                domain%partition, domain%parcomm, domain%topology,  halo_width, 'full')
 
     !Perform exchange
     call exch_halo%do(f, domain%parcomm)
@@ -81,7 +81,7 @@ subroutine test_A_halo_exchange()
                     ie = min(ie,domain%partition%nh)
                 end if
                 do i = is, ie
-                    call get_real_panel_coords(i, j,pn, nh, nh, i1, j1, p1)
+                    call domain%topology%get_true_panel_coords(i, j,pn, nh, nh, i1, j1, p1)
                     f_remote = __fun1(i1,j1,k,p1)
                     err_sum = err_sum + abs(int(f%tile(t)%p(i,j,k) - f_remote))
                 end do
@@ -140,8 +140,8 @@ subroutine test_A_halo_exchange()
                     ie = min(ie,domain%partition%nh)
                 end if
                 do i = is, ie
-                    call get_real_panel_coords(i, j, pn, nh, nh, i1, j1, p1)
-                    call find_basis_orientation(pn, p1, i_step, j_step, first_dim_index)
+                    call domain%topology%get_true_panel_coords(i, j, pn, nh, nh, i1, j1, p1)
+                    call domain%topology%find_basis_orientation(pn, p1, i_step, j_step, first_dim_index)
                     if (first_dim_index == "i") then
                         u_remote = i_step*__fun1(i1,j1,k,p1)
                         v_remote = j_step*__fun2(i1,j1,k,p1)
@@ -177,8 +177,6 @@ subroutine test_halo_vec_C_exchange()
     use exchange_halo_C_mod,    only : exchange_2D_halo_C_t
     use partition_mod,          only : partition_t
     use exchange_factory_mod,   only : create_symmetric_halo_vec_exchange_C
-    use topology_mod,           only : transform_index, find_basis_orientation, &
-                                       get_real_panel_coords
 
     type(domain_t) :: domain
 
@@ -231,7 +229,8 @@ subroutine test_halo_vec_C_exchange()
 
     !Init exchange
 
-    exch_halo = create_symmetric_halo_vec_exchange_C(domain%partition, domain%parcomm, halo_width, 'full')
+    exch_halo = create_symmetric_halo_vec_exchange_C( &
+                domain%partition, domain%parcomm, domain%topology, halo_width, 'full')
 
     !Perform exchange
     call exch_halo%do_vec(u, v, domain%parcomm)
@@ -253,8 +252,8 @@ subroutine test_halo_vec_C_exchange()
                     ie = min(ie,nh+1)
                 end if
                 do i = is, ie
-                    call get_real_panel_coords(i, j, pn, nh+1, nh, i1, j1, p1)
-                    call find_basis_orientation(pn, p1, i_step, j_step, first_dim_index)
+                    call domain%topology%get_true_panel_coords(i, j, pn, nh+1, nh, i1, j1, p1)
+                    call domain%topology%find_basis_orientation(pn, p1, i_step, j_step, first_dim_index)
                     if (first_dim_index == "i") then
                         u_remote = i_step*__fun1(i1,j1,k,p1)
                     else
@@ -281,8 +280,8 @@ subroutine test_halo_vec_C_exchange()
                     ie = min(ie,nh)
                 end if
                 do i = is, ie
-                    call get_real_panel_coords(i, j, pn, nh, nh+1, i1, j1, p1)
-                    call find_basis_orientation(pn, p1, i_step, j_step, first_dim_index)
+                    call domain%topology%get_true_panel_coords(i, j, pn, nh, nh+1, i1, j1, p1)
+                    call domain%topology%find_basis_orientation(pn, p1, i_step, j_step, first_dim_index)
                     if (first_dim_index == "i") then
                         v_remote = j_step*__fun2(i1,j1,k,p1)
                     else
@@ -316,8 +315,6 @@ subroutine test_halo_u_exchange()
     use exchange_halo_C_mod,    only : exchange_2D_halo_C_t
     use partition_mod,          only : partition_t
     use exchange_factory_mod,   only : create_symm_halo_vec_exchange_U_points
-    use topology_mod,           only : transform_index, find_basis_orientation, &
-                                       get_real_panel_coords
 
     type(domain_t) :: domain
 
@@ -370,7 +367,8 @@ subroutine test_halo_u_exchange()
 
     !Init exchange
 
-    exch_halo = create_symm_halo_vec_exchange_U_points(domain%partition, domain%parcomm, halo_width, 'full')
+    exch_halo = create_symm_halo_vec_exchange_U_points( &
+                domain%partition, domain%parcomm, domain%topology, halo_width, 'full')
 
     !Perform exchange
     call exch_halo%do_vec(u, v, domain%parcomm)
@@ -392,8 +390,8 @@ subroutine test_halo_u_exchange()
                     ie = min(ie,nh+1)
                 end if
                 do i = is, ie
-                    call get_real_panel_coords(i, j, pn, nh+1, nh, i1, j1, p1)
-                    call find_basis_orientation(pn, p1, i_step, j_step, first_dim_index)
+                    call domain%topology%get_true_panel_coords(i, j, pn, nh+1, nh, i1, j1, p1)
+                    call domain%topology%find_basis_orientation(pn, p1, i_step, j_step, first_dim_index)
                     if (first_dim_index == "i") then
                         u_remote = i_step*__fun1(i1,j1,k,p1)
                     else
@@ -427,8 +425,6 @@ subroutine test_halo_v_exchange()
     use exchange_halo_C_mod,    only : exchange_2D_halo_C_t
     use partition_mod,          only : partition_t
     use exchange_factory_mod,   only : create_symm_halo_vec_exchange_V_points
-    use topology_mod,           only : transform_index, find_basis_orientation, &
-                                       get_real_panel_coords
 
     type(domain_t) :: domain
 
@@ -481,7 +477,8 @@ subroutine test_halo_v_exchange()
 
     !Init exchange
 
-    exch_halo = create_symm_halo_vec_exchange_V_points(domain%partition, domain%parcomm, halo_width, 'full')
+    exch_halo = create_symm_halo_vec_exchange_V_points( &
+                domain%partition, domain%parcomm, domain%topology, halo_width, 'full')
 
     !Perform exchange
     call exch_halo%do_vec(u, v, domain%parcomm)
@@ -503,8 +500,8 @@ subroutine test_halo_v_exchange()
                     ie = min(ie,nh)
                 end if
                 do i = is, ie
-                    call get_real_panel_coords(i, j, pn, nh, nh+1, i1, j1, p1)
-                    call find_basis_orientation(pn, p1, i_step, j_step, first_dim_index)
+                    call domain%topology%get_true_panel_coords(i, j, pn, nh, nh+1, i1, j1, p1)
+                    call domain%topology%find_basis_orientation(pn, p1, i_step, j_step, first_dim_index)
                     if (first_dim_index == "i") then
                         v_remote = j_step*__fun2(i1,j1,k,p1)
                     else
