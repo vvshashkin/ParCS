@@ -15,6 +15,7 @@ subroutine create_domain(domain, topology_type, staggering_type, nh, nz)
 
     use mesh_factory_mod,    only : create_mesh
     use parcomm_factory_mod, only : create_parcomm
+    use parcomm_mod,         only : parcomm_global
 
     type(domain_t),   intent(out) :: domain
     character(len=*), intent(in)  :: topology_type
@@ -31,7 +32,7 @@ subroutine create_domain(domain, topology_type, staggering_type, nh, nz)
 
     call create_metric(metric,domain%topology,"ecs")
 
-    call create_parcomm(domain%parcomm)
+    call create_parcomm(parcomm_global%comm_w, domain%parcomm)
 
     call domain%partition%init(nh, nz, max(1,domain%parcomm%np/6), domain%parcomm%myid, domain%parcomm%Np, &
                                 staggering_type, strategy = 'default')

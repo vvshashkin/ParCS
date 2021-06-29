@@ -1,6 +1,7 @@
 module stvec_abstract_mod
 
 use container_abstract_mod, only : state_abstract_t
+use parcomm_mod,            only : parcomm_global
 
 implicit none
 
@@ -39,7 +40,7 @@ real(kind=8) function norm(this) result(l2)
     class(stvec_abstract_t), intent(in) :: this
     !calculates norm of state vector
     l2 = 0._8
-    call avost("norm function not implemented for specific stvec class")
+    call parcomm_global%abort("norm function not implemented for specific stvec class")
 end function norm
 
 subroutine smult(this, alpha)
@@ -47,7 +48,7 @@ subroutine smult(this, alpha)
     class(stvec_abstract_t), intent(inout) :: this
     real(kind=8),            intent(in)    :: alpha
 
-    call avost("scalar multiplication not implemented for specific stvec class")
+    call parcomm_global%abort("scalar multiplication not implemented for specific stvec class")
 end subroutine smult
 
 real(kind=8) function dot(this,other) result(dot_prod)
@@ -56,7 +57,7 @@ real(kind=8) function dot(this,other) result(dot_prod)
     class(stvec_abstract_t), intent(in) :: other
 
     dot_prod = 0._8
-    call avost("dot product function is not implemented for specific stvec class")
+    call parcomm_global%abort("dot product function is not implemented for specific stvec class")
 end function dot
 
 end module stvec_abstract_mod

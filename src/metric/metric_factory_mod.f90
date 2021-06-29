@@ -2,6 +2,7 @@ module metric_factory_mod
 
 use metric_mod,   only : metric_t
 use topology_mod, only : topology_t
+use parcomm_mod,  only : parcomm_global
 
 implicit none
 
@@ -22,11 +23,11 @@ subroutine create_metric(metric,topology,metric_type)
         class is (cubed_sphere_topology_t)
             call create_ecs_metric(metric,topology)
         class default
-            call avost("incorrect topology class in metric_factory_mod " // &
-                       "while initializing ecs metric")
+            call parcomm_global%abort( &
+                 "Wrong topology class in metric_factory_mod. ecs case")
         end select
     case default
-        call avost("Unknown metric_type var " // metric_type // &
+        call parcomm_global%abort("Unknown metric_type var " // metric_type // &
                                                     " in metric_factory_mod")
     end select
 end

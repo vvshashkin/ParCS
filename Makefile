@@ -177,13 +177,15 @@ $(DOBJ)operator_abstract_mod.o: src/operator_abstract_mod.f90 \
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)stvec_abstract_mod.o: src/stvec_abstract_mod.f90 \
-	$(DOBJ)container_abstract_mod.o
+	$(DOBJ)container_abstract_mod.o \
+	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)ecs_halo_vec_a_factory_mod.o: src/equiang_cs/ecs_halo_vec_a_factory_mod.f90 \
 	$(DOBJ)ecs_halo_mod.o \
 	$(DOBJ)ecs_halo_vec_a_mod.o \
+	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)topology_mod.o \
 	$(DOBJ)const_mod.o \
 	$(DOBJ)ecs_geometry_mod.o
@@ -205,7 +207,8 @@ $(DOBJ)ecs_metric_factory_mod.o: src/equiang_cs/ecs_metric_factory_mod.f90 \
 
 $(DOBJ)ecs_metric_mod.o: src/equiang_cs/ecs_metric_mod.f90 \
 	$(DOBJ)metric_mod.o \
-	$(DOBJ)cubed_sphere_topology_mod.o
+	$(DOBJ)cubed_sphere_topology_mod.o \
+	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -221,8 +224,8 @@ $(DOBJ)ecs_halo_factory_mod.o: src/equiang_cs/ecs_halo_factory_mod.f90 \
 $(DOBJ)ecs_halo_mod.o: src/equiang_cs/ecs_halo_mod.f90 \
 	$(DOBJ)halo_mod.o \
 	$(DOBJ)exchange_halo_mod.o \
-	$(DOBJ)grid_field_mod.o \
-	$(DOBJ)parcomm_mod.o
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)grid_field_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -303,6 +306,7 @@ $(DOBJ)exchange_halo_mod.o: src/parallel/exchange_halo_mod.f90 \
 $(DOBJ)metric_factory_mod.o: src/metric/metric_factory_mod.f90 \
 	$(DOBJ)metric_mod.o \
 	$(DOBJ)topology_mod.o \
+	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)cubed_sphere_topology_mod.o \
 	$(DOBJ)ecs_metric_mod.o \
 	$(DOBJ)ecs_metric_factory_mod.o
@@ -326,6 +330,7 @@ $(DOBJ)topology_mod.o: src/topology/topology_mod.f90 \
 
 $(DOBJ)topology_factory_mod.o: src/topology/topology_factory_mod.f90 \
 	$(DOBJ)topology_mod.o \
+	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)cubed_sphere_topology_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -354,7 +359,8 @@ $(DOBJ)halo_a_default_mod.o: src/halo/halo_A_default_mod.f90 \
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)swlin.o: src/models/linear_shallow_water/swlin.f90 \
-	$(DOBJ)swlin_mod.o
+	$(DOBJ)swlin_mod.o \
+	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -547,6 +553,7 @@ $(DOBJ)nhlin_output_mod.o: src/models/linear_NH/NHlin_output_mod.f90 \
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)nhlin.o: src/models/linear_NH/NHlin.f90 \
+	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)nhlin_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -615,7 +622,8 @@ $(DOBJ)domain_factory_mod.o: src/domain/domain_factory_mod.f90 \
 	$(DOBJ)metric_mod.o \
 	$(DOBJ)metric_factory_mod.o \
 	$(DOBJ)mesh_factory_mod.o \
-	$(DOBJ)parcomm_factory_mod.o
+	$(DOBJ)parcomm_factory_mod.o \
+	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -679,7 +687,8 @@ $(DOBJ)exp_taylor_mod.o: src/time_schemes/exp_taylor_mod.f90 \
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)test_cmd_line.o: src/test/test_cmd_line/test_cmd_line.f90 \
-	$(DOBJ)cmd_args_test_mod.o
+	$(DOBJ)cmd_args_test_mod.o \
+	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -689,7 +698,8 @@ $(DOBJ)cmd_args_test_mod.o: src/test/test_cmd_line/cmd_args_test_mod.f90 \
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)test_namelist.o: src/test/test_namelist/test_namelist.f90 \
-	$(DOBJ)test_namelist_mod.o
+	$(DOBJ)test_namelist_mod.o \
+	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -708,12 +718,14 @@ $(DOBJ)test_grid_field_mod.o: src/test/test_grid_field/test_grid_field_mod.f90 \
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)test_grid_field.o: src/test/test_grid_field/test_grid_field.f90 \
-	$(DOBJ)test_grid_field_mod.o
+	$(DOBJ)test_grid_field_mod.o \
+	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)test_exch_main.o: src/test/test_exch/test_exch_main.f90 \
-	$(DOBJ)test_mod.o
+	$(DOBJ)test_mod.o \
+	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -731,7 +743,8 @@ $(DOBJ)test_mod.o: src/test/test_exch/test_mod.f90 \
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)test_paneled_output.o: src/test/test_paneled_output/test_paneled_output.f90 \
-	$(DOBJ)test_paneled_output_mod.o
+	$(DOBJ)test_paneled_output_mod.o \
+	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -756,13 +769,15 @@ $(DOBJ)test_domain_mod.o: src/test/test_domain/test_domain_mod.f90 \
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)test_domain_main.o: src/test/test_domain/test_domain_main.f90 \
-	$(DOBJ)test_domain_mod.o
+	$(DOBJ)test_domain_mod.o \
+	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)test_halo_main.o: src/test/test_halo/test_halo_main.f90 \
 	$(DOBJ)test_ecs_halo_mod.o \
-	$(DOBJ)test_halo_mod.o
+	$(DOBJ)test_halo_mod.o \
+	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -802,7 +817,8 @@ $(DOBJ)test_ts_mod.o: src/test/test_time_steping/test_ts_mod.f90 \
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)test_ts.o: src/test/test_time_steping/test_ts.f90 \
-	$(DOBJ)test_ts_mod.o
+	$(DOBJ)test_ts_mod.o \
+	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -819,7 +835,8 @@ $(DOBJ)test_gl_diag_mod.o: src/test/test_global_diagnostics/test_gl_diag_mod.f90
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)test_global_diag_main.o: src/test/test_global_diagnostics/test_global_diag_main.f90 \
-	$(DOBJ)test_gl_diag_mod.o
+	$(DOBJ)test_gl_diag_mod.o \
+	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -837,7 +854,8 @@ $(DOBJ)test_metric_mod.o: src/test/test_metric/test_metric_mod.f90 \
 
 $(DOBJ)test_metric_main.o: src/test/test_metric/test_metric_main.f90 \
 	$(DOBJ)test_metric_mod.o \
-	$(DOBJ)test_metric_class_mod.o
+	$(DOBJ)test_metric_class_mod.o \
+	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -857,7 +875,8 @@ $(DOBJ)test_mesh_mod.o: src/test/test_mesh/test_mesh_mod.f90 \
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)test_mesh_main.o: src/test/test_mesh/test_mesh_main.f90 \
-	$(DOBJ)test_mesh_mod.o
+	$(DOBJ)test_mesh_mod.o \
+	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

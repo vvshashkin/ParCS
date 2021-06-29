@@ -3,6 +3,7 @@ module ecs_metric_mod
 
 use metric_mod,                only : metric_t
 use cubed_sphere_topology_mod, only : cubed_sphere_topology_t
+use parcomm_mod,               only : parcomm_global
 
 implicit none
 
@@ -109,7 +110,8 @@ function ecs_vector(this,panel_ind,vector_type,alpha,beta) result(r)
     case("b2")
         r = ecs_b2_proto(alpha,beta)
     case default
-        call avost("unknown vector type " // vector_type // " in ecs_metric_mod")
+        call parcomm_global%abort("unknown vector type " // vector_type //&
+                                 " in ecs_metric_mod")
     end select
 
     r = ecs_proto2realface(this%topology,this%rotation_matrix,panel_ind,r)

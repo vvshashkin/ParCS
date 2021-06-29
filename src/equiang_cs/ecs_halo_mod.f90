@@ -27,6 +27,7 @@ module ecs_halo_mod
 
 use halo_mod,          only : halo_t
 use exchange_halo_mod, only : exchange_t
+use parcomm_mod,       only : parcomm_global
 
 implicit none
 
@@ -110,7 +111,8 @@ n = this%n
 thw = this%halo_width !dimensions of initialized weights, theoretically max hw
 ihw = halo_width      !width of user-requested halo-interpolations
 
-if(thw < ihw) call halo_avost("requested halo width is greater than initialized maximum halo_width")
+if(thw < ihw) call parcomm_global%abort("requested halo width is greater than " // &
+                                          "initialized maximum halo_width")
 
 is = f%is;      ie = f%ie
 js = f%js;      je = f%je
@@ -194,7 +196,7 @@ lfail_corn = (lcorn(1) .and. (isv> -2 .or. iev<  3 .or. jsv> -2 .or. jev<  3)) .
              (lcorn(2) .and. (isv>n-2 .or. iev<n+3 .or. jsv> -2 .or. jev<  3)) .or.& !corner 2
              (lcorn(3) .and. (isv>n-2 .or. iev<n+3 .or. jsv>n-2 .or. jev<n+3)) .or.& !corner 3
              (lcorn(4) .and. (isv> -2 .or. iev<  3 .or. jsv>n-2 .or. jev<n+3))       !corner 4
-if(lfail_corn) call halo_avost("Must be at least 3 halo points for interpolation at corners")
+if(lfail_corn) call parcomm_global%abort("Must be at least 3 halo points for interpolation at corners")
 
 do icor = 1,4
     if(lcorn(icor)) then
@@ -346,12 +348,12 @@ real(kind=8) zbufx(isv:iev, hw, klev)
 !Internal checks to avoid (at least some part of) out-of-array errors
 !check if we have enough data for edge halo-procedure
 lfail_hw = nvj< hw
-if(lfail_hw) call halo_avost("cubed sphere halo_width > grid_function_t halo width, can't continue")
+if(lfail_hw) call parcomm_global%abort("cubed sphere halo_width > grid_function_t halo width, can't continue")
 !check if we have enough data along edges to perform interpolations
 ish = max(1,is-hw); ieh = min(n,ie+hw)
 lfail_halo_long = .false.
 lfail_halo_long = (minval(indx(ish,1:hw))-1<isv .or. maxval(indx(ieh,1:hw))+2>iev)
-if(lfail_halo_long) call halo_avost("not enough points along cub.sph edge to perform halo-interpolations (nvi=5 needed)")
+if(lfail_halo_long) call parcomm_global%abort("not enough points along cub.sph edge to perform halo-interpolations (nvi=5 needed)")
 
 !calculate values at corner special points
 !store them in sepparate arrays to not to spoil original f%p
@@ -395,11 +397,11 @@ real(kind=8) zbufy(jsv:jev, hw, klev)
 !Internal checks to avoid (at least some part of) out-of-array errors
 !check if we have enough data for edge halo-procedure
 lfail_hw = nvj< hw
-if(lfail_hw) call halo_avost("cubed sphere halo_width > grid_function_t halo width, can't continue")
+if(lfail_hw) call parcomm_global%abort("cubed sphere halo_width > grid_function_t halo width, can't continue")
 !check if we have enough data along edges to perform interpolations
 jsh = max(1,js-hw); jeh = min(n,je+hw)
 lfail_halo_long = (minval(indy(jsh,1:hw))-1<jsv .or. maxval(indy(jeh,1:hw))+2>jev)
-if(lfail_halo_long) call halo_avost("not enough points along cub.sph edge to perform halo-interpolations (nvi=5 needed)")
+if(lfail_halo_long) call parcomm_global%abort("not enough points along cub.sph edge to perform halo-interpolations (nvi=5 needed)")
 
 !calculate values at corner special points
 !store them in sepparate arrays to not to spoil original f%p
@@ -464,16 +466,5 @@ do k=1, klev
 end do
 
 end subroutine ecs_ext_halo_1e
-
-subroutine halo_avost(str)
-use mpi
-integer ierr
-character(*) str
-print *, str
-!print '(6(A,i8,1x))', "is=", is, "ie=", ie, "js=", js, "je=", je, "nvi=", iev-ie, "nvj=", jev-je
-print *, "exit"
-call mpi_finalize(ierr)
-stop
-end subroutine halo_avost
 
 end module ecs_halo_mod

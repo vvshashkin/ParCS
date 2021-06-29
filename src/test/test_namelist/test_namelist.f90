@@ -1,13 +1,13 @@
 program main
 
-use test_namelist_mod, only : test_namelist
-use mpi
+    use test_namelist_mod, only : test_namelist
+    use parcomm_mod,       only : init_global_parallel_enviroment, &
+                                  deinit_global_parallel_enviroment
 
-call MPI_init(ierr)
+    call init_global_parallel_enviroment()
 
-call test_namelist
+    call test_namelist
 
-call mpi_barrier(mpi_comm_world, ierr)
-call mpi_finalize(ierr)
+    call deinit_global_parallel_enviroment()
 
 end

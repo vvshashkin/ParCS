@@ -7,6 +7,7 @@
 module ecs_halo_vec_a_factory_mod
 use ecs_halo_mod,       only : ecs_halo_t
 use ecs_halo_vec_a_mod, only : ecs_halo_vec_t
+use parcomm_mod,        only : parcomm_global
 
 implicit none
 
@@ -127,7 +128,7 @@ subroutine find_adjacent_panel(adjacent_panel_ind, ist, iinc, jst, jinc, &
             return
         end if
     end do
-    call halo_avost("cannot find adjacent face! (init_ecs_halo_vect)")
+    call parcomm_global%abort("cannot find adjacent face! (init_ecs_halo_vect)")
 end subroutine find_adjacent_panel
 
 subroutine init_transform_matrix(TM, i1, i2, hw, panel_ind,    &
@@ -178,16 +179,5 @@ subroutine init_transform_matrix(TM, i1, i2, hw, panel_ind,    &
     end do
 
 end subroutine init_transform_matrix
-
-subroutine halo_avost(str)
-use mpi
-integer ierr
-character(*) str
-print *, str
-!print '(6(A,i8,1x))', "is=", is, "ie=", ie, "js=", js, "je=", je, "nvi=", iev-ie, "nvj=", jev-je
-print *, "exit"
-call mpi_finalize(ierr)
-stop
-end subroutine halo_avost
 
 end module ecs_halo_vec_a_factory_mod

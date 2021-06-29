@@ -1,16 +1,14 @@
 program main
 
-use test_mod, only : test_A_halo_exchange, test_halo_vec_C_exchange
-use mpi
+use test_mod,    only : test_A_halo_exchange, test_halo_vec_C_exchange
+use parcomm_mod, only : init_global_parallel_enviroment, &
+                        deinit_global_parallel_enviroment
 
-call MPI_init(ierr)
+    call init_global_parallel_enviroment()
 
-call test_A_halo_exchange()
-call test_halo_vec_C_exchange()
+    call test_A_halo_exchange()
+    call test_halo_vec_C_exchange()
 
-! call test_gather_exchange()
-
-call mpi_barrier(mpi_comm_world, ierr)
-call mpi_finalize(ierr)
+    call deinit_global_parallel_enviroment()
 
 end

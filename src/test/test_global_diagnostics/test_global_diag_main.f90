@@ -1,13 +1,13 @@
 program test_gl_diag_ecs
 
-use test_gl_diag_mod, only : test_gl_diag
-use mpi
+    use test_gl_diag_mod, only : test_gl_diag
+    use parcomm_mod,      only : init_global_parallel_enviroment, &
+                                 deinit_global_parallel_enviroment
 
-call MPI_init(ierr)
+    call init_global_parallel_enviroment()
 
-call test_gl_diag()
+    call test_gl_diag()
 
-call mpi_barrier(mpi_comm_world, ierr)
-call mpi_finalize(ierr)
+    call deinit_global_parallel_enviroment()
 
 end

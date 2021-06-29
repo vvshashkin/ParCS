@@ -1,6 +1,7 @@
 module topology_factory_mod
 
 use topology_mod, only : topology_t
+use parcomm_mod,  only : parcomm_global
 
 contains
 
@@ -16,7 +17,7 @@ function create_topology(topology_type) result(topology)
         allocate(cubed_sphere_topology_t :: topology)
         call topology%init()
     case default
-        call avost("unknown topology type " //  topology_type)
+        call parcomm_global%abort("Unknown topology type " //  topology_type // " in create_topology")
     end select
 end function create_topology
 

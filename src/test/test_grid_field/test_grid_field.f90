@@ -1,13 +1,13 @@
 program test_grid_field_main
 
-use test_grid_field_mod, only : test_grid_field
+    use test_grid_field_mod, only : test_grid_field
+    use parcomm_mod,         only : init_global_parallel_enviroment, &
+                                    deinit_global_parallel_enviroment
 
-use mpi
+    call init_global_parallel_enviroment()
 
-call MPI_init(ierr)
+    call test_grid_field()
 
-call test_grid_field()
-
-call mpi_finalize(ierr)
+    call deinit_global_parallel_enviroment()
 
 end
