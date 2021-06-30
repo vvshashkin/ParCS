@@ -59,7 +59,7 @@ subroutine test_ecs_halo()
 
     call domain%parcomm%print('equiangular cubed-sphere halo-zone interpolation test')
 
-    call halo%get_halo_scalar(f_test,domain%parcomm,halo_width)
+    call halo%get_halo_scalar(f_test,domain,halo_width)
 
     call halo_err(inface_err, inface_err_max, cross_edge_err, cross_edge_err_max, &
                   inface_corner_err, inface_corner_err_max, inedge_corner_err,       &
@@ -214,9 +214,9 @@ num_inedge_corners = 0
 
 do ind = mesh%ts, mesh%te
 
-    is = f1%tile(ind)%is; ie = f1%tile(ind)%ie
-    js = f1%tile(ind)%js; je = f1%tile(ind)%je
-    ks = f1%tile(ind)%ks; ke = f1%tile(ind)%ke
+    is = mesh%tile(ind)%is; ie = mesh%tile(ind)%ie
+    js = mesh%tile(ind)%js; je = mesh%tile(ind)%je
+    ks = mesh%tile(ind)%ks; ke = mesh%tile(ind)%ke
     klev = ke-ks+1
 
     !tile edge errors

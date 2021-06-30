@@ -17,16 +17,16 @@ end type
 
 contains
 
-subroutine get_A_default_scalar_halo(this,f,parcomm,halo_width)
+subroutine get_A_default_scalar_halo(this,f,domain,halo_width)
     use grid_field_mod, only : grid_field_t
-    use parcomm_mod,    only : parcomm_t
+    use domain_mod,     only : domain_t
 
     class(halo_A_default_t),  intent(inout) :: this
     class(grid_field_t),      intent(inout) :: f
-    type(parcomm_t),          intent(in)    :: parcomm
+    type(domain_t),           intent(in)    :: domain
     integer(kind=4),          intent(in)    :: halo_width
 
-    call this%exch_halo%do(f, parcomm)
+    call this%exch_halo%do(f, domain%parcomm)
 
 end subroutine get_A_default_scalar_halo
 

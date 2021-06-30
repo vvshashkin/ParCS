@@ -27,7 +27,7 @@ subroutine test_halo()
 
     call create_domain(domain, "cube", 'A', nh, nz)
     call domain%parcomm%print("cubed sphere default A grid scalar halo test")
-    
+
     call create_halo_procedure(halo,domain,halo_width,"A_default")
 
     call create_grid_field(f1, halo_width, 0, domain%mesh_p)
@@ -36,7 +36,7 @@ subroutine test_halo()
     call init_field_xz(f1,domain,0,halo_width)
     call init_field_xz(f2,domain,halo_width,halo_width)
 
-    call halo%get_halo_scalar(f1,domain%parcomm,halo_width)
+    call halo%get_halo_scalar(f1,domain,halo_width)
 
     err = compare_grid_functions(domain,halo_width,f1,f2)
     !print *, err

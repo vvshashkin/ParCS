@@ -289,7 +289,7 @@ $(DOBJ)master_paneled_outputer_mod.o: src/outputer/master_paneled_outputer_mod.f
 
 $(DOBJ)halo_mod.o: src/halo/halo_mod.f90 \
 	$(DOBJ)grid_field_mod.o \
-	$(DOBJ)parcomm_mod.o
+	$(DOBJ)domain_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -306,7 +306,7 @@ $(DOBJ)halo_a_default_mod.o: src/halo/halo_A_default_mod.f90 \
 	$(DOBJ)halo_mod.o \
 	$(DOBJ)exchange_halo_mod.o \
 	$(DOBJ)grid_field_mod.o \
-	$(DOBJ)parcomm_mod.o
+	$(DOBJ)domain_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -449,7 +449,8 @@ $(DOBJ)ecs_halo_mod.o: src/equiang_cs/ecs_halo_mod.f90 \
 	$(DOBJ)halo_mod.o \
 	$(DOBJ)exchange_halo_mod.o \
 	$(DOBJ)grid_field_mod.o \
-	$(DOBJ)parcomm_mod.o
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)tile_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

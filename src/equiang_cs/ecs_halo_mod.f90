@@ -66,30 +66,32 @@ end type ecs_tile_halo_t
 contains
 
 
-subroutine get_ecs_halo(this,f,parcomm,halo_width)
+subroutine get_ecs_halo(this,f,domain,halo_width)
     use grid_field_mod, only : grid_field_t
-    use parcomm_mod,    only : parcomm_t
+    use domain_mod,     only : domain_t
 
     class(ecs_halo_t),        intent(inout) :: this
     class(grid_field_t),      intent(inout) :: f
-    type(parcomm_t),          intent(in)    :: parcomm
+    type(domain_t),           intent(in)    :: domain
     integer(kind=4),          intent(in)    :: halo_width
 
     integer(kind=4) t
 
-    call this%exch_halo%do(f, parcomm)
+    call this%exch_halo%do(f, domain%parcomm)
 
     do t=this%ts,this%te
-        call this%tile(t)%interp(f%tile(t),halo_width)
+        call this%tile(t)%interp(f%tile(t),domain%partition%tile(t),halo_width)
     end do
 end subroutine get_ecs_halo
 
-subroutine ext_ecs_tile_halo(this, f, halo_width)
+subroutine ext_ecs_tile_halo(this, f, tile, halo_width)
 !interpolate source face values at halo zones to target face virtual points
 use grid_field_mod, only : tile_field_t
+use tile_mod,       only : tile_t
 
 class(ecs_tile_halo_t), intent(in)    :: this
 type(tile_field_t),     intent(inout) :: f
+type(tile_t),           intent(in)    :: tile
 integer(kind=4),        intent(in)    :: halo_width
 
 !local
@@ -102,7 +104,7 @@ integer(kind=4) i,j,k
 logical lhalo(4) !halo-procedure at edge
 logical lcorn(4) !corner halo-procedure  for numeration of edges and corners see below
 logical lfail_hw, lfail_corn, lfail_halo_long
-real(kind=8) zf_csp(6,f%ks-f%nvk:f%ke+f%nvk,4) !values at corner-points and near-corner points@first halo-row
+real(kind=8) zf_csp(6,f%ks:f%ke,4) !values at corner-points and near-corner points@first halo-row
 !local real(kind=8) zbufc(1-f%nvi:f%nvi,1-f%nvj:f%nvj,f%ks-f%nvk:f%ke+f%nvk) !store values for corner procedure
 
 !short names for needed params
@@ -112,13 +114,13 @@ ihw = halo_width      !width of user-requested halo-interpolations
 
 if(thw < ihw) call halo_avost("requested halo width is greater than initialized maximum halo_width")
 
-is = f%is;      ie = f%ie
-js = f%js;      je = f%je
-nvi = f%nvi;    nvj = f%nvj;     nvk = f%nvk
+is = tile%is;      ie = tile%ie
+js = tile%js;      je = tile%je
+nvi = tile%is-f%is;    nvj = tile%js-f%js; nvk = tile%ks-f%ks
 
 isv = is-nvi;   iev = ie+nvi
 jsv = js-nvj;   jev = je+nvj
-ksv = f%ks-nvk; kev = f%ke+nvk
+ksv = tile%ks-nvk; kev = tile%ke+nvk
 
 klev = kev-ksv+1
 
