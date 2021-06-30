@@ -8,7 +8,7 @@ use mpi
 call MPI_init(ierr)
 
 call test_halo()
-call test_ecs_halo
+!call test_ecs_halo
 
 call mpi_finalize(ierr)
 

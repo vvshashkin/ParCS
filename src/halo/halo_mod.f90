@@ -12,7 +12,7 @@ end type halo_t
 
 type, abstract :: halo_vec_t
     contains
-    procedure(get_halo_vector),  deferred, public :: get_halo_vector  !scalar halo procedure
+    procedure(get_halo_vector),  deferred, public :: get_halo_vector  !vector halo procedure
 end type halo_vec_t
 
 interface
