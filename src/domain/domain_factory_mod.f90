@@ -21,7 +21,7 @@ subroutine create_domain(domain, topology_type, staggering_type, nh, nz)
     character(len=*), intent(in)  :: staggering_type
     integer(kind=4),  intent(in)  :: nh, nz
 
-    class(metric_t), allocatable  :: metric
+    !class(metric_t), allocatable  :: metric
     integer(kind=4) :: halo_width
 
 !have to be passed as an argument in future
@@ -29,16 +29,16 @@ subroutine create_domain(domain, topology_type, staggering_type, nh, nz)
 
     domain%topology = init_topology(topology_type)
 
-    call create_metric(metric,domain%topology,"ecs")
+    call create_metric(domain%metric,domain%topology,"ecs")
 
     call create_parcomm(domain%parcomm)
 
     call domain%partition%init(nh, nz, max(1,domain%parcomm%np/6), domain%parcomm%myid, domain%parcomm%Np, &
                                 staggering_type, strategy = 'default')
 
-    call create_mesh(domain%mesh_p, domain%partition, metric, halo_width, staggering_type, 'p')
-    call create_mesh(domain%mesh_u, domain%partition, metric, halo_width, staggering_type, 'u')
-    call create_mesh(domain%mesh_v, domain%partition, metric, halo_width, staggering_type, 'v')
+    call create_mesh(domain%mesh_p, domain%partition, domain%metric, halo_width, staggering_type, 'p')
+    call create_mesh(domain%mesh_u, domain%partition, domain%metric, halo_width, staggering_type, 'u')
+    call create_mesh(domain%mesh_v, domain%partition, domain%metric, halo_width, staggering_type, 'v')
 
 end subroutine create_domain
 
