@@ -16,7 +16,7 @@ use ecs_halo_mod, only : ecs_halo_t, ecs_tile_halo_t
 implicit none
 
 private
-public   :: create_ecs_o_scalar_halo
+public   :: create_ecs_o_scalar_halo, init_ecs_tile_halo
 
 contains
 

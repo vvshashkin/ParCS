@@ -43,7 +43,6 @@ subroutine test_halo()
     call halo%get_halo_scalar(f1,domain,halo_width)
 
     err = compare_grid_functions(domain,halo_width,f1,f2)
-    print *, err
     call mpi_allreduce(err, gl_err, 1, mpi_double, mpi_max, domain%parcomm%comm_w, ierr)
 
     if(gl_err<1e-16) then

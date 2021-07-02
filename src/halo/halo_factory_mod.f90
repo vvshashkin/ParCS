@@ -27,7 +27,7 @@ end
 subroutine create_vector_halo_procedure(halo,domain,halo_width,halo_type)
     use halo_mod,   only : halo_vec_t
     use domain_mod, only : domain_t
-    use ecs_halo_factory_mod, only : create_ecs_o_scalar_halo
+    use ecs_halo_vec_a_factory_mod, only : create_ecs_A_vec_halo_procedure
 
     class(halo_vec_t), allocatable, intent(out) :: halo
     class(domain_t),                intent(in)  :: domain
@@ -36,6 +36,8 @@ subroutine create_vector_halo_procedure(halo,domain,halo_width,halo_type)
 
     if(halo_type=="A_vec_default") then
         call create_A_vec_default_halo_procedure(halo,domain,halo_width)
+    elseif(halo_type=="ecs_A_vec") then
+        call create_ecs_A_vec_halo_procedure(halo,domain,halo_width)
     else
         call domain%parcomm%abort("unknown halo_type in create_vector_halo_procedure: "// &
                                    halo_type)

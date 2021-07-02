@@ -5,18 +5,31 @@
 
 module ecs_halo_vec_a_mod
 
-use halo_mod,     only : halo_vec_t
-use ecs_halo_mod, only : ecs_halo_t
+use halo_mod,          only : halo_t, halo_vec_t
+use exchange_halo_mod, only : exchange_t
+use ecs_halo_mod,      only : ecs_tile_halo_t
 
 implicit none
 
 type, extends(halo_vec_t) :: ecs_halo_vec_t
+
+    integer(kind=4)                        :: ts, te
+    class(exchange_t),         allocatable :: exch_halo
+    type(ecs_tile_halo_vec_t), allocatable :: tile(:)
+
+    contains
+
+    procedure :: get_halo_vector => get_ecs_a_vector_halo
+
+end type
+
+type ecs_tile_halo_vec_t
   integer(kind=4) n          !number of real grid points along cubed-sphere face edge
   integer(kind=4) panel_ind
   integer(kind=4) ish, ieh, jsh, jeh
   integer(kind=4) halo_width !number of rows in halo-zone (maximum)
   integer(kind=4) corner_halo_width !number of rows needed to compute corner areas
-  logical lhalo(4)   !flags to perform haloprocedures at specific edge and corner
+  logical lhalo(4)   !flags to perform haloprocedures at specific edge and corner!
 
   !Transformation matrices source panel vect ->target panel vect
   real(kind=8)   , allocatable :: TM1(:,:,:) !lower edge
@@ -24,29 +37,50 @@ type, extends(halo_vec_t) :: ecs_halo_vec_t
   real(kind=8)   , allocatable :: TM3(:,:,:) !left edge
   real(kind=8)   , allocatable :: TM4(:,:,:) !right edge
 
-  !will pointer below be better (memory efficiency)?
-  class(ecs_halo_t), allocatable :: halo !scalar halo to interpolate individual
-                                         !vector components after transformation
+  class(ecs_tile_halo_t), allocatable :: scalar_halo !scalar halo to interpolate individual
+                                                     !vector components after transformation
   contains
-  procedure, public :: interpv  => ext_halo_vec_a_ecs
+  procedure, public :: interpv  => ext_ecs_a_vector_tile_halo
 
-end type ecs_halo_vec_t
+end type ecs_tile_halo_vec_t
 
 contains
 
-subroutine ext_halo_vec_a_ecs(this, u, v, halo_width)
-!interpolate source face vectors at halo zones to target face virtual points
-use grid_field_mod, only: block_t
+subroutine get_ecs_a_vector_halo(this,u,v,domain,halo_width)
+    use grid_field_mod, only : grid_field_t
+    use domain_mod,     only : domain_t
 
-class(ecs_halo_vec_t), intent(in)    :: this
-type(block_t),         intent(inout) :: u, v
-integer(kind=4),       intent(in)    :: halo_width
+    class(ecs_halo_vec_t),    intent(inout) :: this
+    class(grid_field_t),      intent(inout) :: u,v
+    type(domain_t),           intent(in)    :: domain
+    integer(kind=4),          intent(in)    :: halo_width
+
+    integer(kind=4) t
+
+    call this%exch_halo%do(u, domain%parcomm)
+    call this%exch_halo%do(v, domain%parcomm)
+    !call this%exch_halo%do_vec(u,v, domain%parcomm)
+
+    do t=this%ts,this%te
+        call this%tile(t)%interpv(u%tile(t),v%tile(t),domain%partition%tile(t),halo_width)
+    end do
+end subroutine get_ecs_a_vector_halo
+
+subroutine ext_ecs_a_vector_tile_halo(this, u, v, tile, halo_width)
+!interpolate source face vectors at halo zones to target face virtual points
+use tile_mod,       only : tile_t
+use grid_field_mod, only: tile_field_t
+
+class(ecs_tile_halo_vec_t), intent(in)    :: this
+type(tile_field_t),         intent(inout) :: u, v
+type(tile_t),               intent(in)    :: tile
+integer(kind=4),            intent(in)    :: halo_width
 !locals
 integer(kind=4) i, j, k, ks, ke
 real(kind=8)    zu, zv
 
-ks = u%ks - u%nvk
-ke = u%ke + u%nvk
+ks = u%ks
+ke = u%ke
 
 !Apply transform matrix
 if(this%lhalo(1)) then
@@ -77,7 +111,7 @@ if(this%lhalo(1)) then
 end if
 if(this%lhalo(2)) then
     do k = ks, ke
-        do j=1,halo_width!max(halo_width,this%halo_width)
+        do j=1,halo_width
             do i=this%ish, this%ieh
                 zu = u%p(i,this%n+j,k)
                 zv = v%p(i,this%n+j,k)
@@ -103,7 +137,7 @@ if(this%lhalo(2)) then
 end if
 if(this%lhalo(3)) then
     do k = ks, ke
-        do j=1,halo_width!max(halo_width,this%halo_width)
+        do j=1,halo_width
             do i=this%jsh, this%jeh
                 zu = u%p(1-j,i,k)
                 zv = v%p(1-j,i,k)
@@ -129,7 +163,7 @@ if(this%lhalo(3)) then
 end if
 if(this%lhalo(4)) then
     do k = ks, ke
-        do j=1,halo_width!max(halo_width,this%halo_width)
+        do j=1,halo_width
             do i=this%jsh, this%jeh
                 zu = u%p(this%n+j,i,k)
                 zv = v%p(this%n+j,i,k)
@@ -154,34 +188,9 @@ if(this%lhalo(4)) then
     end do
 end if
 
-!corners
-!if(this%halo%lcorn(1) .and. halo_width < 5) then
-!    do k=ks,ke
-!        zu = u%p(1,-3,k); zv = v%p(1,-3,k)
-!        u%p(1,-3,k) = this%TM1(1,1,4)*zu + this%TM1(2,1,4)*zv
-!        v%p(1,-3,k) = this%TM1(3,1,4)*zu + this%TM1(4,1,4)*zv
-!        zu = u%p(2,-3,k); zv = v%p(2,-3,k)
-!        u%p(2,-3,k) = this%TM1(1,2,4)*zu + this%TM1(2,2,4)*zv
-!        v%p(2,-3,k) = this%TM1(3,2,4)*zu + this%TM1(4,2,4)*zv
-!        zu = u%p(2,-4,k); zv = v%p(2,-4,k)
-!        u%p(2,-4,k) = this%TM1(1,2,5)*zu + this%TM1(2,2,5)*zv
-!        v%p(2,-4,k) = this%TM1(3,2,5)*zu + this%TM1(4,2,5)*zv
-!
-!        zu = u%p(-3,1,k); zv = v%p(-3,1,k)
-!        u%p(-3,1,k) = this%TM3(1,1,4)*zu + this%TM3(2,1,4)*zv
-!        v%p(-3,1,k) = this%TM3(3,1,4)*zu + this%TM3(4,1,4)*zv
-!        zu = u%p(-3,2,k); zv = v%p(-3,2,k)
-!        u%p(-3,2,k) = this%TM3(1,2,4)*zu + this%TM3(2,2,4)*zv
-!        v%p(-3,2,k) = this%TM3(3,2,4)*zu + this%TM3(4,2,4)*zv
-!        zu = u%p(-4,2,k); zv = v%p(-4,2,k)
-!        u%p(-4,2,k) = this%TM3(1,2,5)*zu + this%TM3(2,2,5)*zv
-!        v%p(-4,2,k) = this%TM3(3,2,5)*zu + this%TM3(4,2,5)*zv
-!    end do
-!end if
+call this%scalar_halo%interp(u,tile,halo_width)
+call this%scalar_halo%interp(v,tile,halo_width)
 
-call this%halo%interp(u,halo_width)
-call this%halo%interp(v,halo_width)
-
-end subroutine ext_halo_vec_a_ecs
+end subroutine ext_ecs_a_vector_tile_halo
 
 end module ecs_halo_vec_a_mod

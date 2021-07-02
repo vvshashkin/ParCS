@@ -6,24 +6,67 @@
 !  to target panel
 module ecs_halo_vec_a_factory_mod
 use ecs_halo_mod,       only : ecs_halo_t
-use ecs_halo_vec_a_mod, only : ecs_halo_vec_t
+use ecs_halo_vec_a_mod, only : ecs_halo_vec_t, ecs_tile_halo_vec_t
 
 implicit none
 
 integer, parameter :: corner_halo_width = 5!minimum halo-width to compute 2x2 corner-halo-areas
 
 private
-public   :: init_ecs_halo_vect
+public   :: create_ecs_A_vec_halo_procedure
 
 contains
 
-type(ecs_halo_vec_t) function init_ecs_halo_vect(panel_ind,is,ie,js,je, &
-                                            nx,halo_width,hx,halo) result(halo_vec)
+subroutine create_ecs_A_vec_halo_procedure(halo_out,domain,halo_width)
+    use halo_mod,               only : halo_vec_t
+    use domain_mod,             only : domain_t
+    use exchange_factory_mod,   only : create_symm_halo_exchange_A
+
+    class(halo_vec_t), allocatable, intent(out) :: halo_out
+    class(domain_t),                intent(in)  :: domain
+    integer(kind=4),                intent(in)  :: halo_width
+
+    !locals
+    type(ecs_halo_vec_t), allocatable :: halo
+    integer(kind=4)      :: ex_halo_width = 8
+    integer(kind=4)      :: ts, te, is,ie, js, je, nh, t
+    real(kind=8)         :: hx
+
+    allocate(halo)
+    ts = domain%partition%ts
+    te = domain%partition%te
+    nh = domain%partition%nh
+    halo%ts = ts
+    halo%te = te
+    allocate(halo%tile(ts:te))
+
+    halo%exch_halo = create_symm_halo_exchange_A(domain%partition, domain%parcomm, ex_halo_width, 'full')
+    do t=ts,te
+        hx = domain%mesh_p%tile(t)%hx
+        call domain%partition%tile(t)%getind(is,ie,js,je)
+        call init_ecs_tile_halo_vect(halo%tile(t),domain%partition%panel_map(t), &
+                                     is,ie,js,je,nh,halo_width,hx,domain%topology, &
+                                     domain%metric)
+    end do
+
+    call move_alloc(halo, halo_out)
+
+end
+
+subroutine init_ecs_tile_halo_vect(tile_halo, panel_ind,is,ie,js,je, &
+                              nx,halo_width,hx,topology,metric)
+
+    use ecs_halo_factory_mod, only : init_ecs_tile_halo
+    use topology_mod,         only : topology_t
+    use metric_mod,           only : metric_t
 
     integer(kind=4),   intent(in) :: panel_ind,is,ie,js,je,nx
     integer(kind=4),   intent(in) :: halo_width
     real(kind=8),      intent(in) :: hx
-    class(ecs_halo_t), intent(in) :: halo
+    class(topology_t), intent(in) :: topology
+    class(metric_t),   intent(in) :: metric
+
+    type(ecs_tile_halo_vec_t), intent(inout) :: tile_halo
 
     !locals
     !direction to edge in local alpha-beta coordinates:
@@ -33,74 +76,84 @@ type(ecs_halo_vec_t) function init_ecs_halo_vect(panel_ind,is,ie,js,je, &
                                                ! inc(1) - along edge, inc(2) accross
     integer(kind=4) adjacent_panel_ind, cor_hw
 
-    halo_vec%n = nx
-    halo_vec%halo = halo !implicit allocate here
-    halo_vec%lhalo = halo%lhalo
-    halo_vec%panel_ind = panel_ind
-    halo_vec%halo_width = max(halo_width,corner_halo_width)
-    halo_vec%corner_halo_width = corner_halo_width
+    allocate(tile_halo%scalar_halo)
+    call init_ecs_tile_halo(tile_halo%scalar_halo,is,ie,js,je,nx,halo_width,hx)
+
+    tile_halo%n = nx
+    tile_halo%lhalo = tile_halo%scalar_halo%lhalo
+    tile_halo%panel_ind = panel_ind
+    tile_halo%halo_width = max(halo_width,corner_halo_width)
+    tile_halo%corner_halo_width = corner_halo_width
     cor_hw = corner_halo_width
 
-    if(halo_vec%lhalo(1) .or. halo_vec%lhalo(2)) then
+    if(tile_halo%lhalo(1) .or. tile_halo%lhalo(2)) then
         ish = max(1,is-halo_width)
-        ish = max(1,minval(halo%indx(ish,1:halo_width)-1))
+        ish = max(1,minval(tile_halo%scalar_halo%indx(ish,1:halo_width)-1))
         ieh = min(nx,ie+halo_width)
-        ieh = min(nx,maxval(halo%indx(ieh,1:halo_width))+2)
-        halo_vec%ish = ish; halo_vec%ieh = ieh
+        ieh = min(nx,maxval(tile_halo%scalar_halo%indx(ieh,1:halo_width))+2)
+        tile_halo%ish = ish; tile_halo%ieh = ieh
     end if
-    if(halo_vec%lhalo(3) .or. halo_vec%lhalo(4)) then
+    if(tile_halo%lhalo(3) .or. tile_halo%lhalo(4)) then
         jsh = max(1,js-halo_width)
-        jsh = max(1,minval(halo%indy(jsh,1:halo_width)-1))
+        jsh = max(1,minval(tile_halo%scalar_halo%indy(jsh,1:halo_width)-1))
         jeh = min(nx,je+halo_width)
-        jeh = min(nx,maxval(halo%indy(jeh,1:halo_width))+2)
-        halo_vec%jsh = jsh; halo_vec%jeh = jeh
+        jeh = min(nx,maxval(tile_halo%scalar_halo%indy(jeh,1:halo_width))+2)
+        tile_halo%jsh = jsh; tile_halo%jeh = jeh
     end if
 
-    if(halo_vec%lhalo(1)) then
-        allocate(halo_vec%TM1(4,ish:ieh,1:max(halo_width,cor_hw)))
+    if(tile_halo%lhalo(1)) then
+        allocate(tile_halo%TM1(4,ish:ieh,1:max(halo_width,cor_hw)))
         call find_adjacent_panel(adjacent_panel_ind, ist, iinc, jst, jinc, &
-                                 panel_ind, edge_dir(1:3,1), nx)
+                                 panel_ind, edge_dir(1:3,1), nx, topology)
         !print '(8I5)',panel_ind, adjacent_panel_ind, ist, iinc, jst, jinc
-        call init_transform_matrix(halo_vec%TM1,ish,ieh,max(halo_width,cor_hw), panel_ind, &
-                              adjacent_panel_ind, ist, iinc, jst, jinc, hx)
+        call init_transform_matrix(tile_halo%TM1,ish,ieh,max(halo_width,cor_hw), panel_ind, &
+                              adjacent_panel_ind, ist, iinc, jst, jinc, hx,metric)
     end if
-    if(halo_vec%lhalo(2)) then
-        allocate(halo_vec%TM2(4,ish:ieh,1:max(halo_width,cor_hw)))
+    if(tile_halo%lhalo(2)) then
+        allocate(tile_halo%TM2(4,ish:ieh,1:max(halo_width,cor_hw)))
         call find_adjacent_panel(adjacent_panel_ind, ist, iinc, jst, jinc, &
-                                 panel_ind, edge_dir(1:3,2), nx)
+                                 panel_ind, edge_dir(1:3,2), nx,topology)
         !print '(8I5)',panel_ind, adjacent_panel_ind, ist, iinc, jst, jinc
-        call init_transform_matrix(halo_vec%TM2,ish,ieh,max(halo_width,cor_hw), panel_ind,&
-                              adjacent_panel_ind, ist, iinc, jst, jinc, hx)
+        call init_transform_matrix(tile_halo%TM2,ish,ieh,max(halo_width,cor_hw), panel_ind,&
+                              adjacent_panel_ind, ist, iinc, jst, jinc, hx,metric)
     end if
-    if(halo_vec%lhalo(3)) then
-        allocate(halo_vec%TM3(4,jsh:jeh,1:max(halo_width,cor_hw)))
+    if(tile_halo%lhalo(3)) then
+        allocate(tile_halo%TM3(4,jsh:jeh,1:max(halo_width,cor_hw)))
         call find_adjacent_panel(adjacent_panel_ind, ist, iinc, jst, jinc, &
-                                 panel_ind, edge_dir(1:3,3), nx)
+                                 panel_ind, edge_dir(1:3,3), nx,topology)
         !print '(8I5)',panel_ind, adjacent_panel_ind, ist, iinc, jst, jinc
-        call init_transform_matrix(halo_vec%TM3,jsh,jeh,max(halo_width,cor_hw), panel_ind, &
-                              adjacent_panel_ind, ist, iinc, jst, jinc, hx)
+        call init_transform_matrix(tile_halo%TM3,jsh,jeh,max(halo_width,cor_hw), panel_ind, &
+                              adjacent_panel_ind, ist, iinc, jst, jinc, hx,metric)
     end if
-    if(halo_vec%lhalo(4)) then
-        allocate(halo_vec%TM4(4,jsh:jeh,1:max(halo_width,cor_hw)))
+    if(tile_halo%lhalo(4)) then
+        allocate(tile_halo%TM4(4,jsh:jeh,1:max(halo_width,cor_hw)))
         call find_adjacent_panel(adjacent_panel_ind, ist, iinc, jst, jinc, &
-                                 panel_ind, edge_dir(1:3,4), nx)
+                                 panel_ind, edge_dir(1:3,4), nx,topology)
         !print '(8I5)',panel_ind, adjacent_panel_ind, ist, iinc, jst, jinc
-        call init_transform_matrix(halo_vec%TM4,jsh,jeh,max(halo_width,cor_hw), panel_ind,&
-                              adjacent_panel_ind, ist, iinc, jst, jinc, hx)
+        call init_transform_matrix(tile_halo%TM4,jsh,jeh,max(halo_width,cor_hw), panel_ind,&
+                              adjacent_panel_ind, ist, iinc, jst, jinc, hx,metric)
     end if
-end function init_ecs_halo_vect
+end subroutine init_ecs_tile_halo_vect
 
 subroutine find_adjacent_panel(adjacent_panel_ind, ist, iinc, jst, jinc, &
-                               panel_ind, edge_dir, nx)
-    use topology_mod, only : ex, ey, n
+                               panel_ind, edge_dir, nx, topology)
+
+    use topology_mod, only : topology_t
+
     integer(kind=4), intent(out) :: adjacent_panel_ind
     integer(kind=4), intent(out) :: ist, iinc(2), jst, jinc(2)
     integer(kind=4), intent(in)  :: panel_ind, edge_dir(2), nx
+    class(topology_t), intent(in), target :: topology
     !local
     integer(kind=8) edge_along(2) !direction along edge in local alpha-beta
     integer(kind=4) edge_xyz(3), edge_along_xyz(3)
     integer(kind=4) ee !for scalar prods
     integer(kind=4) pind
+    integer(kind=4), dimension(:,:), pointer :: ex, ey, n
+
+    ex => topology%ex
+    ey => topology%ey
+    n  => topology%n
 
     edge_xyz(1:3) = edge_dir(1)*ex(1:3,panel_ind)+edge_dir(2)*ey(1:3,panel_ind)
     edge_along(1:2) = [1,1]-abs(edge_dir(1:2))
@@ -127,12 +180,13 @@ subroutine find_adjacent_panel(adjacent_panel_ind, ist, iinc, jst, jinc, &
             return
         end if
     end do
-    call halo_avost("cannot find adjacent face! (init_ecs_halo_vect)")
+    call halo_avost("cannot find adjacent face! (init_ecs_htile_alo_vect)")
 end subroutine find_adjacent_panel
 
 subroutine init_transform_matrix(TM, i1, i2, hw, panel_ind,    &
-                                 adjacent_panel_ind, ist, iinc, jst, jinc, hx)
+                                 adjacent_panel_ind, ist, iinc, jst, jinc, hx,metric)
     use const_mod,        only : pi
+    use metric_mod,       only : metric_t
     use ecs_geometry_mod, only : ecs_acov_proto, ecs_bcov_proto, ecs_proto2face,&
                                  ecs_actv_proto, ecs_bctv_proto, ecs_xyz2ab,    &
                                  ecs_ab2xyz_proto
@@ -142,6 +196,7 @@ subroutine init_transform_matrix(TM, i1, i2, hw, panel_ind,    &
     integer(kind=4), intent(in)  :: panel_ind, adjacent_panel_ind
     integer(kind=4), intent(in)  :: ist, iinc(2), jst, jinc(2)
     real(kind=8),    intent(in)  :: hx
+    class(metric_t), intent(in)  :: metric
     !locals
     integer(kind=4) i, j, ia, ja
     real(kind=8) as(3), bs(3), at(3), bt(3)
@@ -184,7 +239,6 @@ use mpi
 integer ierr
 character(*) str
 print *, str
-!print '(6(A,i8,1x))', "is=", is, "ie=", ie, "js=", js, "je=", je, "nvi=", iev-ie, "nvj=", jev-je
 print *, "exit"
 call mpi_finalize(ierr)
 stop
