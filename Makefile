@@ -441,7 +441,7 @@ $(DOBJ)ecs_halo_vec_a_factory_mod.o: src/equiang_cs/ecs_halo_vec_a_factory_mod.f
 	$(DOBJ)topology_mod.o \
 	$(DOBJ)metric_mod.o \
 	$(DOBJ)const_mod.o \
-	$(DOBJ)ecs_geometry_mod.o
+	$(DOBJ)ecs_metric_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

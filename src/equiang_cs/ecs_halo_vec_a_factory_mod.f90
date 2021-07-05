@@ -45,8 +45,7 @@ subroutine create_ecs_A_vec_halo_procedure(halo_out,domain,halo_width)
         hx = domain%mesh_p%tile(t)%hx
         call domain%partition%tile(t)%getind(is,ie,js,je)
         call init_ecs_tile_halo_vect(halo%tile(t),domain%partition%panel_map(t), &
-                                     is,ie,js,je,nh,halo_width,hx,domain%topology, &
-                                     domain%metric)
+                                     is,ie,js,je,nh,halo_width,hx)
     end do
 
     call move_alloc(halo, halo_out)
@@ -54,27 +53,19 @@ subroutine create_ecs_A_vec_halo_procedure(halo_out,domain,halo_width)
 end
 
 subroutine init_ecs_tile_halo_vect(tile_halo, panel_ind,is,ie,js,je, &
-                              nx,halo_width,hx,topology,metric)
+                              nx,halo_width,hx)
 
     use ecs_halo_factory_mod, only : init_ecs_tile_halo
-    use topology_mod,         only : topology_t
-    use metric_mod,           only : metric_t
 
     integer(kind=4),   intent(in) :: panel_ind,is,ie,js,je,nx
     integer(kind=4),   intent(in) :: halo_width
     real(kind=8),      intent(in) :: hx
-    class(topology_t), intent(in) :: topology
-    class(metric_t),   intent(in) :: metric
 
     type(ecs_tile_halo_vec_t), intent(inout) :: tile_halo
 
     !locals
-    !direction to edge in local alpha-beta coordinates:
-    integer(kind=4), parameter :: edge_dir(2,4) = [[0,-1], [0,1], [-1,0], [1,0]]
     integer(kind=4) ish, ieh, jsh, jeh
-    integer(kind=4) jst, jinc(2), ist, iinc(2) !start points and increments for adjacent panel
-                                               ! inc(1) - along edge, inc(2) accross
-    integer(kind=4) adjacent_panel_ind, cor_hw
+    integer(kind=4) cor_hw
 
     allocate(tile_halo%scalar_halo)
     call init_ecs_tile_halo(tile_halo%scalar_halo,is,ie,js,je,nx,halo_width,hx)
@@ -103,132 +94,77 @@ subroutine init_ecs_tile_halo_vect(tile_halo, panel_ind,is,ie,js,je, &
 
     if(tile_halo%lhalo(1)) then
         allocate(tile_halo%TM1(4,ish:ieh,1:max(halo_width,cor_hw)))
-        call find_adjacent_panel(adjacent_panel_ind, ist, iinc, jst, jinc, &
-                                 panel_ind, edge_dir(1:3,1), nx, topology)
-        !print '(8I5)',panel_ind, adjacent_panel_ind, ist, iinc, jst, jinc
-        call init_transform_matrix(tile_halo%TM1,ish,ieh,max(halo_width,cor_hw), panel_ind, &
-                              adjacent_panel_ind, ist, iinc, jst, jinc, hx,metric)
+        call init_transform_matrix(tile_halo%TM1,ish,ieh,max(halo_width,cor_hw), hx, 1)
     end if
     if(tile_halo%lhalo(2)) then
         allocate(tile_halo%TM2(4,ish:ieh,1:max(halo_width,cor_hw)))
-        call find_adjacent_panel(adjacent_panel_ind, ist, iinc, jst, jinc, &
-                                 panel_ind, edge_dir(1:3,2), nx,topology)
-        !print '(8I5)',panel_ind, adjacent_panel_ind, ist, iinc, jst, jinc
-        call init_transform_matrix(tile_halo%TM2,ish,ieh,max(halo_width,cor_hw), panel_ind,&
-                              adjacent_panel_ind, ist, iinc, jst, jinc, hx,metric)
+        call init_transform_matrix(tile_halo%TM2,ish,ieh,max(halo_width,cor_hw), hx, 2)
     end if
     if(tile_halo%lhalo(3)) then
         allocate(tile_halo%TM3(4,jsh:jeh,1:max(halo_width,cor_hw)))
-        call find_adjacent_panel(adjacent_panel_ind, ist, iinc, jst, jinc, &
-                                 panel_ind, edge_dir(1:3,3), nx,topology)
-        !print '(8I5)',panel_ind, adjacent_panel_ind, ist, iinc, jst, jinc
-        call init_transform_matrix(tile_halo%TM3,jsh,jeh,max(halo_width,cor_hw), panel_ind, &
-                              adjacent_panel_ind, ist, iinc, jst, jinc, hx,metric)
+        call init_transform_matrix(tile_halo%TM3,jsh,jeh,max(halo_width,cor_hw), hx, 3)
     end if
     if(tile_halo%lhalo(4)) then
         allocate(tile_halo%TM4(4,jsh:jeh,1:max(halo_width,cor_hw)))
-        call find_adjacent_panel(adjacent_panel_ind, ist, iinc, jst, jinc, &
-                                 panel_ind, edge_dir(1:3,4), nx,topology)
-        !print '(8I5)',panel_ind, adjacent_panel_ind, ist, iinc, jst, jinc
-        call init_transform_matrix(tile_halo%TM4,jsh,jeh,max(halo_width,cor_hw), panel_ind,&
-                              adjacent_panel_ind, ist, iinc, jst, jinc, hx,metric)
+        call init_transform_matrix(tile_halo%TM4,jsh,jeh,max(halo_width,cor_hw), hx, 4)
     end if
 end subroutine init_ecs_tile_halo_vect
 
-subroutine find_adjacent_panel(adjacent_panel_ind, ist, iinc, jst, jinc, &
-                               panel_ind, edge_dir, nx, topology)
-
-    use topology_mod, only : topology_t
-
-    integer(kind=4), intent(out) :: adjacent_panel_ind
-    integer(kind=4), intent(out) :: ist, iinc(2), jst, jinc(2)
-    integer(kind=4), intent(in)  :: panel_ind, edge_dir(2), nx
-    class(topology_t), intent(in), target :: topology
-    !local
-    integer(kind=8) edge_along(2) !direction along edge in local alpha-beta
-    integer(kind=4) edge_xyz(3), edge_along_xyz(3)
-    integer(kind=4) ee !for scalar prods
-    integer(kind=4) pind
-    integer(kind=4), dimension(:,:), pointer :: ex, ey, n
-
-    ex => topology%ex
-    ey => topology%ey
-    n  => topology%n
-
-    edge_xyz(1:3) = edge_dir(1)*ex(1:3,panel_ind)+edge_dir(2)*ey(1:3,panel_ind)
-    edge_along(1:2) = [1,1]-abs(edge_dir(1:2))
-    edge_along_xyz(1:3) = edge_along(1)*ex(1:3,panel_ind)+edge_along(2)*ey(1:3,panel_ind)
-
-    do pind=1,6
-        if(sum(abs(edge_xyz(1:3)+n(1:3,pind)))==0) then
-            adjacent_panel_ind = pind
-            ee = min(1,max(-1,sum(edge_along_xyz(1:3)*ex(1:3,pind))))
-            if(abs(ee)==1) then
-                iinc = [ee,0]
-                ist  = (1+ee)/2 + (1-ee)/2*nx
-                ee = min(1,max(-1,sum(n(1:3,panel_ind)*ey(1:3,pind))))
-                jinc = [0, ee]
-                jst = (1+ee)/2 + (1-ee)/2*nx
-            else
-                ee = min(1,max(-1,sum(edge_along_xyz(1:3)*ey(1:3,pind))))
-                jinc = [ee,0]
-                jst  = (1+ee)/2 + (1-ee)/2*nx
-                ee = min(1,max(-1,sum(n(1:3,panel_ind)*ex(1:3,pind))))
-                iinc = [0, ee]
-                ist = (1+ee)/2 + (1-ee)/2*nx
-            end if
-            return
-        end if
-    end do
-    call halo_avost("cannot find adjacent face! (init_ecs_htile_alo_vect)")
-end subroutine find_adjacent_panel
-
-subroutine init_transform_matrix(TM, i1, i2, hw, panel_ind,    &
-                                 adjacent_panel_ind, ist, iinc, jst, jinc, hx,metric)
+subroutine init_transform_matrix(TM, i1, i2, hw, hx, edge_num)
     use const_mod,        only : pi
-    use metric_mod,       only : metric_t
-    use ecs_geometry_mod, only : ecs_acov_proto, ecs_bcov_proto, ecs_proto2face,&
-                                 ecs_actv_proto, ecs_bctv_proto, ecs_xyz2ab,    &
-                                 ecs_ab2xyz_proto
+    use ecs_metric_mod,   only : ecs_a1_proto, ecs_a2_proto, &
+                                 ecs_b1_proto, ecs_b2_proto, &
+                                 ecs_point_r_proto
 
     integer(kind=4), intent(in)  :: i1, i2, hw
-    real(kind=8),    intent(out) :: TM(4,i1:i2,1:hw)
-    integer(kind=4), intent(in)  :: panel_ind, adjacent_panel_ind
-    integer(kind=4), intent(in)  :: ist, iinc(2), jst, jinc(2)
     real(kind=8),    intent(in)  :: hx
-    class(metric_t), intent(in)  :: metric
+    integer(kind=4), intent(in)  :: edge_num
+    real(kind=8),    intent(out) :: TM(4,i1:i2,1:hw)
+
     !locals
-    integer(kind=4) i, j, ia, ja
-    real(kind=8) as(3), bs(3), at(3), bt(3)
-    real(kind=8) alpha, beta, r(3) !alpha, beta and xyz-cartesian
+    integer(kind=4) i, j
+    real(kind=8) a1s(3), a2s(3), b1t(3), b2t(3), v(3), r(3)
+    real(kind=8) alpha, beta, alpha_s, beta_s, alpha_t, beta_t
+    integer(kind=4), parameter :: rot_matrix(3,3,4) = reshape(&
+                                        [[[ 1, 0, 0],[ 0, 0,-1],[ 0, 1, 0]],&
+                                         [[ 1, 0, 0],[ 0, 0, 1],[ 0,-1, 0]],&
+                                         [[ 0, 0,-1],[ 0, 1, 0],[ 1, 0, 0]],&
+                                         [[ 0, 0, 1],[ 0, 1, 0],[-1, 0, 0]]],&
+                                         [3,3,4])
+    integer(kind=4), parameter :: ab_shift(4) = [0,0,1,1]
+    integer(kind=4), parameter :: b_sign(4)   = [1,-1,1,-1]
 
     do j=1, hw
         do i=i1,i2
-            !indices at source panel to get source-alpha|beta
-            ia = ist+iinc(1)*(i-1)+iinc(2)*(j-1)
-            ja = jst+jinc(1)*(i-1)+jinc(2)*(j-1)
-            alpha = -0.25_8*pi+(ia-0.5_8)*hx
-            beta  = -0.25_8*pi+(ja-0.5_8)*hx
+            alpha = -0.25_8*pi+(i-0.5_8)*hx
+            beta  =  b_sign(edge_num)*(0.25_8*pi-(j-0.5_8)*hx)
+            alpha_s = (1-ab_shift(edge_num))*alpha+ab_shift(edge_num)*beta
+            beta_s  = ab_shift(edge_num)*alpha+(1-ab_shift(edge_num))*beta
             !covariant basis vectors at source panel
-            as = ecs_acov_proto(alpha, beta)
-            as = ecs_proto2face(as,adjacent_panel_ind)
-            bs = ecs_bcov_proto(alpha, beta)
-            bs = ecs_proto2face(bs,adjacent_panel_ind)
-            !xyz of source panel point to get alpha/beta at target panel
-            r = ecs_ab2xyz_proto(alpha, beta)
-            r = ecs_proto2face(r,adjacent_panel_ind)
-            call ecs_xyz2ab(alpha,beta,r(1),r(2),r(3), panel_ind)
-            at = ecs_actv_proto(alpha, beta)
-            at = ecs_proto2face(at,panel_ind)
-            bt = ecs_bctv_proto(alpha, beta)
-            bt = ecs_proto2face(bt,panel_ind)
+            v   = ecs_a1_proto(alpha_s, beta_s)
+            a1s(1) = rot_matrix(1,1,edge_num)*v(1)+rot_matrix(2,1,edge_num)*v(2)+rot_matrix(3,1,edge_num)*v(3)
+            a1s(2) = rot_matrix(1,2,edge_num)*v(1)+rot_matrix(2,2,edge_num)*v(2)+rot_matrix(3,2,edge_num)*v(3)
+            a1s(3) = rot_matrix(1,3,edge_num)*v(1)+rot_matrix(2,3,edge_num)*v(2)+rot_matrix(3,3,edge_num)*v(3)
+            v   = ecs_a2_proto(alpha_s, beta_s)
+            a2s(1) = rot_matrix(1,1,edge_num)*v(1)+rot_matrix(2,1,edge_num)*v(2)+rot_matrix(3,1,edge_num)*v(3)
+            a2s(2) = rot_matrix(1,2,edge_num)*v(1)+rot_matrix(2,2,edge_num)*v(2)+rot_matrix(3,2,edge_num)*v(3)
+            a2s(3) = rot_matrix(1,3,edge_num)*v(1)+rot_matrix(2,3,edge_num)*v(2)+rot_matrix(3,3,edge_num)*v(3)
+            v   = ecs_point_r_proto(alpha_s, beta_s)
+            r(1) = rot_matrix(1,1,edge_num)*v(1)+rot_matrix(2,1,edge_num)*v(2)+rot_matrix(3,1,edge_num)*v(3)
+            r(2) = rot_matrix(1,2,edge_num)*v(1)+rot_matrix(2,2,edge_num)*v(2)+rot_matrix(3,2,edge_num)*v(3)
+            r(3) = rot_matrix(1,3,edge_num)*v(1)+rot_matrix(2,3,edge_num)*v(2)+rot_matrix(3,3,edge_num)*v(3)
+
+            alpha_t = atan(r(1)/r(3))
+            beta_t  = atan(r(2)/r(3))
+            b1t = ecs_b1_proto(alpha_t, beta_t)
+            b2t = ecs_b2_proto(alpha_t, beta_t)
             !transform matrix <- dot-products of target_contra_vec*source_cov_vec
             !TM = |1  2|
             !     |3  4|
-            TM(1,i,j) = sum(as(1:3)*at(1:3))
-            TM(2,i,j) = sum(bs(1:3)*at(1:3))
-            TM(3,i,j) = sum(as(1:3)*bt(1:3))
-            TM(4,i,j) = sum(bs(1:3)*bt(1:3))
+            TM(1,i,j) = sum(a1s(1:3)*b1t(1:3))
+            TM(2,i,j) = sum(a2s(1:3)*b1t(1:3))
+            TM(3,i,j) = sum(a1s(1:3)*b2t(1:3))
+            TM(4,i,j) = sum(a2s(1:3)*b2t(1:3))
         end do
     end do
 
