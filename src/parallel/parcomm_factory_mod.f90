@@ -7,8 +7,9 @@ implicit none
 
 contains
 
-subroutine create_parcomm(parcomm)
+subroutine create_parcomm(comm_w, parcomm)
 
+    integer(kind=4), intent(in)  :: comm_w
     type(parcomm_t), intent(out) :: parcomm
 
     integer(kind=4) :: ierr

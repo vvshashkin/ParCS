@@ -57,7 +57,8 @@ subroutine create_A_default_halo_procedure(halo,domain,halo_width)
     allocate(halo_A_default_t :: halo)
     select type(halo)
     type is (halo_A_default_t)
-        halo%exch_halo = create_symm_halo_exchange_A(domain%partition, domain%parcomm, halo_width, 'full')
+        halo%exch_halo = create_symm_halo_exchange_A( &
+                   domain%partition, domain%parcomm, domain%topology, halo_width, 'full')
     end select
 end
 
@@ -74,7 +75,8 @@ subroutine create_A_vec_default_halo_procedure(halo,domain,halo_width)
     allocate(halo_A_vec_default_t :: halo)
     select type(halo)
     type is (halo_A_vec_default_t)
-        halo%exch_halo = create_symm_halo_exchange_A(domain%partition, domain%parcomm, halo_width, 'full')
+        halo%exch_halo = create_symm_halo_exchange_A(domain%partition, domain%parcomm, domain%topology, & 
+                                                     halo_width, 'full')
     end select
 end
 

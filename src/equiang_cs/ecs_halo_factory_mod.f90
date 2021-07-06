@@ -37,7 +37,8 @@ subroutine create_ecs_o_scalar_halo(halo_out,domain,halo_width)
 
     allocate(halo)
     ex_halo_width = 8
-    halo%exch_halo = create_symm_halo_exchange_A(domain%partition, domain%parcomm, ex_halo_width, 'full')
+    halo%exch_halo = create_symm_halo_exchange_A(domain%partition, domain%parcomm, domain%topology, &
+                                                  ex_halo_width, 'full')
 
     ts = domain%partition%ts
     te = domain%partition%te

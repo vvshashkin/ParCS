@@ -1,16 +1,15 @@
 program swlin_main
 
-    use mpi
-    use swlin_mod, only : init_swlin_model, run_swlin_model
+    use swlin_mod,   only : init_swlin_model, run_swlin_model
+    use parcomm_mod, only : init_global_parallel_enviroment, &
+                            deinit_global_parallel_enviroment
     implicit none
 
-    integer(kind=4) ierr
-
-    call mpi_init(ierr)
+    call init_global_parallel_enviroment()
 
     call init_swlin_model()
     call run_swlin_model()
 
-    call mpi_finalize(ierr)
+    call deinit_global_parallel_enviroment()
 
 end program swlin_main

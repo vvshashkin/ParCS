@@ -1,14 +1,13 @@
 program mesh_test
 
     use test_mesh_mod, only : test_mesh
-    use mpi
+    use parcomm_mod,   only : init_global_parallel_enviroment, &
+                              deinit_global_parallel_enviroment
 
-    call MPI_init(ierr)
+    call init_global_parallel_enviroment()
 
     call test_mesh()
 
-
-    call mpi_barrier(mpi_comm_world, ierr)
-    call mpi_finalize(ierr)
+    call deinit_global_parallel_enviroment()
 
 end program mesh_test

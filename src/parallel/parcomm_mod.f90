@@ -15,7 +15,33 @@ contains
     procedure, public :: print
 end type parcomm_t
 
+
+!single acces point for global parcomm singleton
+!can be thought as an analogue of use mpi
+type(parcomm_t) :: parcomm_global
+
 contains
+
+subroutine init_global_parallel_enviroment()
+
+    integer(kind=4) :: ierr
+
+    call MPI_init(ierr)
+
+    parcomm_global%comm_w = mpi_comm_world
+    parcomm_global%myid   = parcomm_global%get_mpi_rank()
+    parcomm_global%np     = parcomm_global%get_mpi_proc_number()
+
+end subroutine init_global_parallel_enviroment
+
+subroutine deinit_global_parallel_enviroment()
+
+    integer(kind=4) :: ierr
+
+    call parcomm_global%barrier()
+    call mpi_finalize(ierr)
+
+end subroutine deinit_global_parallel_enviroment
 
 function get_mpi_rank(this) result(myid)
 
@@ -51,7 +77,7 @@ subroutine abort(this, error_message)
 
     integer(kind=4) :: code, ierr
 
-    call this%print(error_message)
+    print*, error_message
     call mpi_abort(this%comm_w, code, ierr)
 
 end subroutine abort

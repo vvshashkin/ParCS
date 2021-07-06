@@ -7,6 +7,7 @@
 module ecs_halo_vec_a_factory_mod
 use ecs_halo_mod,       only : ecs_halo_t
 use ecs_halo_vec_a_mod, only : ecs_halo_vec_t, ecs_tile_halo_vec_t
+use parcomm_mod,        only : parcomm_global
 
 implicit none
 
@@ -40,7 +41,8 @@ subroutine create_ecs_A_vec_halo_procedure(halo_out,domain,halo_width)
     halo%te = te
     allocate(halo%tile(ts:te))
 
-    halo%exch_halo = create_symm_halo_exchange_A(domain%partition, domain%parcomm, ex_halo_width, 'full')
+    halo%exch_halo = create_symm_halo_exchange_A(domain%partition, domain%parcomm, domain%topology, &
+                                                 ex_halo_width, 'full')
     do t=ts,te
         hx = domain%mesh_p%tile(t)%hx
         call domain%partition%tile(t)%getind(is,ie,js,je)
@@ -169,15 +171,5 @@ subroutine init_transform_matrix(TM, i1, i2, hw, hx, edge_num)
     end do
 
 end subroutine init_transform_matrix
-
-subroutine halo_avost(str)
-use mpi
-integer ierr
-character(*) str
-print *, str
-print *, "exit"
-call mpi_finalize(ierr)
-stop
-end subroutine halo_avost
 
 end module ecs_halo_vec_a_factory_mod
