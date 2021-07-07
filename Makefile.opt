@@ -171,6 +171,13 @@ $(DOBJ)mesh_factory_mod.o: src/mesh_factory_mod.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)operator_mod.o: src/operator_mod.f90 \
+	$(DOBJ)stvec_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)parcomm_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)mesh_mod.o: src/mesh_mod.f90
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -497,11 +504,11 @@ $(DOBJ)parameters_iomega_mod.o: src/models/iomega_model/parameters_iomega_mod.f9
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)operator_iomega_mod.o: src/models/iomega_model/operator_iomega_mod.f90 \
-	$(DOBJ)operator_abstract_mod.o \
-	$(DOBJ)stvec_abstract_mod.o \
+	$(DOBJ)operator_mod.o \
+	$(DOBJ)stvec_mod.o \
 	$(DOBJ)stvec_iomega_mod.o \
-	$(DOBJ)container_abstract_mod.o \
-	$(DOBJ)parameters_iomega_mod.o
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -757,7 +764,9 @@ $(DOBJ)test_ts.o: src/test/test_time_steping/test_ts.f90 \
 $(DOBJ)test_ts_mod.o: src/test/test_time_steping/test_ts_mod.f90 \
 	$(DOBJ)stvec_mod.o \
 	$(DOBJ)stvec_iomega_mod.o \
-	$(DOBJ)domain_mod.o
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)operator_iomega_mod.o \
+	$(DOBJ)const_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
