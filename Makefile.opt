@@ -327,49 +327,8 @@ $(DOBJ)halo_a_default_mod.o: src/halo/halo_A_default_mod.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
-$(DOBJ)timescheme_abstract_mod.o: src/time_schemes/timescheme_abstract_mod.f90 \
-	$(DOBJ)container_abstract_mod.o \
-	$(DOBJ)operator_abstract_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
-$(DOBJ)ars343.o: src/time_schemes/ars343.f90 \
-	$(DOBJ)container_abstract_mod.o \
-	$(DOBJ)stvec_abstract_mod.o \
-	$(DOBJ)timescheme_abstract_mod.o \
-	$(DOBJ)operator_abstract_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
-$(DOBJ)exp_taylor_mod.o: src/time_schemes/exp_taylor_mod.f90 \
-	$(DOBJ)container_abstract_mod.o \
-	$(DOBJ)stvec_abstract_mod.o \
-	$(DOBJ)timescheme_abstract_mod.o \
-	$(DOBJ)operator_abstract_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
-$(DOBJ)exp_krylov_mod.o: src/time_schemes/exp_krylov_mod.f90 \
-	$(DOBJ)container_abstract_mod.o \
-	$(DOBJ)stvec_abstract_mod.o \
-	$(DOBJ)timescheme_abstract_mod.o \
-	$(DOBJ)operator_abstract_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
-$(DOBJ)rk4_mod.o: src/time_schemes/rk4_mod.f90 \
-	$(DOBJ)container_abstract_mod.o \
-	$(DOBJ)stvec_abstract_mod.o \
-	$(DOBJ)timescheme_abstract_mod.o \
-	$(DOBJ)operator_abstract_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
-$(DOBJ)explicit_eul1_mod.o: src/time_schemes/explicit_Eul1_mod.f90 \
-	$(DOBJ)container_abstract_mod.o \
-	$(DOBJ)stvec_abstract_mod.o \
-	$(DOBJ)timescheme_abstract_mod.o \
-	$(DOBJ)operator_abstract_mod.o
+$(DOBJ)timescheme_mod.o: src/time_schemes/timescheme_mod.f90 \
+	$(DOBJ)operator_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -898,6 +857,52 @@ $(DOBJ)test_gl_diag_mod.o: src/test/test_global_diagnostics/test_gl_diag_mod.f90
 	$(DOBJ)parameters_swlin_mod.o \
 	$(DOBJ)stvec_swlin_mod.o \
 	$(DOBJ)global_diag_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)timescheme_abstract_mod.o: src/time_schemes_old/timescheme_abstract_mod.f90 \
+	$(DOBJ)container_abstract_mod.o \
+	$(DOBJ)operator_abstract_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)ars343.o: src/time_schemes_old/ars343.f90 \
+	$(DOBJ)container_abstract_mod.o \
+	$(DOBJ)stvec_abstract_mod.o \
+	$(DOBJ)timescheme_abstract_mod.o \
+	$(DOBJ)operator_abstract_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)exp_taylor_mod.o: src/time_schemes_old/exp_taylor_mod.f90 \
+	$(DOBJ)container_abstract_mod.o \
+	$(DOBJ)stvec_abstract_mod.o \
+	$(DOBJ)timescheme_abstract_mod.o \
+	$(DOBJ)operator_abstract_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)exp_krylov_mod.o: src/time_schemes_old/exp_krylov_mod.f90 \
+	$(DOBJ)container_abstract_mod.o \
+	$(DOBJ)stvec_abstract_mod.o \
+	$(DOBJ)timescheme_abstract_mod.o \
+	$(DOBJ)operator_abstract_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)rk4_mod.o: src/time_schemes_old/rk4_mod.f90 \
+	$(DOBJ)container_abstract_mod.o \
+	$(DOBJ)stvec_abstract_mod.o \
+	$(DOBJ)timescheme_abstract_mod.o \
+	$(DOBJ)operator_abstract_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)explicit_eul1_mod.o: src/time_schemes_old/explicit_Eul1_mod.f90 \
+	$(DOBJ)container_abstract_mod.o \
+	$(DOBJ)stvec_abstract_mod.o \
+	$(DOBJ)timescheme_abstract_mod.o \
+	$(DOBJ)operator_abstract_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
