@@ -10,7 +10,8 @@ subroutine test_rk4()
     use domain_mod,              only: domain_t
     use operator_iomega_mod,     only: operator_iomega_t, init_iomega_operator
     use timescheme_mod,          only: timescheme_t
-    use explicit_Eul1_mod,       only: init_explicit_Eul1_ts
+    use timescheme_factory_mod,  only: create_timescheme
+    !use explicit_Eul1_mod,       only: init_explicit_Eul1_ts
 !    use rk4_mod,                  only: rk4_t, init_rk4
 !    use exp_taylor_mod,           only: exp_taylor_t, init_exp_taylor
 !    use exp_krylov_mod,           only: exp_krylov_t, init_exp_krylov
@@ -60,7 +61,7 @@ subroutine test_rk4()
         !print *, v1%f(:)
     end select
 
-    call init_explicit_Eul1_ts(explicit_Eul1,v1)
+    call create_timescheme(explicit_Eul1,v1,"explicit_Eul1")
 
     call explicit_Eul1%step(v1, oper, domain, dt)
 !

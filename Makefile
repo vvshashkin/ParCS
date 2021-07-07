@@ -327,6 +327,14 @@ $(DOBJ)halo_a_default_mod.o: src/halo/halo_A_default_mod.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)timescheme_factory_mod.o: src/time_schemes/timescheme_factory_mod.f90 \
+	$(DOBJ)stvec_mod.o \
+	$(DOBJ)timescheme_mod.o \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)explicit_eul1_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)timescheme_mod.o: src/time_schemes/timescheme_mod.f90 \
 	$(DOBJ)operator_mod.o \
 	$(DOBJ)stvec_mod.o \
@@ -736,7 +744,7 @@ $(DOBJ)test_ts_mod.o: src/test/test_time_steping/test_ts_mod.f90 \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)operator_iomega_mod.o \
 	$(DOBJ)timescheme_mod.o \
-	$(DOBJ)explicit_eul1_mod.o \
+	$(DOBJ)timescheme_factory_mod.o \
 	$(DOBJ)const_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
