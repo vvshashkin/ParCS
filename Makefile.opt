@@ -128,6 +128,13 @@ $(DOBJ)grid_field_mod.o: src/grid_field_mod.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)stvec_mod.o: src/stvec_mod.f90 \
+	$(DOBJ)container_abstract_mod.o \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)domain_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)namelist_read_mod.o: src/namelist_read_mod.f90
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -478,7 +485,9 @@ $(DOBJ)ecs_metric_factory_mod.o: src/equiang_cs/ecs_metric_factory_mod.f90 \
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)stvec_iomega_mod.o: src/models/iomega_model/stvec_iomega_mod.f90 \
-	$(DOBJ)stvec_abstract_mod.o
+	$(DOBJ)stvec_mod.o \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)domain_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -746,15 +755,9 @@ $(DOBJ)test_ts.o: src/test/test_time_steping/test_ts.f90 \
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)test_ts_mod.o: src/test/test_time_steping/test_ts_mod.f90 \
+	$(DOBJ)stvec_mod.o \
 	$(DOBJ)stvec_iomega_mod.o \
-	$(DOBJ)operator_iomega_mod.o \
-	$(DOBJ)parameters_iomega_mod.o \
-	$(DOBJ)timescheme_abstract_mod.o \
-	$(DOBJ)explicit_eul1_mod.o \
-	$(DOBJ)rk4_mod.o \
-	$(DOBJ)exp_taylor_mod.o \
-	$(DOBJ)exp_krylov_mod.o \
-	$(DOBJ)const_mod.o
+	$(DOBJ)domain_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
