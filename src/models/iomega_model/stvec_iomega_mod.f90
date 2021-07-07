@@ -47,7 +47,7 @@ subroutine init_stvec_iomega(new_stvec, N, f)
 end subroutine init_stvec_iomega
 
 subroutine copy_stvec_to(this,destination)
-    class(stvec_iomega_t),       intent(inout) :: this
+    class(stvec_iomega_t),       intent(in)    :: this
     class(stvec_t), allocatable, intent(inout) :: destination
 
     allocate(stvec_iomega_t :: destination)
@@ -61,7 +61,7 @@ subroutine copy_stvec_to(this,destination)
 end subroutine copy_stvec_to
 
 subroutine create_similar_stvec(this,destination)
-    class(stvec_iomega_t),       intent(inout) :: this
+    class(stvec_iomega_t),       intent(in)    :: this
     class(stvec_t), allocatable, intent(inout) :: destination
 
     allocate(stvec_iomega_t :: destination)

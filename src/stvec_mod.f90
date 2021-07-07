@@ -30,7 +30,7 @@ end type stvec_t
 contains
 
 subroutine copy_stvec_to(this,destination)
-    class(stvec_t),              intent(inout) :: this
+    class(stvec_t),              intent(in)    :: this
     class(stvec_t), allocatable, intent(inout) :: destination
 
     call parcomm_global%abort("copy_stvec_to not implemented for specific stvec class")
@@ -38,7 +38,7 @@ subroutine copy_stvec_to(this,destination)
 end subroutine copy_stvec_to
 
 subroutine create_similar_stvec(this,destination)
-    class(stvec_t),              intent(inout) :: this
+    class(stvec_t),              intent(in)    :: this
     class(stvec_t), allocatable, intent(inout) :: destination
 
     call parcomm_global%abort("create_similar_stvec not implemented for specific stvec class")

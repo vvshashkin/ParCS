@@ -328,7 +328,17 @@ $(DOBJ)halo_a_default_mod.o: src/halo/halo_A_default_mod.f90 \
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)timescheme_mod.o: src/time_schemes/timescheme_mod.f90 \
-	$(DOBJ)operator_mod.o
+	$(DOBJ)operator_mod.o \
+	$(DOBJ)stvec_mod.o \
+	$(DOBJ)domain_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)explicit_eul1_mod.o: src/time_schemes/explicit_Eul1_mod.f90 \
+	$(DOBJ)stvec_mod.o \
+	$(DOBJ)timescheme_mod.o \
+	$(DOBJ)operator_mod.o \
+	$(DOBJ)domain_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -725,6 +735,8 @@ $(DOBJ)test_ts_mod.o: src/test/test_time_steping/test_ts_mod.f90 \
 	$(DOBJ)stvec_iomega_mod.o \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)operator_iomega_mod.o \
+	$(DOBJ)timescheme_mod.o \
+	$(DOBJ)explicit_eul1_mod.o \
 	$(DOBJ)const_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -891,14 +903,6 @@ $(DOBJ)exp_krylov_mod.o: src/time_schemes_old/exp_krylov_mod.f90 \
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)rk4_mod.o: src/time_schemes_old/rk4_mod.f90 \
-	$(DOBJ)container_abstract_mod.o \
-	$(DOBJ)stvec_abstract_mod.o \
-	$(DOBJ)timescheme_abstract_mod.o \
-	$(DOBJ)operator_abstract_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
-$(DOBJ)explicit_eul1_mod.o: src/time_schemes_old/explicit_Eul1_mod.f90 \
 	$(DOBJ)container_abstract_mod.o \
 	$(DOBJ)stvec_abstract_mod.o \
 	$(DOBJ)timescheme_abstract_mod.o \
