@@ -20,7 +20,7 @@ subroutine test_rk4()
     class(stvec_t), allocatable :: v2, v3, v4
     type(domain_t)  :: domain
     type(operator_iomega_t), allocatable :: oper
-    class(timescheme_t), allocatable :: explicit_Eul1
+    class(timescheme_t), allocatable :: explicit_Eul1, rk4
 !    type(parameters_iomega_t), allocatable :: model_params
 !    type(explicit_Eul1_t) ts_exEul
 !    type(rk4_t) ts_rk4
@@ -47,23 +47,31 @@ subroutine test_rk4()
     call init_stvec_iomega(v1,N)
     call init_iomega_operator(oper,omega)
 
-    v1%f(1:N) = 1._8
-    call v1%copy_to(v3)
-    call v3%create_similar(v2)
-
-    call oper%apply_to(v2,v3,domain)
-    call v3%update(-dt,v2,domain)
-    call oper%solve(v2,v3,dt,domain)
+!    v1%f(1:N) = 1._8
+!    call v1%copy_to(v2)
+!    call v1%copy_to(v3)
+!    call v3%create_similar(v2)
 !
-    select type(v2)
-    class is (stvec_iomega_t)
-        !print *, v2%f(:)-v1%f(:)
-        !print *, v1%f(:)
-    end select
+!    call oper%apply_to(v2,v3,domain)
+!    call v3%update(-dt,v2,domain)
+!    call oper%solve(v2,v3,dt,domain)
+!
+!    select type(v2)
+!    class is (stvec_iomega_t)
+!        !print *, v2%f(:)-v1%f(:)
+!        !print *, v1%f(:)
+!    end select
 
+    v1%f(1:N) = 1._8
     call create_timescheme(explicit_Eul1,v1,"explicit_Eul1")
-
     call explicit_Eul1%step(v1, oper, domain, dt)
+    call ifpassed(v1%f, ftrue1,    tolerance, "Explicit Eulerian")
+
+    v1%f(1:N) = 1._8
+    call create_timescheme(rk4,v1,"rk4")
+    call rk4%step(v1, oper, domain, dt)
+    call ifpassed(v1%f, ftrue_rk4,    tolerance, "RK4")
+
 !
 !    ts_rk4 = init_rk4(oper, v2)
 !    call ts_rk4%step(v2, model_params, dt)
@@ -74,7 +82,6 @@ subroutine test_rk4()
 !    call init_exp_krylov(ts_exp_krylov, oper, v3, 2*N)
 !    call ts_exp_krylov%step(v4, model_params, dt)
 !
-    call ifpassed(v1%f, ftrue1,    tolerance, "Explicit Eulerian")
 !    call ifpassed(v2%f, ftrue_rk4, tolerance, "RK4")
 !    call ifpassed(v3%f, ftrue_exp, tolerance_exp, "EXP_Taylor")
 !    call ifpassed(v4%f, ftrue_exp, tolerance, "EXP_Krylov")
