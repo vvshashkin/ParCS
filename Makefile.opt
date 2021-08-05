@@ -314,8 +314,18 @@ $(DOBJ)halo_factory_mod.o: src/halo/halo_factory_mod.f90 \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)ecs_halo_factory_mod.o \
 	$(DOBJ)ecs_halo_vec_a_factory_mod.o \
+	$(DOBJ)ecs_halo_vec_c_factory_mod.o \
 	$(DOBJ)halo_a_default_mod.o \
-	$(DOBJ)exchange_factory_mod.o
+	$(DOBJ)exchange_factory_mod.o \
+	$(DOBJ)halo_c_default_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)halo_c_default_mod.o: src/halo/halo_C_default_mod.f90 \
+	$(DOBJ)halo_mod.o \
+	$(DOBJ)exchange_halo_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)domain_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -422,8 +432,27 @@ $(DOBJ)ecs_metric_mod.o: src/equiang_cs/ecs_metric_mod.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)ecs_halo_vec_c_mod.o: src/equiang_cs/ecs_halo_vec_c_mod.f90 \
+	$(DOBJ)halo_mod.o \
+	$(DOBJ)exchange_halo_mod.o \
+	$(DOBJ)ecs_halo_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)domain_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)ecs_geometry_mod.o: src/equiang_cs/ecs_geometry_mod.f90 \
 	$(DOBJ)topology_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)ecs_halo_vec_c_factory_mod.o: src/equiang_cs/ecs_halo_vec_c_factory_mod.f90 \
+	$(DOBJ)ecs_halo_mod.o \
+	$(DOBJ)ecs_halo_vec_c_mod.o \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)halo_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)exchange_factory_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -790,8 +819,20 @@ $(DOBJ)test_cmd_line.o: src/test/test_cmd_line/test_cmd_line.f90 \
 
 $(DOBJ)test_halo_main.o: src/test/test_halo/test_halo_main.f90 \
 	$(DOBJ)test_ecs_halo_mod.o \
+	$(DOBJ)test_ecs_halo_c_mod.o \
 	$(DOBJ)test_halo_mod.o \
 	$(DOBJ)parcomm_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)test_ecs_halo_c_mod.o: src/test/test_halo/test_ecs_halo_c_mod.f90 \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)domain_factory_mod.o \
+	$(DOBJ)grid_field_factory_mod.o \
+	$(DOBJ)halo_mod.o \
+	$(DOBJ)halo_factory_mod.o \
+	$(DOBJ)mesh_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
