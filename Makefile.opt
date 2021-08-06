@@ -435,9 +435,10 @@ $(DOBJ)ecs_metric_mod.o: src/equiang_cs/ecs_metric_mod.f90 \
 $(DOBJ)ecs_halo_vec_c_mod.o: src/equiang_cs/ecs_halo_vec_c_mod.f90 \
 	$(DOBJ)halo_mod.o \
 	$(DOBJ)exchange_halo_mod.o \
-	$(DOBJ)ecs_halo_mod.o \
 	$(DOBJ)grid_field_mod.o \
-	$(DOBJ)domain_mod.o
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)tile_mod.o \
+	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -452,7 +453,8 @@ $(DOBJ)ecs_halo_vec_c_factory_mod.o: src/equiang_cs/ecs_halo_vec_c_factory_mod.f
 	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)halo_mod.o \
 	$(DOBJ)domain_mod.o \
-	$(DOBJ)exchange_factory_mod.o
+	$(DOBJ)exchange_factory_mod.o \
+	$(DOBJ)const_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
