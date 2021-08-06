@@ -17,7 +17,7 @@ subroutine test_ecs_cvec_halo()
     use halo_mod,                   only : halo_t, halo_vec_t
     use halo_factory_mod,           only : create_halo_procedure, create_vector_halo_procedure
 
-    integer(kind=4), parameter         :: nh=64, nz=3, halo_width=2, ex_halo_width=8
+    integer(kind=4), parameter         :: nh=32, nz=3, halo_width=2, ex_halo_width=8
 
     type(domain_t)             :: domain
     type(grid_field_t)         :: u_test, v_test

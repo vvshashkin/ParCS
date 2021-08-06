@@ -60,7 +60,7 @@ subroutine interp_ecs_tile_halo_cvec(this,u,v,tile_u,tile_v,halo_width)
     type(tile_t),                intent(in)    :: tile_u, tile_v
     integer(kind=4),             intent(in)    :: halo_width
 
-    integer(kind=4) :: i,is,ie,js,je,ks,ke
+    integer(kind=4) :: i,is,ie,js,je,ks,ke,wst,wend
 
     is = tile_u%is
     ie = tile_u%ie
@@ -74,14 +74,18 @@ subroutine interp_ecs_tile_halo_cvec(this,u,v,tile_u,tile_v,halo_width)
         do i=1,halo_width
             u%p(1-i,js:je,ks:ke) = u%p(-i,js:je,ks:ke)
         end do
-        call interp_edge(u,this%wn_left,this%in_left,js,je,ks,ke,halo_width,ie,'left')
+        wst  = lbound(this%wn_left,1)
+        wend = ubound(this%wn_left,1)
+        call interp_edge(u,this%wn_left,this%in_left,wst,wend,js,je,ks,ke,halo_width,ie,'left')
     end if
     if(this%is_right_edge) then
         u%p(ie,js:je,ks:ke) = 0.5_8*(u%p(ie,js:je,ks:ke)+u%p(ie+1,js:je,ks:ke))
         do i=1,halo_width
             u%p(ie+i,js:je,ks:ke) = u%p(ie+i+1,js:je,ks:ke)
         end do
-        call interp_edge(u,this%wn_right,this%in_right,js,je,ks,ke,halo_width,ie,'right')
+        wst  = lbound(this%wn_right,1)
+        wend = ubound(this%wn_right,1)
+        call interp_edge(u,this%wn_right,this%in_right,wst,wend,js,je,ks,ke,halo_width,ie,'right')
     end if
 
     is = tile_v%is
@@ -96,55 +100,60 @@ subroutine interp_ecs_tile_halo_cvec(this,u,v,tile_u,tile_v,halo_width)
         do i=1,halo_width
             v%p(is:ie,1-i,ks:ke) = v%p(is:ie,-i,ks:ke)
         end do
-        call interp_edge(v,this%wn_bottom,this%in_bottom,is,ie,ks,ke,halo_width,je,'bottom')
+        wst  = lbound(this%wn_bottom,1)
+        wend = ubound(this%wn_bottom,1)
+        call interp_edge(v,this%wn_bottom,this%in_bottom,wst,wend,is,ie,ks,ke,halo_width,je,'bottom')
     end if
     if(this%is_top_edge) then
         v%p(is:ie,je,ks:ke) = 0.5_8*(v%p(is:ie,je,ks:ke)+v%p(is:ie,je+1,ks:ke))
         do i=1,halo_width
             v%p(is:ie,je+i,ks:ke) = v%p(is:ie,je+i+1,ks:ke)
         end do
-        call interp_edge(v,this%wn_top,this%in_top,is,ie,ks,ke,halo_width,je,'top')
+        wst  = lbound(this%wn_top,1)
+        wend = ubound(this%wn_top,1)
+        call interp_edge(v,this%wn_top,this%in_top,wst,wend,is,ie,ks,ke,halo_width,je,'top')
     end if
 
 end subroutine interp_ecs_tile_halo_cvec
 
-subroutine interp_edge(f, w, ind, is, ie, ks, ke, halo_width, nh, edge)
+subroutine interp_edge(f, w, ind, wst, wend, si, ei, ks, ke, halo_width, nh, edge)
     use grid_field_mod, only : tile_field_t
     use parcomm_mod,    only : parcomm_global
 
     type(tile_field_t), intent(inout) :: f
-    integer(kind=4),    intent(in)    :: is, ie, ks, ke, halo_width, nh
-    real(kind=8),       intent(in)    :: w(-1:2,is:ie,1:halo_width)
-    integer(kind=4),    intent(in)    :: ind(is:ie,1:halo_width)
+    integer(kind=4),    intent(in)    :: wst, wend
+    integer(kind=4),    intent(in)    :: si, ei, ks, ke, halo_width, nh
+    real(kind=8),       intent(in)    :: w(wst:wend,si:ei,1:halo_width)
+    integer(kind=4),    intent(in)    :: ind(si:ei,1:halo_width)
     character(len=*),   intent(in)    :: edge
 
     integer(kind=4) :: i, j, k
-    real(kind=8)    :: f1(is:ie)
+    real(kind=8)    :: f1(si:ei)
 
     do k=ks,ke
         do j=1,halo_width
             if(edge=="left") then
-                do i=is,ie
-                    f1(i) = w(0,i,j)*f%p(1-j,ind(i,j),k)+w(1,i,j)*f%p(1-j,ind(i,j)+1,k)
+                do i=si,ei
+                    f1(i) = sum(w(wst:wend,i,j)*f%p(1-j,ind(i,j)+wst:ind(i,j)+wend,k))
                 end do
-                f%p(1-j,is:ie,k) = f1(is:ie)
+                f%p(1-j,si:ei,k) = f1(si:ei)
             elseif(edge=="right") then
-                do i=is,ie
-                    f1(i) = w(0,i,j)*f%p(nh+j,ind(i,j),k)+w(1,i,j)*f%p(nh+j,ind(i,j)+1,k)
+                do i=si,ei
+                    f1(i) = sum(w(wst:wend,i,j)*f%p(nh+j,ind(i,j)+wst:ind(i,j)+wend,k))
                 end do
-                f%p(nh+j,is:ie,k) = f1(is:ie)
+                f%p(nh+j,si:ei,k) = f1(si:ei)
             elseif(edge=="bottom") then
-                do i=is,ie
-                    f1(i) = w(0,i,j)*f%p(ind(i,j),1-j,k)+w(1,i,j)*f%p(ind(i,j)+1,1-j,k)
+                do i=si,ei
+                    f1(i) = sum(w(wst:wend,i,j)*f%p(ind(i,j)+wst:ind(i,j)+wend,1-j,k))
                 end do
-                f%p(is:ie,1-j,k) = f1(is:ie)
+                f%p(si:ei,1-j,k) = f1(si:ei)
             elseif(edge=="top") then
-                do i=is,ie
-                    f1(i) = w(0,i,j)*f%p(ind(i,j),nh+j,k)+w(1,i,j)*f%p(ind(i,j)+1,nh+j,k)
+                do i=si,ei
+                    f1(i) = sum(w(wst:wend,i,j)*f%p(ind(i,j)+wst:ind(i,j)+wend,nh+j,k))
                 end do
-                f%p(is:ie,nh+j,k) = f1(is:ie)
+                f%p(si:ei,nh+j,k) = f1(si:ei)
             else
-                call parcomm_global%abort("unknown edge "//edge)
+                call parcomm_global%abort("ecs_halo_vec_c_mod: interp_edge, unknown edge: "//edge)
             end if
         end do
     end do
