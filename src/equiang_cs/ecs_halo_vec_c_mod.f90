@@ -1,4 +1,4 @@
-!Object to interpolate vector values to virtual points beyond face edge
+!Object to interpolate vector contravariant component values to virtual points beyond face edge
 !C-staggered grid.
 
 module ecs_halo_vec_c_mod
@@ -22,9 +22,17 @@ end type
 
 type ecs_tile_halo_cvec_t
     logical is_left_edge, is_right_edge, is_bottom_edge, is_top_edge
-    !interpolation weights and stencils for normal components
+    !interpolation weights and stencils for the vector component normal to edge
     real(kind=8),    allocatable :: wn_left(:,:,:), wn_right(:,:,:), wn_bottom(:,:,:), wn_top(:,:,:)
     integer(kind=4), allocatable :: in_left(:,:), in_right(:,:), in_bottom(:,:), in_top(:,:)
+    !interpolation weights and stencils for the vector component tangential to edge
+    real(kind=8),    allocatable :: wt_left(:,:,:), wt_right(:,:,:), wt_bottom(:,:,:), wt_top(:,:,:)
+    integer(kind=4), allocatable :: it_left(:,:), it_right(:,:), it_bottom(:,:), it_top(:,:)
+    !transformation from source panel contravariant to target panel contravariant
+    real(kind=8),    allocatable :: qtt_left(:,:), qtt_right(:,:), qtt_bottom(:,:), qtt_top(:,:)
+    real(kind=8),    allocatable :: qtn_left(:,:), qtn_right(:,:), qtn_bottom(:,:), qtn_top(:,:)
+    real(kind=8),    allocatable :: wtn_left(:,:,:), wtn_right(:,:,:), wtn_bottom(:,:,:), wtn_top(:,:,:)
+    integer(kind=4), allocatable :: itn_left(:,:), itn_right(:,:), itn_bottom(:,:), itn_top(:,:)
     contains
 
     procedure :: interpv => interp_ecs_tile_halo_cvec
@@ -61,28 +69,46 @@ subroutine interp_ecs_tile_halo_cvec(this,u,v,tile_u,tile_v,halo_width)
     integer(kind=4),             intent(in)    :: halo_width
 
     integer(kind=4) :: i,is,ie,js,je,ks,ke,wst,wend
+    integer(kind=4) :: is1,ie1,js1,je1
 
     is = tile_u%is
     ie = tile_u%ie
+    ie1 = tile_v%ie
     js = tile_u%js
     je = tile_u%je
+    js1 = tile_v%js
+    je1 = tile_v%je
     ks = tile_u%ks
     ke = tile_u%ke
 
     if(this%is_left_edge) then
         u%p(1,js:je,ks:ke) = 0.5_8*(u%p(1,js:je,ks:ke)+u%p(0,js:je,ks:ke))
-        do i=1,halo_width
+        do i=1,halo_width+1
             u%p(1-i,js:je,ks:ke) = u%p(-i,js:je,ks:ke)
         end do
+        wst  = lbound(this%wt_left,1)
+        wend = ubound(this%wt_left,1)
+        call interp_edge(v,this%wt_left,this%it_left,wst,wend,js1,je1,ks,ke,halo_width,ie1,'left')
+        wst  = lbound(this%wtn_left,1)
+        wend = ubound(this%wtn_left,1)
+        call tangent_comp_transform(v,u,this%wtn_left,this%itn_left,this%qtt_left, this%qtn_left, &
+                                    wst,wend,js1,je1,ks,ke,halo_width,ie1,'left')
         wst  = lbound(this%wn_left,1)
         wend = ubound(this%wn_left,1)
         call interp_edge(u,this%wn_left,this%in_left,wst,wend,js,je,ks,ke,halo_width,ie,'left')
     end if
     if(this%is_right_edge) then
         u%p(ie,js:je,ks:ke) = 0.5_8*(u%p(ie,js:je,ks:ke)+u%p(ie+1,js:je,ks:ke))
-        do i=1,halo_width
+        do i=1,halo_width+1
             u%p(ie+i,js:je,ks:ke) = u%p(ie+i+1,js:je,ks:ke)
         end do
+        wst  = lbound(this%wt_right,1)
+        wend = ubound(this%wt_right,1)
+        call interp_edge(v,this%wt_right,this%it_right,wst,wend,js1,je1,ks,ke,halo_width,ie1,'right')
+        wst  = lbound(this%wtn_right,1)
+        wend = ubound(this%wtn_right,1)
+        call tangent_comp_transform(v,u,this%wtn_right,this%itn_right,this%qtt_right, this%qtn_right, &
+                                    wst,wend,js1,je1,ks,ke,halo_width,ie1,'right')
         wst  = lbound(this%wn_right,1)
         wend = ubound(this%wn_right,1)
         call interp_edge(u,this%wn_right,this%in_right,wst,wend,js,je,ks,ke,halo_width,ie,'right')
@@ -90,25 +116,42 @@ subroutine interp_ecs_tile_halo_cvec(this,u,v,tile_u,tile_v,halo_width)
 
     is = tile_v%is
     ie = tile_v%ie
+    is1 = tile_u%is
+    ie1 = tile_u%ie
     js = tile_v%js
     je = tile_v%je
+    je1 = tile_u%je
     ks = tile_v%ks
     ke = tile_v%ke
 
     if(this%is_bottom_edge) then
         v%p(is:ie,1,ks:ke) = 0.5_8*(v%p(is:ie,1,ks:ke)+v%p(is:ie,0,ks:ke))
-        do i=1,halo_width
+        do i=1,halo_width+1
             v%p(is:ie,1-i,ks:ke) = v%p(is:ie,-i,ks:ke)
         end do
+        !wst  = lbound(this%wt_bottom,1)
+        !wend = ubound(this%wt_bottom,1)
+        !call interp_edge(u,this%wt_bottom,this%it_bottom,wst,wend,is1,ie1,ks,ke,halo_width,je1,'bottom')
+        !wst  = lbound(this%wtn_bottom,1)
+        !wend = ubound(this%wtn_bottom,1)
+        !call tangent_comp_transform(u,v,this%wtn_bottom,this%itn_bottom,this%qtt_bottom, this%qtn_bottom, &
+        !                            wst,wend,is1,ie1,ks,ke,halo_width,je1,'bottom')
         wst  = lbound(this%wn_bottom,1)
         wend = ubound(this%wn_bottom,1)
         call interp_edge(v,this%wn_bottom,this%in_bottom,wst,wend,is,ie,ks,ke,halo_width,je,'bottom')
     end if
     if(this%is_top_edge) then
         v%p(is:ie,je,ks:ke) = 0.5_8*(v%p(is:ie,je,ks:ke)+v%p(is:ie,je+1,ks:ke))
-        do i=1,halo_width
+        do i=1,halo_width+1
             v%p(is:ie,je+i,ks:ke) = v%p(is:ie,je+i+1,ks:ke)
         end do
+        !wst  = lbound(this%wt_top,1)
+        !wend = ubound(this%wt_top,1)
+        !call interp_edge(u,this%wt_top,this%it_top,wst,wend,is1,ie1,ks,ke,halo_width,je1,'top')
+        !wst  = lbound(this%wtn_bottom,1)
+        !wend = ubound(this%wtn_bottom,1)
+        !call tangent_comp_transform(u,v,this%wtn_top,this%itn_top,this%qtt_top,this%qtn_top, &
+        !                            wst,wend,is1,ie1,ks,ke,halo_width,je1,'top')
         wst  = lbound(this%wn_top,1)
         wend = ubound(this%wn_top,1)
         call interp_edge(v,this%wn_top,this%in_top,wst,wend,is,ie,ks,ke,halo_width,je,'top')
@@ -159,5 +202,106 @@ subroutine interp_edge(f, w, ind, wst, wend, si, ei, ks, ke, halo_width, nh, edg
     end do
 
 end subroutine interp_edge
+
+subroutine tangent_comp_transform(ut, un, w, ind, qtt, qtn, wst, wend, si, ei, ks, ke, halo_width, nh, edge)
+    use grid_field_mod, only : tile_field_t
+    use parcomm_mod,    only : parcomm_global
+
+    type(tile_field_t), intent(inout) :: ut !contravariant velocity components: tangent& normal to edge
+    type(tile_field_t), intent(in)    :: un !contravariant velocity components: tangent& normal to edge
+    integer(kind=4),    intent(in)    :: wst, wend
+    integer(kind=4),    intent(in)    :: si, ei, ks, ke, halo_width, nh
+    real(kind=8),       intent(in)    :: w(wst:wend,si:ei,1:halo_width)
+    integer(kind=4),    intent(in)    :: ind(si:ei,1:halo_width)
+    real(kind=8),       intent(in)    :: qtt(si:ei,1:halo_width), qtn(si:ei,1:halo_width)
+    character(len=*),   intent(in)    :: edge
+
+    integer(kind=4) :: i, j, k
+    real(kind=8)    :: un1, un2, un3, un4, un0
+
+    do k=ks,ke
+        select case(edge)
+        case("left")
+            do i=si,ei
+                un1 = sum(w(wst:wend,i,1)*un%p(1,ind(i,1)+wst:ind(i,1)+wend,k))
+                un2 = sum(w(wst:wend,i,1)*un%p(0,ind(i,1)+wst:ind(i,1)+wend,k))
+                un3 = sum(w(wst:wend,i,1)*un%p(-1,ind(i,1)+wst:ind(i,1)+wend,k))
+                un4 = sum(w(wst:wend,i,1)*un%p(-2,ind(i,1)+wst:ind(i,1)+wend,k))
+                un0 = (un4-5.0_8*un3+15.0_8*un2+5.0_8*un1)/16.0_8
+                ut%p(0,i,k) = qtt(i,1)*ut%p(0,i,k)-qtn(i,1)*un0
+            end do
+            do j=2,halo_width
+                do i=si,ei
+                    un1 = sum(w(wst:wend,i,j)*un%p(3-j,ind(i,j)+wst:ind(i,j)+wend,k))
+                    un2 = sum(w(wst:wend,i,j)*un%p(2-j,ind(i,j)+wst:ind(i,j)+wend,k))
+                    un3 = sum(w(wst:wend,i,j)*un%p(1-j,ind(i,j)+wst:ind(i,j)+wend,k))
+                    un4 = sum(w(wst:wend,i,j)*un%p(-j,ind(i,j)+wst:ind(i,j)+wend,k))
+                    un0 = (-un1+9.0_8*un2+9.0_8*un3-un4)/16.0_8
+                    ut%p(1-j,i,k) = qtt(i,j)*ut%p(1-j,i,k)-qtn(i,j)*un0
+                end do
+            end do
+        case("right")
+            do i=si,ei
+                un1 = sum(w(wst:wend,i,1)*un%p(nh+1,ind(i,1)+wst:ind(i,1)+wend,k))
+                un2 = sum(w(wst:wend,i,1)*un%p(nh+2,ind(i,1)+wst:ind(i,1)+wend,k))
+                un3 = sum(w(wst:wend,i,1)*un%p(nh+3,ind(i,1)+wst:ind(i,1)+wend,k))
+                un4 = sum(w(wst:wend,i,1)*un%p(nh+4,ind(i,1)+wst:ind(i,1)+wend,k))
+                un0 = (un4-5.0_8*un3+15.0_8*un2+5.0_8*un1)/16.0_8
+                ut%p(nh+1,i,k) = qtt(i,1)*ut%p(nh+1,i,k)+qtn(i,1)*un0
+            end do
+            do j=2,halo_width
+                do i=si,ei
+                    un1 = sum(w(wst:wend,i,j)*un%p(nh+j-1,ind(i,j)+wst:ind(i,j)+wend,k))
+                    un2 = sum(w(wst:wend,i,j)*un%p(nh+j  ,ind(i,j)+wst:ind(i,j)+wend,k))
+                    un3 = sum(w(wst:wend,i,j)*un%p(nh+j+1,ind(i,j)+wst:ind(i,j)+wend,k))
+                    un4 = sum(w(wst:wend,i,j)*un%p(nh+j+2,ind(i,j)+wst:ind(i,j)+wend,k))
+                    un0 = (-un1+9.0_8*un2+9.0_8*un3-un4)/16.0_8
+                    ut%p(nh+j,i,k) = qtt(i,j)*ut%p(nh+j,i,k)+qtn(i,j)*un0
+                end do
+            end do
+        case("bottom")
+            do i=si,ei
+                un1 = sum(w(wst:wend,i,1)*un%p(ind(i,1)+wst:ind(i,1)+wend,1,k))
+                un2 = sum(w(wst:wend,i,1)*un%p(ind(i,1)+wst:ind(i,1)+wend,0,k))
+                un3 = sum(w(wst:wend,i,1)*un%p(ind(i,1)+wst:ind(i,1)+wend,-1,k))
+                un4 = sum(w(wst:wend,i,1)*un%p(ind(i,1)+wst:ind(i,1)+wend,-2,k))
+                un0 = (un4-5.0_8*un3+15.0_8*un2+5.0_8*un1)/16.0_8
+                ut%p(i,0,k) = qtt(i,1)*ut%p(i,0,k)-qtn(i,1)*un0
+            end do
+            do j=2,halo_width
+                do i=si,ei
+                    un1 = sum(w(wst:wend,i,j)*un%p(ind(i,j)+wst:ind(i,j)+wend,3-j,k))
+                    un2 = sum(w(wst:wend,i,j)*un%p(ind(i,j)+wst:ind(i,j)+wend,2-j,k))
+                    un3 = sum(w(wst:wend,i,j)*un%p(ind(i,j)+wst:ind(i,j)+wend,1-j,k))
+                    un4 = sum(w(wst:wend,i,j)*un%p(ind(i,j)+wst:ind(i,j)+wend,-j,k))
+                    un0 = (-un1+9.0_8*un2+9.0_8*un3-un4)/16.0_8
+                    ut%p(i,1-j,k) = qtt(i,j)*ut%p(i,1-j,k)-qtn(i,j)*un0
+                end do
+            end do
+        case("top")
+            do i=si,ei
+                un1 = sum(w(wst:wend,i,1)*un%p(ind(i,1)+wst:ind(i,1)+wend,nh+1,k))
+                un2 = sum(w(wst:wend,i,1)*un%p(ind(i,1)+wst:ind(i,1)+wend,nh+2,k))
+                un3 = sum(w(wst:wend,i,1)*un%p(ind(i,1)+wst:ind(i,1)+wend,nh+3,k))
+                un4 = sum(w(wst:wend,i,1)*un%p(ind(i,1)+wst:ind(i,1)+wend,nh+4,k))
+                un0 = (un4-5.0_8*un3+15.0_8*un2+5.0_8*un1)/16.0_8
+                ut%p(i,nh+1,k) = qtt(i,1)*ut%p(i,nh+1,k)+qtn(i,1)*un0
+            end do
+            do j=2,halo_width
+                do i=si,ei
+                    un1 = sum(w(wst:wend,i,j)*un%p(ind(i,j)+wst:ind(i,j)+wend,nh+j-1,k))
+                    un2 = sum(w(wst:wend,i,j)*un%p(ind(i,j)+wst:ind(i,j)+wend,nh+j  ,k))
+                    un3 = sum(w(wst:wend,i,j)*un%p(ind(i,j)+wst:ind(i,j)+wend,nh+j+1,k))
+                    un4 = sum(w(wst:wend,i,j)*un%p(ind(i,j)+wst:ind(i,j)+wend,nh+j+2,k))
+                    un0 = (-un1+9.0_8*un2+9.0_8*un3-un4)/16.0_8
+                    ut%p(i,nh+j,k) = qtt(i,j)*ut%p(i,nh+j,k)+qtn(i,j)*un0
+                end do
+            end do
+        case default
+        call parcomm_global%abort("ecs_halo_vec_c_mod, tangent_comp_transform - "//&
+                                  "unkniown edge type: "//edge)
+        end select
+    end do
+end subroutine tangent_comp_transform
 
 end module ecs_halo_vec_c_mod

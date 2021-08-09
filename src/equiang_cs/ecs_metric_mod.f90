@@ -132,7 +132,7 @@ function ecs_point_r_proto(alpha,beta) result(r)
 end function ecs_point_r_proto
 
 function ecs_a1_proto(alpha,beta) result(a1)
-    !covariant a-vector at prototype face given alpha&beta
+    !dr / d alpha vector at prototype face for given alpha&beta
     real(kind=8), intent(in)  :: alpha, beta
     real(kind=8)              :: a1(3)
     !local
@@ -147,7 +147,7 @@ function ecs_a1_proto(alpha,beta) result(a1)
 end function ecs_a1_proto
 
 function ecs_a2_proto(alpha,beta) result(a2)
-    !covariant b-vector at prototype face given alpha&beta
+    !dr / d beta vector at prototype face for given alpha&beta
     real(kind=8)              :: a2(3)
     real(kind=8), intent(in)  :: alpha, beta
     !local
@@ -162,7 +162,7 @@ function ecs_a2_proto(alpha,beta) result(a2)
 end function ecs_a2_proto
 
 function ecs_b1_proto(alpha,beta) result(b1)
-    !covariant a-vector at prototype face given alpha&beta
+    !contravariant alpha vector at prototype face for given alpha&beta
     real(kind=8), intent(in)  :: alpha, beta
     real(kind=8)              :: b1(3)
     !local
@@ -178,7 +178,7 @@ function ecs_b1_proto(alpha,beta) result(b1)
 end function ecs_b1_proto
 
 function ecs_b2_proto(alpha,beta) result(b2)
-    !covariant b-vector at prototype face given alpha&beta
+    !contravariant beta vector at prototype face for given alpha&beta
     real(kind=8), intent(in)  :: alpha, beta
     real(kind=8)              :: b2(3)
     !local
