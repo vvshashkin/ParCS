@@ -17,7 +17,7 @@ subroutine test_ecs_cvec_halo()
     use halo_mod,                   only : halo_t, halo_vec_t
     use halo_factory_mod,           only : create_halo_procedure, create_vector_halo_procedure
 
-    integer(kind=4), parameter         :: nh=64, nz=3, halo_width=2, ex_halo_width=8
+    integer(kind=4), parameter         :: nh=32, nz=3, halo_width=2, ex_halo_width=8
 
     type(domain_t)             :: domain
     type(grid_field_t)         :: u_test, v_test
@@ -108,11 +108,11 @@ subroutine test_ecs_cvec_halo()
 !        print '(i3,3F15.7)', j, v_test%tile(1)%p(0,j,1),v_true%tile(1)%p(0,j,1),&
 !                                v_test%tile(1)%p(0,j,1)-v_true%tile(1)%p(0,j,1) 
 !    end do
-    !do j=1, nh+1
+    !do j=domain%mesh_u%tile(3)%is,domain%mesh_u%tile(3)%ie 
     !    !print '(i3,3E15.7)', j, v_test%tile(1)%p(nh+2,j,1),v_true%tile(1)%p(nh+2,j,1),&
     !    !                        v_test%tile(1)%p(nh+2,j,1)-v_true%tile(1)%p(nh+2,j,1)
-    !    print '(i3,3E15.7)', j, u_test%tile(1)%p(j,nh+1,1),u_true%tile(1)%p(j,nh+1,1),&
-    !                            u_test%tile(1)%p(j,nh+1,1)-u_true%tile(1)%p(j,nh+1,1)
+    !    print '(i3,3E15.7)', j, u_test%tile(3)%p(j,nh+1,1),u_true%tile(3)%p(j,nh+1,1),&
+    !                            u_test%tile(3)%p(j,nh+1,1)-u_true%tile(3)%p(j,nh+1,1)
     !end do
 end subroutine test_ecs_cvec_halo
 
@@ -216,25 +216,25 @@ do ind = mesh%ts, mesh%te
     ks = mesh%tile(ind)%ks; ke = mesh%tile(ind)%ke
     klev = ke-ks+1
     !tile edge errors
-    !err     = sum(abs(f1%tile(ind)%p(is-halo_width:is-1,js:je,ks:ke)-f2%tile(ind)%p(is-halo_width:is-1,js:je,ks:ke)))/ny
-    !err_max = maxval(abs(f1%tile(ind)%p(is-halo_width:is-1,js:je,ks:ke)-f2%tile(ind)%p(is-halo_width:is-1,js:je,ks:ke)))
-    !if(is == 1) then
-    !    cross_edge_err     = cross_edge_err+err
-    !    cross_edge_err_max = max(cross_edge_err_max,err_max)
-    !else
-    !    inface_err     = inface_err+err
-    !    inface_err_max = max(inface_err_max,err_max)
-    !end if
+    err     = sum(abs(f1%tile(ind)%p(is-halo_width:is-1,js:je,ks:ke)-f2%tile(ind)%p(is-halo_width:is-1,js:je,ks:ke)))/ny
+    err_max = maxval(abs(f1%tile(ind)%p(is-halo_width:is-1,js:je,ks:ke)-f2%tile(ind)%p(is-halo_width:is-1,js:je,ks:ke)))
+    if(is == 1) then
+        cross_edge_err     = cross_edge_err+err
+        cross_edge_err_max = max(cross_edge_err_max,err_max)
+    else
+        inface_err     = inface_err+err
+        inface_err_max = max(inface_err_max,err_max)
+    end if
 
-    !err     =    sum(abs(f1%tile(ind)%p(ie+1:ie+halo_width,js:je,ks:ke)-f2%tile(ind)%p(ie+1:ie+halo_width,js:je,ks:ke)))/ny
-    !err_max = maxval(abs(f1%tile(ind)%p(ie+1:ie+halo_width,js:je,ks:ke)-f2%tile(ind)%p(ie+1:ie+halo_width,js:je,ks:ke)))
-    !if(ie == nx) then
-    !    cross_edge_err     = cross_edge_err+err
-    !    cross_edge_err_max = max(cross_edge_err_max,err_max)
-    !else
-    !    inface_err     = inface_err+err
-    !    inface_err_max = max(inface_err_max,err_max)
-    !end if
+    err     =    sum(abs(f1%tile(ind)%p(ie+1:ie+halo_width,js:je,ks:ke)-f2%tile(ind)%p(ie+1:ie+halo_width,js:je,ks:ke)))/ny
+    err_max = maxval(abs(f1%tile(ind)%p(ie+1:ie+halo_width,js:je,ks:ke)-f2%tile(ind)%p(ie+1:ie+halo_width,js:je,ks:ke)))
+    if(ie == nx) then
+        cross_edge_err     = cross_edge_err+err
+        cross_edge_err_max = max(cross_edge_err_max,err_max)
+    else
+        inface_err     = inface_err+err
+        inface_err_max = max(inface_err_max,err_max)
+    end if
 
     err     =    sum(abs(f1%tile(ind)%p(is:ie,js-halo_width:js-1,ks:ke)-f2%tile(ind)%p(is:ie,js-halo_width:js-1,ks:ke)))/nx
     err_max = maxval(abs(f1%tile(ind)%p(is:ie,js-halo_width:js-1,ks:ke)-f2%tile(ind)%p(is:ie,js-halo_width:js-1,ks:ke)))
@@ -311,6 +311,7 @@ do ind = mesh%ts, mesh%te
 !        inface_corner_err = inface_corner_err+err
 !        inface_corner_err_max = max(inface_corner_err_max,err_max)
 !    end if
+    !print *, "error", ind, cross_edge_err_max
 end do
 
 call mpi_allreduce(cross_edge_err, gl_cross_edge_err, 1, mpi_double, mpi_sum, mpi_comm_world, ierr)

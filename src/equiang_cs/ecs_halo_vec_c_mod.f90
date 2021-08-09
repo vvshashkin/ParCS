@@ -11,6 +11,7 @@ implicit none
 type, extends(halo_vec_t) :: ecs_halo_vec_c_t
 
     integer(kind=4)                         :: ts, te
+    integer(kind=4)                         :: exchange_width
     class(exchange_t),          allocatable :: exch_halo
     type(ecs_tile_halo_cvec_t), allocatable :: tile(:)
 
@@ -55,21 +56,22 @@ subroutine get_ecs_c_vector_halo(this,u,v,domain,halo_width)
 
     do t=this%ts,this%te
         call this%tile(t)%interpv(u%tile(t),v%tile(t),domain%partition%tile_u(t), &
-                                  domain%partition%tile_v(t),halo_width)
+                                  domain%partition%tile_v(t),halo_width,this%exchange_width,t)
     end do
 end subroutine get_ecs_c_vector_halo
 
-subroutine interp_ecs_tile_halo_cvec(this,u,v,tile_u,tile_v,halo_width)
+subroutine interp_ecs_tile_halo_cvec(this,u,v,tile_u,tile_v,halo_width,exchange_width,t)
     use grid_field_mod, only: tile_field_t
     use tile_mod,       only: tile_t
 
     class(ecs_tile_halo_cvec_t), intent(in)    :: this
     type(tile_field_t),          intent(inout) :: u, v
     type(tile_t),                intent(in)    :: tile_u, tile_v
-    integer(kind=4),             intent(in)    :: halo_width
+    integer(kind=4),             intent(in)    :: halo_width, exchange_width,t
 
     integer(kind=4) :: i,is,ie,js,je,ks,ke,wst,wend
     integer(kind=4) :: is1,ie1,js1,je1
+    integer(kind=4) :: jsv,jev,isv,iev
 
     is = tile_u%is
     ie = tile_u%ie
@@ -80,11 +82,13 @@ subroutine interp_ecs_tile_halo_cvec(this,u,v,tile_u,tile_v,halo_width)
     je1 = tile_v%je
     ks = tile_u%ks
     ke = tile_u%ke
+    jsv = js-exchange_width
+    jev = je+exchange_width
 
     if(this%is_left_edge) then
         u%p(1,js:je,ks:ke) = 0.5_8*(u%p(1,js:je,ks:ke)+u%p(0,js:je,ks:ke))
         do i=1,halo_width+1
-            u%p(1-i,js:je,ks:ke) = u%p(-i,js:je,ks:ke)
+            u%p(1-i,jsv:jev,ks:ke) = u%p(-i,jsv:jev,ks:ke)
         end do
         wst  = lbound(this%wt_left,1)
         wend = ubound(this%wt_left,1)
@@ -100,7 +104,7 @@ subroutine interp_ecs_tile_halo_cvec(this,u,v,tile_u,tile_v,halo_width)
     if(this%is_right_edge) then
         u%p(ie,js:je,ks:ke) = 0.5_8*(u%p(ie,js:je,ks:ke)+u%p(ie+1,js:je,ks:ke))
         do i=1,halo_width+1
-            u%p(ie+i,js:je,ks:ke) = u%p(ie+i+1,js:je,ks:ke)
+            u%p(ie+i,jsv:jev,ks:ke) = u%p(ie+i+1,jsv:jev,ks:ke)
         end do
         wst  = lbound(this%wt_right,1)
         wend = ubound(this%wt_right,1)
@@ -123,19 +127,21 @@ subroutine interp_ecs_tile_halo_cvec(this,u,v,tile_u,tile_v,halo_width)
     je1 = tile_u%je
     ks = tile_v%ks
     ke = tile_v%ke
+    isv = is-exchange_width
+    iev = ie+exchange_width
 
     if(this%is_bottom_edge) then
         v%p(is:ie,1,ks:ke) = 0.5_8*(v%p(is:ie,1,ks:ke)+v%p(is:ie,0,ks:ke))
         do i=1,halo_width+1
-            v%p(is:ie,1-i,ks:ke) = v%p(is:ie,-i,ks:ke)
+            v%p(isv:iev,1-i,ks:ke) = v%p(isv:iev,-i,ks:ke)
         end do
-        !wst  = lbound(this%wt_bottom,1)
-        !wend = ubound(this%wt_bottom,1)
-        !call interp_edge(u,this%wt_bottom,this%it_bottom,wst,wend,is1,ie1,ks,ke,halo_width,je1,'bottom')
-        !wst  = lbound(this%wtn_bottom,1)
-        !wend = ubound(this%wtn_bottom,1)
-        !call tangent_comp_transform(u,v,this%wtn_bottom,this%itn_bottom,this%qtt_bottom, this%qtn_bottom, &
-        !                            wst,wend,is1,ie1,ks,ke,halo_width,je1,'bottom')
+        wst  = lbound(this%wt_bottom,1)
+        wend = ubound(this%wt_bottom,1)
+        call interp_edge(u,this%wt_bottom,this%it_bottom,wst,wend,is1,ie1,ks,ke,halo_width,je1,'bottom')
+        wst  = lbound(this%wtn_bottom,1)
+        wend = ubound(this%wtn_bottom,1)
+        call tangent_comp_transform(u,v,this%wtn_bottom,this%itn_bottom,this%qtt_bottom, this%qtn_bottom, &
+                                    wst,wend,is1,ie1,ks,ke,halo_width,je1,'bottom')
         wst  = lbound(this%wn_bottom,1)
         wend = ubound(this%wn_bottom,1)
         call interp_edge(v,this%wn_bottom,this%in_bottom,wst,wend,is,ie,ks,ke,halo_width,je,'bottom')
@@ -143,15 +149,15 @@ subroutine interp_ecs_tile_halo_cvec(this,u,v,tile_u,tile_v,halo_width)
     if(this%is_top_edge) then
         v%p(is:ie,je,ks:ke) = 0.5_8*(v%p(is:ie,je,ks:ke)+v%p(is:ie,je+1,ks:ke))
         do i=1,halo_width+1
-            v%p(is:ie,je+i,ks:ke) = v%p(is:ie,je+i+1,ks:ke)
+            v%p(isv:iev,je+i,ks:ke) = v%p(isv:iev,je+i+1,ks:ke)
         end do
-        !wst  = lbound(this%wt_top,1)
-        !wend = ubound(this%wt_top,1)
-        !call interp_edge(u,this%wt_top,this%it_top,wst,wend,is1,ie1,ks,ke,halo_width,je1,'top')
-        !wst  = lbound(this%wtn_bottom,1)
-        !wend = ubound(this%wtn_bottom,1)
-        !call tangent_comp_transform(u,v,this%wtn_top,this%itn_top,this%qtt_top,this%qtn_top, &
-        !                            wst,wend,is1,ie1,ks,ke,halo_width,je1,'top')
+        wst  = lbound(this%wt_top,1)
+        wend = ubound(this%wt_top,1)
+        call interp_edge(u,this%wt_top,this%it_top,wst,wend,is1,ie1,ks,ke,halo_width,je1,'top')
+        wst  = lbound(this%wtn_top,1)
+        wend = ubound(this%wtn_top,1)
+        call tangent_comp_transform(u,v,this%wtn_top,this%itn_top,this%qtt_top,this%qtn_top, &
+                                    wst,wend,is1,ie1,ks,ke,halo_width,je1,'top')
         wst  = lbound(this%wn_top,1)
         wend = ubound(this%wn_top,1)
         call interp_edge(v,this%wn_top,this%in_top,wst,wend,is,ie,ks,ke,halo_width,je,'top')

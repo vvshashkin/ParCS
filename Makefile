@@ -454,7 +454,8 @@ $(DOBJ)ecs_halo_vec_c_factory_mod.o: src/equiang_cs/ecs_halo_vec_c_factory_mod.f
 	$(DOBJ)halo_mod.o \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
-	$(DOBJ)const_mod.o
+	$(DOBJ)const_mod.o \
+	$(DOBJ)ecs_metric_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

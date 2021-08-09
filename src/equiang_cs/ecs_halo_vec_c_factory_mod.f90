@@ -25,7 +25,7 @@ subroutine create_ecs_C_vec_halo_procedure(halo_out,domain,halo_width)
 
     !locals
     type(ecs_halo_vec_c_t), allocatable :: halo
-    integer(kind=4)      :: ex_halo_width = 6
+    integer(kind=4)      :: ex_halo_width = 7
     integer(kind=4)      :: ts, te, is, ie, js, je, nh, t
     integer(kind=4)      :: is1, ie1, js1, je1
     real(kind=8)         :: hx
@@ -42,6 +42,7 @@ subroutine create_ecs_C_vec_halo_procedure(halo_out,domain,halo_width)
     halo%exch_halo = create_symmetric_halo_vec_exchange_C(domain%partition, &
                               domain%parcomm, domain%topology, ex_halo_width, 'full')
 
+    halo%exchange_width = ex_halo_width
     allocate(halo%tile(ts:te))
 
     normal_comp_interp_type = "cubic_lag"
