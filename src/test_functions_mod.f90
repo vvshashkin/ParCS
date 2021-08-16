@@ -9,6 +9,7 @@ public :: set_scalar_test_field, set_vector_test_field
 public :: xyz_scalar_field_generator_t, xyz_scalar_field_generator
 public :: solid_rotation_field_generator_t, solid_rotation_field_generator
 
+!!!!!!!!!!!!!Abstract scalar and vector fields generators
 type, public, abstract :: scalar_field_generator_t
 contains
 procedure(get_scalar_field), deferred :: get_scalar_field
@@ -19,6 +20,7 @@ contains
 procedure(get_vector_field), deferred :: get_vector_field
 end type vector_field_generator_t
 
+!!!!!!!!!!!!Specific fields
 type, extends(scalar_field_generator_t) :: xyz_scalar_field_generator_t
 contains
 procedure :: get_scalar_field => generate_xyz_scalar_field
@@ -29,7 +31,7 @@ contains
 procedure :: get_vector_field => generate_solid_rotation_vector_field
 end type solid_rotation_field_generator_t
 
-type(xyz_scalar_field_generator_t) :: xyz_scalar_field_generator
+type(xyz_scalar_field_generator_t)     :: xyz_scalar_field_generator
 type(solid_rotation_field_generator_t) :: solid_rotation_field_generator
 
 abstract interface
@@ -83,20 +85,36 @@ subroutine set_scalar_test_field(f, generator, mesh, halo_width, fill_value)
     end do
 end subroutine set_scalar_test_field
 
-subroutine set_vector_test_field(u, v, generator, mesh_u, mesh_v, halo_width, fill_value)
+subroutine set_vector_test_field(u, v, generator, mesh_u, mesh_v, halo_width, components_type, fill_value)
+
+    use parcomm_mod, only : parcomm_global
 
     type(grid_field_t),              intent(inout) :: u, v
     class(vector_field_generator_t), intent(in)    :: generator    
     type(mesh_t),                    intent(in)    :: mesh_u, mesh_v
     integer(kind=4),                 intent(in)    :: halo_width
+    character(len=*),                intent(in)    :: components_type
     real(kind=8),          optional, intent(in)    :: fill_value
     
     !locals
     integer(kind=4) :: t
 
      do t = mesh_u%ts, mesh_u%te
-        call set_vector_test_field_1tile_1comp(u%tile(t),generator,mesh_u%tile(t),mesh_u%tile(t)%b1,halo_width,fill_value)
-        call set_vector_test_field_1tile_1comp(v%tile(t),generator,mesh_v%tile(t),mesh_v%tile(t)%b2,halo_width,fill_value)
+        if(components_type=="contravariant") then
+            call set_vector_test_field_1tile_1comp(u%tile(t),generator,mesh_u%tile(t),mesh_u%tile(t)%b1, &
+                                                   halo_width,fill_value)
+            call set_vector_test_field_1tile_1comp(v%tile(t),generator,mesh_v%tile(t),mesh_v%tile(t)%b2, &
+                                                   halo_width,fill_value)
+        else if (components_type=="covariant") then
+            call set_vector_test_field_1tile_1comp(u%tile(t),generator,mesh_u%tile(t),mesh_u%tile(t)%a1, &
+                                                   halo_width,fill_value)
+            call set_vector_test_field_1tile_1comp(v%tile(t),generator,mesh_v%tile(t),mesh_v%tile(t)%a2, &
+                                                   halo_width,fill_value)
+        else
+            call parcomm_global%abort("test_functions_mod, set_vector_test_field: unknown components type "// &
+                                      components_type//" use covariant or contravariant")
+        end if
+
      end do
 
 end subroutine set_vector_test_field

@@ -45,10 +45,10 @@ subroutine test_ecs_cvec_halo()
     call create_grid_field(v_test, ex_halo_width, 0, domain%mesh_v)
     call create_grid_field(v_true, ex_halo_width, 0, domain%mesh_v)
 
-    !call init_vector_halo_test_fun(u_test,v_test,domain%mesh_u,domain%mesh_v, 0)
-    !call init_vector_halo_test_fun(u_true,v_true,domain%mesh_u,domain%mesh_v, halo_width)
-    call set_vector_test_field(u_test,v_test,solid_rot, domain%mesh_u, domain%mesh_v, 0, 0.0_8)
-    call set_vector_test_field(u_true,v_true,solid_rot, domain%mesh_u, domain%mesh_v, halo_width, 0.0_8)
+    call set_vector_test_field(u_test,v_test,solid_rot, domain%mesh_u, domain%mesh_v, &
+                               0, "contravariant", 0.0_8)
+    call set_vector_test_field(u_true,v_true,solid_rot, domain%mesh_u, domain%mesh_v, &
+                               halo_width, "contravariant", 0.0_8)
 
     call domain%parcomm%print('equiangular cubed-sphere C-grid halo-zone interpolation test')
 

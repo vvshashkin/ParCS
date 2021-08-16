@@ -64,8 +64,10 @@ subroutine test_ecs_halo()
     call set_scalar_test_field(f_true,xyz_f,domain%mesh_p, halo_width, -9999999._8)
     call u_test%assign(0._8,domain%mesh_p)
     call v_test%assign(0._8,domain%mesh_p)
-    call set_vector_test_field(u_test,v_test,solid_rotation, domain%mesh_p, domain%mesh_p, 0, 0.0_8)
-    call set_vector_test_field(u_true,v_true,solid_rotation, domain%mesh_p, domain%mesh_p, halo_width, 0.0_8)
+    call set_vector_test_field(u_test,v_test,solid_rotation, domain%mesh_p, domain%mesh_p, &
+                               0, "contravariant", 0.0_8)
+    call set_vector_test_field(u_true,v_true,solid_rotation, domain%mesh_p, domain%mesh_p, &
+                               halo_width, "contravariant", 0.0_8)
 
     call domain%parcomm%print('equiangular cubed-sphere halo-zone interpolation test')
 
@@ -134,7 +136,6 @@ subroutine test_ecs_halo()
 
 end subroutine test_ecs_halo
 
-!
 subroutine halo_err(gl_inface_err, gl_inface_err_max, gl_cross_edge_err, gl_cross_edge_err_max, &
                     gl_inface_corner_err, gl_inface_corner_err_max, gl_inedge_corner_err,       &
                     gl_inedge_corner_err_max, gl_halo_corner_err, gl_halo_corner_err_max,       &
