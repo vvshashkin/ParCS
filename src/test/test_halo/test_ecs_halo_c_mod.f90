@@ -16,8 +16,9 @@ subroutine test_ecs_cvec_halo()
     use grid_field_factory_mod,     only : create_grid_field
     use halo_mod,                   only : halo_t, halo_vec_t
     use halo_factory_mod,           only : create_halo_procedure, create_vector_halo_procedure
+    use test_fields_mod,            only : set_vector_test_field, solid_rot => solid_rotation_field_generator
 
-    integer(kind=4), parameter         :: nh=32, nz=3, halo_width=2, ex_halo_width=8
+    integer(kind=4), parameter         :: nh=64, nz=3, halo_width=3, ex_halo_width=8
 
     type(domain_t)             :: domain
     type(grid_field_t)         :: u_test, v_test
@@ -44,8 +45,10 @@ subroutine test_ecs_cvec_halo()
     call create_grid_field(v_test, ex_halo_width, 0, domain%mesh_v)
     call create_grid_field(v_true, ex_halo_width, 0, domain%mesh_v)
 
-    call init_vector_halo_test_fun(u_test,v_test,domain%mesh_u,domain%mesh_v, 0)
-    call init_vector_halo_test_fun(u_true,v_true,domain%mesh_u,domain%mesh_v, halo_width)
+    !call init_vector_halo_test_fun(u_test,v_test,domain%mesh_u,domain%mesh_v, 0)
+    !call init_vector_halo_test_fun(u_true,v_true,domain%mesh_u,domain%mesh_v, halo_width)
+    call set_vector_test_field(u_test,v_test,solid_rot, domain%mesh_u, domain%mesh_v, 0, 0.0_8)
+    call set_vector_test_field(u_true,v_true,solid_rot, domain%mesh_u, domain%mesh_v, halo_width, 0.0_8)
 
     call domain%parcomm%print('equiangular cubed-sphere C-grid halo-zone interpolation test')
 
@@ -115,67 +118,6 @@ subroutine test_ecs_cvec_halo()
     !                            u_test%tile(3)%p(j,nh+1,1)-u_true%tile(3)%p(j,nh+1,1)
     !end do
 end subroutine test_ecs_cvec_halo
-
-subroutine init_vector_halo_test_fun(u, v, mesh_u, mesh_v, halo_width)
-
-use mesh_mod, only : mesh_t
-
-type(grid_field_t), intent(inout) :: u, v
-
-type(mesh_t),      intent(in) :: mesh_u, mesh_v
-integer(kind=4),   intent(in) :: halo_width
-
-!locals
-integer(kind=4) :: isv, iev, jsv, jev, i, j, t
-real(kind=8)    ::  vx, vy, vz
-
-do t = mesh_u%ts, mesh_u%te
-    !u%tile(t)%p = 0.0_8
-
-    isv = mesh_u%tile(t)%is-halo_width
-    iev = mesh_u%tile(t)%ie+halo_width
-    jsv = mesh_u%tile(t)%js-halo_width
-    jev = mesh_u%tile(t)%je+halo_width
-
-    do j = jsv, jev
-        do i = isv, iev
-            !level 1: solid rotation around (1,0,0) axis
-            vx = 0._8; vy = mesh_u%tile(t)%rz(i,j); vz =-mesh_u%tile(t)%ry(i,j)
-            u%tile(t)%p(i,j,1) = sum([vx,vy,vz]*mesh_u%tile(t)%b1(1:3,i,j))
-            !level 2: solid rotation around (0,1,0) axis
-            vx =-mesh_u%tile(t)%rz(i,j); vy = 0._8; vz = mesh_u%tile(t)%rx(i,j)
-            u%tile(t)%p(i,j,2) = sum([vx,vy,vz]*mesh_u%tile(t)%b1(1:3,i,j))
-            !level 3: solid rotation around (0,0,1) axis
-            vx = mesh_u%tile(t)%ry(i,j); vy =-mesh_u%tile(t)%rx(i,j); vz = 0._8
-            u%tile(t)%p(i,j,3) = sum([vx,vy,vz]*mesh_u%tile(t)%b1(1:3,i,j))
-        end do
-    end do
-end do
-
-do t = mesh_v%ts, mesh_v%te
-    !v%tile(t)%p = 0.0_8
-
-    isv = mesh_v%tile(t)%is-halo_width
-    iev = mesh_v%tile(t)%ie+halo_width
-    jsv = mesh_v%tile(t)%js-halo_width
-    jev = mesh_v%tile(t)%je+halo_width
-    do j = jsv, jev
-        do i = isv, iev
-            !level 1: solid rotation around (1,0,0) axis
-            vx = 0._8; vy = mesh_v%tile(t)%rz(i,j); vz =-mesh_v%tile(t)%ry(i,j)
-            v%tile(t)%p(i,j,1) = sum([vx,vy,vz]*mesh_v%tile(t)%b2(1:3,i,j))
-            !level 2: solid rotation around (0,1,0) axis
-            vx =-mesh_v%tile(t)%rz(i,j); vy = 0._8; vz = mesh_v%tile(t)%rx(i,j)
-            v%tile(t)%p(i,j,2) = sum([vx,vy,vz]*mesh_v%tile(t)%b2(1:3,i,j))
-            !level 3: solid rotation around (0,0,1) axis
-            vx = mesh_v%tile(t)%ry(i,j); vy =-mesh_v%tile(t)%rx(i,j); vz = 0._8
-            v%tile(t)%p(i,j,3) = sum([vx,vy,vz]*mesh_v%tile(t)%b2(1:3,i,j))
-        end do
-    end do
-end do
-
-
-end subroutine init_vector_halo_test_fun
 
 subroutine halo_err(gl_inface_err, gl_inface_err_max, gl_cross_edge_err, gl_cross_edge_err_max, &
                     gl_inface_corner_err, gl_inface_corner_err_max, gl_inedge_corner_err,       &

@@ -8,8 +8,8 @@ program test_halo_main
 
     call init_global_parallel_enviroment()
 
-    !call test_halo()
-    !call test_ecs_halo
+    call test_halo()
+    call test_ecs_halo
     call test_ecs_cvec_halo
 
     call deinit_global_parallel_enviroment()
