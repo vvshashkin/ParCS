@@ -8,6 +8,7 @@ private
 public :: set_scalar_test_field, set_vector_test_field
 public :: xyz_scalar_field_generator_t, xyz_scalar_field_generator
 public :: solid_rotation_field_generator_t, solid_rotation_field_generator
+public :: xyz_grad_generator_t, xyz_grad_generator
 
 !!!!!!!!!!!!!Abstract scalar and vector fields generators
 type, public, abstract :: scalar_field_generator_t
@@ -31,8 +32,15 @@ contains
 procedure :: get_vector_field => generate_solid_rotation_vector_field
 end type solid_rotation_field_generator_t
 
+type, extends(vector_field_generator_t) :: xyz_grad_generator_t
+contains
+procedure :: get_vector_field => generate_xyz_grad_field
+end type xyz_grad_generator_t
+
+!!!field generator instances
 type(xyz_scalar_field_generator_t)     :: xyz_scalar_field_generator
 type(solid_rotation_field_generator_t) :: solid_rotation_field_generator
+type(xyz_grad_generator_t)             :: xyz_grad_generator
 
 abstract interface
     subroutine get_scalar_field(this,f,npts,nlev,x,y,z)
@@ -204,5 +212,34 @@ subroutine generate_solid_rotation_vector_field(this,vx,vy,vz,npts,nlev,x,y,z)
         end do
     end do
 end subroutine generate_solid_rotation_vector_field
+
+subroutine generate_xyz_grad_field(this,vx,vy,vz,npts,nlev,x,y,z)
+    class(xyz_grad_generator_t),              intent(in)  :: this
+    integer(kind=4),                          intent(in)  :: npts, nlev
+    real(kind=8),       dimension(npts),      intent(in)  :: x, y, z
+    real(kind=8),       dimension(npts,nlev), intent(out) :: vx, vy, vz
+
+    integer(kind=4) :: i, k, k1
+    real(kind=8)    :: e(3,3) = reshape([1.0_8, 0.0_8, 0.0_8,  & ! level1: f=x, 
+                                         0.0_8, 1.0_8, 0.0_8,  & ! level2: f=y
+                                         0.0_8, 0.0_8, 1.0_8],[3,3]) !level 3: f=z
+    !(nabla)_h f = (nabla)_3d f- n *(n, nabla_3d f)
+    !(nabla)_3d f = e(k)
+    real(kind=8)    :: n(3) !normal to the surface
+    real(kind=8)    :: nne(3) !n *(n, nabla_3d f)
+    real(kind=8)    :: nabla_h(3)
+
+    do k = 1, nlev
+        k1 = mod(k-1,3)+1  !1,2,3,1,2,3,1,2 etc
+        do i=1, npts
+            n(1:3) = [x(i),y(i),z(i)] / sqrt(x(i)**2+y(i)**2+z(i)**2)
+            nne(1:3) = n(1:3)*sum(n(1:3)*e(1:3,k))
+            nabla_h(1:3) = e(1:3,k)-nne(1:3)
+            vx(i,k) = nabla_h(1)
+            vy(i,k) = nabla_h(2)
+            vz(i,k) = nabla_h(3)
+        end do
+    end do
+end subroutine generate_xyz_grad_field
 
 end module test_fields_mod
