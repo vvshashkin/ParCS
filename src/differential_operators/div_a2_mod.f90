@@ -1,59 +1,50 @@
 module div_a2_mod
 
-use abstract_div_mod,          only : div_operator_t
-use grid_function_mod,         only : grid_function_t
-use mesh_mod,                  only : mesh_t
-use partition_mod,             only : partition_t
-use exchange_abstract_mod,     only : exchange_t
-use ecs_halo_vec_a_mod,        only : ecs_halo_vec_t
+use domain_mod,         only : domain_t
+use abstract_div_mod,   only : div_operator_t
+use grid_field_mod,     only : grid_field_t, tile_field_t
+use halo_mod,           only : halo_vec_t
 
-!use timer_parallel_mod,        only : t_bstab_matvec
 implicit none
 
 type, public, extends(div_operator_t) :: div_a2_t
-    class(exchange_t),     allocatable :: exch_halo
-    class(ecs_halo_vec_t), allocatable :: halo_vec(:)
+    class(halo_vec_t), allocatable :: halo_procedure
 contains
     procedure, public :: calc_div => calc_div_a2
 end type div_a2_t
 
 contains
 
-subroutine calc_div_a2(this, u, v, div, mesh, partition, multiplier)
-
+subroutine calc_div_a2(this, div, u, v, domain, multiplier)
     class(div_a2_t),        intent(inout) :: this
-    type(partition_t),      intent(in)    :: partition
-    type(grid_function_t),  intent(inout) :: u(partition%ts:partition%te), &
-                                             v(partition%ts:partition%te)
-    type(grid_function_t),  intent(inout) :: div(partition%ts:partition%te)
-    type(mesh_t),           intent(in)    :: mesh(partition%ts:partition%te)
+    type(domain_t),         intent(in)    :: domain
+    type(grid_field_t),     intent(inout) :: u, v
     real(kind=8), optional, intent(in)    :: multiplier
+    !output
+    type(grid_field_t),     intent(inout) :: div
 
-    integer(kind=4) :: i, j, k, t
-    real(kind=8) mult_loc, hx
+    integer, parameter :: halo_width = 1
+    integer(kind=4) :: t
 
-    call this%exch_halo%do(u, partition%ts, partition%te)
-    call this%exch_halo%do(v, partition%ts, partition%te)
-
-    do t = partition%ts, partition%te
-        call this%halo_vec(t)%interpv(u(t),v(t),1)
-    end do
-
-    do t = partition%ts, partition%te
-        call calc_div_on_tile(u(t), v(t), div(t), mesh(t), multiplier)
+    call this%halo_procedure%get_halo_vector(u,v,domain,halo_width)
+    do t = domain%partition%ts, domain%partition%te
+        call calc_div_on_tile(div%tile(t), u%tile(t), v%tile(t),            &
+                              domain%mesh_p%tile(t), multiplier)
     end do
 
 
 end subroutine calc_div_a2
 
-subroutine calc_div_on_tile(u, v, div, mesh, multiplier)
+subroutine calc_div_on_tile(div, u, v, mesh, multiplier)
 
-    type(grid_function_t),  intent(in)    :: u, v
-    type(grid_function_t),  intent(inout) :: div
-    type(mesh_t),           intent(in)    :: mesh
+    use mesh_mod, only : tile_mesh_t
+
+    type(tile_field_t),     intent(inout) :: div
+    type(tile_field_t),     intent(in)    :: u, v
+    type(tile_mesh_t),      intent(in)    :: mesh
     real(kind=8), optional, intent(in)    :: multiplier
 
-    real(kind=8) :: hx, mult_loc
+    real(kind=8)    :: hx, mult_loc
     integer(kind=4) :: ks, ke, js, je, is, ie, i, j, k
     integer(kind=4) :: ip1, im1, jp1, jm1
 
@@ -67,13 +58,9 @@ subroutine calc_div_on_tile(u, v, div, mesh, multiplier)
     hx = mesh%hx
     do k = ks, ke
         do j = js, je
-            jp1 = min(j+1,mesh%nx)
-            jm1 = max(j-1,1)
             do i = is, ie
-                ip1 = min(i+1,mesh%nx)
-                im1 = max(i-1,1)
-                div%p(i,j,k) = (mesh%G(ip1,j)*u%p(i+1,j,k)-mesh%G(im1,j)*u%p(i-1,j,k) +  &
-                                mesh%G(i,jp1)*v%p(i,j+1,k)-mesh%G(i,jm1)*v%p(i,j-1,k))/  &
+                div%p(i,j,k) = (mesh%G(i+1,j)*u%p(i+1,j,k)-mesh%G(i-1,j)*u%p(i-1,j,k) +  &
+                                mesh%G(i,j+1)*v%p(i,j+1,k)-mesh%G(i,j-1)*v%p(i,j-1,k))/  &
                                 (2._8*mesh%G(i,j)*hx)*mult_loc
             end do
         end do

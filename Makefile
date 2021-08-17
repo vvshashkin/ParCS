@@ -76,6 +76,13 @@ $(DEXE)TEST_CMD_LINE: $(MKDIRS) $(DOBJ)test_cmd_line.o \
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_CMD_LINE
+$(DEXE)TEST_DIFFOPS: $(MKDIRS) $(DOBJ)test_diffops.o \
+	$(DOBJ)avost.o \
+	$(DOBJ)auxhs.o
+	@rm -f $(filter-out $(DOBJ)test_diffops.o,$(EXESOBJ))
+	@echo $(LITEXT)
+	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
+EXES := $(EXES) TEST_DIFFOPS
 $(DEXE)TEST_HALO_MAIN: $(MKDIRS) $(DOBJ)test_halo_main.o \
 	$(DOBJ)avost.o \
 	$(DOBJ)auxhs.o
@@ -180,7 +187,8 @@ $(DOBJ)operator_mod.o: src/operator_mod.f90 \
 
 $(DOBJ)test_functions_mod.o: src/test_functions_mod.f90 \
 	$(DOBJ)grid_field_mod.o \
-	$(DOBJ)mesh_mod.o
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -396,6 +404,15 @@ $(DOBJ)domain_mod.o: src/domain/domain_mod.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)div_a2_mod.o: src/differential_operators/div_a2_mod.f90 \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)abstract_div_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)halo_mod.o \
+	$(DOBJ)mesh_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)abstract_grad_mod.o: src/differential_operators/abstract_grad_mod.f90 \
 	$(DOBJ)grid_function_mod.o \
 	$(DOBJ)domain_mod.o
@@ -408,6 +425,16 @@ $(DOBJ)hor_difops_abstract_mod.o: src/differential_operators/hor_difops_abstract
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)div_factory_mod.o: src/differential_operators/div_factory_mod.f90 \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)abstract_div_mod.o \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)div_a2_mod.o \
+	$(DOBJ)halo_factory_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)hor_difops_basic_mod.o: src/differential_operators/hor_difops_basic_mod.f90 \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)mesh_mod.o \
@@ -415,8 +442,16 @@ $(DOBJ)hor_difops_basic_mod.o: src/differential_operators/hor_difops_basic_mod.f
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
-$(DOBJ)abstract_div_mod.o: src/differential_operators/abstract_div_mod.f90 \
+$(DOBJ)div_c2_mod.o: src/differential_operators/div_c2_mod.f90 \
+	$(DOBJ)abstract_div_mod.o \
 	$(DOBJ)grid_function_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)partition_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)abstract_div_mod.o: src/differential_operators/abstract_div_mod.f90 \
+	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)domain_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -838,6 +873,23 @@ $(DOBJ)test_cmd_line.o: src/test/test_cmd_line/test_cmd_line.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)test_diffops.o: src/test/test_diff_ops/test_diffops.f90 \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)test_diffops_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)test_diffops_mod.o: src/test/test_diff_ops/test_diffops_mod.f90 \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)domain_factory_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)grid_field_factory_mod.o \
+	$(DOBJ)test_functions_mod.o \
+	$(DOBJ)div_factory_mod.o \
+	$(DOBJ)abstract_div_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)test_halo_main.o: src/test/test_halo/test_halo_main.f90 \
 	$(DOBJ)test_ecs_halo_mod.o \
 	$(DOBJ)test_ecs_halo_c_mod.o \
@@ -853,6 +905,7 @@ $(DOBJ)test_ecs_halo_c_mod.o: src/test/test_halo/test_ecs_halo_c_mod.f90 \
 	$(DOBJ)grid_field_factory_mod.o \
 	$(DOBJ)halo_mod.o \
 	$(DOBJ)halo_factory_mod.o \
+	$(DOBJ)test_functions_mod.o \
 	$(DOBJ)mesh_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@

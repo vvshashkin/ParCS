@@ -1,6 +1,6 @@
 module abstract_div_mod
 
-use grid_function_mod, only : grid_function_t
+use grid_field_mod,    only : grid_field_t
 use domain_mod,        only : domain_t
 
 implicit none
@@ -15,13 +15,13 @@ end type div_operator_t
 
 abstract interface
     subroutine div_calc_procedure(this, div, u, v, domain, multiplier)
-        import div_operator_t, grid_function_t, domain_t
+        import div_operator_t, grid_field_t, domain_t
         class(div_operator_t),  intent(inout) :: this
         type(domain_t),         intent(in)    :: domain
-        type(grid_function_t),  intent(inout) :: u, v
+        type(grid_field_t),     intent(inout) :: u, v
         real(kind=8), optional, intent(in)    :: multiplier
         !out put
-        type(grid_function_t),  intent(inout) :: div
+        type(grid_field_t),     intent(inout) :: div
     end subroutine div_calc_procedure
 end interface
 
