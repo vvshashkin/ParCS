@@ -20,6 +20,9 @@ contains
     procedure, public :: create_similar => create_similar_grid_field
     procedure, public :: algebraic_norm2 => compute_grid_field_algebraic_norm2
     procedure, public :: algebraic_dot   => compute_grid_field_algebraic_dot
+    procedure, public :: maximum => compute_grid_field_maximum
+    procedure, public :: maxabs  => compute_grid_field_maxabs
+    procedure, public :: minimum => compute_grid_field_minimum
     ! procedure, public :: init => grid_field_init
 end type grid_field_t
 
@@ -43,6 +46,9 @@ contains
 
     procedure, public :: algebraic_norm2 => compute_tile_field_algebraic_norm2
     procedure, public :: algebraic_dot => compute_tile_field_algebraic_dot
+    procedure, public :: maximum => compute_tile_field_maximum
+    procedure, public :: maxabs  => compute_tile_field_maxabs
+    procedure, public :: minimum => compute_tile_field_minimum
 end type tile_field_t
 
 contains
@@ -367,4 +373,115 @@ subroutine tile_field_assign_s1(this, scalar1, mesh)
     end do
 
 end subroutine tile_field_assign_s1
+
+function compute_grid_field_maximum(this, mesh, parcomm) result(maximum_value)
+    use parcomm_mod, only : parcomm_t
+    use mpi
+
+    class(grid_field_t), intent(in)  :: this
+    type(mesh_t),        intent(in)  :: mesh
+    type(parcomm_t),     intent(in)  :: parcomm
+    real(kind=8)                     :: maximum_value
+
+    real(kind=8) :: local_max
+    integer(kind=4) :: t
+    integer(kind=4) :: ierr
+
+    local_max = this%tile(mesh%ts)%maximum(mesh%tile(mesh%ts))
+    do t = mesh%ts+1, mesh%te
+        local_max = max(local_max,this%tile(t)%maximum(mesh%tile(t)))
+    end do
+
+    call mpi_allreduce(local_max, maximum_value, 1, mpi_double, mpi_max, parcomm%comm_w, ierr)
+end function compute_grid_field_maximum
+
+function compute_tile_field_maximum(this, mesh) result(maximum_value)
+    use parcomm_mod, only : parcomm_t
+
+    class(tile_field_t), intent(in)  :: this
+    type(tile_mesh_t),   intent(in)  :: mesh
+    real(kind=8)                     :: maximum_value
+
+    integer(kind=4) :: is,ie,js,je,ks,ke
+    is = mesh%is; ie = mesh%ie
+    js = mesh%js; je = mesh%je
+    ks = mesh%ks; ke = mesh%ke
+
+    maximum_value = maxval(this%p(is:ie,js:je,ks:ke))
+
+end function compute_tile_field_maximum
+
+function compute_grid_field_minimum(this, mesh, parcomm) result(minimum_value)
+    use parcomm_mod, only : parcomm_t
+    use mpi
+
+    class(grid_field_t), intent(in)  :: this
+    type(mesh_t),        intent(in)  :: mesh
+    type(parcomm_t),     intent(in)  :: parcomm
+    real(kind=8)                     :: minimum_value
+
+    real(kind=8) :: local_min
+    integer(kind=4) :: t
+    integer(kind=4) :: ierr
+
+    local_min = this%tile(mesh%ts)%minimum(mesh%tile(mesh%ts))
+    do t = mesh%ts+1, mesh%te
+        local_min = max(local_min,this%tile(t)%minimum(mesh%tile(t)))
+    end do
+
+    call mpi_allreduce(local_min, minimum_value, 1, mpi_double, mpi_min, parcomm%comm_w, ierr)
+end function compute_grid_field_minimum
+
+function compute_tile_field_minimum(this, mesh) result(minimum_value)
+    use parcomm_mod, only : parcomm_t
+
+    class(tile_field_t), intent(in)  :: this
+    type(tile_mesh_t),   intent(in)  :: mesh
+    real(kind=8)                     :: minimum_value
+
+    integer(kind=4) :: is,ie,js,je,ks,ke
+    is = mesh%is; ie = mesh%ie
+    js = mesh%js; je = mesh%je
+    ks = mesh%ks; ke = mesh%ke
+
+    minimum_value = minval(this%p(is:ie,js:je,ks:ke))
+
+end function compute_tile_field_minimum
+
+function compute_grid_field_maxabs(this, mesh, parcomm) result(maxabs_value)
+    use parcomm_mod, only : parcomm_t
+    use mpi
+
+    class(grid_field_t), intent(in)  :: this
+    type(mesh_t),        intent(in)  :: mesh
+    type(parcomm_t),     intent(in)  :: parcomm
+    real(kind=8)                     :: maxabs_value
+
+    real(kind=8) :: local_maxabs
+    integer(kind=4) :: t
+    integer(kind=4) :: ierr
+
+    local_maxabs = 0.0_8
+    do t = mesh%ts, mesh%te
+        local_maxabs = max(local_maxabs,this%tile(t)%maxabs(mesh%tile(t)))
+    end do
+
+    call mpi_allreduce(local_maxabs, maxabs_value, 1, mpi_double, mpi_max, parcomm%comm_w, ierr)
+end function compute_grid_field_maxabs
+
+function compute_tile_field_maxabs(this, mesh) result(maxabs_value)
+    use parcomm_mod, only : parcomm_t
+
+    class(tile_field_t), intent(in)  :: this
+    type(tile_mesh_t),   intent(in)  :: mesh
+    real(kind=8)                     :: maxabs_value
+
+    integer(kind=4) :: is,ie,js,je,ks,ke
+    is = mesh%is; ie = mesh%ie
+    js = mesh%js; je = mesh%je
+    ks = mesh%ks; ke = mesh%ke
+
+    maxabs_value = maxval(abs(this%p(is:ie,js:je,ks:ke)))
+
+end function compute_tile_field_maxabs
 end module grid_field_mod
