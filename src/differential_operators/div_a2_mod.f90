@@ -37,18 +37,18 @@ subroutine calc_div_a2(this, div, u, v, domain, multiplier)
     case("cons")
         do t = domain%partition%ts, domain%partition%te
             call calc_div_on_tile_cons(div%tile(t), u%tile(t), v%tile(t), &
-                                       domain%mesh_p%tile(t), domain%partition%Nh, mult_loc)
+                                       domain%mesh_o%tile(t), domain%partition%Nh, mult_loc)
         end do
     case("fv")
         do t = domain%partition%ts, domain%partition%te
             call calc_div_on_tile_fv(div%tile(t), u%tile(t), v%tile(t),            &
-                                     domain%mesh_p%tile(t), domain%mesh_u%tile(t), &
-                                     domain%mesh_v%tile(t),mult_loc)
+                                     domain%mesh_o%tile(t), domain%mesh_x%tile(t), &
+                                     domain%mesh_y%tile(t),mult_loc)
         end do
     case("default")
         do t = domain%partition%ts, domain%partition%te
             call calc_div_on_tile(div%tile(t), u%tile(t), v%tile(t),  &
-                                  domain%mesh_p%tile(t), mult_loc)
+                                  domain%mesh_o%tile(t), mult_loc)
         end do
     case default
         call parcomm_global%abort("div_a2_mod, calc_div_a2, unknown subtype: "// this%subtype)
@@ -121,31 +121,31 @@ subroutine calc_div_on_tile_cons(div, u, v, mesh, nx, multiplier)
 
 end subroutine calc_div_on_tile_cons
 
-subroutine calc_div_on_tile_fv(div, u, v, mesh, mesh_u, mesh_v, multiplier)
+subroutine calc_div_on_tile_fv(div, u, v, mesh_o, mesh_x, mesh_y, multiplier)
 
     use mesh_mod, only : tile_mesh_t
 
     type(tile_field_t),     intent(inout) :: div
     type(tile_field_t),     intent(in)    :: u, v
-    type(tile_mesh_t),      intent(in)    :: mesh, mesh_u, mesh_v
+    type(tile_mesh_t),      intent(in)    :: mesh_o, mesh_x, mesh_y
     real(kind=8),           intent(in)    :: multiplier
 
     real(kind=8)    :: hx, mult_loc
     integer(kind=4) :: ks, ke, js, je, is, ie, i, j, k
 
-    is = mesh%is; ie = mesh%ie
-    js = mesh%js; je = mesh%je
-    ks = mesh%ks; ke = mesh%ke
+    is = mesh_o%is; ie = mesh_o%ie
+    js = mesh_o%js; je = mesh_o%je
+    ks = mesh_o%ks; ke = mesh_o%ke
 
-    hx = mesh%hx
+    hx = mesh_o%hx
     do k = ks, ke
         do j = js, je
             do i = is, ie
-                div%p(i,j,k) = (mesh_u%G(i+1,j)*(u%p(i+1,j,k)+u%p(i,j,k)) -     &
-                                mesh_u%G(i  ,j)*(u%p(i  ,j,k)+u%p(i-1,j,k)) +   &
-                                mesh_v%G(i,j+1)*(v%p(i,j+1,k)+v%p(i,j,k))-      &
-                                mesh_v%G(i,j  )*(v%p(i,j  ,k)+v%p(i,j-1,k))) /  &
-                                (2._8*mesh%G(i,j)*hx)*multiplier
+                div%p(i,j,k) = (mesh_x%G(i+1,j)*(u%p(i+1,j,k)+u%p(i,j,k)) -     &
+                                mesh_x%G(i  ,j)*(u%p(i  ,j,k)+u%p(i-1,j,k)) +   &
+                                mesh_y%G(i,j+1)*(v%p(i,j+1,k)+v%p(i,j,k))-      &
+                                mesh_y%G(i,j  )*(v%p(i,j  ,k)+v%p(i,j-1,k))) /  &
+                                (2._8*mesh_o%G(i,j)*hx)*multiplier
             end do
         end do
     end do
