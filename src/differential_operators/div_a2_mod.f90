@@ -39,6 +39,12 @@ subroutine calc_div_a2(this, div, u, v, domain, multiplier)
             call calc_div_on_tile_cons(div%tile(t), u%tile(t), v%tile(t), &
                                        domain%mesh_p%tile(t), domain%partition%Nh, mult_loc)
         end do
+    case("fv")
+        do t = domain%partition%ts, domain%partition%te
+            call calc_div_on_tile_fv(div%tile(t), u%tile(t), v%tile(t),            &
+                                     domain%mesh_p%tile(t), domain%mesh_u%tile(t), &
+                                     domain%mesh_v%tile(t),mult_loc)
+        end do
     case("default")
         do t = domain%partition%ts, domain%partition%te
             call calc_div_on_tile(div%tile(t), u%tile(t), v%tile(t),  &
@@ -114,5 +120,36 @@ subroutine calc_div_on_tile_cons(div, u, v, mesh, nx, multiplier)
     end do
 
 end subroutine calc_div_on_tile_cons
+
+subroutine calc_div_on_tile_fv(div, u, v, mesh, mesh_u, mesh_v, multiplier)
+
+    use mesh_mod, only : tile_mesh_t
+
+    type(tile_field_t),     intent(inout) :: div
+    type(tile_field_t),     intent(in)    :: u, v
+    type(tile_mesh_t),      intent(in)    :: mesh, mesh_u, mesh_v
+    real(kind=8),           intent(in)    :: multiplier
+
+    real(kind=8)    :: hx, mult_loc
+    integer(kind=4) :: ks, ke, js, je, is, ie, i, j, k
+
+    is = mesh%is; ie = mesh%ie
+    js = mesh%js; je = mesh%je
+    ks = mesh%ks; ke = mesh%ke
+
+    hx = mesh%hx
+    do k = ks, ke
+        do j = js, je
+            do i = is, ie
+                div%p(i,j,k) = (mesh_u%G(i+1,j)*(u%p(i+1,j,k)+u%p(i,j,k)) -     &
+                                mesh_u%G(i  ,j)*(u%p(i  ,j,k)+u%p(i-1,j,k)) +   &
+                                mesh_v%G(i,j+1)*(v%p(i,j+1,k)+v%p(i,j,k))-      &
+                                mesh_v%G(i,j  )*(v%p(i,j  ,k)+v%p(i,j-1,k))) /  &
+                                (2._8*mesh%G(i,j)*hx)*multiplier
+            end do
+        end do
+    end do
+
+end subroutine calc_div_on_tile_fv
 
 end module div_a2_mod

@@ -29,17 +29,16 @@ real(kind=8) function test_div_a2(N) result(err)
     type(domain_t)              :: domain
     class(div_operator_t), allocatable :: div_op
 
-    call create_domain(domain, "cube", 'A', N, nz)
+    call create_domain(domain, "cube", 'C', N, nz)
     call create_grid_field(u, ex_halo_width, 0, domain%mesh_u)
     call create_grid_field(v, ex_halo_width, 0, domain%mesh_v)
     call create_grid_field(div, 0, 0, domain%mesh_p)
     call create_grid_field(div2, 0, 0, domain%mesh_p)
 
-    call set_vector_test_field(u,v,solid_rot, domain%mesh_u, domain%mesh_v, &
+    call set_vector_test_field(u,v,solid_rot, domain%mesh_p, domain%mesh_p, &
                                0, "contravariant")
 
-
-    div_op = create_div_operator(domain, "divergence_a2_cons")
+    div_op = create_div_operator(domain, "divergence_a2_fv")
     call div_op%calc_div(div, u,v,domain)
     call div_op%calc_div(div2,u,v,domain,some_const)
 

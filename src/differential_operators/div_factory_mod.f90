@@ -18,8 +18,9 @@ function create_div_operator(domain, div_operator_name) result(div)
     if(div_operator_name == 'divergence_c2') then
         call parcomm_global%abort("not implemented: "//div_operator_name)
         !div = div_c2_t()
-    elseif(div_operator_name == 'divergence_a2_ecs' .or. &
-           div_operator_name == 'divergence_a2_cons') then
+    elseif(div_operator_name == 'divergence_a2_ecs'  .or. &
+           div_operator_name == 'divergence_a2_cons' .or. &
+           div_operator_name == 'divergence_a2_fv') then
         div = create_div_a2_operator(domain,div_operator_name)
     else
         call parcomm_global%abort("unknown divergence operator: "//div_operator_name)
@@ -43,6 +44,9 @@ function create_div_a2_operator(domain, div_operator_name) result(div)
     else if(div_operator_name == "divergence_a2_cons") then
         call create_vector_halo_procedure(div%halo_procedure,domain,default_halo_width,"A_vec_default")
         div%subtype="cons"
+    else if(div_operator_name == "divergence_a2_fv") then
+        call create_vector_halo_procedure(div%halo_procedure,domain,default_halo_width,"A_vec_default")
+        div%subtype="fv"
     else
         call parcomm_global%abort("div_factory_mod, create_div_a2_operator, "// &
                                   "unknown divergence_a2 operator subtype: "// div_operator_name)
