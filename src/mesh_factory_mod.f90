@@ -7,7 +7,7 @@ implicit none
 
 contains
 
-subroutine create_mesh(mesh, partition, metric, halo_width, staggering_type, points_type)
+subroutine create_mesh(mesh, partition, metric, halo_width, points_type)
 
     use partition_mod, only : partition_t
     use metric_mod,    only : metric_t
@@ -17,7 +17,7 @@ subroutine create_mesh(mesh, partition, metric, halo_width, staggering_type, poi
     type(mesh_t),              intent(out) :: mesh
 
     integer(kind=4),  intent(in)   :: halo_width
-    character(len=*), intent(in)   :: staggering_type, points_type
+    character(len=*), intent(in)   :: points_type
 
     integer(kind=4) :: t, pind, i, j, k, ts, te, is, ie, js, je, ks, ke, nh, nx, ny
     real(kind=8) :: alpha, beta, vec(3)
@@ -33,14 +33,18 @@ subroutine create_mesh(mesh, partition, metric, halo_width, staggering_type, poi
     shift_j = 0.5_8
 
     select case(points_type)
-    case('p')
+    case('c')
         tile => partition%tile
-    case('u')
-        if (staggering_type=='C') shift_i = 0.0_8
-        tile => partition%tile_u
-    case('v')
-        if (staggering_type=='C') shift_j = 0.0_8
-        tile => partition%tile_v
+    case('x')
+        shift_i = 0.0_8
+        tile => partition%tile_x
+    case('y')
+        shift_j = 0.0_8
+        tile => partition%tile_y
+    case('xy')
+        shift_i = 0.0_8
+        shift_j = 0.0_8
+        tile => partition%tile_xy
     case default
         print*, 'Error! Wrong points_type! Abort!'
         stop

@@ -200,7 +200,7 @@ function create_symm_halo_vec_exchange_U_points(partition, parcomm, topology, ha
             halo_width_y = halo_width
 
             !recv part
-            local_tile => partition%tile_u(local_ind)
+            local_tile => partition%tile_x(local_ind)
 
             remote_panel = partition%panel_map(remote_ind)
 
@@ -210,10 +210,10 @@ function create_symm_halo_vec_exchange_U_points(partition, parcomm, topology, ha
 
             if (first_dim_index(snum+1) == 'i') then
             !recv from u points to u points
-                remote_tile => partition%tile_u(remote_ind)
+                remote_tile => partition%tile_x(remote_ind)
             else if (first_dim_index(snum+1) == 'j') then
             !recv from v points to u points
-                remote_tile => partition%tile_v(remote_ind)
+                remote_tile => partition%tile_y(remote_ind)
             end if
 
             call topology%transform_tile_coords(remote_panel, remote_tile,     &
@@ -246,8 +246,8 @@ function create_symm_halo_vec_exchange_U_points(partition, parcomm, topology, ha
                               local_tile, halo_type, send_tile(snum+1), is_intersection)
             else if (first_dim_index(snum+1) == 'j') then
                 !send from v points to u points
-                local_tile  => partition%tile_v(local_ind)
-                remote_tile => partition%tile_u(remote_ind)
+                local_tile  => partition%tile_y(local_ind)
+                remote_tile => partition%tile_x(remote_ind)
                 call topology%transform_tile_coords(remote_panel, remote_tile, &
                                                     local_panel, temp_tile,     &
                                                     partition%nx_v, partition%ny_v)
@@ -350,7 +350,7 @@ function create_symm_halo_vec_exchange_V_points(partition, parcomm, topology, ha
             halo_width_y = halo_width
 
             !recv part
-            local_tile => partition%tile_v(local_ind)
+            local_tile => partition%tile_y(local_ind)
 
             remote_panel = partition%panel_map(remote_ind)
 
@@ -360,10 +360,10 @@ function create_symm_halo_vec_exchange_V_points(partition, parcomm, topology, ha
 
             if (first_dim_index(snum+1) == 'i') then
             !recv from v points to v points
-                remote_tile => partition%tile_v(remote_ind)
+                remote_tile => partition%tile_y(remote_ind)
             else if (first_dim_index(snum+1) == 'j') then
             !recv from u points to v points
-                remote_tile => partition%tile_u(remote_ind)
+                remote_tile => partition%tile_x(remote_ind)
             end if
 
             call topology%transform_tile_coords(remote_panel, remote_tile,     &
@@ -396,8 +396,8 @@ function create_symm_halo_vec_exchange_V_points(partition, parcomm, topology, ha
                               local_tile, halo_type, send_tile(snum+1), is_intersection)
             else if (first_dim_index(snum+1) == 'j') then
                 !send from u points to v points
-                local_tile  => partition%tile_u(local_ind)
-                remote_tile => partition%tile_v(remote_ind)
+                local_tile  => partition%tile_x(local_ind)
+                remote_tile => partition%tile_y(remote_ind)
                 call topology%transform_tile_coords(remote_panel, remote_tile,   &
                                                     local_panel, temp_tile,     &
                                                     partition%nx_u, partition%ny_u)

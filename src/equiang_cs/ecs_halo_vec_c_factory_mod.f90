@@ -49,12 +49,12 @@ subroutine create_ecs_C_vec_halo_procedure(halo_out,domain,halo_width)
     tangential_comp_interp_type = "cubic_lag"
     normal_tang_interp_type = "cubic_lag"
     do t=ts,te
-        is = domain%partition%tile_u(t)%is
-        ie = domain%partition%tile_u(t)%ie
-        js = domain%partition%tile_u(t)%js
-        je = domain%partition%tile_u(t)%je
-        js1 = domain%partition%tile_v(t)%js
-        je1 = domain%partition%tile_v(t)%je
+        is = domain%partition%tile_x(t)%is
+        ie = domain%partition%tile_x(t)%ie
+        js = domain%partition%tile_x(t)%js
+        je = domain%partition%tile_x(t)%je
+        js1 = domain%partition%tile_y(t)%js
+        je1 = domain%partition%tile_y(t)%je
 
         halo%tile(t)%is_left_edge   = (is == 1)
         if(halo%tile(t)%is_left_edge) then
@@ -86,12 +86,12 @@ subroutine create_ecs_C_vec_halo_procedure(halo_out,domain,halo_width)
                                          normal_comp_interp_type,"y","y")
         end if
 
-        is = domain%partition%tile_v(t)%is
-        ie = domain%partition%tile_v(t)%ie
-        js = domain%partition%tile_v(t)%js
-        je = domain%partition%tile_v(t)%je
-        is1 = domain%partition%tile_u(t)%is
-        ie1 = domain%partition%tile_u(t)%ie
+        is = domain%partition%tile_y(t)%is
+        ie = domain%partition%tile_y(t)%ie
+        js = domain%partition%tile_y(t)%js
+        je = domain%partition%tile_y(t)%je
+        is1 = domain%partition%tile_x(t)%is
+        ie1 = domain%partition%tile_x(t)%ie
 
         halo%tile(t)%is_bottom_edge = (js == 1)
         if(halo%tile(t)%is_bottom_edge) then

@@ -4,7 +4,8 @@ use mpi
 implicit none
 
 type, public :: partition_t
-    type(tile_t),    allocatable :: tile(:), tile_u(:), tile_v(:)!array of partition tiles
+    type(tile_t),    allocatable :: tile_c(:), tile_x(:), tile_y(:), tile_xy(:)!array of partition tiles
+    type(tile_t),    allocatable :: tile(:)!, tile_u(:), tile_v(:)!array of partition tiles
     integer(kind=4), allocatable :: proc_map(:) !determine belonging of the tile to the specific processor
     integer(kind=4), allocatable :: panel_map(:)!determine belonging of the tile to the specific panel
     integer(kind=4)              :: Nh, Nz      !number of grid points in x/y, z direction for the one panel
@@ -37,9 +38,13 @@ subroutine init(this, Nh, Nz, num_tiles, myid, Np, staggering_type, strategy)
 
     this%num_panels = num_panels ! need to modify
 
+    allocate(this%tile_c(num_panels*num_tiles))
+    allocate(this%tile_x(num_panels*num_tiles))
+    allocate(this%tile_y(num_panels*num_tiles))
+    allocate(this%tile_xy(num_panels*num_tiles))
     allocate(this%tile(num_panels*num_tiles))
-    allocate(this%tile_u(num_panels*num_tiles))
-    allocate(this%tile_v(num_panels*num_tiles))
+    !allocate(this%tile_u(num_panels*num_tiles))
+    !allocate(this%tile_v(num_panels*num_tiles))
     allocate(this%proc_map(num_panels*num_tiles))
     allocate(this%panel_map(num_panels*num_tiles))
     this%num_tiles = num_tiles
@@ -64,27 +69,35 @@ subroutine init(this, Nh, Nz, num_tiles, myid, Np, staggering_type, strategy)
     this%ts = findloc(this%proc_map, myid, dim=1)
     this%te = findloc(this%proc_map, myid, back = .true., dim=1)
 
+    do t=1, this%num_panels*this%num_tiles
+        this%tile_c(t) = this%tile(t)
+        this%tile_x(t) = this%tile(t)
+        if(this%tile(t)%ie == nh) this%tile_x(t)%ie = this%nh+1
+        this%tile_y(t) = this%tile(t)
+        if(this%tile(t)%je == nh) this%tile_y(t)%je = this%nh+1
+        this%tile_xy(t) = this%tile(t)
+        if(this%tile(t)%je == nh) this%tile_xy(t)%je = this%nh+1
+        if(this%tile(t)%je == nh) this%tile_xy(t)%je = this%nh+1
+    end do
 
     if (staggering_type == 'A') then
         this%nx_u = this%nh
         this%ny_u = this%nh
         this%nx_v = this%nh
         this%ny_v = this%nh
-    do t = 1, this%num_panels*this%num_tiles
-        this%tile_u(t) = this%tile(t)
-        this%tile_v(t) = this%tile(t)
-    end do
+    !    do t = 1, this%num_panels*this%num_tiles
+    !        this%tile_u(t) = this%tile_c(t)
+    !        this%tile_v(t) = this%tile_c(t)
+    !    end do
     else if (staggering_type == 'C') then
         this%nx_u = this%nh+1
         this%ny_u = this%nh
         this%nx_v = this%nh
         this%ny_v = this%nh+1
-        do t = 1, this%num_panels*this%num_tiles
-            this%tile_u(t) = this%tile(t)
-            this%tile_v(t) = this%tile(t)
-            if (this%tile_u(t)%ie == this%nh) this%tile_u(t)%ie = this%nx_u
-            if (this%tile_v(t)%je == this%nh) this%tile_v(t)%je = this%ny_v
-        end do
+    !    do t = 1, this%num_panels*this%num_tiles
+    !        this%tile_u(t) = this%tile_x(t)
+    !        this%tile_v(t) = this%tile_y(t)
+    !    end do
     else
         print*, 'Unknown staggering_type in partition initialization. Stop'
         stop
