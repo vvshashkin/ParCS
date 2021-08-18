@@ -409,6 +409,7 @@ $(DOBJ)div_a2_mod.o: src/differential_operators/div_a2_mod.f90 \
 	$(DOBJ)abstract_div_mod.o \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)halo_mod.o \
+	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)mesh_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@

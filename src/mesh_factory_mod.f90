@@ -55,6 +55,8 @@ subroutine create_mesh(mesh, partition, metric, halo_width, staggering_type, poi
 
     mesh%scale = metric%scale
 
+    nh = partition%nh
+
     do t = ts, te
 
         ks = tile(t)%ks; ke = tile(t)%ke
@@ -62,7 +64,8 @@ subroutine create_mesh(mesh, partition, metric, halo_width, staggering_type, poi
         is = tile(t)%is; ie = tile(t)%ie;
         pind = partition%panel_map(t)
 
-        nh = partition%nh
+        mesh%tile(t)%nx = nh
+        mesh%tile(t)%ny = nh    
 
         call mesh%tile(t)%init(is, ie, js, je, ks, ke, halo_width)
 
