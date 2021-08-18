@@ -10,13 +10,13 @@ real(kind=8) :: err
 
 call init_global_parallel_enviroment()
 
-err = test_div_a2(N=64)
+err = test_div_a2(N=32)
 print *, "Err: ", err
 
-err = test_grad_a2(N=32)
+err = test_grad_a2(N=64)
 print *, "Err: ", err
 
-call test_laplace_spectre("divergence_a2_ecs", "gradient_a2_ecs","A")
+call test_laplace_spectre("divergence_a2_cons", "gradient_a2_cons","A")
 
 call deinit_global_parallel_enviroment()
 

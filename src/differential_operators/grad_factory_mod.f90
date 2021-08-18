@@ -17,8 +17,9 @@ function create_grad_operator(domain, grad_operator_name) result(grad)
     if(grad_operator_name == 'gradient_c2') then
        ! grad = create_grad_contra_c2_operator(mesh,partition,grad_operator_name)
         call parcomm_global%abort("not implemented "//grad_operator_name)
-    else if(grad_operator_name == 'gradient_a2_ecs') then
-        grad = create_grad_contra_a2_ecs_operator(domain)
+    else if(grad_operator_name == 'gradient_a2_ecs' .or. &
+            grad_operator_name == 'gradient_a2_cons') then
+        grad = create_grad_contra_a2_operator(domain,grad_operator_name)
     else
         call parcomm_global%abort("unknown gradient operator: "//grad_operator_name)
     end if
@@ -59,19 +60,27 @@ end
 
 ! end function create_grad_contra_c2_operator
 
-function create_grad_contra_a2_ecs_operator(domain) result(grad)
+function create_grad_contra_a2_operator(domain, grad_operator_name) result(grad)
 
     use grad_contra_a2_mod, only : grad_contra_a2_t
     use halo_factory_mod,   only : create_halo_procedure
 
-    type(domain_t), intent(in)    :: domain
+    type(domain_t),   intent(in)  :: domain
+    character(len=*), intent(in)  :: grad_operator_name
     type(grad_contra_a2_t) :: grad
 
-    integer(kind=4), parameter :: halo_width=2
+    integer(kind=4), parameter :: ecs_halo_width=2, default_halo_width=1
 
     grad = grad_contra_a2_t()
-    call create_halo_procedure(grad%halo_procedure,domain,halo_width,"ECS_O")
+    if(grad_operator_name=="gradient_a2_ecs") then
+        call create_halo_procedure(grad%halo_procedure,domain,ecs_halo_width,"ECS_O")
+    else if(grad_operator_name=="gradient_a2_cons") then
+        call create_halo_procedure(grad%halo_procedure,domain,default_halo_width,"A_default")
+    else
+        call parcomm_global%abort("grad_factory_mod, create_grad_contra_a2_operator "//&
+                                  "unknown gradient_a2 subtype: "// grad_operator_name)
+    end if
 
-end function create_grad_contra_a2_ecs_operator
+end function create_grad_contra_a2_operator
 
 end module grad_factory_mod

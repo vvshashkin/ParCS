@@ -39,7 +39,7 @@ real(kind=8) function test_div_a2(N) result(err)
                                0, "contravariant")
 
 
-    div_op = create_div_operator(domain, "divergence_a2_ecs")
+    div_op = create_div_operator(domain, "divergence_a2_cons")
     call div_op%calc_div(div, u,v,domain)
     call div_op%calc_div(div2,u,v,domain,some_const)
 
@@ -94,6 +94,7 @@ real(kind=8) function test_grad_a2(N) result(err)
     call gx%update(-1.0_8,gx_true,domain%mesh_u)
     call gy%update(-1.0_8,gy_true,domain%mesh_v)
     err = gx%maxabs(domain%mesh_p,domain%parcomm)+gy%maxabs(domain%mesh_p,domain%parcomm)
+
 end function test_grad_a2
 
 subroutine test_laplace_spectre(div_operator_name, grad_operator_name, staggering)
@@ -105,7 +106,7 @@ subroutine test_laplace_spectre(div_operator_name, grad_operator_name, staggerin
 
     character(len=*), intent(in) :: div_operator_name, grad_operator_name, staggering
 
-    integer(kind=4), parameter  :: nz = 1, nh = 18
+    integer(kind=4), parameter  :: nz = 1, nh = 12
     integer(kind=4), parameter  :: ex_halo_width = 8
     type(grid_field_t)          :: f, gx, gy, lap
     type(domain_t)              :: domain
@@ -168,7 +169,6 @@ subroutine test_laplace_spectre(div_operator_name, grad_operator_name, staggerin
         end do
     end do
 
-    !print *, "lap matrix max", maxval(lapM)
     call eigvals(lapM,npts)
 end subroutine test_laplace_spectre
 
@@ -193,37 +193,6 @@ subroutine eigvals(H,M)
     call rg(M,M,H,WR,WI,1,P,IA,FV,ierr)
 
     print *, "eig", maxval(wr), minval(wr), maxval(wi), minval(wi)
-    ! do while(j<=M)
-    !     if(abs(wi(j))<1d-15) then
-    !         PP(1:M,j) = P(1:M,j)
-    !         eval(j) = wr(j)+im*wi(j)
-    !         j = j+1
-    !     else
-    !         PP(1:M,j)   = P(1:M,j)+im*P(1:M,j+1)
-    !         PP(1:M,j+1) = P(1:M,j)-im*P(1:M,j+1)
-    !         eval(j) = wr(j)+im*wi(j)
-    !         eval(j+1) = wr(j)-im*wi(j)
-    !         j = j+2
-    !     end if
-    ! end do
-    ! do j=1, M
-    !     if(abs(eval(j))> zeps) then
-    !         !eval(j) = (exp(eval(j)*dt)-1._8)/(eval(j)*dt)
-    !         eval(j) = exp(eval(j)*dt)
-    !     else
-    !         eval(j) = 1._8
-    !     end if
-    ! end do
-
-    ! P1 = PP
-    ! CALL ZGECO(P1,M,M,IPVT,RCOND,ZWK)
-    ! CALL ZGEDI(P1,M,M,IPVT,ZDET,ZWK,11)
-
-    ! do j=1,M
-    !   do i=1,M
-    !     expH(i,j) = real(sum(PP(i,:)*eval(:)*P1(:,j)))
-    !   end do
-    ! end do
 
 end subroutine eigvals
 
