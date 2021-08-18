@@ -191,7 +191,11 @@ subroutine eigvals(H,M)
 
     call rg(M,M,H,WR,WI,1,P,IA,FV,ierr)
 
-    print *, "eig", maxval(wr), minval(wr), maxval(wi), minval(wi)
+    print *, "Eigvals"
+    print *, "max real", maxval(wr)
+    print *, "min real", minval(wr)
+    print *, "max imag", maxval(wi)
+    print *, "min imag", minval(wi)
 
 end subroutine eigvals
 

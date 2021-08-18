@@ -83,6 +83,13 @@ $(DEXE)TEST_DIFFOPS: $(MKDIRS) $(DOBJ)test_diffops.o \
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_DIFFOPS
+$(DEXE)TEST_LAPLACE_SPECTRE: $(MKDIRS) $(DOBJ)test_laplace_spectre.o \
+	$(DOBJ)avost.o \
+	$(DOBJ)auxhs.o
+	@rm -f $(filter-out $(DOBJ)test_laplace_spectre.o,$(EXESOBJ))
+	@echo $(LITEXT)
+	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
+EXES := $(EXES) TEST_LAPLACE_SPECTRE
 $(DEXE)TEST_HALO_MAIN: $(MKDIRS) $(DOBJ)test_halo_main.o \
 	$(DOBJ)avost.o \
 	$(DOBJ)auxhs.o
@@ -222,7 +229,8 @@ $(DOBJ)exchange_abstract_mod.o: src/parallel/exchange_abstract_mod.f90 \
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)partition_mod.o: src/parallel/partition_mod.f90 \
-	$(DOBJ)tile_mod.o
+	$(DOBJ)tile_mod.o \
+	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -909,6 +917,13 @@ $(DOBJ)test_diffops_mod.o: src/test/test_diff_ops/test_diffops_mod.f90 \
 	$(DOBJ)abstract_div_mod.o \
 	$(DOBJ)grad_factory_mod.o \
 	$(DOBJ)abstract_grad_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)test_laplace_spectre.o: src/test/test_diff_ops/test_laplace_spectre.f90 \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)test_diffops_mod.o \
+	$(DOBJ)cmd_args_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
