@@ -127,6 +127,125 @@ function create_symm_halo_exchange_A(partition, parcomm, topology, halo_width, h
 
 end function create_symm_halo_exchange_A
 
+function create_symm_halo_exchange_D(partition, parcomm, topology, halo_width, halo_type) result(exchange)
+
+    use exchange_halo_mod, only : exchange_2D_halo_t
+
+    type(partition_t), target, intent(in)    :: partition
+    class(topology_t), intent(in) :: topology
+    integer(kind=4),   intent(in) :: halo_width
+    character(*),      intent(in) :: halo_type
+    type(parcomm_t),   intent(in) :: parcomm
+
+    type(exchange_2D_halo_t) :: exchange
+
+    type(tile_t), pointer :: local_tile, remote_tile
+
+    type(tile_t),     dimension((partition%num_panels*partition%num_tiles)**2) :: &
+                      send_tile, recv_tile
+    integer(kind=4),  dimension((partition%num_panels*partition%num_tiles)**2) :: &
+                      send_to_proc_id, recv_from_proc_id   , &
+                      recv_to_tile_ind , &
+                      send_from_tile_ind, &
+                      send_tag, recv_tag
+    integer(kind=4),  dimension((partition%num_panels*partition%num_tiles)**2) :: &
+                      send_pts_num, recv_pts_num
+    integer(kind=4),  dimension((partition%num_panels*partition%num_tiles)**2) :: &
+                      send_i_step, send_j_step
+    character(len=1), dimension((partition%num_panels*partition%num_tiles)**2) :: &
+                      first_dim_index
+
+    type(tile_t) :: temp_tile, halo_tile
+
+    integer(kind=4) :: local_ind, remote_ind, exch_num, ind,ts ,te, rnum, snum
+    integer(kind=4) :: local_panel, remote_panel
+    logical :: is_intersection
+
+    if (halo_width > partition%Nh) then
+        write(*,*) 'Error! Halo is too wide! Abort!'
+        stop
+    end if
+
+    rnum = 0
+    snum = 0
+
+    do local_ind = 1, partition%num_panels*partition%num_tiles
+
+        if (partition%proc_map(local_ind) /= parcomm%myid) cycle
+
+        local_tile => partition%tile_xy(local_ind)
+        local_panel = partition%panel_map(local_ind)
+
+        do remote_ind = 1, partition%num_panels*partition%num_tiles
+
+            if (remote_ind == local_ind) cycle
+
+            remote_tile => partition%tile_xy(remote_ind)
+            remote_panel = partition%panel_map(remote_ind)
+
+            call topology%transform_tile_coords(remote_panel, remote_tile, &
+                                                local_panel,  temp_tile,   &
+                                                partition%nh+1, partition%nh+1)
+
+            !recv exchange
+            call find_tiles_halo_intersection(local_tile, halo_width, halo_width, &
+                          temp_tile, halo_type, recv_tile(rnum+1), is_intersection)
+
+            if (is_intersection) then
+                rnum = rnum + 1
+
+                recv_to_tile_ind(rnum) = local_ind
+                recv_pts_num(rnum) = recv_tile(rnum)%get_points_num()
+                recv_from_proc_id(rnum) = partition%proc_map(remote_ind)
+                recv_tag(rnum) = partition%num_panels*partition%num_tiles*(remote_ind-1) + local_ind
+            end if
+
+            !send exchange
+            call topology%find_basis_orientation(remote_panel, local_panel, &
+                                                  send_i_step(snum+1), send_j_step(snum+1), &
+                                                  first_dim_index(snum+1))
+            call find_tiles_halo_intersection(temp_tile, halo_width, halo_width, &
+                        local_tile, halo_type, send_tile(snum+1), is_intersection)
+
+            if (is_intersection) then
+                snum = snum + 1
+                send_from_tile_ind(snum) = local_ind
+                send_pts_num(snum) = send_tile(snum)%get_points_num()
+                send_to_proc_id(snum) = partition%proc_map(remote_ind)
+                send_tag(snum) = partition%num_panels*partition%num_tiles*(local_ind-1) + remote_ind
+            end if
+        end do
+    end do
+
+    exchange%send_tile          = send_tile(1:snum)
+    exchange%send_points_num    = send_pts_num(1:snum)
+    exchange%send_from_tile_ind = send_from_tile_ind(1:snum)
+    exchange%send_to_proc_id    = send_to_proc_id(1:snum)
+    exchange%send_tag           = send_tag(1:snum)
+    exchange%send_i_step        = send_i_step(1:snum)
+    exchange%send_j_step        = send_j_step(1:snum)
+    exchange%first_dim_index    = first_dim_index(1:snum)
+    exchange%send_number        = snum
+    exchange%recv_tile          = recv_tile(1:rnum)
+    exchange%recv_to_tile_ind   = recv_to_tile_ind(1:rnum)
+    exchange%recv_from_proc_id  = recv_from_proc_id(1:rnum)
+    exchange%recv_points_num    = recv_pts_num(1:rnum)
+    exchange%recv_tag           = recv_tag(1:rnum)
+    exchange%recv_number        = rnum
+
+    allocate(exchange%send_buff(snum)   , exchange%recv_buff(rnum)   )
+    allocate(exchange%mpi_send_req(snum), exchange%mpi_recv_req(rnum))
+
+    ! points num multiplied by 2 for vec excahnges
+    do ind = 1, rnum
+        call exchange%recv_buff(ind)%init(2*recv_pts_num(ind))
+    end do
+    do ind = 1, snum
+        call exchange%send_buff(ind)%init(2*send_pts_num(ind))
+    end do
+
+end function create_symm_halo_exchange_D
+
 function create_symmetric_halo_vec_exchange_C(partition, parcomm, topology, halo_width, halo_type) result(exchange)
 
     use exchange_halo_C_mod, only : exchange_2D_halo_C_t

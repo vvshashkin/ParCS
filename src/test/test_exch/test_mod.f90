@@ -167,6 +167,43 @@ subroutine test_A_halo_exchange()
 #undef __fun2
 
 end subroutine test_A_halo_exchange
+
+subroutine test_D_halo_exchange()
+
+    use mpi
+
+    use domain_mod,             only : domain_t
+    use domain_factory_mod,     only : create_domain
+    use exchange_abstract_mod,  only : exchange_t
+    use exchange_halo_mod,      only : exchange_2D_halo_t
+    use partition_mod,          only : partition_t
+    use exchange_factory_mod,   only : create_symm_halo_exchange_D
+    use test_fields_mod,        only : set_vector_test_field, set_scalar_test_field, &
+                                       xyz_f => xyz_scalar_field_generator
+
+    type(domain_t) :: domain
+
+    class(exchange_t), allocatable     :: exch_halo
+    type(grid_field_t)                 :: f, u, v
+    integer(kind=4)                    :: nh=100, nz=10, halo_width=50
+    integer(kind=4)                    :: ierr, code
+
+    call create_domain(domain, "cube", 'A', nh, nz)
+    call domain%parcomm%print('Running D-grid halo exchange test!')
+    exch_halo = create_symm_halo_exchange_D( &
+                    domain%partition, domain%parcomm, domain%topology,  halo_width, 'full')
+
+    call create_grid_field(f, halo_width, 0, domain%mesh_xy)
+    call set_scalar_test_field(f,xyz_f,domain%mesh_xy,0)
+
+    call exch_halo%do(f, domain%parcomm)
+
+    print *, f%tile(1)%p(101,1,1)
+    print *, f%tile(1)%p(101,0,1)
+    print *, f%tile(1)%p(102,1,1)
+    
+end subroutine test_D_halo_exchange
+
 subroutine test_halo_vec_C_exchange()
 
     use mpi

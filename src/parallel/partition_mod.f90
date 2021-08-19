@@ -72,7 +72,7 @@ subroutine init(this, Nh, Nz, num_tiles, myid, Np, staggering_type, strategy)
         this%tile_y(t) = this%tile(t)
         if(this%tile(t)%je == nh) this%tile_y(t)%je = this%nh+1
         this%tile_xy(t) = this%tile(t)
-        if(this%tile(t)%je == nh) this%tile_xy(t)%je = this%nh+1
+        if(this%tile(t)%ie == nh) this%tile_xy(t)%ie = this%nh+1
         if(this%tile(t)%je == nh) this%tile_xy(t)%je = this%nh+1
     end do
 
