@@ -8,14 +8,23 @@ use parcomm_mod,            only : parcomm_global
 
 implicit none
 
+type string_t
+    character(:), allocatable :: str
+end type string_t
+
+type err_container_t
+    type(string_t), allocatable :: keys(:)
+    real(kind=8),   allocatable :: values(:)
+end type err_container_t
+
 private
-public :: test_div_a2, test_div_d2, test_grad_a2, test_laplace_spectre
+public :: err_container_t, test_div, test_div_d2, test_grad_a2, test_laplace_spectre
 
 real(kind=8), parameter :: some_const = 12.34567_8
 
 contains
 
-real(kind=8) function test_div_a2(N) result(err)
+type(err_container_t) function test_div(N,div_oper_name,staggering) result(errs)
 
     use test_fields_mod,  only : set_vector_test_field, set_scalar_test_field, &
                                  solid_rot=>solid_rotation_field_generator, &
@@ -24,7 +33,8 @@ real(kind=8) function test_div_a2(N) result(err)
     use div_factory_mod,  only : create_div_operator
     use abstract_div_mod, only : div_operator_t
 
-    integer(kind=4), intent(in) :: N
+    integer(kind=4),  intent(in) :: N
+    character(len=*), intent(in) :: div_oper_name, staggering
     !locals:
     integer(kind=4), parameter  :: nz = 3
     integer(kind=4), parameter  :: ex_halo_width = 8
@@ -32,7 +42,7 @@ real(kind=8) function test_div_a2(N) result(err)
     type(domain_t)              :: domain
     class(div_operator_t), allocatable :: div_op
 
-    call create_domain(domain, "cube", 'A', N, nz)
+    call create_domain(domain, "cube", staggering, N, nz)
     call create_grid_field(u, ex_halo_width, 0, domain%mesh_u)
     call create_grid_field(v, ex_halo_width, 0, domain%mesh_v)
     call create_grid_field(div, 0, 0, domain%mesh_p)
@@ -42,7 +52,8 @@ real(kind=8) function test_div_a2(N) result(err)
     call set_vector_test_field(u,v,solid_rot, domain%mesh_u, domain%mesh_v, &
                                0, "contravariant")
 
-    div_op = create_div_operator(domain, "divergence_a2_ecs")
+    div_op = create_div_operator(domain, div_oper_name)
+
     call div_op%calc_div(div, u,v,domain)
     call div_op%calc_div(div2,u,v,domain,some_const)
 
@@ -51,7 +62,14 @@ real(kind=8) function test_div_a2(N) result(err)
         call parcomm_global%abort("div_a2 test, wrong multiplier interface. Test failed!")
     end if
 
-    err = div%maxabs(domain%mesh_p,domain%parcomm)
+    allocate(errs%keys(4), errs%values(4))
+    errs%keys(1)%str = "solid rotation linf"
+    errs%keys(2)%str = "solid rotation l2"
+    errs%keys(3)%str = "cross polar linf"
+    errs%keys(4)%str = "cross polar l2"
+
+    errs%values(1) = div%maxabs(domain%mesh_p,domain%parcomm)
+    errs%values(2) = div%algebraic_norm2(domain%mesh_p,domain%parcomm)/real(N,8)
 
     call set_vector_test_field(u,v,cross_polar, domain%mesh_u, domain%mesh_v, &
                                0, "contravariant")
@@ -59,9 +77,10 @@ real(kind=8) function test_div_a2(N) result(err)
     call div_op%calc_div(div, u,v,domain)
     call div%update(-1.0_8,div_true,domain%mesh_p)
 
-    err = div%maxabs(domain%mesh_p,domain%parcomm)
+    errs%values(3) = div%maxabs(domain%mesh_p,domain%parcomm)
+    errs%values(4) = div%algebraic_norm2(domain%mesh_p,domain%parcomm)/real(N,8)
 
-end function test_div_a2
+end function test_div
 
 real(kind=8) function test_div_d2(N) result(err)
 
