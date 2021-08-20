@@ -9,6 +9,7 @@ public :: set_scalar_test_field, set_vector_test_field
 public :: xyz_scalar_field_generator_t, xyz_scalar_field_generator
 public :: solid_rotation_field_generator_t, solid_rotation_field_generator
 public :: xyz_grad_generator_t, xyz_grad_generator
+public :: cross_polar_flow_generator_t, cross_polar_flow_generator
 
 !!!!!!!!!!!!!Abstract scalar and vector fields generators
 type, public, abstract :: scalar_field_generator_t
@@ -37,10 +38,16 @@ contains
 procedure :: get_vector_field => generate_xyz_grad_field
 end type xyz_grad_generator_t
 
+type, extends(vector_field_generator_t) :: cross_polar_flow_generator_t
+contains
+procedure :: get_vector_field => generate_cross_polar_flow
+end type cross_polar_flow_generator_t
+
 !!!field generator instances
 type(xyz_scalar_field_generator_t)     :: xyz_scalar_field_generator
 type(solid_rotation_field_generator_t) :: solid_rotation_field_generator
 type(xyz_grad_generator_t)             :: xyz_grad_generator
+type(cross_polar_flow_generator_t)     :: cross_polar_flow_generator
 
 abstract interface
     subroutine get_scalar_field(this,f,npts,nlev,x,y,z)
@@ -66,12 +73,12 @@ subroutine set_scalar_test_field(f, generator, mesh, halo_width, fill_value)
     class(scalar_field_generator_t), intent(in)    :: generator
     type(mesh_t),                    intent(in)    :: mesh
     integer(kind=4),                 intent(in)    :: halo_width
-    real(kind=8),          optional, intent(in)    :: fill_value 
+    real(kind=8),          optional, intent(in)    :: fill_value
 
     !locals
     integer(kind=4) t, isv, iev, jsv, jev, npoints, klev
     real(kind=8), allocatable :: p(:,:,:)
-    real(kind=8), dimension(:,:), allocatable :: px, py, pz 
+    real(kind=8), dimension(:,:), allocatable :: px, py, pz
 
     do t = mesh%ts, mesh%te
         isv = mesh%tile(t)%is-halo_width
@@ -98,12 +105,12 @@ subroutine set_vector_test_field(u, v, generator, mesh_u, mesh_v, halo_width, co
     use parcomm_mod, only : parcomm_global
 
     type(grid_field_t),              intent(inout) :: u, v
-    class(vector_field_generator_t), intent(in)    :: generator    
+    class(vector_field_generator_t), intent(in)    :: generator
     type(mesh_t),                    intent(in)    :: mesh_u, mesh_v
     integer(kind=4),                 intent(in)    :: halo_width
     character(len=*),                intent(in)    :: components_type
     real(kind=8),          optional, intent(in)    :: fill_value
-    
+
     !locals
     integer(kind=4) :: t
 
@@ -132,20 +139,20 @@ subroutine set_vector_test_field_1tile_1comp(u,generator,mesh,bvec,halo_width,fi
     use mesh_mod,       only : tile_mesh_t
 
     type(tile_field_t),              intent(inout) :: u
-    class(vector_field_generator_t), intent(in)    :: generator    
+    class(vector_field_generator_t), intent(in)    :: generator
     type(tile_mesh_t),               intent(in)    :: mesh
     real(kind=8),                    intent(in)    :: bvec(1:3,mesh%is-mesh%halo_width:mesh%ie+mesh%halo_width, &
                                                                mesh%js-mesh%halo_width:mesh%je+mesh%halo_width)
     integer(kind=4),                 intent(in)    :: halo_width
     real(kind=8),          optional, intent(in)    :: fill_value
-    
+
     !locals
     integer(kind=4) :: isv, iev, jsv, jev, i, j, k, k1, klev, npoints
     real(kind=8), dimension(:,:,:), allocatable ::  vx, vy, vz
     real(kind=8), dimension(:,:), allocatable   :: px, py, pz
 
     if(present(fill_value)) u%p(:,:,:) = fill_value
-    
+
     isv = mesh%is-halo_width
     iev = mesh%ie+halo_width
     jsv = mesh%js-halo_width
@@ -220,7 +227,7 @@ subroutine generate_xyz_grad_field(this,vx,vy,vz,npts,nlev,x,y,z)
     real(kind=8),       dimension(npts,nlev), intent(out) :: vx, vy, vz
 
     integer(kind=4) :: i, k, k1
-    real(kind=8)    :: e(3,3) = reshape([1.0_8, 0.0_8, 0.0_8,  & ! level1: f=x, 
+    real(kind=8)    :: e(3,3) = reshape([1.0_8, 0.0_8, 0.0_8,  & ! level1: f=x,
                                          0.0_8, 1.0_8, 0.0_8,  & ! level2: f=y
                                          0.0_8, 0.0_8, 1.0_8],[3,3]) !level 3: f=z
     !(nabla)_h f = (nabla)_3d f- n *(n, nabla_3d f)
@@ -241,5 +248,43 @@ subroutine generate_xyz_grad_field(this,vx,vy,vz,npts,nlev,x,y,z)
         end do
     end do
 end subroutine generate_xyz_grad_field
+
+subroutine generate_cross_polar_flow(this,vx,vy,vz,npts,nlev,x,y,z)
+    use latlon_functions_mod, only : sin_phi, cos_phi, sin_lam, cos_lam
+
+    class(cross_polar_flow_generator_t),      intent(in)  :: this
+    integer(kind=4),                          intent(in)  :: npts, nlev
+    real(kind=8),       dimension(npts),      intent(in)  :: x, y, z
+    real(kind=8),       dimension(npts,nlev), intent(out) :: vx, vy, vz
+
+    integer(kind=4) :: i, k, k1
+    integer(kind=4) :: k3
+    real(kind=8)    :: x1, y1, z1
+    real(kind=8)    :: cphi, sphi, clam, slam
+    real(kind=8)    :: u, v
+    real(kind=8)    :: M(3,3) = reshape([1.0_8, 0.0_8, 0.0_8,  & !rotation matrix
+                                         0.0_8, 1.0_8, 0.0_8,  &
+                                         0.0_8, 0.0_8, 1.0_8],[3,3])
+
+    k3(k) = mod(k-1,3)+1
+
+    do k = 1, nlev
+        do i=1, npts
+            !permutate coordinates k=1: (x,y,z), k=2: (y,z,x), k=3: (z,x,y)
+            x1 = sum(M(1:3,k3(k))  *[x(i),y(i),z(i)])
+            y1 = sum(M(1:3,k3(k+1))*[x(i),y(i),z(i)])
+            z1 = sum(M(1:3,k3(k+2))*[x(i),y(i),z(i)])
+            cphi = cos_phi(x1,y1,z1)
+            sphi = sin_phi(x1,y1,z1)
+            clam = cos_lam(x1,y1,z1)
+            slam = sin_lam(x1,y1,z1)
+            u = sphi*(sphi**2-3.0_8*cphi**2)*slam-0.5_8*cphi
+            v = sphi**2*cphi
+            vx(i,k) =-cphi*slam*u-sphi*clam*v
+            vy(i,k) = cphi*clam*u-sphi*slam*v
+            vz(i,k) = cphi*v
+        end do
+    end do
+end subroutine generate_cross_polar_flow
 
 end module test_fields_mod
