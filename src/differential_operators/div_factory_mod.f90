@@ -22,6 +22,8 @@ function create_div_operator(domain, div_operator_name) result(div)
            div_operator_name == 'divergence_a2_cons' .or. &
            div_operator_name == 'divergence_a2_fv') then
         div = create_div_a2_operator(domain,div_operator_name)
+    elseif(div_operator_name == 'divergence_d2') then
+        div = create_div_d2_operator(domain)
     else
         call parcomm_global%abort("unknown divergence operator: "//div_operator_name)
     end if
@@ -51,7 +53,23 @@ function create_div_a2_operator(domain, div_operator_name) result(div)
         call parcomm_global%abort("div_factory_mod, create_div_a2_operator, "// &
                                   "unknown divergence_a2 operator subtype: "// div_operator_name)
     end if
-    
+
 end function create_div_a2_operator
+
+function create_div_d2_operator(domain) result(div)
+
+    use div_d2_mod,           only : div_d2_t
+    !use halo_factory_mod,     only : create_vector_halo_procedure
+    use exchange_factory_mod, only : create_symm_halo_exchange_D
+
+    type(domain_t),   intent(in)  :: domain
+    type(div_d2_t) :: div
+
+    integer(kind=4), parameter :: halo_width=2
+
+    div%exch_halo = create_symm_halo_exchange_D( &
+                    domain%partition, domain%parcomm, domain%topology,  halo_width, 'full')
+
+end function create_div_d2_operator
 
 end module div_factory_mod

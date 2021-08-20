@@ -4,12 +4,12 @@ use domain_mod,             only : domain_t
 use domain_factory_mod,     only : create_domain
 use grid_field_mod,         only : grid_field_t
 use grid_field_factory_mod, only : create_grid_field
-use parcomm_mod,            only : parcomm_global 
-    
+use parcomm_mod,            only : parcomm_global
+
 implicit none
 
 private
-public :: test_div_a2, test_grad_a2, test_laplace_spectre
+public :: test_div_a2, test_div_d2, test_grad_a2, test_laplace_spectre
 
 real(kind=8), parameter :: some_const = 12.34567_8
 
@@ -17,7 +17,10 @@ contains
 
 real(kind=8) function test_div_a2(N) result(err)
 
-    use test_fields_mod,  only : set_vector_test_field, solid_rot=>solid_rotation_field_generator
+    use test_fields_mod,  only : set_vector_test_field, set_scalar_test_field, &
+                                 solid_rot=>solid_rotation_field_generator, &
+                                 cross_polar=>cross_polar_flow_generator, &
+                                 cross_polar_div=>cross_polar_flow_div_generator
     use div_factory_mod,  only : create_div_operator
     use abstract_div_mod, only : div_operator_t
 
@@ -25,20 +28,21 @@ real(kind=8) function test_div_a2(N) result(err)
     !locals:
     integer(kind=4), parameter  :: nz = 3
     integer(kind=4), parameter  :: ex_halo_width = 8
-    type(grid_field_t)          :: u, v, div, div2
+    type(grid_field_t)          :: u, v, div, div2, div_true
     type(domain_t)              :: domain
     class(div_operator_t), allocatable :: div_op
 
-    call create_domain(domain, "cube", 'C', N, nz)
+    call create_domain(domain, "cube", 'A', N, nz)
     call create_grid_field(u, ex_halo_width, 0, domain%mesh_u)
     call create_grid_field(v, ex_halo_width, 0, domain%mesh_v)
     call create_grid_field(div, 0, 0, domain%mesh_p)
     call create_grid_field(div2, 0, 0, domain%mesh_p)
+    call create_grid_field(div_true, 0, 0, domain%mesh_p)
 
-    call set_vector_test_field(u,v,solid_rot, domain%mesh_p, domain%mesh_p, &
+    call set_vector_test_field(u,v,solid_rot, domain%mesh_u, domain%mesh_v, &
                                0, "contravariant")
 
-    div_op = create_div_operator(domain, "divergence_a2_fv")
+    div_op = create_div_operator(domain, "divergence_a2_ecs")
     call div_op%calc_div(div, u,v,domain)
     call div_op%calc_div(div2,u,v,domain,some_const)
 
@@ -48,7 +52,53 @@ real(kind=8) function test_div_a2(N) result(err)
     end if
 
     err = div%maxabs(domain%mesh_p,domain%parcomm)
+
+    call set_vector_test_field(u,v,cross_polar, domain%mesh_u, domain%mesh_v, &
+                               0, "contravariant")
+    call set_scalar_test_field(div_true,cross_polar_div, domain%mesh_p,0)
+    call div_op%calc_div(div, u,v,domain)
+    call div%update(-1.0_8,div_true,domain%mesh_p)
+
+    err = div%maxabs(domain%mesh_p,domain%parcomm)
+
 end function test_div_a2
+
+real(kind=8) function test_div_d2(N) result(err)
+
+    use test_fields_mod,  only : set_vector_test_field, solid_rot=>solid_rotation_field_generator, &
+                                 cross_polar=>cross_polar_flow_generator
+    use div_factory_mod,  only : create_div_operator
+    use abstract_div_mod, only : div_operator_t
+
+    integer(kind=4), intent(in) :: N
+    !locals:
+    integer(kind=4), parameter  :: nz = 3
+    integer(kind=4), parameter  :: ex_halo_width = 2
+    type(grid_field_t)          :: u, v, div, div2
+    type(domain_t)              :: domain
+    class(div_operator_t), allocatable :: div_op
+
+    call create_domain(domain, "cube", 'A', N, nz)
+    call create_grid_field(u, ex_halo_width, 0, domain%mesh_xy)
+    call create_grid_field(v, ex_halo_width, 0, domain%mesh_xy)
+    call create_grid_field(div, 0, 0, domain%mesh_xy)
+    call create_grid_field(div2, 0, 0, domain%mesh_xy)
+
+    call set_vector_test_field(u,v,solid_rot, domain%mesh_xy, domain%mesh_xy, &
+                               0, "contravariant")
+
+    div_op = create_div_operator(domain, "divergence_d2")
+    call div_op%calc_div(div, u,v,domain)
+    call div_op%calc_div(div2,u,v,domain,some_const)
+
+    call div2%update(-some_const,div,domain%mesh_p)
+    if(div2%maxabs(domain%mesh_p,domain%parcomm)>1e-16) then
+        call parcomm_global%abort("div_a2 test, wrong multiplier interface. Test failed!")
+    end if
+
+    err = div%maxabs(domain%mesh_p,domain%parcomm)
+    print *, div%tile(1)%p(:,1,1)
+end function test_div_d2
 
 real(kind=8) function test_grad_a2(N) result(err)
 
@@ -56,7 +106,7 @@ real(kind=8) function test_grad_a2(N) result(err)
                                    xyz_f => xyz_scalar_field_generator, &
                                    xyz_grad => xyz_grad_generator
     use grad_factory_mod,   only : create_grad_operator
-    use abstract_grad_mod,  only : grad_operator_t 
+    use abstract_grad_mod,  only : grad_operator_t
 
     integer(kind=4), intent(in) :: N
     !locals:
@@ -122,7 +172,7 @@ subroutine test_laplace_spectre(div_operator_name, grad_operator_name, staggerin
     end if
 
     call create_domain(domain, "cube", staggering, nh, nz)
- 
+
     call create_grid_field(f,  ex_halo_width, 0, domain%mesh_p)
     call create_grid_field(gx, ex_halo_width, 0, domain%mesh_u)
     call create_grid_field(gy, ex_halo_width, 0, domain%mesh_v)
