@@ -68,10 +68,10 @@ subroutine create_mesh(mesh, partition, metric, halo_width, points_type)
         is = tile(t)%is; ie = tile(t)%ie;
         pind = partition%panel_map(t)
 
-        mesh%tile(t)%nx = nh
-        mesh%tile(t)%ny = nh    
-
         call mesh%tile(t)%init(is, ie, js, je, ks, ke, halo_width)
+
+        mesh%tile(t)%nx = nh
+        mesh%tile(t)%ny = nh
 
         mesh%tile(t)%hx = (metric%alpha1-metric%beta0)/real(nh,8)
 
