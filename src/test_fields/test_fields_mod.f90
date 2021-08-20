@@ -10,6 +10,7 @@ public :: xyz_scalar_field_generator_t, xyz_scalar_field_generator
 public :: solid_rotation_field_generator_t, solid_rotation_field_generator
 public :: xyz_grad_generator_t, xyz_grad_generator
 public :: cross_polar_flow_generator_t, cross_polar_flow_generator
+public :: cross_polar_flow_div_generator_t, cross_polar_flow_div_generator
 
 !!!!!!!!!!!!!Abstract scalar and vector fields generators
 type, public, abstract :: scalar_field_generator_t
@@ -43,11 +44,17 @@ contains
 procedure :: get_vector_field => generate_cross_polar_flow
 end type cross_polar_flow_generator_t
 
+type, extends(scalar_field_generator_t) :: cross_polar_flow_div_generator_t
+contains
+procedure :: get_scalar_field => generate_cross_polar_flow_div
+end type cross_polar_flow_div_generator_t
+
 !!!field generator instances
 type(xyz_scalar_field_generator_t)     :: xyz_scalar_field_generator
 type(solid_rotation_field_generator_t) :: solid_rotation_field_generator
 type(xyz_grad_generator_t)             :: xyz_grad_generator
 type(cross_polar_flow_generator_t)     :: cross_polar_flow_generator
+type(cross_polar_flow_div_generator_t) :: cross_polar_flow_div_generator
 
 abstract interface
     subroutine get_scalar_field(this,f,npts,nlev,x,y,z)
@@ -260,6 +267,7 @@ subroutine generate_cross_polar_flow(this,vx,vy,vz,npts,nlev,x,y,z)
     integer(kind=4) :: i, k, k1
     integer(kind=4) :: k3
     real(kind=8)    :: x1, y1, z1
+    real(kind=8)    :: vx1, vy1, vz1
     real(kind=8)    :: cphi, sphi, clam, slam
     real(kind=8)    :: u, v
     real(kind=8)    :: M(3,3) = reshape([1.0_8, 0.0_8, 0.0_8,  & !rotation matrix
@@ -271,20 +279,42 @@ subroutine generate_cross_polar_flow(this,vx,vy,vz,npts,nlev,x,y,z)
     do k = 1, nlev
         do i=1, npts
             !permutate coordinates k=1: (x,y,z), k=2: (y,z,x), k=3: (z,x,y)
-            x1 = sum(M(1:3,k3(k))  *[x(i),y(i),z(i)])
-            y1 = sum(M(1:3,k3(k+1))*[x(i),y(i),z(i)])
-            z1 = sum(M(1:3,k3(k+2))*[x(i),y(i),z(i)])
+            !x1 = sum(M(1:3,k3(k))  *[x(i),y(i),z(i)])
+            !y1 = sum(M(1:3,k3(k+1))*[x(i),y(i),z(i)])
+            !z1 = sum(M(1:3,k3(k+2))*[x(i),y(i),z(i)])
+            x1 = x(i); y1 = y(i); z1 = z(i)
             cphi = cos_phi(x1,y1,z1)
             sphi = sin_phi(x1,y1,z1)
             clam = cos_lam(x1,y1,z1)
             slam = sin_lam(x1,y1,z1)
             u = sphi*(sphi**2-3.0_8*cphi**2)*slam-0.5_8*cphi
-            v = sphi**2*cphi
-            vx(i,k) =-cphi*slam*u-sphi*clam*v
-            vy(i,k) = cphi*clam*u-sphi*slam*v
-            vz(i,k) = cphi*v
+            v = sphi**2*clam
+            vx1 =-slam*u-sphi*clam*v
+            vy1 = clam*u-sphi*slam*v
+            vz1 = cphi*v
+            vx(i,k) = vx1; vy(i,k) = vy1; vz(i,k) = vz1
+            !permute vector components back
+            !vx(i,k) = sum(M(k3(k),  1:3)  *[vx1,vy1,vz1])
+            !vy(i,k) = sum(M(k3(k+1),1:3)  *[vx1,vy1,vz1])
+            !vz(i,k) = sum(M(k3(k+2),1:3)  *[vx1,vy1,vz1])
         end do
     end do
 end subroutine generate_cross_polar_flow
+
+subroutine generate_cross_polar_flow_div(this,f,npts,nlev,x,y,z)
+    import scalar_field_generator_t
+    class(cross_polar_flow_div_generator_t),  intent(in) :: this
+    integer(kind=4), intent(in)                  :: npts, nlev
+    real(kind=8),    intent(in)                  :: x(npts), y(npts), z(npts)
+    real(kind=8),    intent(out)                 :: f(npts,nlev)
+
+    integer(kind=4) :: i, k
+
+    do k = 1, nlev
+        do i=1, npts
+            f(i,k) = -x(i)*z(i) / (x(i)**2+y(i)**2+z(i)**2)
+        end do
+    end do
+end subroutine generate_cross_polar_flow_div
 
 end module test_fields_mod
