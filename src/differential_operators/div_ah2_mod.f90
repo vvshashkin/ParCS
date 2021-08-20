@@ -1,4 +1,4 @@
-module div_d2_mod
+module div_ah2_mod
 
 use domain_mod,             only : domain_t
 use abstract_div_mod,       only : div_operator_t
@@ -9,16 +9,16 @@ use parcomm_mod,            only : parcomm_global
 
 implicit none
 
-type, public, extends(div_operator_t) :: div_d2_t
+type, public, extends(div_operator_t) :: div_ah2_t
     class(exchange_t), allocatable     :: exch_halo
 contains
-    procedure, public :: calc_div => calc_div_d2
-end type div_d2_t
+    procedure, public :: calc_div => calc_div_ah2
+end type div_ah2_t
 
 contains
 
-subroutine calc_div_d2(this, div, u, v, domain, multiplier)
-    class(div_d2_t),        intent(inout) :: this
+subroutine calc_div_ah2(this, div, u, v, domain, multiplier)
+    class(div_ah2_t),        intent(inout) :: this
     type(domain_t),         intent(in)    :: domain
     type(grid_field_t),     intent(inout) :: u, v
     real(kind=8), optional, intent(in)    :: multiplier
@@ -41,7 +41,7 @@ subroutine calc_div_d2(this, div, u, v, domain, multiplier)
     end do
 
 
-end subroutine calc_div_d2
+end subroutine calc_div_ah2
 
 subroutine calc_div_on_tile(div, u, v, mesh, multiplier)
 
@@ -95,4 +95,4 @@ subroutine calc_div_on_tile(div, u, v, mesh, multiplier)
 
 end subroutine calc_div_on_tile
 
-end module div_d2_mod
+end module div_ah2_mod

@@ -13,11 +13,11 @@ contains
 
     real(kind=8) pure function cos_lam(x,y,z) result(c)
         real(kind=8), intent(in) :: x,y,z
-        c = x / sqrt(x**2+y**2)
+        c = x / max(sqrt(x**2+y**2),1e-14)
     end function cos_lam
 
     real(kind=8) pure function sin_lam(x,y,z) result(c)
         real(kind=8), intent(in) :: x,y,z
-        c = y / sqrt(x**2+y**2)
+        c = y / max(sqrt(x**2+y**2),1e-14)
     end function sin_lam
 end module latlon_functions_mod

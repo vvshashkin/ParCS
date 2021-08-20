@@ -47,6 +47,10 @@ subroutine create_domain(domain, topology_type, staggering_type, nh, nz)
         domain%mesh_p = domain%mesh_o
         domain%mesh_u = domain%mesh_o
         domain%mesh_v = domain%mesh_o
+    case ('Ah') !all degrees of freedom at corner points
+        domain%mesh_p = domain%mesh_xy
+        domain%mesh_u = domain%mesh_xy
+        domain%mesh_v = domain%mesh_xy
     case ('C')
         domain%mesh_p = domain%mesh_o
         domain%mesh_u = domain%mesh_x

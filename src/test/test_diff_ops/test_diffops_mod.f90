@@ -18,7 +18,7 @@ type err_container_t
 end type err_container_t
 
 private
-public :: err_container_t, test_div, test_div_d2, test_grad_a2, test_laplace_spectre
+public :: err_container_t, test_div, test_grad_a2, test_laplace_spectre
 
 real(kind=8), parameter :: some_const = 12.34567_8
 
@@ -81,43 +81,6 @@ type(err_container_t) function test_div(N,div_oper_name,staggering) result(errs)
     errs%values(4) = div%algebraic_norm2(domain%mesh_p,domain%parcomm)/real(N,8)
 
 end function test_div
-
-real(kind=8) function test_div_d2(N) result(err)
-
-    use test_fields_mod,  only : set_vector_test_field, solid_rot=>solid_rotation_field_generator, &
-                                 cross_polar=>cross_polar_flow_generator
-    use div_factory_mod,  only : create_div_operator
-    use abstract_div_mod, only : div_operator_t
-
-    integer(kind=4), intent(in) :: N
-    !locals:
-    integer(kind=4), parameter  :: nz = 3
-    integer(kind=4), parameter  :: ex_halo_width = 2
-    type(grid_field_t)          :: u, v, div, div2
-    type(domain_t)              :: domain
-    class(div_operator_t), allocatable :: div_op
-
-    call create_domain(domain, "cube", 'A', N, nz)
-    call create_grid_field(u, ex_halo_width, 0, domain%mesh_xy)
-    call create_grid_field(v, ex_halo_width, 0, domain%mesh_xy)
-    call create_grid_field(div, 0, 0, domain%mesh_xy)
-    call create_grid_field(div2, 0, 0, domain%mesh_xy)
-
-    call set_vector_test_field(u,v,solid_rot, domain%mesh_xy, domain%mesh_xy, &
-                               0, "contravariant")
-
-    div_op = create_div_operator(domain, "divergence_d2")
-    call div_op%calc_div(div, u,v,domain)
-    call div_op%calc_div(div2,u,v,domain,some_const)
-
-    call div2%update(-some_const,div,domain%mesh_p)
-    if(div2%maxabs(domain%mesh_p,domain%parcomm)>1e-16) then
-        call parcomm_global%abort("div_a2 test, wrong multiplier interface. Test failed!")
-    end if
-
-    err = div%maxabs(domain%mesh_p,domain%parcomm)
-    print *, div%tile(1)%p(:,1,1)
-end function test_div_d2
 
 real(kind=8) function test_grad_a2(N) result(err)
 

@@ -127,7 +127,7 @@ function create_symm_halo_exchange_A(partition, parcomm, topology, halo_width, h
 
 end function create_symm_halo_exchange_A
 
-function create_symm_halo_exchange_D(partition, parcomm, topology, halo_width, halo_type) result(exchange)
+function create_symm_halo_exchange_Ah(partition, parcomm, topology, halo_width, halo_type) result(exchange)
 
     use exchange_halo_mod, only : exchange_2D_halo_t
 
@@ -244,7 +244,7 @@ function create_symm_halo_exchange_D(partition, parcomm, topology, halo_width, h
         call exchange%send_buff(ind)%init(2*send_pts_num(ind))
     end do
 
-end function create_symm_halo_exchange_D
+end function create_symm_halo_exchange_Ah
 
 function create_symmetric_halo_vec_exchange_C(partition, parcomm, topology, halo_width, halo_type) result(exchange)
 

@@ -81,6 +81,11 @@ subroutine init(this, Nh, Nz, num_tiles, myid, Np, staggering_type, strategy)
         this%ny_u = this%nh
         this%nx_v = this%nh
         this%ny_v = this%nh
+    else if (staggering_type == 'Ah') then
+        this%nx_u = this%nh+1
+        this%ny_u = this%nh+1
+        this%nx_v = this%nh+1
+        this%ny_v = this%nh+1
     else if (staggering_type == 'C') then
         this%nx_u = this%nh+1
         this%ny_u = this%nh
