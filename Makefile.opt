@@ -935,7 +935,8 @@ $(DOBJ)test_diffops_mod.o: src/test/test_diff_ops/test_diffops_mod.f90 \
 	$(DOBJ)div_factory_mod.o \
 	$(DOBJ)abstract_div_mod.o \
 	$(DOBJ)grad_factory_mod.o \
-	$(DOBJ)abstract_grad_mod.o
+	$(DOBJ)abstract_grad_mod.o \
+	$(DOBJ)mesh_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

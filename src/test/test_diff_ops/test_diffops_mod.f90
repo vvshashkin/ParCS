@@ -45,8 +45,8 @@ type(err_container_t) function test_div(N,div_oper_name,staggering) result(errs)
     call create_domain(domain, "cube", staggering, N, nz)
     call create_grid_field(u, ex_halo_width, 0, domain%mesh_u)
     call create_grid_field(v, ex_halo_width, 0, domain%mesh_v)
-    call create_grid_field(div, 0, 0, domain%mesh_p)
-    call create_grid_field(div2, 0, 0, domain%mesh_p)
+    call create_grid_field(div, ex_halo_width, 0, domain%mesh_p)
+    call create_grid_field(div2, ex_halo_width, 0, domain%mesh_p)
     call create_grid_field(div_true, 0, 0, domain%mesh_p)
 
     call set_vector_test_field(u,v,solid_rot, domain%mesh_u, domain%mesh_v, &
@@ -78,7 +78,8 @@ type(err_container_t) function test_div(N,div_oper_name,staggering) result(errs)
     call div%update(-1.0_8,div_true,domain%mesh_p)
 
     errs%values(3) = div%maxabs(domain%mesh_p,domain%parcomm)
-    errs%values(4) = div%algebraic_norm2(domain%mesh_p,domain%parcomm)/real(N,8)
+    errs%values(4) = div%algebraic_norm2(domain%mesh_p,domain%parcomm)/real(nz*N,8)
+    call stats(div,domain%mesh_p)
 
 end function test_div
 
@@ -230,5 +231,45 @@ subroutine eigvals(H,M)
     print *, "min imag", minval(wi)
 
 end subroutine eigvals
+
+subroutine stats(f,mesh)
+    use mesh_mod, only : mesh_t
+
+    type(grid_field_t), intent(in) :: f
+    type(mesh_t),       intent(in) :: mesh
+
+    integer(kind=4) nx, ny, nz, t
+    real(kind=8)  :: edge(4)
+    real(kind=8)  :: corner(4)
+    real(kind=8)  :: interior, interior_maxabs
+
+    edge(1:4) = 0.0_8
+    corner(1:4) = 0.0_8
+    interior = 0.0_8
+    interior_maxabs = 0.0_8
+
+    do t = 1,6
+        nx = mesh%tile(t)%ie
+        ny = mesh%tile(t)%je
+        nz = mesh%tile(t)%ke
+
+        edge(1) = edge(1) + sum(abs(f%tile(t)%p(2:nx-1,1,:))) / (nx-2) / nz
+        edge(2) = edge(2) + sum(abs(f%tile(t)%p(nx,2:ny-1,:))) / (ny-2) / nz
+        edge(3) = edge(3) + sum(abs(f%tile(t)%p(2:nx-1,ny,:))) / (nx-2) / nz
+        edge(4) = edge(4) + sum(abs(f%tile(t)%p(1,2:ny-1,:))) / (ny-2) / nz
+
+        corner(1) = corner(1)+sum(abs(f%tile(t)%p(1,1,:)))/nz
+        corner(2) = corner(2)+sum(abs(f%tile(t)%p(nx,1,:)))/nz
+        corner(3) = corner(3)+sum(abs(f%tile(t)%p(nx,ny,:)))/nz
+        corner(4) = corner(4)+sum(abs(f%tile(t)%p(1,ny,:)))/nz
+
+        interior = interior + sum(abs(f%tile(t)%p(2:nx-1,2:ny-1,:))) / (nx-2)**2 / nz
+        interior_maxabs = max(interior_maxabs, maxval(abs(f%tile(t)%p(2:nx-1,2:ny-1,:))))
+    end do
+
+    print '(A,4E15.7)', "edges: ", edge / 6.0_8
+    print '(A,4E15.7)', "corner: ", corner / 6.0_8
+    print *, "interior", interior/6.0, interior_maxabs
+end subroutine stats
 
 end module test_diffops_mod
