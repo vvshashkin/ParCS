@@ -135,6 +135,8 @@ type(err_container_t) function test_grad(N,grad_oper_name,staggering) result(err
     errs%values(2) = gx%algebraic_norm2(domain%mesh_u,domain%parcomm)/real(nz*N,8)+&
                      gy%algebraic_norm2(domain%mesh_v,domain%parcomm)/real(nz*N,8)
 
+    !call stats(gx,domain%mesh_u)
+
 end function test_grad
 
 subroutine test_laplace_spectre(div_operator_name, grad_operator_name, staggering)
