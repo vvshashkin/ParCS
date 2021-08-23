@@ -18,7 +18,7 @@ type err_container_t
 end type err_container_t
 
 private
-public :: err_container_t, test_div, test_grad_a2, test_laplace_spectre
+public :: err_container_t, test_div, test_grad, test_laplace_spectre
 
 real(kind=8), parameter :: some_const = 12.34567_8
 
@@ -79,11 +79,11 @@ type(err_container_t) function test_div(N,div_oper_name,staggering) result(errs)
 
     errs%values(3) = div%maxabs(domain%mesh_p,domain%parcomm)
     errs%values(4) = div%algebraic_norm2(domain%mesh_p,domain%parcomm)/real(nz*N,8)
-    call stats(div,domain%mesh_p)
+    !call stats(div,domain%mesh_p)
 
 end function test_div
 
-real(kind=8) function test_grad_a2(N) result(err)
+type(err_container_t) function test_grad(N,grad_oper_name,staggering) result(errs)
 
     use test_fields_mod,    only : set_vector_test_field, set_scalar_test_field, &
                                    xyz_f => xyz_scalar_field_generator, &
@@ -91,7 +91,8 @@ real(kind=8) function test_grad_a2(N) result(err)
     use grad_factory_mod,   only : create_grad_operator
     use abstract_grad_mod,  only : grad_operator_t
 
-    integer(kind=4), intent(in) :: N
+    integer(kind=4),  intent(in) :: N
+    character(len=*), intent(in) :: grad_oper_name, staggering
     !locals:
     integer(kind=4), parameter  :: nz = 3
     integer(kind=4), parameter  :: ex_halo_width = 8
@@ -100,19 +101,19 @@ real(kind=8) function test_grad_a2(N) result(err)
     type(domain_t)              :: domain
     class(grad_operator_t), allocatable :: grad_op
 
-    call create_domain(domain, "cube", 'A', N, nz)
+    call create_domain(domain, "cube", staggering, N, nz)
     call create_grid_field(gx, 0, 0, domain%mesh_u)
     call create_grid_field(gy, 0, 0, domain%mesh_v)
     call create_grid_field(gx1,0, 0, domain%mesh_u)
     call create_grid_field(gy1,0, 0, domain%mesh_v)
     call create_grid_field(gx_true, 0, 0, domain%mesh_u)
     call create_grid_field(gy_true, 0, 0, domain%mesh_v)
-    call create_grid_field(f, ex_halo_width, 0, domain%mesh_v)
+    call create_grid_field(f, ex_halo_width, 0, domain%mesh_p)
 
     call set_scalar_test_field(f,xyz_f, domain%mesh_p,0)
     call set_vector_test_field(gx_true, gy_true, xyz_grad, domain%mesh_u, domain%mesh_v, 0, "contravariant")
 
-    grad_op = create_grad_operator(domain, "gradient_a2_ecs")
+    grad_op = create_grad_operator(domain, grad_oper_name)
     call grad_op%calc_grad(gx,gy,f,domain)
     call grad_op%calc_grad(gx1,gy1,f,domain,some_const)
 
@@ -123,11 +124,18 @@ real(kind=8) function test_grad_a2(N) result(err)
         call parcomm_global%abort("grad_a2 test, wrong multiplier interface. Test failed!")
     end if
 
+    allocate(errs%keys(2), errs%values(2))
+    errs%keys(1)%str = "xyz linf"
+    errs%keys(2)%str = "xyz l2"
+
     call gx%update(-1.0_8,gx_true,domain%mesh_u)
     call gy%update(-1.0_8,gy_true,domain%mesh_v)
-    err = gx%maxabs(domain%mesh_p,domain%parcomm)+gy%maxabs(domain%mesh_p,domain%parcomm)
+    errs%values(1) = gx%maxabs(domain%mesh_u,domain%parcomm)+ &
+                     gy%maxabs(domain%mesh_v,domain%parcomm)
+    errs%values(2) = gx%algebraic_norm2(domain%mesh_u,domain%parcomm)/real(nz*N,8)+&
+                     gy%algebraic_norm2(domain%mesh_v,domain%parcomm)/real(nz*N,8)
 
-end function test_grad_a2
+end function test_grad
 
 subroutine test_laplace_spectre(div_operator_name, grad_operator_name, staggering)
     use test_fields_mod,   only : set_vector_test_field, solid_rot=>solid_rotation_field_generator
