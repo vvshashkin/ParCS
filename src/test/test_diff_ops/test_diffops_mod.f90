@@ -58,7 +58,8 @@ type(err_container_t) function test_div(N,div_oper_name,staggering) result(errs)
     call div_op%calc_div(div2,u,v,domain,some_const)
 
     call div2%update(-some_const,div,domain%mesh_p)
-    if(div2%maxabs(domain%mesh_p,domain%parcomm)>1e-16) then
+    if(div2%maxabs(domain%mesh_p,domain%parcomm)>1e-15) then
+        print *, "Errrr:", div2%maxabs(domain%mesh_p,domain%parcomm)
         call parcomm_global%abort("div_a2 test, wrong multiplier interface. Test failed!")
     end if
 
@@ -145,6 +146,8 @@ subroutine test_laplace_spectre(div_operator_name, grad_operator_name, staggerin
     use abstract_div_mod,  only : div_operator_t
     use grad_factory_mod,  only : create_grad_operator
     use abstract_grad_mod, only : grad_operator_t
+    use exchange_abstract_mod,  only : exchange_t
+    use exchange_factory_mod,   only : create_symm_halo_exchange_Ah
 
     character(len=*), intent(in) :: div_operator_name, grad_operator_name, staggering
 
@@ -155,9 +158,10 @@ subroutine test_laplace_spectre(div_operator_name, grad_operator_name, staggerin
     class(div_operator_t),  allocatable :: div_op
     class(grad_operator_t), allocatable :: grad_op
     real(kind=8), allocatable :: lapM(:,:)
+    class(exchange_t), allocatable :: Ah_exchange
     integer(kind=4) :: npts, ts, te, is, ie, js, je
     integer(kind=4) :: is1, ie1, js1, je1
-    integer(kind=4) :: i, j, t, i1, j1, t1, ind, ind1
+    integer(kind=4) :: i, j, t, i1, j1, t1, ind, ind1, nx
 
     if(parcomm_global%np>1) then
         call parcomm_global%print("ommiting laplace spectre test, works only in mpi n=1 mode")
@@ -171,12 +175,20 @@ subroutine test_laplace_spectre(div_operator_name, grad_operator_name, staggerin
     call create_grid_field(gy, ex_halo_width, 0, domain%mesh_v)
     call create_grid_field(lap, 0, 0, domain%mesh_p)
 
+    if(staggering == "Ah") then
+        Ah_exchange = create_symm_halo_exchange_Ah(domain%partition, domain%parcomm, &
+                                                   domain%topology,  1, 'full')
+    end if
+
     grad_op = create_grad_operator(domain, grad_operator_name)
     div_op  = create_div_operator (domain, div_operator_name)
 
     ts = domain%mesh_p%ts
     te = domain%mesh_p%te
-    npts = (te-ts+1)*nh**2
+
+    nx = domain%mesh_p%tile(1)%ie
+    npts = (te-ts+1)*nx**2
+
     allocate(lapM(npts,npts))
 
     call f%assign(0.0_8,domain%mesh_p)
@@ -189,10 +201,13 @@ subroutine test_laplace_spectre(div_operator_name, grad_operator_name, staggerin
         do j=js,je
             do i=is,ie
                 f%tile(t)%p(i,j,1) = 1.0_8
+                !if(staggering == "Ah") then
+                !    call make_consistent_AH_field(f,domain%parcomm,domain%mesh_p,Ah_exchange)
+                !end if
                 call grad_op%calc_grad(gx,gy,f,domain)
                 call div_op%calc_div(lap,gx,gy,domain)
 
-                ind = (t-ts)*nh**2+(j-js)*nh+(i-is+1)
+                ind = (t-ts)*nx**2+(j-js)*nx+(i-is+1)
 
                 do t1 = ts, te
                     is1 = domain%mesh_p%tile(t1)%is
@@ -201,18 +216,72 @@ subroutine test_laplace_spectre(div_operator_name, grad_operator_name, staggerin
                     je1 = domain%mesh_p%tile(t1)%je
                     do j1 = js1, je1
                         do i1= is1, ie1
-                            ind1 = (t1-ts)*nh**2+(j1-js1)*nh+(i1-is1+1)
+                            ind1 = (t1-ts)*nx**2+(j1-js1)*nx+(i1-is1+1)
                             lapM(ind1,ind) = lap%tile(t1)%p(i1,j1,1)
                         end do
                     end do
                 end do
-                f%tile(t)%p(i,j,1) = 0.0_8
+                !f%tile(t)%p(i,j,1) = 0.0_8
+                do t1 = ts, te
+                    f%tile(t)%p = 0.0_8
+                end do
             end do
         end do
     end do
 
+    print *, maxval(lapM), minval(lapM)
+
     call eigvals(lapM,npts)
 end subroutine test_laplace_spectre
+
+subroutine make_consistent_Ah_field(f,parcomm,mesh,exchange)
+    use parcomm_mod,            only : parcomm_t
+    use mesh_mod,               only : mesh_t
+    use exchange_abstract_mod,  only : exchange_t
+
+    type(grid_field_t), intent(inout) :: f
+    type(parcomm_t),    intent(in)    :: parcomm
+    type(mesh_t),       intent(in)    :: mesh
+    class(exchange_t),  intent(inout) :: exchange
+
+    integer(kind=4) :: t, i, j, k, is, ie, js, je, ks, ke
+
+    call exchange%do(f,parcomm)
+
+    do t = mesh%ts, mesh%te
+        is = mesh%tile(t)%is
+        ie = mesh%tile(t)%ie
+        js = mesh%tile(t)%js
+        je = mesh%tile(t)%je
+        ks = mesh%tile(t)%ks
+        ke = mesh%tile(t)%ke
+
+        do k=ks,ke
+            if(js == 1) then
+                do i=is, ie
+                    if(f%tile(t)%p(i,0,k) == 1.0_8) f%tile(t)%p(i,1,k) = 1.0_8
+                end do
+            end if
+            if(je == mesh%tile(t)%ny+1) then
+                j = je
+                do i=is, ie
+                    if(f%tile(t)%p(i,j+1,k) == 1.0_8) f%tile(t)%p(i,j,k) = 1.0_8
+                end do
+            end if
+            if(is == 1) then
+                do j=js, je
+                    if(f%tile(t)%p(0,j,k) == 1.0_8) f%tile(t)%p(1,j,k) = 1.0_8
+                end do
+            end if
+            if(ie == mesh%tile(t)%nx+1) then
+                i = ie
+                do j=js, je
+                    if(f%tile(t)%p(i+1,j,k) == 1.0_8) f%tile(t)%p(i,j,k) = 1.0_8
+                end do
+            end if
+        end do
+    end do
+end subroutine make_consistent_Ah_field
 
 subroutine eigvals(H,M)
     integer(kind=4) M

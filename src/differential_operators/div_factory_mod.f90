@@ -24,6 +24,8 @@ function create_div_operator(domain, div_operator_name) result(div)
         div = create_div_a2_operator(domain,div_operator_name)
     elseif(div_operator_name == 'divergence_ah2') then
         div = create_div_ah2_operator(domain)
+    elseif(div_operator_name == 'divergence_ah42_sbp') then
+        div = create_div_ah42_sbp_operator(domain)
     else
         call parcomm_global%abort("unknown divergence operator: "//div_operator_name)
     end if
@@ -62,13 +64,33 @@ function create_div_ah2_operator(domain) result(div)
     use exchange_factory_mod, only : create_symm_halo_exchange_Ah
 
     type(domain_t),   intent(in)  :: domain
-    type(div_ah2_t) :: div
+    type(div_ah2_t)               :: div
 
     integer(kind=4), parameter :: halo_width=2
 
-    div%exch_halo = create_symm_halo_exchange_Ah( &
-                    domain%partition, domain%parcomm, domain%topology,  halo_width, 'full')
+    div%exch_halo = create_symm_halo_exchange_Ah(domain%partition, domain%parcomm, &
+                                                 domain%topology,  halo_width, 'full')
 
 end function create_div_ah2_operator
+
+function create_div_ah42_sbp_operator(domain) result(div)
+
+    use div_ah42_sbp_mod,     only : div_ah42_sbp_t
+    use exchange_factory_mod, only : create_symm_halo_exchange_Ah
+
+    type(domain_t),   intent(in)  :: domain
+    type(div_ah42_sbp_t)          :: div
+
+    integer(kind=4), parameter :: halo_width_interior=3
+    integer(kind=4), parameter :: halo_width_edges=1
+
+    div%exch_uv_interior =  &
+                    create_symm_halo_exchange_Ah(domain%partition, domain%parcomm, &
+                                                 domain%topology,  halo_width_interior, 'full')
+    div%exch_div_edges =  &
+                    create_symm_halo_exchange_Ah(domain%partition, domain%parcomm, &
+                                                 domain%topology,  halo_width_edges, 'full')
+
+end function create_div_ah42_sbp_operator
 
 end module div_factory_mod
