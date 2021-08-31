@@ -59,7 +59,6 @@ type(err_container_t) function test_div(N,div_oper_name,staggering) result(errs)
 
     call div2%update(-some_const,div,domain%mesh_p)
     if(div2%maxabs(domain%mesh_p,domain%parcomm)>1e-15) then
-        print *, "Errrr:", div2%maxabs(domain%mesh_p,domain%parcomm)
         call parcomm_global%abort("div_a2 test, wrong multiplier interface. Test failed!")
     end if
 
@@ -103,12 +102,12 @@ type(err_container_t) function test_grad(N,grad_oper_name,staggering) result(err
     class(grad_operator_t), allocatable :: grad_op
 
     call create_domain(domain, "cube", staggering, N, nz)
-    call create_grid_field(gx, 0, 0, domain%mesh_u)
-    call create_grid_field(gy, 0, 0, domain%mesh_v)
-    call create_grid_field(gx1,0, 0, domain%mesh_u)
-    call create_grid_field(gy1,0, 0, domain%mesh_v)
-    call create_grid_field(gx_true, 0, 0, domain%mesh_u)
-    call create_grid_field(gy_true, 0, 0, domain%mesh_v)
+    call create_grid_field(gx, 1, 0, domain%mesh_u)
+    call create_grid_field(gy, 1, 0, domain%mesh_v)
+    call create_grid_field(gx1,1, 0, domain%mesh_u)
+    call create_grid_field(gy1,1, 0, domain%mesh_v)
+    call create_grid_field(gx_true, 1, 0, domain%mesh_u)
+    call create_grid_field(gy_true, 1, 0, domain%mesh_v)
     call create_grid_field(f, ex_halo_width, 0, domain%mesh_p)
 
     call set_scalar_test_field(f,xyz_f, domain%mesh_p,0)
@@ -121,7 +120,7 @@ type(err_container_t) function test_grad(N,grad_oper_name,staggering) result(err
     call gx1%update(-some_const,gx,domain%mesh_u)
     call gy1%update(-some_const,gy,domain%mesh_v)
 
-    if(gx1%maxabs(domain%mesh_u,domain%parcomm)+gy1%maxabs(domain%mesh_v,domain%parcomm)>1e-16) then
+    if(gx1%maxabs(domain%mesh_u,domain%parcomm)+gy1%maxabs(domain%mesh_v,domain%parcomm)>1e-13) then
         call parcomm_global%abort("grad_a2 test, wrong multiplier interface. Test failed!")
     end if
 
@@ -137,6 +136,7 @@ type(err_container_t) function test_grad(N,grad_oper_name,staggering) result(err
                      gy%algebraic_norm2(domain%mesh_v,domain%parcomm)/real(nz*N,8)
 
     !call stats(gx,domain%mesh_u)
+    !call stats(gy,domain%mesh_u)
 
 end function test_grad
 
@@ -173,7 +173,7 @@ subroutine test_laplace_spectre(div_operator_name, grad_operator_name, staggerin
     call create_grid_field(f,  ex_halo_width, 0, domain%mesh_p)
     call create_grid_field(gx, ex_halo_width, 0, domain%mesh_u)
     call create_grid_field(gy, ex_halo_width, 0, domain%mesh_v)
-    call create_grid_field(lap, 0, 0, domain%mesh_p)
+    call create_grid_field(lap, 1, 0, domain%mesh_p)
 
     if(staggering == "Ah") then
         Ah_exchange = create_symm_halo_exchange_Ah(domain%partition, domain%parcomm, &

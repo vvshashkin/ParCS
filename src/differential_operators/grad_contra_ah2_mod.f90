@@ -16,14 +16,14 @@ type, public, extends(grad_operator_t) :: grad_contra_ah2_t
     !quantities to calculate the components in the edge points (gx,gy)
     !using components from neighbouring faces (gx, gy):
     !gx = gx', gy = g=q*gx'+gy'
-    type(tile_q),      allocatable     :: q(:)
+    type(tile_edge_transform_t), allocatable     :: q(:)
 contains
     procedure, public :: calc_grad => calc_grad_ah2
 end type grad_contra_ah2_t
 
-type tile_q
+type, public :: tile_edge_transform_t
     real(kind=8), dimension(:), allocatable :: qb, qr, qt, ql
-end type tile_q
+end type tile_edge_transform_t
 
 contains
 
@@ -56,11 +56,11 @@ subroutine calc_grad_on_tile(gx, gy, f, mesh, q, multiplier)
 
     use mesh_mod, only : tile_mesh_t
 
-    type(tile_field_t),     intent(inout) :: gx, gy
-    type(tile_field_t),     intent(in)    :: f
-    type(tile_mesh_t),      intent(in)    :: mesh
-    type(tile_q),           intent(in)    :: q
-    real(kind=8),           intent(in)    :: multiplier
+    type(tile_field_t),           intent(inout) :: gx, gy
+    type(tile_field_t),           intent(in)    :: f
+    type(tile_mesh_t),            intent(in)    :: mesh
+    type(tile_edge_transform_t),  intent(in)    :: q
+    real(kind=8),                 intent(in)    :: multiplier
 
     real(kind=8)    :: hx, mult_loc
     real(kind=8)    :: fdx, fdy, fdx1, fdy1, fdx0, fdy0
