@@ -16,6 +16,14 @@ real(kind=8), parameter :: Q42(6,4) = reshape( &
   [6,4])
 integer(kind=4), parameter :: lastnonzeroQ42(4) =[4,3,5,6]
 
+real(kind=8), parameter :: Q43(6,4) = reshape( &
+[-1.8280236842718398_8,   2.978054584697369_8,  -1.4653148294044123_8,  0.3078538227474199_8,  0.008136925288119662_8, -0.0007068190566565205_8, &
+- 0.37814159126691327_8, -0.31480210500706657_8, 0.707290999364066_8,   0.04835554461933453_8,-0.06866771096803422_8,   0.005964863258613564_8,  &
+  0.1162478575921292_8,  -0.8028500807354999_8,  0.21558841368737428_8, 0.5078566674295846_8, -0.03231754093993847_8,  -0.004525317033649745_8,  &
+ -0.010287398573128293_8, 0.12592344801071614_8,-0.7341531396449149_8,  0.04979271660173103_8, 0.6506171865540596_8,  -0.08189281294846368_8],   &
+                                              [6,4])
+integer(kind=4), parameter :: lastnonzeroQ43(4) =[6,6,6,6]
+
 contains
 
 subroutine sbp_diff(direction,opername,f,is,ie,js,je,n,is1,ie1,js1,je1,df)
@@ -41,6 +49,12 @@ subroutine sbp_diff(direction,opername,f,is,ie,js,je,n,is1,ie1,js1,je1,df)
             call sbp_dx(Q42,lastnonzeroQ42,f,is,ie,js,je,n,is1,ie1,js1,je1,df)
         else !(direction == "y")
             call sbp_dy(Q42,lastnonzeroQ42,f,is,ie,js,je,n,is1,ie1,js1,je1,df)
+        end if
+    case ("d43")
+        if(direction == "x") then
+            call sbp_dx(Q43,lastnonzeroQ43,f,is,ie,js,je,n,is1,ie1,js1,je1,df)
+        else !(direction == "y")
+            call sbp_dy(Q43,lastnonzeroQ43,f,is,ie,js,je,n,is1,ie1,js1,je1,df)
         end if
     case default
         call parcomm_global%abort("sbp_mod, sbp_diff - unkonwn operator: "//opername)

@@ -24,8 +24,9 @@ function create_div_operator(domain, div_operator_name) result(div)
         div = create_div_a2_operator(domain,div_operator_name)
     elseif(div_operator_name == 'divergence_ah2') then
         div = create_div_ah2_operator(domain)
-    elseif(div_operator_name == 'divergence_ah42_sbp') then
-        div = create_div_ah42_sbp_operator(domain)
+    elseif(div_operator_name == 'divergence_ah42_sbp' .or. &
+           div_operator_name == 'divergence_ah43_sbp') then
+        div = create_div_ah_sbp_operator(domain,div_operator_name)
     else
         call parcomm_global%abort("unknown divergence operator: "//div_operator_name)
     end if
@@ -73,16 +74,29 @@ function create_div_ah2_operator(domain) result(div)
 
 end function create_div_ah2_operator
 
-function create_div_ah42_sbp_operator(domain) result(div)
+function create_div_ah_sbp_operator(domain, div_operator_name) result(div)
 
-    use div_ah42_sbp_mod,     only : div_ah42_sbp_t
+    use div_ah_sbp_mod,       only : div_ah_sbp_t
     use exchange_factory_mod, only : create_symm_halo_exchange_Ah
 
     type(domain_t),   intent(in)  :: domain
-    type(div_ah42_sbp_t)          :: div
+    character(len=*), intent(in)  :: div_operator_name
+    type(div_ah_sbp_t)            :: div
 
-    integer(kind=4), parameter :: halo_width_interior=3
+    integer(kind=4)            :: halo_width_interior
     integer(kind=4), parameter :: halo_width_edges=1
+
+    select case(div_operator_name)
+    case ("divergence_ah42_sbp")
+        halo_width_interior = 3
+        div%sbp_operator_name="d42"
+    case ("divergence_ah43_sbp")
+        halo_width_interior = 5
+        div%sbp_operator_name="d43"
+    case default
+        call parcomm_global%abort("div_factory_mod, create_div_ah_sbp_operator"// &
+                                  " - unknown SBP operator: "//div_operator_name)
+    end select
 
     div%exch_uv_interior =  &
                     create_symm_halo_exchange_Ah(domain%partition, domain%parcomm, &
@@ -91,6 +105,6 @@ function create_div_ah42_sbp_operator(domain) result(div)
                     create_symm_halo_exchange_Ah(domain%partition, domain%parcomm, &
                                                  domain%topology,  halo_width_edges, 'full')
 
-end function create_div_ah42_sbp_operator
+end function create_div_ah_sbp_operator
 
 end module div_factory_mod
