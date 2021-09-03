@@ -456,10 +456,11 @@ $(DOBJ)div_factory_mod.o: src/differential_operators/div_factory_mod.f90 \
 	$(DOBJ)mesh_mod.o \
 	$(DOBJ)abstract_div_mod.o \
 	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)div_c2_mod.o \
+	$(DOBJ)exchange_factory_mod.o \
 	$(DOBJ)div_a2_mod.o \
 	$(DOBJ)halo_factory_mod.o \
 	$(DOBJ)div_ah2_mod.o \
-	$(DOBJ)exchange_factory_mod.o \
 	$(DOBJ)div_ah_sbp_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -515,9 +516,10 @@ $(DOBJ)div_ah_sbp_mod.o: src/differential_operators/div_ah_sbp_mod.f90 \
 
 $(DOBJ)div_c2_mod.o: src/differential_operators/div_c2_mod.f90 \
 	$(DOBJ)abstract_div_mod.o \
-	$(DOBJ)grid_function_mod.o \
+	$(DOBJ)domain_mod.o \
 	$(DOBJ)mesh_mod.o \
-	$(DOBJ)partition_mod.o
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)exchange_halo_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

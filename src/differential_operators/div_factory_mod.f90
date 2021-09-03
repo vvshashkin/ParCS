@@ -16,8 +16,7 @@ function create_div_operator(domain, div_operator_name) result(div)
     class(div_operator_t), allocatable :: div
 
     if(div_operator_name == 'divergence_c2') then
-        call parcomm_global%abort("not implemented: "//div_operator_name)
-        !div = div_c2_t()
+        div = create_div_c2_operator(domain)
     elseif(div_operator_name == 'divergence_a2_ecs'  .or. &
            div_operator_name == 'divergence_a2_cons' .or. &
            div_operator_name == 'divergence_a2_fv') then
@@ -31,6 +30,20 @@ function create_div_operator(domain, div_operator_name) result(div)
         call parcomm_global%abort("unknown divergence operator: "//div_operator_name)
     end if
 end
+
+function create_div_c2_operator(domain) result(div)
+
+    use div_c2_mod,             only : div_c2_t
+    use exchange_factory_mod,   only : create_symmetric_halo_vec_exchange_C
+
+    type(domain_t),   intent(in)  :: domain
+    type(div_c2_t)                :: div
+
+    integer(kind=4), parameter :: halo_width=1
+
+    div%exch_halo = create_symmetric_halo_vec_exchange_C(domain%partition, domain%parcomm, &
+                                                         domain%topology, halo_width, 'full')
+end function create_div_c2_operator
 
 function create_div_a2_operator(domain, div_operator_name) result(div)
 
