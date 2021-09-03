@@ -433,12 +433,6 @@ $(DOBJ)abstract_grad_mod.o: src/differential_operators/abstract_grad_mod.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
-$(DOBJ)hor_difops_abstract_mod.o: src/differential_operators/hor_difops_abstract_mod.f90 \
-	$(DOBJ)grid_field_mod.o \
-	$(DOBJ)mesh_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
 $(DOBJ)grad_contra_ah_sbp_mod.o: src/differential_operators/grad_contra_ah_sbp_mod.f90 \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)abstract_grad_mod.o \
@@ -462,13 +456,6 @@ $(DOBJ)div_factory_mod.o: src/differential_operators/div_factory_mod.f90 \
 	$(DOBJ)halo_factory_mod.o \
 	$(DOBJ)div_ah2_mod.o \
 	$(DOBJ)div_ah_sbp_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
-$(DOBJ)hor_difops_basic_mod.o: src/differential_operators/hor_difops_basic_mod.f90 \
-	$(DOBJ)grid_field_mod.o \
-	$(DOBJ)mesh_mod.o \
-	$(DOBJ)const_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -523,8 +510,23 @@ $(DOBJ)div_c2_mod.o: src/differential_operators/div_c2_mod.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)grad_contra_c2_ecs_mod.o: src/differential_operators/grad_contra_c2_ecs_mod.f90 \
+	$(DOBJ)abstract_grad_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)halo_mod.o \
+	$(DOBJ)domain_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)sbp_mod.o: src/differential_operators/sbp_mod.f90 \
 	$(DOBJ)parcomm_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)old_hor_difops_abstract_mod.o: src/differential_operators/OLD_hor_difops_abstract_mod.f90 \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)mesh_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -538,13 +540,21 @@ $(DOBJ)grad_factory_mod.o: src/differential_operators/grad_factory_mod.f90 \
 	$(DOBJ)abstract_grad_mod.o \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)parcomm_mod.o \
-	$(DOBJ)grad_contra_a2_mod.o \
+	$(DOBJ)grad_contra_c2_ecs_mod.o \
 	$(DOBJ)halo_factory_mod.o \
+	$(DOBJ)grad_contra_a2_mod.o \
 	$(DOBJ)grad_contra_ah2_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
 	$(DOBJ)ecs_metric_mod.o \
 	$(DOBJ)const_mod.o \
 	$(DOBJ)grad_contra_ah_sbp_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)old_hor_difops_basic_mod.o: src/differential_operators/OLD_hor_difops_basic_mod.f90 \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)const_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -692,11 +702,11 @@ $(DOBJ)operator_nhlin_mod.o: src/models/linear_NH/operator_NHlin_mod.f90 \
 	$(DOBJ)mesh_mod.o \
 	$(DOBJ)exchange_abstract_mod.o \
 	$(DOBJ)ecs_halo_mod.o \
-	$(DOBJ)hor_difops_abstract_mod.o \
+	$(DOBJ)old_hor_difops_abstract_mod.o \
 	$(DOBJ)partition_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
 	$(DOBJ)ecs_halo_factory_mod.o \
-	$(DOBJ)hor_difops_basic_mod.o \
+	$(DOBJ)old_hor_difops_basic_mod.o \
 	$(DOBJ)const_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -740,7 +750,7 @@ $(DOBJ)operator_nhlin_split_mod.o: src/models/linear_NH/operator_NHlin_split_mod
 	$(DOBJ)mesh_mod.o \
 	$(DOBJ)exchange_abstract_mod.o \
 	$(DOBJ)ecs_halo_mod.o \
-	$(DOBJ)hor_difops_abstract_mod.o \
+	$(DOBJ)old_hor_difops_abstract_mod.o \
 	$(DOBJ)const_mod.o \
 	$(DOBJ)grid_function_mod.o
 	@echo $(COTEXT)
@@ -853,7 +863,7 @@ $(DOBJ)operator_swlin_mod.o: src/models/linear_shallow_water/operator_swlin_mod.
 	$(DOBJ)mesh_mod.o \
 	$(DOBJ)exchange_abstract_mod.o \
 	$(DOBJ)ecs_halo_mod.o \
-	$(DOBJ)hor_difops_abstract_mod.o \
+	$(DOBJ)old_hor_difops_abstract_mod.o \
 	$(DOBJ)const_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -869,7 +879,7 @@ $(DOBJ)swlin_operator_factory_mod.o: src/models/linear_shallow_water/swlin_opera
 	$(DOBJ)partition_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
 	$(DOBJ)ecs_halo_factory_mod.o \
-	$(DOBJ)hor_difops_basic_mod.o \
+	$(DOBJ)old_hor_difops_basic_mod.o \
 	$(DOBJ)parameters_swlin_mod.o \
 	$(DOBJ)operator_swlin_mod.o
 	@echo $(COTEXT)

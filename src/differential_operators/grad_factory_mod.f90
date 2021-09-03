@@ -14,9 +14,8 @@ function create_grad_operator(domain, grad_operator_name) result(grad)
 
     class(grad_operator_t), allocatable :: grad
 
-    if(grad_operator_name == 'gradient_c2') then
-       ! grad = create_grad_contra_c2_operator(mesh,partition,grad_operator_name)
-        call parcomm_global%abort("not implemented "//grad_operator_name)
+    if(grad_operator_name == 'gradient_c2_ecs') then
+        grad = create_grad_contra_c2_ecs_operator(domain)
     else if(grad_operator_name == 'gradient_a2_ecs' .or. &
             grad_operator_name == 'gradient_a2_cons') then
         grad = create_grad_contra_a2_operator(domain,grad_operator_name)
@@ -30,40 +29,20 @@ function create_grad_operator(domain, grad_operator_name) result(grad)
     end if
 end
 
-! function create_grad_contra_c2_operator(mesh, partition,grad_operator_name) result(grad)
+function create_grad_contra_c2_ecs_operator(domain) result(grad)
 
-!     use grad_contra_c2_mod,        only : grad_contra_c2_t
-!     use mpi,                       only : MPI_comm_rank, MPI_comm_size, mpi_comm_world
-!     use exchange_factory_mod,      only : create_Agrid_halo_exchange
-!     use ecs_halo_factory_mod,      only : init_ecs_halo
-!     use ecs_halo_lin_factory_mod,  only : init_ecs_halo_lin
-!     !use grid_function_factory_mod, only : create_grid_function
+    use grad_contra_c2_ecs_mod, only : grad_contra_c2_ecs_t
+    use halo_factory_mod,       only : create_halo_procedure
 
-!     type(partition_t), intent(in)    :: partition
-!     type(mesh_t),      intent(in)    :: mesh(partition%ts:partition%te)
-!     character(*),      intent(in)    :: grad_operator_name
+    type(domain_t),   intent(in)  :: domain
+    type(grad_contra_c2_ecs_t)    :: grad
 
-!     type(grad_contra_c2_t) :: grad
+    integer(kind=4), parameter :: ecs_halo_width=2, default_halo_width=1
 
-!     integer(kind=4) :: myid, np, ierr, t
+    grad = grad_contra_c2_ecs_t()
+    call create_halo_procedure(grad%halo_procedure,domain,ecs_halo_width,"ECS_O")
 
-!     call MPI_comm_rank(mpi_comm_world , myid, ierr)
-!     call MPI_comm_size(mpi_comm_world , Np  , ierr)
-
-!     grad%kernel_type = grad_operator_name
-
-!     grad%exch_halo = create_Agrid_halo_exchange( &
-!                       partition, 4, 'full', myid, np )
-
-!     allocate(grad%halo(partition%ts:partition%te))
-!     do t = partition%ts, partition%te
-!          grad%halo(t) = init_ecs_halo_lin(mesh(t)%is, mesh(t)%ie, &
-!                                       mesh(t)%js, mesh(t)%je, &
-!                                       mesh(t)%nx, 2         , &
-!                                       mesh(t)%hx)
-!     end do
-
-! end function create_grad_contra_c2_operator
+end function create_grad_contra_c2_ecs_operator
 
 function create_grad_contra_a2_operator(domain, grad_operator_name) result(grad)
 
