@@ -17,6 +17,8 @@ function create_div_operator(domain, div_operator_name) result(div)
 
     if(div_operator_name == 'divergence_c2') then
         div = create_div_c2_operator(domain)
+    elseif(div_operator_name == 'divergence_c_sbp21') then
+        div = create_div_c_sbp21_operator(domain)
     elseif(div_operator_name == 'divergence_a2_ecs'  .or. &
            div_operator_name == 'divergence_a2_cons' .or. &
            div_operator_name == 'divergence_a2_fv') then
@@ -34,16 +36,31 @@ end
 function create_div_c2_operator(domain) result(div)
 
     use div_c2_mod,             only : div_c2_t
-    use exchange_factory_mod,   only : create_symmetric_halo_vec_exchange_C
+    use halo_factory_mod,       only : create_vector_halo_procedure
 
     type(domain_t),   intent(in)  :: domain
     type(div_c2_t)                :: div
 
     integer(kind=4), parameter :: halo_width=1
 
+    !div%exch_halo = create_symmetric_halo_vec_exchange_C(domain%partition, domain%parcomm, &
+    !                                                     domain%topology, halo_width, 'full')
+    call create_vector_halo_procedure(div%halo_procedure,domain,1,"C_vec_default")
+end function create_div_c2_operator
+
+function create_div_c_sbp21_operator(domain) result(div)
+
+    use div_c2_mod,             only : div_c_sbp21_t
+    use exchange_factory_mod,   only : create_symmetric_halo_vec_exchange_C
+
+    type(domain_t),   intent(in)  :: domain
+    type(div_c_sbp21_t)           :: div
+
+    integer(kind=4), parameter :: halo_width=1
+
     div%exch_halo = create_symmetric_halo_vec_exchange_C(domain%partition, domain%parcomm, &
                                                          domain%topology, halo_width, 'full')
-end function create_div_c2_operator
+end function create_div_c_sbp21_operator
 
 function create_div_a2_operator(domain, div_operator_name) result(div)
 
