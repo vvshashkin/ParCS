@@ -18,11 +18,52 @@ type err_container_t
 end type err_container_t
 
 private
-public :: err_container_t, test_div, test_grad, test_laplace_spectre
+public :: err_container_t, test_div, test_grad, test_conv, &
+          test_laplace_spectre
 
 real(kind=8), parameter :: some_const = 12.34567_8
 
 contains
+
+
+subroutine test_conv(operator_name,staggering,Ns)
+    character(len=*), intent(in) :: operator_name
+    character(len=*), intent(in) :: staggering
+    integer(kind=4),  intent(in) :: Ns(:)
+
+    integer(kind=4) kn, ke
+    type(err_container_t) :: errs(size(Ns))
+    real(kind=8) err_buff(size(Ns))
+    character(len=2) :: n_errs_str
+    character(:), allocatable :: fmt_str
+
+    print *, "======================================================"
+    print *, "Convergence test of "//operator_name
+
+    do kn = 1, size(Ns)
+        if(operator_name(1:4) == "grad") then
+            errs(kn) = test_grad(Ns(kn),operator_name,staggering)
+        else if(operator_name(1:3) == "div") then
+            errs(kn) = test_div(Ns(kn),operator_name,staggering)
+        else
+            call parcomm_global%abort("test_conv: unknown type of operator: " // &
+                                                                 operator_name)
+        end if
+    end do
+
+    write (n_errs_str,"(I2)") size(Ns)
+    fmt_str = "(A,"//n_errs_str//"E15.7)"
+
+    print *, "N=", Ns
+    do ke = 1, size(errs(1)%keys)
+        do kn = 1, size(Ns)
+            err_buff(kn) = errs(kn)%values(ke)
+        end do
+        print fmt_str, errs(1)%keys(ke)%str, err_buff
+    end do
+    print *, "======================================================"
+
+end subroutine test_conv
 
 type(err_container_t) function test_div(N,div_oper_name,staggering) result(errs)
 
