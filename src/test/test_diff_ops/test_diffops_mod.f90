@@ -29,7 +29,8 @@ type(err_container_t) function test_div(N,div_oper_name,staggering) result(errs)
     use test_fields_mod,  only : set_vector_test_field, set_scalar_test_field, &
                                  solid_rot=>solid_rotation_field_generator, &
                                  cross_polar=>cross_polar_flow_generator, &
-                                 cross_polar_div=>cross_polar_flow_div_generator
+                                 cross_polar_div=>cross_polar_flow_div_generator,&
+                                 random_vec=>random_vector_field_generator
     use div_factory_mod,  only : create_div_operator
     use abstract_div_mod, only : div_operator_t
 
@@ -58,15 +59,16 @@ type(err_container_t) function test_div(N,div_oper_name,staggering) result(errs)
     call div_op%calc_div(div2,u,v,domain,some_const)
 
     call div2%update(-some_const,div,domain%mesh_p)
-    if(div2%maxabs(domain%mesh_p,domain%parcomm)>1e-15) then
+    if(div2%maxabs(domain%mesh_p,domain%parcomm)>100e-15) then
         call parcomm_global%abort("div_a2 test, wrong multiplier interface. Test failed!")
     end if
 
-    allocate(errs%keys(4), errs%values(4))
+    allocate(errs%keys(5), errs%values(5))
     errs%keys(1)%str = "solid rotation linf"
     errs%keys(2)%str = "solid rotation l2"
     errs%keys(3)%str = "cross polar linf"
     errs%keys(4)%str = "cross polar l2"
+    errs%keys(5)%str = "random v mass err"
 
     errs%values(1) = div%maxabs(domain%mesh_p,domain%parcomm)
     errs%values(2) = div%algebraic_norm2(domain%mesh_p,domain%parcomm)/real(N,8)
@@ -80,6 +82,14 @@ type(err_container_t) function test_div(N,div_oper_name,staggering) result(errs)
     errs%values(3) = div%maxabs(domain%mesh_p,domain%parcomm)
     errs%values(4) = div%algebraic_norm2(domain%mesh_p,domain%parcomm)/real(nz*N,8)
     !call stats(div,domain%mesh_p)
+
+    call set_vector_test_field(u,v,random_vec, domain%mesh_u, domain%mesh_v, &
+                               0, "contravariant")
+
+    !call div_op%calc_div(div, u,v,domain)
+!
+!    errs%values(5) = mass(div,domain%mesh_p)
+     errs%values(5) = 0.0_8
 
 end function test_div
 
@@ -135,8 +145,8 @@ type(err_container_t) function test_grad(N,grad_oper_name,staggering) result(err
     errs%values(2) = gx%algebraic_norm2(domain%mesh_u,domain%parcomm)/real(nz*N,8)+&
                      gy%algebraic_norm2(domain%mesh_v,domain%parcomm)/real(nz*N,8)
 
-    call stats(gx,domain%mesh_u)
-    call stats(gy,domain%mesh_v)
+    !call stats(gx,domain%mesh_u)
+    !call stats(gy,domain%mesh_v)
 
 end function test_grad
 
@@ -350,5 +360,26 @@ subroutine stats(f,mesh)
     print '(A,4E15.7)', "corner: ", corner / 6.0_8
     print *, "interior", interior/6.0, interior_maxabs
 end subroutine stats
+
+real(kind=8) function mass(f,mesh) result(m)
+    use mesh_mod, only : mesh_t
+
+    type(grid_field_t), intent(in) :: f
+    type(mesh_t),       intent(in) :: mesh
+
+    integer(kind=4) t, i, j, k
+
+    m = 0.0_8
+
+    do t=1,6
+        do k = mesh%tile(t)%ks,mesh%tile(t)%ke
+            do j=mesh%tile(t)%js, mesh%tile(t)%je
+                do i=mesh%tile(t)%is,mesh%tile(t)%ie
+                    m = m+mesh%tile(t)%G(i,j)*f%tile(t)%p(i,j,k)
+                end do
+            end do
+        end do
+    end do
+end function mass
 
 end module test_diffops_mod

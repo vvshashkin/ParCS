@@ -11,6 +11,7 @@ public :: solid_rotation_field_generator_t, solid_rotation_field_generator
 public :: xyz_grad_generator_t, xyz_grad_generator
 public :: cross_polar_flow_generator_t, cross_polar_flow_generator
 public :: cross_polar_flow_div_generator_t, cross_polar_flow_div_generator
+public :: random_vector_field_generator_t, random_vector_field_generator
 
 !!!!!!!!!!!!!Abstract scalar and vector fields generators
 type, public, abstract :: scalar_field_generator_t
@@ -49,12 +50,18 @@ contains
 procedure :: get_scalar_field => generate_cross_polar_flow_div
 end type cross_polar_flow_div_generator_t
 
+type, extends(vector_field_generator_t) :: random_vector_field_generator_t
+contains
+procedure :: get_vector_field => generate_random_vector_field
+end type random_vector_field_generator_t
+
 !!!field generator instances
 type(xyz_scalar_field_generator_t)     :: xyz_scalar_field_generator
 type(solid_rotation_field_generator_t) :: solid_rotation_field_generator
 type(xyz_grad_generator_t)             :: xyz_grad_generator
 type(cross_polar_flow_generator_t)     :: cross_polar_flow_generator
 type(cross_polar_flow_div_generator_t) :: cross_polar_flow_div_generator
+type(random_vector_field_generator_t)  :: random_vector_field_generator
 
 abstract interface
     subroutine get_scalar_field(this,f,npts,nlev,x,y,z)
@@ -316,5 +323,35 @@ subroutine generate_cross_polar_flow_div(this,f,npts,nlev,x,y,z)
         end do
     end do
 end subroutine generate_cross_polar_flow_div
+
+subroutine generate_random_vector_field(this,vx,vy,vz,npts,nlev,x,y,z)
+    use latlon_functions_mod, only : sin_phi, cos_phi, sin_lam, cos_lam
+
+    class(random_vector_field_generator_t),   intent(in)  :: this
+    integer(kind=4),                          intent(in)  :: npts, nlev
+    real(kind=8),       dimension(npts),      intent(in)  :: x, y, z
+    real(kind=8),       dimension(npts,nlev), intent(out) :: vx, vy, vz
+
+    integer(kind=4) :: i, k
+    real(kind=8)    :: proj
+
+    call random_number(vx)
+    call random_number(vy)
+    call random_number(vz)
+
+    vx = vx-0.5_8
+    vy = vy-0.5_8
+    vz = vz-0.5_8
+
+    !ensure the vectors are tangent to the sphere
+!    do k = 1, nlev
+!        do i=1, npts
+!            proj = (x(i)*vx(i)+y(i)*vy(i)+z(i)*vz(i)) / (x(i)**2+y(i)**2+z(i)**2)
+!            vx(i) = vx(i)-proj*x(i)
+!            vy(i) = vy(i)-proj*y(i)
+!            vz(i) = vz(i)-proj*z(i)
+!        end do
+!    end do
+end subroutine generate_random_vector_field
 
 end module test_fields_mod

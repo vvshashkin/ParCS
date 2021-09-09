@@ -451,9 +451,9 @@ $(DOBJ)div_factory_mod.o: src/differential_operators/div_factory_mod.f90 \
 	$(DOBJ)abstract_div_mod.o \
 	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)div_c2_mod.o \
+	$(DOBJ)halo_factory_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
 	$(DOBJ)div_a2_mod.o \
-	$(DOBJ)halo_factory_mod.o \
 	$(DOBJ)div_ah2_mod.o \
 	$(DOBJ)div_ah_sbp_mod.o
 	@echo $(COTEXT)
@@ -506,7 +506,8 @@ $(DOBJ)div_c2_mod.o: src/differential_operators/div_c2_mod.f90 \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)mesh_mod.o \
 	$(DOBJ)grid_field_mod.o \
-	$(DOBJ)exchange_halo_mod.o
+	$(DOBJ)exchange_halo_mod.o \
+	$(DOBJ)halo_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -516,7 +517,7 @@ $(DOBJ)grad_contra_c2_ecs_mod.o: src/differential_operators/grad_contra_c2_ecs_m
 	$(DOBJ)mesh_mod.o \
 	$(DOBJ)halo_mod.o \
 	$(DOBJ)domain_mod.o \
-	$(DOBJ)exchange_halo_mod.o
+	$(DOBJ)exchange_abstract_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -543,9 +544,9 @@ $(DOBJ)grad_factory_mod.o: src/differential_operators/grad_factory_mod.f90 \
 	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)grad_contra_c2_ecs_mod.o \
 	$(DOBJ)halo_factory_mod.o \
-	$(DOBJ)grad_contra_a2_mod.o \
 	$(DOBJ)grad_contra_ah2_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
+	$(DOBJ)grad_contra_a2_mod.o \
 	$(DOBJ)ecs_metric_mod.o \
 	$(DOBJ)const_mod.o \
 	$(DOBJ)grad_contra_ah_sbp_mod.o
