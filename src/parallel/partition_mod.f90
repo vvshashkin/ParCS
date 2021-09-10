@@ -1,21 +1,22 @@
 module partition_mod
 use tile_mod,    only : tile_t
-use mpi
 use parcomm_mod, only : parcomm_global
 implicit none
 
 type, public :: partition_t
-    type(tile_t),    allocatable :: tile_o(:), tile_x(:), tile_y(:), tile_xy(:)!array of partition tiles
-    type(tile_t),    allocatable :: tile(:)!, tile_u(:), tile_v(:)!array of partition tiles
+    !array of partition tiles
+    type(tile_t),    allocatable :: tile_o(:), tile_x(:), tile_y(:), tile_xy(:)
+    type(tile_t),    allocatable :: tile(:), tile_u(:), tile_v(:), tile_p(:)!array of partition tiles
     integer(kind=4), allocatable :: proc_map(:) !determine belonging of the tile to the specific processor
     integer(kind=4), allocatable :: panel_map(:)!determine belonging of the tile to the specific panel
     integer(kind=4)              :: Nh, Nz      !number of grid points in x/y, z direction for the one panel
     integer(kind=4)              :: nx_u, ny_u, nx_v, ny_v
-    integer(kind=4)              :: num_tiles   !number of tiles in the partition
+    integer(kind=4)              :: num_tiles   !number of tiles at each panel in the partition
     integer(kind=4)              :: num_panels  !
     integer(kind=4)              :: ts, te      ! start and end index of the tiles belonging to the specific processor
 contains
     procedure, public :: init
+    procedure, public :: get_points_type_tile
     ! procedure, public :: write_to_txt
     ! procedure, public :: write_to_txt_3d
 end type partition_t
@@ -81,16 +82,31 @@ subroutine init(this, Nh, Nz, num_tiles, myid, Np, staggering_type, strategy)
         this%ny_u = this%nh
         this%nx_v = this%nh
         this%ny_v = this%nh
+
+        this%tile_u = this%tile_o
+        this%tile_v = this%tile_o
+        this%tile_p = this%tile_o
+
     else if (staggering_type == 'Ah') then
         this%nx_u = this%nh+1
         this%ny_u = this%nh+1
         this%nx_v = this%nh+1
         this%ny_v = this%nh+1
+
+        this%tile_u = this%tile_xy
+        this%tile_v = this%tile_xy
+        this%tile_p = this%tile_xy
+
     else if (staggering_type == 'C') then
         this%nx_u = this%nh+1
         this%ny_u = this%nh
         this%nx_v = this%nh
         this%ny_v = this%nh+1
+
+        this%tile_u = this%tile_x
+        this%tile_v = this%tile_y
+        this%tile_p = this%tile_o
+
     else
         print*, 'Unknown staggering_type in partition initialization. Stop'
         stop
@@ -229,5 +245,26 @@ function get_factors(n) result(factors)
     factors = (/n/f1, f1/)
 
 end function get_factors
+
+subroutine get_points_type_tile(this, points_type, tile)
+
+    use parcomm_mod, only : parcomm_global
+
+    class(partition_t),        intent(in)  :: this
+    character(len=*),          intent(in)  :: points_type
+    type(tile_t), allocatable, intent(out) :: tile(:)
+
+    select case(points_type)
+    case('p')
+        tile = this%tile_p
+    case('u')
+        tile = this%tile_u
+    case('v')
+        tile = this%tile_v
+    case default
+        call parcomm_global%abort("Wrong points_type in get_points_type_tile")
+    end select
+
+end subroutine
 
 end module partition_mod

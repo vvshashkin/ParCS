@@ -15,7 +15,6 @@ subroutine test_A_halo_exchange()
     use domain_factory_mod,     only : create_domain
     use exchange_abstract_mod,  only : exchange_t
     use exchange_halo_mod,      only : exchange_2D_halo_t
-    use partition_mod,          only : partition_t
     use exchange_factory_mod,   only : create_symm_halo_exchange_A
 
     type(domain_t) :: domain
@@ -176,7 +175,6 @@ subroutine test_Ah_halo_exchange()
     use domain_factory_mod,     only : create_domain
     use exchange_abstract_mod,  only : exchange_t
     use exchange_halo_mod,      only : exchange_2D_halo_t
-    use partition_mod,          only : partition_t
     use exchange_factory_mod,   only : create_symm_halo_exchange_Ah
     use test_fields_mod,        only : set_vector_test_field, set_scalar_test_field, &
                                        xyz_f => xyz_scalar_field_generator
@@ -212,7 +210,6 @@ subroutine test_halo_vec_C_exchange()
     use domain_factory_mod,     only : create_domain
     use exchange_abstract_mod,  only : exchange_t
     use exchange_halo_C_mod,    only : exchange_2D_halo_C_t
-    use partition_mod,          only : partition_t
     use exchange_factory_mod,   only : create_symmetric_halo_vec_exchange_C
 
     type(domain_t) :: domain
@@ -350,7 +347,6 @@ subroutine test_halo_u_exchange()
     use domain_factory_mod,     only : create_domain
     use exchange_abstract_mod,  only : exchange_t
     use exchange_halo_C_mod,    only : exchange_2D_halo_C_t
-    use partition_mod,          only : partition_t
     use exchange_factory_mod,   only : create_symm_halo_vec_exchange_U_points
 
     type(domain_t) :: domain
@@ -460,7 +456,6 @@ subroutine test_halo_v_exchange()
     use domain_factory_mod,     only : create_domain
     use exchange_abstract_mod,  only : exchange_t
     use exchange_halo_C_mod,    only : exchange_2D_halo_C_t
-    use partition_mod,          only : partition_t
     use exchange_factory_mod,   only : create_symm_halo_vec_exchange_V_points
 
     type(domain_t) :: domain
@@ -560,98 +555,101 @@ subroutine test_halo_v_exchange()
 
 end subroutine test_halo_v_exchange
 
-! subroutine test_gather_exchange()
-!
-! use mpi
-!
-! use exchange_abstract_mod, only : exchange_t
-! use partition_mod,         only : partition_t
-! use exchange_factory_mod,  only : create_gather_exchange
-!
-! class(exchange_t),allocatable      :: exch_gather
-! type(partition_t)                  :: partition
-! type(grid_field_t)                 :: f
-!
-! integer(kind=4)                    :: nh=100, nz=10, halo_width=10
-! integer(kind=4)                    :: myid, np, ierr, code
-! integer(kind=4)                    :: master_id = 0
-!
-! integer(kind=4) :: ts, te
-! integer(kind=4) :: ind, i, j, k, t
-!
-! real(kind=8) :: err_sum
-!
-! integer(kind=4) :: local_tile_ind, remote_tile_ind, local_tile_panel_number, remote_tile_panel_number
-!
-! call MPI_comm_rank(mpi_comm_world , myid, ierr)
-! call MPI_comm_size(mpi_comm_world , Np  , ierr)
-!
-!
-! if (myid==0) print*, 'Running gather_exchange test!'
-!
-! call partition%init(nh, nz, max(1,Np/6), myid, Np, strategy = 'default')
-!
-! !find start and end index of tiles belonging to the current proccesor
-! ts = partition%ts
-! te = partition%te
-!
-! !Init arrays
-!
-! if (myid == master_id) then
-!     allocate(f%tile(1:6*partition%num_tiles))
-!     do i = 1, 6*partition%num_tiles
-!         call f%tile(i)%init(partition%tile(i)%panel_number,             &
-!                         partition%tile(i)%is, partition%tile(i)%ie, &
-!                         partition%tile(i)%js, partition%tile(i)%je, &
-!                         partition%tile(i)%ks, partition%tile(i)%ke, &
-!                         halo_width, halo_width, 0)
-!         f%tile(i)%p = huge(1.0_8)
-!     end do
-! else
-!     call create_grid_field(f, halo_width, 0, partition)
-! end if
-!
-! do t = ts, te
-!     do k = partition%tile(t)%ks, partition%tile(t)%ke
-!         do j = partition%tile(t)%js, partition%tile(t)%je
-!             do i = partition%tile(t)%is, partition%tile(t)%ie
-!                 f%tile(t)%p(i,j,k) =  (partition%tile(t)%panel_number-1)*nh*nh*nz + nz*nh*(j-1) + nz*(i-1) + k
-!             end do
-!         end do
-!     end do
-! end do
-!
-! !Init exchange
-! exch_gather = create_gather_exchange(partition, master_id, myid, np)
-!
-! !Perform exchange
-! call exch_gather%do(f)
-!
-! if (myid == master_id) then
-!
-!     err_sum = 0
-!
-!     do ind = 1, 6*partition%num_tiles
-!         do k = partition%tile(ind)%ks, partition%tile(ind)%ke
-!             do j = partition%tile(ind)%js, partition%tile(ind)%je
-!                 do i = partition%tile(ind)%is, partition%tile(ind)%ie
-!                     err_sum = err_sum + abs(f%tile(ind)%p(i,j,k) - ((partition%tile(ind)%panel_number-1)*nh*nh*nz + nz*nh*(j-1) + nz*(i-1) + k))
-!                 end do
-!             end do
-!         end do
-!     end do
-!
-!     if (int(err_sum)==0) then
-!         print*, 'Test passed!'
-!     else
-!         print*, 'Test not passed! Error! Abort!'
-!         call mpi_abort(mpi_comm_world, code, ierr)
-!         stop
-!     end if
-!
-! end if
-!
-! end subroutine test_gather_exchange
+subroutine test_gather_exchange()
+
+    use domain_mod,            only : domain_t
+    use domain_factory_mod,    only : create_domain
+    use exchange_abstract_mod, only : exchange_t
+    use exchange_factory_mod,  only : create_gather_exchange
+
+    type(domain_t) :: domain
+
+    class(exchange_t), allocatable :: exch_gather
+    type(grid_field_t)             :: f
+
+    integer(kind=4) :: nh=100, nz=10, halo_width=10
+    integer(kind=4) :: ierr, code
+    integer(kind=4) :: master_id = 0
+
+    integer(kind=4) :: ts, te
+    integer(kind=4) :: i, j, k, t, N_tiles, pn
+
+    real(kind=8) :: err_sum
+
+    integer(kind=4) :: local_tile_ind, remote_tile_ind, local_tile_panel_number, remote_tile_panel_number
+
+#define __fun(i,j,k,pn) ((pn-1)*nh*nh*nz + nz*nh*(j-1) + nz*(i-1) + k)
+
+    call create_domain(domain, "cube", 'A', nh, nz)
+
+    call domain%parcomm%print('Running gather exchange test!')
+
+    !find start and end index of tiles belonging to the current proccesor
+    ts = domain%partition%ts
+    te = domain%partition%te
+
+    !Init arrays
+
+    N_tiles = domain%partition%num_tiles*domain%partition%num_panels
+
+    if (domain%parcomm%myid == master_id) then
+        allocate(f%tile(N_tiles))
+        do i = 1, N_tiles
+            call f%tile(i)%init(domain%partition%tile_p(i)%is, domain%partition%tile_p(i)%ie, &
+                                domain%partition%tile_p(i)%js, domain%partition%tile_p(i)%je, &
+                                domain%partition%tile_p(i)%ks, domain%partition%tile_p(i)%ke)
+            f%tile(i)%p = huge(1.0_8)
+        end do
+    else
+        call create_grid_field(f, halo_width, 0, domain%mesh_p)
+    end if
+
+    do t = ts, te
+        f%tile(t)%p = huge(1.0_8)
+        pn = domain%partition%panel_map(t)
+        do k = domain%mesh_p%tile(t)%ks, domain%mesh_p%tile(t)%ke
+            do j = domain%mesh_p%tile(t)%js, domain%mesh_p%tile(t)%je
+                do i = domain%mesh_p%tile(t)%is, domain%mesh_p%tile(t)%ie
+                    f%tile(t)%p(i,j,k) =  __fun(i,j,k,pn)
+                end do
+            end do
+        end do
+    end do
+
+    !Init exchange
+
+    call create_gather_exchange(exch_gather, 'p', domain%parcomm, domain%partition, master_id)
+
+    !Perform exchange
+    call exch_gather%do(f, domain%parcomm)
+
+    if (domain%parcomm%myid == master_id) then
+
+        err_sum = 0
+
+        do t = 1, N_tiles
+            pn = domain%partition%panel_map(t)
+            do k = domain%partition%tile_p(t)%ks, domain%partition%tile_p(t)%ke
+                do j = domain%partition%tile_p(t)%js, domain%partition%tile_p(t)%je
+                    do i = domain%partition%tile_p(t)%is, domain%partition%tile_p(t)%ie
+                        err_sum = err_sum + abs(f%tile(t)%p(i,j,k) - __fun(i,j,k,pn))
+                    end do
+                end do
+            end do
+        end do
+
+        if (int(err_sum)==0) then
+            print*, 'Test passed!'
+        else
+            call domain%parcomm%abort('Test not passed! Error! Abort!')
+            stop
+        end if
+
+    end if
+
+#undef __fun
+
+end subroutine test_gather_exchange
 
 
 end module test_mod
