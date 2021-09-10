@@ -34,6 +34,7 @@ subroutine test_conv(operator_name,staggering,Ns)
     integer(kind=4) kn, ke
     type(err_container_t) :: errs(size(Ns))
     real(kind=8) err_buff(size(Ns))
+    real(kind=8) conv_rate
     character(len=2) :: n_errs_str
     character(:), allocatable :: fmt_str
 
@@ -52,14 +53,15 @@ subroutine test_conv(operator_name,staggering,Ns)
     end do
 
     write (n_errs_str,"(I2)") size(Ns)
-    fmt_str = "(A,"//n_errs_str//"E15.7)"
+    fmt_str = "(A,"//n_errs_str//"E15.7,A,F15.7)"
 
     print *, "N=", Ns
     do ke = 1, size(errs(1)%keys)
         do kn = 1, size(Ns)
             err_buff(kn) = errs(kn)%values(ke)
         end do
-        print fmt_str, errs(1)%keys(ke)%str, err_buff
+        conv_rate = calculate_convergence_rate(Ns,err_buff)
+        print fmt_str, errs(1)%keys(ke)%str, err_buff, "| convergence rate:", conv_rate
     end do
     print *, "======================================================"
 
@@ -104,12 +106,11 @@ type(err_container_t) function test_div(N,div_oper_name,staggering) result(errs)
         call parcomm_global%abort("div_a2 test, wrong multiplier interface. Test failed!")
     end if
 
-    allocate(errs%keys(5), errs%values(5))
+    allocate(errs%keys(4), errs%values(4))
     errs%keys(1)%str = "solid rotation linf"
     errs%keys(2)%str = "solid rotation l2"
     errs%keys(3)%str = "cross polar linf"
     errs%keys(4)%str = "cross polar l2"
-    errs%keys(5)%str = "random v mass err"
 
     errs%values(1) = div%maxabs(domain%mesh_p,domain%parcomm)
     errs%values(2) = div%algebraic_norm2(domain%mesh_p,domain%parcomm)/real(N,8)
@@ -123,14 +124,6 @@ type(err_container_t) function test_div(N,div_oper_name,staggering) result(errs)
     errs%values(3) = div%maxabs(domain%mesh_p,domain%parcomm)
     errs%values(4) = div%algebraic_norm2(domain%mesh_p,domain%parcomm)/real(nz*N,8)
     !call stats(div,domain%mesh_p)
-
-    call set_vector_test_field(u,v,random_vec, domain%mesh_u, domain%mesh_v, &
-                               0, "contravariant")
-
-    !call div_op%calc_div(div, u,v,domain)
-!
-!    errs%values(5) = mass(div,domain%mesh_p)
-     errs%values(5) = 0.0_8
 
 end function test_div
 
@@ -422,5 +415,31 @@ real(kind=8) function mass(f,mesh) result(m)
         end do
     end do
 end function mass
+
+real(kind=8) function calculate_convergence_rate(Ns,e) result(conv)
+    integer(kind=4), intent(in) :: Ns(:)
+    real(kind=8),    intent(in) :: e(:)
+
+    integer(kind=4) :: n, i
+    real(kind=8)    :: x(size(Ns)), y(size(Ns))
+    real(kind=8)    :: sx, sx2, sy, syx, det
+
+    n = size(Ns)
+    do i = 1, n
+        y(i) = log(max(e(i),1e-14))
+    end do
+
+    x = log(1.0*Ns)
+
+    !solve min{(y-ax-b)**2} for a:
+    !conv rate = -a
+    sx = sum(x)
+    sy = sum(y)
+    sx2 = sum(x**2)
+    syx = sum(y*x)
+    det = n*sx2-sx**2
+    conv =-(n*syx-sx*sy) / det
+
+end function calculate_convergence_rate
 
 end module test_diffops_mod
