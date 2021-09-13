@@ -18,7 +18,7 @@ type err_container_t
 end type err_container_t
 
 private
-public :: err_container_t, test_div, test_grad, test_laplace_spectre
+public :: err_container_t, test_div, test_grad, test_curl, test_laplace_spectre
 
 real(kind=8), parameter :: some_const = 12.34567_8
 
@@ -149,7 +149,46 @@ type(err_container_t) function test_grad(N,grad_oper_name,staggering) result(err
     !call stats(gy,domain%mesh_v)
 
 end function test_grad
+function test_curl(N, div_oper_name, staggering) result(errs)
 
+    use test_fields_mod,   only : set_vector_test_field, set_scalar_test_field, &
+                                  VSH_curl_free_10 => VSH_curl_free_10_generator, &
+                                  zero_field => zero_scalar_field_generator
+
+    use curl_factory_mod,  only : create_curl_operator_div_based
+    use abstract_curl_mod, only : curl_operator_t
+
+    integer(kind=4),  intent(in) :: N
+    character(len=*), intent(in) :: div_oper_name, staggering
+    type(err_container_t)        :: errs
+    !locals:
+    integer(kind=4), parameter  :: nz = 3
+    integer(kind=4), parameter  :: ex_halo_width = 8
+    type(grid_field_t)          :: u, v, curl, curl_true
+    type(domain_t)              :: domain
+    class(curl_operator_t), allocatable :: curl_op
+
+    call create_domain(domain, "cube", staggering, N, nz)
+
+    call create_curl_operator_div_based(curl_op, div_oper_name, domain)
+
+    call create_grid_field(u,         ex_halo_width, 0, domain%mesh_u)
+    call create_grid_field(v,         ex_halo_width, 0, domain%mesh_v)
+    call create_grid_field(curl,      ex_halo_width, 0, domain%mesh_p)
+    call create_grid_field(curl_true, 0,             0, domain%mesh_p)
+
+    allocate(errs%keys(2), errs%values(2))
+    errs%keys(1)%str = "VSH_curl_free_10 linf"
+    errs%keys(2)%str = "VSH_curl_free_10 l2"
+
+    call set_vector_test_field(u, v, VSH_curl_free_10, domain%mesh_u, domain%mesh_v, &
+                               0, "contravariant")
+    call curl_op%calc_curl(curl, u, v, domain)
+
+    errs%values(1) = curl%maxabs(domain%mesh_p, domain%parcomm)
+    errs%values(2) = curl%algebraic_norm2(domain%mesh_p,domain%parcomm)/real(N,8)
+
+end function test_curl
 subroutine test_laplace_spectre(div_operator_name, grad_operator_name, staggering)
     use test_fields_mod,   only : set_vector_test_field, solid_rot=>solid_rotation_field_generator
     use div_factory_mod,   only : create_div_operator
