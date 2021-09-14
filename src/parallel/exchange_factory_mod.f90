@@ -615,46 +615,62 @@ subroutine find_tiles_halo_intersection(tile1, halo_width1_x, halo_width1_y, til
 
 end subroutine find_tiles_halo_intersection
 
-function create_gather_exchange(partition, master_id, myid, np) result(exchange)
+subroutine create_gather_exchange(exchange, points_type, parcomm, partition, master_id)
 
-    use exchange_gather_mod,    only : exchange_gather_t
+    use exchange_abstract_mod, only : exchange_t
+    use exchange_gather_mod,   only : exchange_gather_t
+    use parcomm_mod,           only : parcomm_t
 
-    type(partition_t), target, intent(in)    :: partition
-    integer(kind=4),           intent(in)    :: master_id
-    integer(kind=4),           intent(in)    :: myid, np
+    class(exchange_t), allocatable, intent(out) :: exchange
+    character(len=*),               intent(in)  :: points_type
+    type(parcomm_t),                intent(in)  :: parcomm
+    type(partition_t),              intent(in)  :: partition
+    integer(kind=4),   optional,    intent(in)  :: master_id
 
-    type(exchange_gather_t), allocatable     :: exchange
+    type(exchange_gather_t), allocatable :: gather_exchange
+    type(tile_t),            allocatable :: tile(:)
 
-    integer(kind=4),  dimension((6*partition%num_tiles)) :: recv_is, recv_ie, recv_js, recv_je, recv_ks, recv_ke, &
-                                                                send_is, send_ie, send_js, send_je, send_ks, send_ke
-    integer(kind=4),  dimension((6*partition%num_tiles)) :: recv_from_proc_id , recv_to_tile_ind , &
-                                                                send_from_tile_ind,  send_tag, recv_tag
-    integer(kind=4),  dimension((6*partition%num_tiles)) :: send_pts_num, recv_pts_num
+    integer(kind=4),  dimension(partition%num_panels*partition%num_tiles) :: &
+                      recv_is, recv_ie, recv_js, recv_je, recv_ks, recv_ke, &
+                      send_is, send_ie, send_js, send_je, send_ks, send_ke
+
+    integer(kind=4),  dimension(partition%num_panels*partition%num_tiles) :: &
+                      recv_from_proc_id , recv_to_tile_ind , &
+                      send_from_tile_ind,  send_tag, recv_tag
+
+    integer(kind=4),  dimension(partition%num_panels*partition%num_tiles) :: &
+                      send_pts_num, recv_pts_num
+
     integer(kind=4) :: ind, send_exch_num, recv_exch_num, ts, te
+    integer(kind=4) :: master_id_loc
 
-    ts = findloc(partition%proc_map, myid, dim=1)
-    te = findloc(partition%proc_map, myid, back = .true., dim=1)
+    master_id_loc = 0
+    if (present(master_id)) master_id_loc = master_id
+
+    ts = partition%ts
+    te = partition%te
 
     recv_exch_num = 0
     send_exch_num = 0
 
-    if (myid == master_id) then
+    call partition%get_points_type_tile(points_type, tile)
 
+    if (parcomm%myid == master_id_loc) then
 
-        do ind = 1, 6*partition%num_tiles
+        do ind = 1, partition%num_panels*partition%num_tiles
 
-            if (partition%proc_map(ind) == myid) cycle
+            if (partition%proc_map(ind) == parcomm%myid) cycle
 
             recv_exch_num = recv_exch_num + 1
 
-            recv_is(recv_exch_num) = partition%tile(ind)%is
-            recv_ie(recv_exch_num) = partition%tile(ind)%ie
+            recv_is(recv_exch_num) = tile(ind)%is
+            recv_ie(recv_exch_num) = tile(ind)%ie
 
-            recv_js(recv_exch_num) = partition%tile(ind)%js
-            recv_je(recv_exch_num) = partition%tile(ind)%je
+            recv_js(recv_exch_num) = tile(ind)%js
+            recv_je(recv_exch_num) = tile(ind)%je
 
-            recv_ks(recv_exch_num) = partition%tile(ind)%ks
-            recv_ke(recv_exch_num) = partition%tile(ind)%ke
+            recv_ks(recv_exch_num) = tile(ind)%ks
+            recv_ke(recv_exch_num) = tile(ind)%ke
 
             recv_pts_num(recv_exch_num) = (recv_ie(recv_exch_num) - recv_is(recv_exch_num) + 1)* &
                                           (recv_je(recv_exch_num) - recv_js(recv_exch_num) + 1)* &
@@ -670,20 +686,20 @@ function create_gather_exchange(partition, master_id, myid, np) result(exchange)
 
     else
 
-        do ind = 1, 6*partition%num_tiles
+        do ind = 1, partition%num_panels*partition%num_tiles
 
-            if (partition%proc_map(ind) /= myid) cycle
+            if (partition%proc_map(ind) /= parcomm%myid) cycle
 
             send_exch_num = send_exch_num + 1
 
-            send_is(send_exch_num) = partition%tile(ind)%is
-            send_ie(send_exch_num) = partition%tile(ind)%ie
+            send_is(send_exch_num) = tile(ind)%is
+            send_ie(send_exch_num) = tile(ind)%ie
 
-            send_js(send_exch_num) = partition%tile(ind)%js
-            send_je(send_exch_num) = partition%tile(ind)%je
+            send_js(send_exch_num) = tile(ind)%js
+            send_je(send_exch_num) = tile(ind)%je
 
-            send_ks(send_exch_num) = partition%tile(ind)%ks
-            send_ke(send_exch_num) = partition%tile(ind)%ke
+            send_ks(send_exch_num) = tile(ind)%ks
+            send_ke(send_exch_num) = tile(ind)%ke
 
             send_pts_num(send_exch_num) = (send_ie(send_exch_num) - send_is(send_exch_num) + 1)* &
                                           (send_je(send_exch_num) - send_js(send_exch_num) + 1)* &
@@ -696,7 +712,7 @@ function create_gather_exchange(partition, master_id, myid, np) result(exchange)
         end do
     end if
 
-    allocate(exchange,         source = exchange_gather_t(            &
+    allocate(gather_exchange,  source = exchange_gather_t(            &
             send_is            = send_is(1:send_exch_num),            &
             send_ie            = send_ie(1:send_exch_num),            &
             send_js            = send_js(1:send_exch_num),            &
@@ -722,15 +738,17 @@ function create_gather_exchange(partition, master_id, myid, np) result(exchange)
             ts = ts,                                                  &
             te = te ))
 
-    allocate(exchange%send_buff(1:send_exch_num)   , exchange%recv_buff(1:recv_exch_num)   )
-    allocate(exchange%mpi_send_req(1:send_exch_num), exchange%mpi_recv_req(1:recv_exch_num))
+    allocate(gather_exchange%send_buff(1:send_exch_num)   , gather_exchange%recv_buff(1:recv_exch_num)   )
+    allocate(gather_exchange%mpi_send_req(1:send_exch_num), gather_exchange%mpi_recv_req(1:recv_exch_num))
     do ind = 1, recv_exch_num
-        call exchange%recv_buff(ind)%init(recv_pts_num(ind))
+        call gather_exchange%recv_buff(ind)%init(recv_pts_num(ind))
     end do
     do ind = 1, send_exch_num
-        call exchange%send_buff(ind)%init(send_pts_num(ind))
+        call gather_exchange%send_buff(ind)%init(send_pts_num(ind))
     end do
 
-end function create_gather_exchange
+    call move_alloc(gather_exchange, exchange)
+
+end subroutine create_gather_exchange
 
 end module exchange_factory_mod

@@ -45,12 +45,10 @@ subroutine do_gather_exchange(this, f, parcomm)
     type(parcomm_t),          intent(in)    :: parcomm
     type(grid_field_t),       intent(inout) :: f
 
-    integer(kind=4) :: ierr, myid
+    integer(kind=4) :: ierr
     integer(kind=4) :: i, ind, ind_recv
 
-    call MPI_comm_rank(mpi_comm_world, myid, ierr)
-
-    if (myid == this%master_id) then
+    if (parcomm%myid == this%master_id) then
 
         this%mpi_recv_req = MPI_REQUEST_NULL
 

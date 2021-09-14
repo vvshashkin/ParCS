@@ -1,7 +1,7 @@
 module outputer_abstract_mod
 
 use grid_field_mod, only : grid_field_t
-use partition_mod,  only : partition_t
+use domain_mod,     only : domain_t
 
 implicit none
 
@@ -18,14 +18,14 @@ contains
 end type outputer_t
 
 abstract interface
-    subroutine write_proc(this, f, partition, file_name, rec_num)
-        import outputer_t, grid_field_t, partition_t
-        class(outputer_t),     intent(inout) :: this
-        type(grid_field_t),    intent(inout) :: f
-        type(partition_t),     intent(in)    :: partition
-        character(*),          intent(in)    :: file_name
-        integer(kind=4),       intent(in), &
-                               optional      :: rec_num
+    subroutine write_proc(this, f, domain, file_name, rec_num)
+        import outputer_t, grid_field_t, domain_t
+        class(outputer_t),   intent(inout) :: this
+        type(grid_field_t),  intent(inout) :: f
+        type(domain_t),      intent(in)    :: domain
+        character(*),        intent(in)    :: file_name
+        integer(kind=4),     intent(in), &
+                             optional      :: rec_num
     end subroutine
 end interface
 
