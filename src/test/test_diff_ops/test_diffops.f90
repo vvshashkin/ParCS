@@ -24,7 +24,7 @@ call init_global_parallel_enviroment()
 ! errs = test_div(N=32,div_oper_name="divergence_ah2",staggering="Ah")
 ! print "(A,4E15.7)", "Err: ", errs%values
 
-errs = test_curl(N=8,div_oper_name="divergence_ah2",staggering="Ah")
+errs = test_curl(N=32,div_oper_name="divergence_ah2",staggering="Ah")
 print "(A,2E15.7)", "Err: ", errs%values
 
 !

@@ -50,7 +50,8 @@ subroutine transform_vectors(u, v, ut, vt, mesh_u, mesh_v)
     type(tile_field_t), intent(inout) :: ut, vt
     type(tile_mesh_t),  intent(in)    :: mesh_u, mesh_v
 
-    integer(kind=4) :: i, j, k, u_covariant, v_covariant
+    integer(kind=4) :: i, j, k
+    real(kind=8)    :: u_covariant, v_covariant
 
 !This implementation works only for unstaggered case, so mesh_u==mesh_v==mesh_p
     do k = mesh_u%ks, mesh_u%ke
