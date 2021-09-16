@@ -1,10 +1,13 @@
 module partition_mod
 use tile_mod,    only : tile_t
+use tiles_mod,   only : tiles_t
 use parcomm_mod, only : parcomm_global
 implicit none
 
 type, public :: partition_t
     !array of partition tiles
+    type(tiles_t) :: tiles_o, tiles_x, tiles_y, tiles_xy
+    type(tiles_t) :: tiles_u, tiles_v, tiles_p
     type(tile_t),    allocatable :: tile_o(:), tile_x(:), tile_y(:), tile_xy(:)
     type(tile_t),    allocatable :: tile(:), tile_u(:), tile_v(:), tile_p(:)!array of partition tiles
     integer(kind=4), allocatable :: proc_map(:) !determine belonging of the tile to the specific processor
@@ -17,6 +20,7 @@ type, public :: partition_t
 contains
     procedure, public :: init
     procedure, public :: get_points_type_tile
+    procedure, public :: get_points_type_tiles
     ! procedure, public :: write_to_txt
     ! procedure, public :: write_to_txt_3d
 end type partition_t
@@ -34,16 +38,13 @@ subroutine init(this, Nh, Nz, num_tiles, myid, Np, staggering_type, strategy)
     integer(kind=4) :: num_panels ! this must bs argument of the routine
 
     integer(kind=4) :: t
+    integer(kind=4), allocatable :: is(:), ie(:), js(:), je(:), ks(:), ke(:)
 
 !We assume that number of tiles at each panel are the same
     num_panels = 6
 
     this%num_panels = num_panels ! need to modify
 
-    allocate(this%tile_o(num_panels*num_tiles))
-    allocate(this%tile_x(num_panels*num_tiles))
-    allocate(this%tile_y(num_panels*num_tiles))
-    allocate(this%tile_xy(num_panels*num_tiles))
     allocate(this%tile(num_panels*num_tiles))
     allocate(this%proc_map(num_panels*num_tiles))
     allocate(this%panel_map(num_panels*num_tiles))
@@ -58,7 +59,6 @@ subroutine init(this, Nh, Nz, num_tiles, myid, Np, staggering_type, strategy)
 
     case ('default')
         call default_strategy(this, Nh, Nz, Np)
-
     case default
         call parcomm_global%abort('Wrong strategy in partition_mod.f90: '// strategy)
     end select
@@ -66,15 +66,18 @@ subroutine init(this, Nh, Nz, num_tiles, myid, Np, staggering_type, strategy)
     this%ts = findloc(this%proc_map, myid, dim=1)
     this%te = findloc(this%proc_map, myid, back = .true., dim=1)
 
+    this%tile_o  = this%tile
+    this%tile_x  = this%tile
+    this%tile_y  = this%tile
+    this%tile_xy = this%tile
+
     do t=1, this%num_panels*this%num_tiles
-        this%tile_o(t) = this%tile(t)
-        this%tile_x(t) = this%tile(t)
-        if(this%tile(t)%ie == nh) this%tile_x(t)%ie = this%nh+1
-        this%tile_y(t) = this%tile(t)
-        if(this%tile(t)%je == nh) this%tile_y(t)%je = this%nh+1
-        this%tile_xy(t) = this%tile(t)
-        if(this%tile(t)%ie == nh) this%tile_xy(t)%ie = this%nh+1
-        if(this%tile(t)%je == nh) this%tile_xy(t)%je = this%nh+1
+        if(this%tile_x(t)%ie == nh) this%tile_x(t)%ie = this%nh+1
+
+        if(this%tile_y(t)%je == nh) this%tile_y(t)%je = this%nh+1
+
+        if(this%tile_xy(t)%ie == nh) this%tile_xy(t)%ie = this%nh+1
+        if(this%tile_xy(t)%je == nh) this%tile_xy(t)%je = this%nh+1
     end do
 
     if (staggering_type == 'A') then
@@ -108,8 +111,66 @@ subroutine init(this, Nh, Nz, num_tiles, myid, Np, staggering_type, strategy)
         this%tile_p = this%tile_o
 
     else
-        print*, 'Unknown staggering_type in partition initialization. Stop'
-        stop
+        call parcomm_global%abort('Unknown staggering_type in partition initialization!')
+    end if
+
+    allocate(is(num_panels*num_tiles))
+    allocate(ie(num_panels*num_tiles))
+    allocate(js(num_panels*num_tiles))
+    allocate(je(num_panels*num_tiles))
+    allocate(ks(num_panels*num_tiles))
+    allocate(ke(num_panels*num_tiles))
+
+    do t = 1, num_tiles*num_panels
+        is(t) = this%tile_o(t)%is
+        ie(t) = this%tile_o(t)%ie
+        js(t) = this%tile_o(t)%js
+        je(t) = this%tile_o(t)%je
+        ks(t) = this%tile_o(t)%ks
+        ke(t) = this%tile_o(t)%ke
+    end do
+
+    call this%tiles_o%init(num_tiles*num_panels, Nz, Nh, Nh, is, ie, js, je, ks, ke)
+
+    this%tiles_x  = this%tiles_o
+    this%tiles_y  = this%tiles_o
+    this%tiles_xy = this%tiles_o
+
+    this%tiles_x%Ni = this%Nh+1
+    this%tiles_y%Nj = this%Nh+1
+
+    this%tiles_xy%Ni = this%Nh+1
+    this%tiles_xy%Nj = this%Nh+1
+
+    do t=1, this%num_panels*this%num_tiles
+        if(this%tiles_x%ie(t) == nh) this%tiles_x%ie(t) = this%nh+1
+
+        if(this%tiles_y%je(t) == nh) this%tiles_y%je(t) = this%nh+1
+
+        if(this%tiles_xy%ie(t) == nh) this%tiles_xy%ie(t) = this%nh+1
+        if(this%tiles_xy%je(t) == nh) this%tiles_xy%je(t) = this%nh+1
+    end do
+
+    if (staggering_type == 'A') then
+
+        this%tiles_u = this%tiles_o
+        this%tiles_v = this%tiles_o
+        this%tiles_p = this%tiles_o
+
+    else if (staggering_type == 'Ah') then
+
+        this%tiles_u = this%tiles_xy
+        this%tiles_v = this%tiles_xy
+        this%tiles_p = this%tiles_xy
+
+    else if (staggering_type == 'C') then
+
+        this%tiles_u = this%tiles_x
+        this%tiles_v = this%tiles_y
+        this%tiles_p = this%tiles_o
+
+    else
+        call parcomm_global%abort('Unknown staggering_type in partition initialization!')
     end if
 
     ! if(myid == 0) call this%write_to_txt('partition.txt')
@@ -174,7 +235,6 @@ subroutine default_strategy(partition, Nh, Nz, Np)
     end do
 
 end subroutine default_strategy
-
 ! subroutine write_to_txt(this, filename)
 !     class(partition_t), intent(in) :: this
 !     character(*),       intent(in) :: filename
@@ -252,7 +312,7 @@ subroutine get_points_type_tile(this, points_type, tile)
 
     class(partition_t),        intent(in)  :: this
     character(len=*),          intent(in)  :: points_type
-    type(tile_t), allocatable, intent(out) :: tile(:)
+    type(tile_t),              intent(out) :: tile(this%num_panels*this%num_tiles)
 
     select case(points_type)
     case('p')
@@ -267,4 +327,24 @@ subroutine get_points_type_tile(this, points_type, tile)
 
 end subroutine
 
+subroutine get_points_type_tiles(this, points_type, tiles)
+
+    use parcomm_mod, only : parcomm_global
+
+    class(partition_t), intent(in)  :: this
+    character(len=*),   intent(in)  :: points_type
+    type(tiles_t),      intent(out) :: tiles
+
+    select case(points_type)
+    case('p')
+        tiles = this%tiles_p
+    case('u')
+        tiles = this%tiles_u
+    case('v')
+        tiles = this%tiles_v
+    case default
+        call parcomm_global%abort("Wrong points_type in get_points_type_tiles")
+    end select
+
+end subroutine
 end module partition_mod

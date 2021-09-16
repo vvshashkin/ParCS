@@ -628,7 +628,8 @@ subroutine create_gather_exchange(exchange, points_type, parcomm, partition, mas
     integer(kind=4),   optional,    intent(in)  :: master_id
 
     type(exchange_gather_t), allocatable :: gather_exchange
-    type(tile_t),            allocatable :: tile(:)
+
+    type(tile_t) :: tile(partition%num_panels*partition%num_tiles)
 
     integer(kind=4),  dimension(partition%num_panels*partition%num_tiles) :: &
                       recv_is, recv_ie, recv_js, recv_je, recv_ks, recv_ke, &

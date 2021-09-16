@@ -28,8 +28,9 @@ subroutine create_master_paneled_outputer(outputer, points_type, domain, master_
     allocate(master_outputer)
 
     if (domain%parcomm%myid == master_id_loc) then
-        call domain%partition%get_points_type_tile(points_type, master_outputer%tile)
-        call create_grid_field_global(master_outputer%buf, 0, 0, master_outputer%tile)
+        call domain%partition%get_points_type_tiles(points_type, master_outputer%tiles)
+        call create_grid_field_global(master_outputer%buf, 0, 0, master_outputer%tiles)
+
     end if
 
     master_outputer%master_id = master_id_loc

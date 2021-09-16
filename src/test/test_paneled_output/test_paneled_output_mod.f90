@@ -21,13 +21,13 @@ subroutine test_master_paneled_output()
     integer(kind=4)                    :: myid, np, ierr, code
     integer(kind=4)                    :: master_id = 0
 
-    call create_domain(domain, "cube", 'A', nh, nz)
+    call create_domain(domain, "cube", 'C', nh, nz)
 
     call domain%parcomm%print('Running master process paneled output test!')
 
-    call create_master_paneled_outputer(outputer, 'p', domain)
+    call create_master_paneled_outputer(outputer, 'v', domain)
 
-    call test_case_1(outputer, domain, 'master_outputer')
+    call test_case_1(outputer, domain, domain%mesh_v, domain%partition%tiles_v, 'master_outputer')
 
 end subroutine test_master_paneled_output
 
@@ -58,16 +58,20 @@ end subroutine test_master_paneled_output
 !
 ! end subroutine test_mpi_paneled_output
 
-subroutine test_case_1(outputer, domain, class_name)
+subroutine test_case_1(outputer, domain, mesh, tiles, class_name)
 
     use domain_mod, only : domain_t
 
     use grid_field_mod,              only : grid_field_t
     use grid_field_factory_mod,      only : create_grid_field
     use outputer_abstract_mod,       only : outputer_t
+    use mesh_mod,                    only : mesh_t
+    use tiles_mod,                   only : tiles_t
 
     class(outputer_t), intent(inout) :: outputer
     type(domain_t),    intent(in)    :: domain
+    type(mesh_t),      intent(in)    :: mesh
+    type(tiles_t),     intent(in)    :: tiles
     character(*),      intent(in)    :: class_name
 
     type(grid_field_t) :: f
@@ -76,7 +80,7 @@ subroutine test_case_1(outputer, domain, class_name)
     integer(kind=4)                    :: fdunit
 
     integer(kind=4)                    :: halo_width=3
-    integer(kind=4)                    :: nh, nz
+    integer(kind=4)                    :: nx, ny, nz
 
     integer(kind=4) :: myid, np, ierr, code
     integer(kind=4) :: ts, te
@@ -86,24 +90,26 @@ subroutine test_case_1(outputer, domain, class_name)
     real(kind=4)  err
     real(kind=4), parameter :: tolerance = 1e-16
 
-#define __fun(i,j,k,pn) ((pn-1)*nh*nh*nz + nz*nh*(j-1) + nz*(i-1) + k)
+#define __fun(i,j,k,pn) ((pn-1)*ny*nx*nz + nz*nx*(j-1) + nz*(i-1) + k)
 
     !start and end index of tiles belonging to the current proccesor
     ts = domain%partition%ts
     te = domain%partition%te
 
+    nz = tiles%Nk
+    ny = tiles%Nj
+    nx = tiles%Ni
+
     !Init arrays
 
-    nh=domain%partition%Nh; nz=domain%partition%Nz
-
-    call create_grid_field(f, halo_width, 0, domain%mesh_p)
+    call create_grid_field(f, halo_width, 0, mesh)
 
     do t = ts, te
         f%tile(t)%p = huge(1.0_8)
         pn = domain%partition%panel_map(t)
-        do k = domain%mesh_p%tile(t)%ks, domain%mesh_p%tile(t)%ke
-            do j = domain%mesh_p%tile(t)%js, domain%mesh_p%tile(t)%je
-                do i = domain%mesh_p%tile(t)%is, domain%mesh_p%tile(t)%ie
+        do k = mesh%tile(t)%ks, mesh%tile(t)%ke
+            do j = mesh%tile(t)%js, mesh%tile(t)%je
+                do i = mesh%tile(t)%is, mesh%tile(t)%ie
                     f%tile(t)%p(i,j,k) =  __fun(i,j,k,pn)
                 end do
             end do
@@ -113,20 +119,21 @@ subroutine test_case_1(outputer, domain, class_name)
     call outputer%write(f, domain, file_name)
 
     if(domain%parcomm%myid == 0) then
-        allocate(bufcheck(nh,nh,6,nz))
-        allocate(   bufin(nh,nh,6,nz))
+        allocate(bufcheck(nx,ny,6,nz))
+        allocate(   bufin(nx,ny,6,nz))
 
-        do k = 1, nz
+
+        do k = 1, tiles%Nk
             do pn = 1, 6
-                do j = 1, nh
-                    do i = 1, nh
+                do j = 1, tiles%Nj
+                    do i = 1, tiles%Ni
                         bufcheck(i,j,pn,k) = __fun(i,j,k,pn)
                     end do
                 end do
             end do
         end do
 
-        open(file="h.dat",newunit = fdunit, access="direct", recl = 6*nh*nh*nz)
+        open(file="h.dat",newunit = fdunit, access="direct", recl = 6*nx*ny*nz)
         read(fdunit,rec=1) bufin
 
         err = maxval(abs(bufcheck-bufin))

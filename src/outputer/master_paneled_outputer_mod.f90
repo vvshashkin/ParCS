@@ -5,15 +5,16 @@ use grid_field_mod,        only : grid_field_t
 use exchange_abstract_mod, only : exchange_t
 use domain_mod,            only : domain_t
 use tile_mod,              only : tile_t
+use tiles_mod,             only : tiles_t
 
 implicit none
 
 type, public, extends(outputer_t) :: master_paneled_outputer_t
     class(exchange_t), allocatable :: gather_exch
-    type(tile_t),      allocatable  :: tile(:)
-    type(grid_field_t)              :: buf
-    integer(kind=4)                 :: master_id
-    integer(kind=4)                 :: rec_num = 1
+    type(tiles_t)                  :: tiles
+    type(grid_field_t)             :: buf
+    integer(kind=4)                :: master_id
+    integer(kind=4)                :: rec_num = 1
 
 contains
     procedure, public :: write => master_paneled_write
@@ -35,9 +36,9 @@ subroutine master_paneled_write(this, f, domain, file_name, rec_num)
 
     if (domain%parcomm%myid == this%master_id) then
         do t = domain%partition%ts, domain%partition%te
-            do k = this%tile(t)%ks, this%tile(t)%ke
-                do j = this%tile(t)%js, this%tile(t)%je
-                    do i = this%tile(t)%is, this%tile(t)%ie
+            do k = this%tiles%ks(t), this%tiles%ke(t)
+                do j = this%tiles%js(t), this%tiles%je(t)
+                    do i = this%tiles%is(t), this%tiles%ie(t)
                         this%buf%tile(t)%p(i,j,k) = f%tile(t)%p(i,j,k)
                     end do
                 end do
@@ -52,23 +53,23 @@ subroutine master_paneled_write(this, f, domain, file_name, rec_num)
             irec = 1
             if (present(rec_num)) irec = rec_num
 
-            reclen  = domain%partition%num_panels*domain%partition%Nh*domain%partition%Nh
-            allocate(buffer(domain%partition%Nh,domain%partition%Nh,1:domain%partition%num_panels))
+            reclen  = domain%partition%num_panels*this%tiles%Ni*this%tiles%Nj
+            allocate(buffer(this%tiles%Ni,this%tiles%Nj,1:domain%partition%num_panels))
 
             open(newunit=this%out_stream, file = trim(file_name), &
                  access="direct", recl = reclen)
 
-            do k = 1, domain%partition%Nz
-                do t = 1, domain%partition%num_panels*domain%partition%num_tiles
-                    do j = this%tile(t)%js, this%tile(t)%je
-                        do i = this%tile(t)%is, this%tile(t)%ie
+            do k = 1, this%tiles%Nk
+                do t = 1, this%tiles%Nt
+                    do j = this%tiles%js(t), this%tiles%je(t)
+                        do i = this%tiles%is(t), this%tiles%ie(t)
                             buffer(i,j,domain%partition%panel_map(t)) = &
                             real(this%buf%tile(t)%p(i,j,k),4)
                         end do
                     end do
                 end do
 
-                write(this%out_stream, rec = (irec-1)*(domain%partition%Nz-1+1)+(k-1+1)) buffer
+                write(this%out_stream, rec = (irec-1)*(this%tiles%Nk-1+1)+(k-1+1)) buffer
             end do
             deallocate(buffer)
             close(this%out_stream)

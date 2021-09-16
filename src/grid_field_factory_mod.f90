@@ -30,30 +30,51 @@ subroutine create_grid_field(grid_field, halo_width_xy, halo_width_z, mesh)
 
 end subroutine create_grid_field
 
-subroutine create_grid_field_global(grid_field, halo_width_xy, halo_width_z, tile)
+! subroutine create_grid_field_global(grid_field, halo_width_xy, halo_width_z, tile)
+!
+!     use tile_mod, only : tile_t
+!
+!     type(grid_field_t), intent(out) :: grid_field
+!     integer(kind=4),    intent(in)  :: halo_width_xy, halo_width_z
+!     type(tile_t),       intent(in)  :: tile(:)
+!
+!     integer(kind=4) :: t, ts, te
+!
+!     ts = lbound(tile, 1)
+!     te = ubound(tile, 1)
+!
+!     allocate(grid_field%tile(ts:te))
+!
+!     grid_field%ts = ts
+!     grid_field%te = te
+!
+!     do t = ts, te
+!         call grid_field%tile(t)%init(tile(t)%is-halo_width_xy, tile(t)%ie+halo_width_xy, &
+!                                      tile(t)%js-halo_width_xy, tile(t)%je+halo_width_xy, &
+!                                      tile(t)%ks-halo_width_z,  tile(t)%ke+halo_width_z)
+!     end do
+!
+! end subroutine create_grid_field_global
+subroutine create_grid_field_global(grid_field, halo_width_xy, halo_width_z, tiles)
 
-    use tile_mod, only : tile_t
+    use tiles_mod, only : tiles_t
 
     type(grid_field_t), intent(out) :: grid_field
     integer(kind=4),    intent(in)  :: halo_width_xy, halo_width_z
-    type(tile_t),       intent(in)  :: tile(:)
+    type(tiles_t),      intent(in) :: tiles
 
     integer(kind=4) :: t, ts, te
 
-    ts = lbound(tile, 1)
-    te = ubound(tile, 1)
+    allocate(grid_field%tile(1:tiles%Nt))
 
-    allocate(grid_field%tile(ts:te))
+    grid_field%ts = 1
+    grid_field%te = tiles%Nt
 
-    grid_field%ts = ts
-    grid_field%te = te
-
-    do t = ts, te
-        call grid_field%tile(t)%init(tile(t)%is-halo_width_xy, tile(t)%ie+halo_width_xy, &
-                                     tile(t)%js-halo_width_xy, tile(t)%je+halo_width_xy, &
-                                     tile(t)%ks-halo_width_z,  tile(t)%ke+halo_width_z)
+    do t = 1, tiles%Nt
+        call grid_field%tile(t)%init(tiles%is(t)-halo_width_xy, tiles%ie(t)+halo_width_xy, &
+                                     tiles%js(t)-halo_width_xy, tiles%je(t)+halo_width_xy, &
+                                     tiles%ks(t)-halo_width_z,  tiles%ke(t)+halo_width_z)
     end do
 
 end subroutine create_grid_field_global
-
 end module grid_field_factory_mod
