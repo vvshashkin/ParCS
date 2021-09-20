@@ -187,6 +187,7 @@ function test_curl(N, div_oper_name, staggering) result(errs)
 
     use curl_factory_mod,  only : create_curl_operator_div_based
     use abstract_curl_mod, only : curl_operator_t
+    use const_mod,         only : radz
 
     integer(kind=4),  intent(in) :: N
     character(len=*), intent(in) :: div_oper_name, staggering
@@ -197,6 +198,7 @@ function test_curl(N, div_oper_name, staggering) result(errs)
     type(grid_field_t)          :: u, v, curl, curl_true
     type(domain_t)              :: domain
     class(curl_operator_t), allocatable :: curl_op
+    real(kind=8), parameter :: default_scale = radz
 
     call create_domain(domain, "cube", staggering, N, nz)
 
@@ -214,6 +216,7 @@ function test_curl(N, div_oper_name, staggering) result(errs)
     call set_vector_test_field(u, v, VSH_curl_free_10, domain%mesh_u, domain%mesh_v, &
                                0, "contravariant")
     call curl_op%calc_curl(curl, u, v, domain)
+    call curl%assign(default_scale, curl, domain%mesh_p)
 
     errs%values(1) = curl%maxabs(domain%mesh_p, domain%parcomm)
     errs%values(2) = curl%algebraic_norm2(domain%mesh_p,domain%parcomm)/real(N,8)
