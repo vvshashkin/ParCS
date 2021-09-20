@@ -17,42 +17,41 @@ call init_global_parallel_enviroment()
 !call test_conv(operator_name="divergence_ah42_sbp",staggering="Ah",Ns=Ns)
 !call test_conv(operator_name="divergence_ah43_sbp",staggering="Ah",Ns=Ns)
 
-! errs = test_div(N=32,div_oper_name="divergence_a2_ecs",staggering="A")
-! print "(A,4E15.7)", "Err: ", errs%values
-!
-!errs = test_div(N=32,div_oper_name="divergence_c2",staggering="C")
-!print "(A,5E15.7)", "Err: ", errs%values
+errs = test_div(N=32,div_oper_name="divergence_a2_ecs",staggering="A")
+print "(A,4E15.7)", "Err: ", errs%values
 
-!errs = test_div(N=64,div_oper_name="divergence_c_sbp21",staggering="C")
-!print "(A,5E15.7)", "Err: ", errs%values
+errs = test_div(N=32,div_oper_name="divergence_c2",staggering="C")
+print "(A,5E15.7)", "Err: ", errs%values
 
-!
-! errs = test_div(N=32,div_oper_name="divergence_ah2",staggering="Ah")
-! print "(A,4E15.7)", "Err: ", errs%values
-!
-! errs = test_div(N=32,div_oper_name="divergence_ah42_sbp",staggering="Ah")
-! print "(A,4E15.7)", "Err: ", errs%values
-!
-! errs = test_div(N=32,div_oper_name="divergence_ah43_sbp",staggering="Ah")
-! print "(A,4E15.7)", "Err: ", errs%values
+errs = test_div(N=64,div_oper_name="divergence_c_sbp21",staggering="C")
+print "(A,5E15.7)", "Err: ", errs%values
 
-!errs = test_grad(N=32,grad_oper_name="gradient_ah2_ecs",staggering="Ah")
-!print "(A,4E15.7)", "Err: ", errs%values
-!
+errs = test_div(N=32,div_oper_name="divergence_ah2",staggering="Ah")
+print "(A,4E15.7)", "Err: ", errs%values
+
+errs = test_div(N=32,div_oper_name="divergence_ah42_sbp",staggering="Ah")
+print "(A,4E15.7)", "Err: ", errs%values
+
+errs = test_div(N=32,div_oper_name="divergence_ah43_sbp",staggering="Ah")
+print "(A,4E15.7)", "Err: ", errs%values
+
+errs = test_grad(N=32,grad_oper_name="gradient_ah2_ecs",staggering="Ah")
+print "(A,4E15.7)", "Err: ", errs%values
+
 errs = test_grad(N=64,grad_oper_name="gradient_ah42_sbp_ecs",staggering="Ah")
 print "(A,4E15.7)", "Err: ", errs%values
-!
+
 errs = test_grad(N=64,grad_oper_name="gradient_ah43_sbp_ecs",staggering="Ah")
 print "(A,4E15.7)", "Err: ", errs%values
 
-!errs = test_grad(N=32,grad_oper_name="gradient_c2_ecs",staggering="C")
-!print "(A,4E15.7)", "Err: ", errs%values
+errs = test_grad(N=32,grad_oper_name="gradient_c2_ecs",staggering="C")
+print "(A,4E15.7)", "Err: ", errs%values
 
-!errs = test_grad(N=32,grad_oper_name="gradient_c2_cons",staggering="C")
-!print "(A,4E15.7)", "Err: ", errs%values
+errs = test_grad(N=32,grad_oper_name="gradient_c2_cons",staggering="C")
+print "(A,4E15.7)", "Err: ", errs%values
 
-!errs = test_grad(N=64,grad_oper_name="gradient_c_sbp21",staggering="C")
-!print "(A,4E15.7)", "Err: ", errs%values
+errs = test_grad(N=64,grad_oper_name="gradient_c_sbp21",staggering="C")
+print "(A,4E15.7)", "Err: ", errs%values
 
 call deinit_global_parallel_enviroment()
 
