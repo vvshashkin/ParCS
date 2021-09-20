@@ -229,39 +229,64 @@ function test_curl(N, div_oper_name, staggering) result(errs)
     errs%values(2) = curl%algebraic_norm2(domain%mesh_p,domain%parcomm)/real(N,8)
 
 end function test_curl
-function test_coriolis(N, staggering) result(errs)
+function test_coriolis(N, coriolis_op_name, staggering) result(errs)
 
     use test_fields_mod,   only : set_vector_test_field, set_scalar_test_field, &
-                                  VSH_curl_free_10 => VSH_curl_free_10_generator
+                                  solid_rotation_field_generator, &
+                                  VSH_curl_free_10_generator, &
+                                  vector_field_generator_t, &
+                                  coriolis_force_field_generator_t
 
-    use coriolis_factory_mod,  only : create_coriolis_unstaggered
+    use coriolis_factory_mod,  only : create_coriolis
     use abstract_coriolis_mod, only : coriolis_operator_t
 
     integer(kind=4),  intent(in) :: N
-    character(len=*), intent(in) :: staggering
+    character(len=*), intent(in) :: coriolis_op_name, staggering
     type(err_container_t)        :: errs
     !locals:
     integer(kind=4), parameter  :: nz = 3
     integer(kind=4), parameter  :: ex_halo_width = 8
-    type(grid_field_t)          :: u, v, cor_u, cor_v
+    class(vector_field_generator_t), allocatable :: exact_field, test_field
+    type(grid_field_t)          :: u, v, cor_u, cor_v, cor_u_true, cor_v_true
     type(domain_t)              :: domain
     class(coriolis_operator_t), allocatable :: coriolis
 
     call create_domain(domain, "cube", staggering, N, nz)
 
-    call create_coriolis_unstaggered(coriolis, domain)
+    call create_coriolis(coriolis, coriolis_op_name, domain)
 
     call create_grid_field(u,     ex_halo_width, 0, domain%mesh_u)
     call create_grid_field(v,     ex_halo_width, 0, domain%mesh_v)
     call create_grid_field(cor_u, ex_halo_width, 0, domain%mesh_u)
     call create_grid_field(cor_v, ex_halo_width, 0, domain%mesh_v)
 
+    call create_grid_field(cor_u_true, ex_halo_width, 0, domain%mesh_u)
+    call create_grid_field(cor_v_true, ex_halo_width, 0, domain%mesh_v)
+
     allocate(errs%keys(2), errs%values(2))
-    !
-    call set_vector_test_field(u, v, VSH_curl_free_10, domain%mesh_u, domain%mesh_v, &
+
+    errs%keys(1)%str = "VSH_curl_free_10 linf"
+    errs%keys(2)%str = "VSH_curl_free_10 l2"
+
+    test_field = VSH_curl_free_10_generator
+
+    call set_vector_test_field(u, v, test_field, domain%mesh_u, domain%mesh_v, &
                                0, "contravariant")
 
     call coriolis%calc_coriolis(cor_u, cor_v, u, v, domain)
+
+    exact_field = coriolis_force_field_generator_t(input_field = test_field)
+
+    call set_vector_test_field(cor_u_true, cor_v_true, exact_field, domain%mesh_u, domain%mesh_v, &
+                               0, "contravariant")
+
+    call cor_u%update(-1.0_8, cor_u_true, domain%mesh_u)
+    call cor_v%update(-1.0_8, cor_v_true, domain%mesh_v)
+
+    errs%values(1) = cor_u%maxabs(domain%mesh_u,domain%parcomm)+ &
+                     cor_v%maxabs(domain%mesh_v,domain%parcomm)
+    errs%values(2) = cor_u%algebraic_norm2(domain%mesh_u,domain%parcomm)/real(nz*N,8)+&
+                     cor_v%algebraic_norm2(domain%mesh_v,domain%parcomm)/real(nz*N,8)
 
 end function test_coriolis
 subroutine test_laplace_spectre(div_operator_name, grad_operator_name, staggering)
