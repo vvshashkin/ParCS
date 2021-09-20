@@ -82,6 +82,7 @@ type(err_container_t) function test_div(N,div_oper_name,staggering) result(errs)
                                  random_vec=>random_vector_field_generator
     use div_factory_mod,  only : create_div_operator
     use abstract_div_mod, only : div_operator_t
+    use const_mod,        only : radz
 
     integer(kind=4),  intent(in) :: N
     character(len=*), intent(in) :: div_oper_name, staggering
@@ -91,6 +92,7 @@ type(err_container_t) function test_div(N,div_oper_name,staggering) result(errs)
     type(grid_field_t)          :: u, v, div, div_true
     type(domain_t)              :: domain
     class(div_operator_t), allocatable :: div_op
+    real(kind=8), parameter :: default_scale = radz
 
     call create_domain(domain, "cube", staggering, N, nz)
     call create_grid_field(u, ex_halo_width, 0, domain%mesh_u)
@@ -104,6 +106,7 @@ type(err_container_t) function test_div(N,div_oper_name,staggering) result(errs)
     div_op = create_div_operator(domain, div_oper_name)
 
     call div_op%calc_div(div, u,v,domain)
+    call div%assign(default_scale, div, domain%mesh_p)
 
     allocate(errs%keys(4), errs%values(4))
     errs%keys(1)%str = "solid rotation linf"
@@ -118,7 +121,7 @@ type(err_container_t) function test_div(N,div_oper_name,staggering) result(errs)
                                0, "contravariant")
     call set_scalar_test_field(div_true,cross_polar_div, domain%mesh_p,0)
     call div_op%calc_div(div, u,v,domain)
-    call div%update(-1.0_8,div_true,domain%mesh_p)
+    call div%assign(default_scale,div,-1.0_8,div_true,domain%mesh_p)
 
     errs%values(3) = div%maxabs(domain%mesh_p,domain%parcomm)
     errs%values(4) = div%algebraic_norm2(domain%mesh_p,domain%parcomm)/real(nz*N,8)

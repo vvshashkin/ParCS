@@ -34,7 +34,8 @@ subroutine calc_div_ah_sbp(this, div, u, v, domain)
 
     do t = domain%partition%ts, domain%partition%te
         call calc_div_on_tile(div%tile(t), u%tile(t), v%tile(t),  &
-                              domain%mesh_xy%tile(t), this%sbp_operator_name)
+                              domain%mesh_xy%tile(t), this%sbp_operator_name,&
+                              domain%mesh_xy%scale)
     end do
 
     call this%exch_div_edges%do(div,domain%parcomm)
@@ -44,7 +45,7 @@ subroutine calc_div_ah_sbp(this, div, u, v, domain)
 
 end subroutine calc_div_ah_sbp
 
-subroutine calc_div_on_tile(div, u, v, mesh, sbp_oper_name)
+subroutine calc_div_on_tile(div, u, v, mesh, sbp_oper_name,scale)
 
     use mesh_mod, only : tile_mesh_t
 
@@ -52,6 +53,7 @@ subroutine calc_div_on_tile(div, u, v, mesh, sbp_oper_name)
     type(tile_field_t),     intent(in)    :: u, v
     type(tile_mesh_t),      intent(in)    :: mesh
     character(len=*),       intent(in)    :: sbp_oper_name
+    real(kind=8),           intent(in)    :: scale
 
     real(kind=8)    :: hx
     integer(kind=4) :: ks, ke, js, je, is, ie, i, j, k
@@ -84,7 +86,7 @@ subroutine calc_div_on_tile(div, u, v, mesh, sbp_oper_name)
 
         do j = js, je
             do i = is,ie
-                div%p(i,j,k) = (Dx(i,j)+Dy(i,j)) / (mesh%G(i,j)*hx)
+                div%p(i,j,k) = (Dx(i,j)+Dy(i,j)) / (mesh%G(i,j)*hx*scale)
             end do
         end do
     end do

@@ -32,18 +32,21 @@ subroutine calc_div_a2(this, div, u, v, domain)
     case("cons")
         do t = domain%partition%ts, domain%partition%te
             call calc_div_on_tile_cons(div%tile(t), u%tile(t), v%tile(t), &
-                                       domain%mesh_o%tile(t), domain%partition%Nh)
+                                       domain%mesh_o%tile(t), domain%partition%Nh,&
+                                       domain%mesh_o%scale)
         end do
     case("fv")
         do t = domain%partition%ts, domain%partition%te
             call calc_div_on_tile_fv(div%tile(t), u%tile(t), v%tile(t),            &
                                      domain%mesh_o%tile(t), domain%mesh_x%tile(t), &
-                                     domain%mesh_y%tile(t))
+                                     domain%mesh_y%tile(t),&
+                                     domain%mesh_o%scale)
         end do
     case("default")
         do t = domain%partition%ts, domain%partition%te
             call calc_div_on_tile(div%tile(t), u%tile(t), v%tile(t),  &
-                                  domain%mesh_o%tile(t))
+                                  domain%mesh_o%tile(t),&
+                                  domain%mesh_o%scale)
         end do
     case default
         call parcomm_global%abort("div_a2_mod, calc_div_a2, unknown subtype: "// this%subtype)
@@ -52,13 +55,14 @@ subroutine calc_div_a2(this, div, u, v, domain)
 
 end subroutine calc_div_a2
 
-subroutine calc_div_on_tile(div, u, v, mesh)
+subroutine calc_div_on_tile(div, u, v, mesh, scale)
 
     use mesh_mod, only : tile_mesh_t
 
     type(tile_field_t),     intent(inout) :: div
     type(tile_field_t),     intent(in)    :: u, v
     type(tile_mesh_t),      intent(in)    :: mesh
+    real(kind=8),           intent(in)    :: scale
 
     real(kind=8)    :: hx, mult_loc
     integer(kind=4) :: ks, ke, js, je, is, ie, i, j, k
@@ -73,14 +77,14 @@ subroutine calc_div_on_tile(div, u, v, mesh)
             do i = is, ie
                 div%p(i,j,k) = (mesh%G(i+1,j)*u%p(i+1,j,k)-mesh%G(i-1,j)*u%p(i-1,j,k) +  &
                                 mesh%G(i,j+1)*v%p(i,j+1,k)-mesh%G(i,j-1)*v%p(i,j-1,k))/  &
-                                (2._8*mesh%G(i,j)*hx)
+                                (2._8*mesh%G(i,j)*hx*scale)
             end do
         end do
     end do
 
 end subroutine calc_div_on_tile
 
-subroutine calc_div_on_tile_cons(div, u, v, mesh, nx)
+subroutine calc_div_on_tile_cons(div, u, v, mesh, nx, scale)
 
     use mesh_mod, only : tile_mesh_t
 
@@ -88,6 +92,7 @@ subroutine calc_div_on_tile_cons(div, u, v, mesh, nx)
     type(tile_field_t),     intent(in)    :: u, v
     type(tile_mesh_t),      intent(in)    :: mesh
     integer(kind=4),        intent(in)    :: nx
+    real(kind=8),           intent(in)    :: scale
 
     real(kind=8)    :: hx, mult_loc
     integer(kind=4) :: ks, ke, js, je, is, ie, i, j, k
@@ -107,20 +112,21 @@ subroutine calc_div_on_tile_cons(div, u, v, mesh, nx)
                 ip1 = min(nx,i+1)
                 div%p(i,j,k) = (mesh%G(ip1,j)*u%p(i+1,j,k)-mesh%G(im1,j)*u%p(i-1,j,k) +  &
                                 mesh%G(i,jp1)*v%p(i,j+1,k)-mesh%G(i,jm1)*v%p(i,j-1,k))/  &
-                                (2._8*mesh%G(i,j)*hx)
+                                (2._8*mesh%G(i,j)*hx*scale)
             end do
         end do
     end do
 
 end subroutine calc_div_on_tile_cons
 
-subroutine calc_div_on_tile_fv(div, u, v, mesh_o, mesh_x, mesh_y)
+subroutine calc_div_on_tile_fv(div, u, v, mesh_o, mesh_x, mesh_y,scale)
 
     use mesh_mod, only : tile_mesh_t
 
     type(tile_field_t),     intent(inout) :: div
     type(tile_field_t),     intent(in)    :: u, v
     type(tile_mesh_t),      intent(in)    :: mesh_o, mesh_x, mesh_y
+    real(kind=8),           intent(in)    :: scale
 
     real(kind=8)    :: hx, mult_loc
     integer(kind=4) :: ks, ke, js, je, is, ie, i, j, k
@@ -137,7 +143,7 @@ subroutine calc_div_on_tile_fv(div, u, v, mesh_o, mesh_x, mesh_y)
                                 mesh_x%G(i  ,j)*(u%p(i  ,j,k)+u%p(i-1,j,k)) +   &
                                 mesh_y%G(i,j+1)*(v%p(i,j+1,k)+v%p(i,j,k))-      &
                                 mesh_y%G(i,j  )*(v%p(i,j  ,k)+v%p(i,j-1,k))) /  &
-                                (2._8*mesh_o%G(i,j)*hx)
+                                (2._8*mesh_o%G(i,j)*hx*scale)
             end do
         end do
     end do

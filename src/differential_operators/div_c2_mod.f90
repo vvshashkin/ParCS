@@ -40,16 +40,17 @@ subroutine calc_div_c2(this, div, u, v, domain)
     do t = domain%partition%ts, domain%partition%te
         call calc_div_on_tile(div%tile(t), u%tile(t), v%tile(t),            &
                               domain%mesh_x%tile(t), domain%mesh_y%tile(t), &
-                              domain%mesh_o%tile(t))
+                              domain%mesh_o%tile(t),domain%mesh_o%scale)
     end do
 
 end subroutine calc_div_c2
 
-subroutine calc_div_on_tile(div, u, v, mesh_u, mesh_v, mesh_p)
+subroutine calc_div_on_tile(div, u, v, mesh_u, mesh_v, mesh_p, scale)
 
     type(tile_field_t),  intent(inout) :: div
     type(tile_field_t),  intent(in)    :: u, v
     type(tile_mesh_t),   intent(in)    :: mesh_u, mesh_v, mesh_p
+    real(kind=8),        intent(in)    :: scale
 
     real(kind=8) :: hx
     integer(kind=4) :: ks, ke, js, je, is, ie, i, j, k
@@ -65,7 +66,7 @@ subroutine calc_div_on_tile(div, u, v, mesh_u, mesh_v, mesh_p)
             do i = is, ie
                 div%p(i,j,k) = (mesh_u%G(i+1,j)*u%p(i+1,j,k)-mesh_u%G(i,j)*u%p(i,j,k)  +  &
                                 mesh_v%G(i,j+1)*v%p(i,j+1,k)-mesh_v%G(i,j)*v%p(i,j,k))/  &
-                                (mesh_p%G(i,j)*hx)
+                                (mesh_p%G(i,j)*hx*scale)
             end do
         end do
     end do
@@ -88,16 +89,17 @@ subroutine calc_div_c_sbp21(this, div, u, v, domain)
     do t = domain%partition%ts, domain%partition%te
         call calc_div_on_tile_sbp21(div%tile(t), u%tile(t), v%tile(t),            &
                                     domain%mesh_x%tile(t), domain%mesh_y%tile(t), &
-                                    domain%mesh_o%tile(t))
+                                    domain%mesh_o%tile(t),domain%mesh_o%scale)
     end do
 
 end subroutine calc_div_c_sbp21
 
-subroutine calc_div_on_tile_sbp21(div, u, v, mesh_u, mesh_v, mesh_p)
+subroutine calc_div_on_tile_sbp21(div, u, v, mesh_u, mesh_v, mesh_p, scale)
 
     type(tile_field_t),  intent(inout) :: div
     type(tile_field_t),  intent(in)    :: u, v
     type(tile_mesh_t),   intent(in)    :: mesh_u, mesh_v, mesh_p
+    real(kind=8),        intent(in)    :: scale
 
     real(kind=8)    :: hx
     integer(kind=4) :: ks, ke, js, je, is, ie, i, j, k
@@ -167,7 +169,7 @@ subroutine calc_div_on_tile_sbp21(div, u, v, mesh_u, mesh_v, mesh_p)
 
         do j = js,je
             do i = is, ie
-                div%p(i,j,k) =  (dx(i,j)+dy(i,j))/mesh_p%G(i,j)/hx
+                div%p(i,j,k) =  (dx(i,j)+dy(i,j))/(mesh_p%G(i,j)*hx*scale)
             end do
         end do
     end do

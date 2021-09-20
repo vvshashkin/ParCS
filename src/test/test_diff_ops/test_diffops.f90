@@ -15,6 +15,12 @@ call init_global_parallel_enviroment()
 errs = test_div(N=32,div_oper_name="divergence_a2_ecs",staggering="A")
 print "(A,4E15.7)", "Err: ", errs%values
 
+errs = test_div(N=32,div_oper_name="divergence_a2_cons",staggering="A")
+print "(A,4E15.7)", "Err: ", errs%values
+
+errs = test_div(N=32,div_oper_name="divergence_a2_fv",staggering="A")
+print "(A,4E15.7)", "Err: ", errs%values
+
 errs = test_div(N=32,div_oper_name="divergence_c2",staggering="C")
 print "(A,5E15.7)", "Err: ", errs%values
 
@@ -28,6 +34,12 @@ errs = test_div(N=32,div_oper_name="divergence_ah42_sbp",staggering="Ah")
 print "(A,4E15.7)", "Err: ", errs%values
 
 errs = test_div(N=32,div_oper_name="divergence_ah43_sbp",staggering="Ah")
+print "(A,4E15.7)", "Err: ", errs%values
+
+errs = test_grad(N=32,grad_oper_name="gradient_a2_ecs",staggering="A")
+print "(A,4E15.7)", "Err: ", errs%values
+
+errs = test_grad(N=32,grad_oper_name="gradient_a2_cons",staggering="A")
 print "(A,4E15.7)", "Err: ", errs%values
 
 errs = test_grad(N=32,grad_oper_name="gradient_ah2_ecs",staggering="Ah")
