@@ -32,7 +32,7 @@ subroutine test_ecs_cvec_halo()
     real(kind=8) halo_corner_err, halo_corner_err_max
 
     logical is_test_passed
-    real(kind=8), parameter :: tolerance = 0.3e-7_8
+    real(kind=8), parameter :: tolerance = 3.0e-7_8
     integer(kind=4) :: t, j
 
     call create_domain(domain, "cube", 'C', nh, nz)
@@ -109,9 +109,9 @@ subroutine test_ecs_cvec_halo()
     !end do
 !    do j=1, nh+1
 !        print '(i3,3F15.7)', j, v_test%tile(1)%p(0,j,1),v_true%tile(1)%p(0,j,1),&
-!                                v_test%tile(1)%p(0,j,1)-v_true%tile(1)%p(0,j,1) 
+!                                v_test%tile(1)%p(0,j,1)-v_true%tile(1)%p(0,j,1)
 !    end do
-    !do j=domain%mesh_u%tile(3)%is,domain%mesh_u%tile(3)%ie 
+    !do j=domain%mesh_u%tile(3)%is,domain%mesh_u%tile(3)%ie
     !    !print '(i3,3E15.7)', j, v_test%tile(1)%p(nh+2,j,1),v_true%tile(1)%p(nh+2,j,1),&
     !    !                        v_test%tile(1)%p(nh+2,j,1)-v_true%tile(1)%p(nh+2,j,1)
     !    print '(i3,3E15.7)', j, u_test%tile(3)%p(j,nh+1,1),u_true%tile(3)%p(j,nh+1,1),&
