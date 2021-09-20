@@ -2,7 +2,8 @@ program test_diffops
 
 use parcomm_mod,         only : init_global_parallel_enviroment, &
                                 deinit_global_parallel_enviroment
-use test_diffops_mod, only: err_container_t, test_div, test_grad, test_conv, test_curl
+use test_diffops_mod, only: err_container_t, test_div, test_grad, test_conv, test_curl, &
+                            test_coriolis
 
 implicit none
 
@@ -12,11 +13,14 @@ integer(kind=4), parameter :: Ns(3) = [32,64,128]
 
 call init_global_parallel_enviroment()
 
-call test_conv(operator_name="gradient_c_sbp21",staggering="C",Ns=Ns)
-call test_conv(operator_name="divergence_c_sbp21",staggering="C",Ns=Ns)
-call test_conv(operator_name="divergence_ah42_sbp",staggering="Ah",Ns=Ns)
-call test_conv(operator_name="divergence_ah43_sbp",staggering="Ah",Ns=Ns)
-call test_conv(operator_name="curl_divergence_ah43_sbp",staggering="Ah",Ns=Ns)
+! call test_conv(operator_name="gradient_c_sbp21",staggering="C",Ns=Ns)
+! call test_conv(operator_name="divergence_c_sbp21",staggering="C",Ns=Ns)
+! call test_conv(operator_name="divergence_ah42_sbp",staggering="Ah",Ns=Ns)
+! call test_conv(operator_name="divergence_ah43_sbp",staggering="Ah",Ns=Ns)
+! call test_conv(operator_name="curl_divergence_ah43_sbp",staggering="Ah",Ns=Ns)
+
+errs = test_coriolis(N=32, staggering="A")
+print "(A,4E15.7)", "Err: ", errs%values
 
 ! errs = test_div(N=32,div_oper_name="divergence_a2_ecs",staggering="A")
 ! print "(A,4E15.7)", "Err: ", errs%values

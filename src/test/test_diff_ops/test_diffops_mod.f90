@@ -19,7 +19,7 @@ end type err_container_t
 
 private
 public :: err_container_t, test_div, test_grad, test_conv, &
-          test_laplace_spectre, test_curl
+          test_laplace_spectre, test_curl, test_coriolis
 
 real(kind=8), parameter :: some_const = 12.34567_8
 
@@ -229,6 +229,41 @@ function test_curl(N, div_oper_name, staggering) result(errs)
     errs%values(2) = curl%algebraic_norm2(domain%mesh_p,domain%parcomm)/real(N,8)
 
 end function test_curl
+function test_coriolis(N, staggering) result(errs)
+
+    use test_fields_mod,   only : set_vector_test_field, set_scalar_test_field, &
+                                  VSH_curl_free_10 => VSH_curl_free_10_generator
+
+    use coriolis_factory_mod,  only : create_coriolis_unstaggered
+    use abstract_coriolis_mod, only : coriolis_operator_t
+
+    integer(kind=4),  intent(in) :: N
+    character(len=*), intent(in) :: staggering
+    type(err_container_t)        :: errs
+    !locals:
+    integer(kind=4), parameter  :: nz = 3
+    integer(kind=4), parameter  :: ex_halo_width = 8
+    type(grid_field_t)          :: u, v, cor_u, cor_v
+    type(domain_t)              :: domain
+    class(coriolis_operator_t), allocatable :: coriolis
+
+    call create_domain(domain, "cube", staggering, N, nz)
+
+    call create_coriolis_unstaggered(coriolis, domain)
+
+    call create_grid_field(u,     ex_halo_width, 0, domain%mesh_u)
+    call create_grid_field(v,     ex_halo_width, 0, domain%mesh_v)
+    call create_grid_field(cor_u, ex_halo_width, 0, domain%mesh_u)
+    call create_grid_field(cor_v, ex_halo_width, 0, domain%mesh_v)
+
+    allocate(errs%keys(2), errs%values(2))
+    !
+    call set_vector_test_field(u, v, VSH_curl_free_10, domain%mesh_u, domain%mesh_v, &
+                               0, "contravariant")
+
+    call coriolis%calc_coriolis(cor_u, cor_v, u, v, domain)
+
+end function test_coriolis
 subroutine test_laplace_spectre(div_operator_name, grad_operator_name, staggering)
     use test_fields_mod,   only : set_vector_test_field, solid_rot=>solid_rotation_field_generator
     use div_factory_mod,   only : create_div_operator

@@ -57,7 +57,9 @@ subroutine create_mesh(mesh, partition, metric, halo_width, points_type)
     mesh%ts = ts
     mesh%te = te
 
-    mesh%scale = metric%scale
+    mesh%scale         = metric%scale
+    mesh%omega         = metric%omega
+    mesh%rotation_axis = metric%rotation_axis
 
     nh = partition%nh
 
