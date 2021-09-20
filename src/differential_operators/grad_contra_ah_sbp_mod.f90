@@ -37,14 +37,15 @@ subroutine calc_grad_ah_sbp(this, gx, gy, f, domain)
 
     do t = domain%partition%ts, domain%partition%te
         call calc_grad_on_tile(gx%tile(t), gy%tile(t), f%tile(t),  &
-                               domain%mesh_xy%tile(t), this%sbp_operator_name)
+                               domain%mesh_xy%tile(t), this%sbp_operator_name, &
+                               domain%mesh_xy%scale)
     end do
 
     call this%sync_edges%get_halo_vector(gx,gy,domain,0)
 
 end subroutine calc_grad_ah_sbp
 
-subroutine calc_grad_on_tile(gx, gy, f, mesh, sbp_oper)
+subroutine calc_grad_on_tile(gx, gy, f, mesh, sbp_oper, scale)
 
     use mesh_mod, only : tile_mesh_t
 
@@ -52,6 +53,7 @@ subroutine calc_grad_on_tile(gx, gy, f, mesh, sbp_oper)
     type(tile_field_t),     intent(in)    :: f
     type(tile_mesh_t),      intent(in)    :: mesh
     character(len=*),       intent(in)    :: sbp_oper
+    real(kind=8),           intent(in)    :: scale
 
     real(kind=8)    :: hx, mult_loc
     real(kind=8)    :: fdx, fdy, fdx1, fdy1, fdx0, fdy0
@@ -72,8 +74,8 @@ subroutine calc_grad_on_tile(gx, gy, f, mesh, sbp_oper)
 
         do j=js,je
             do i=is,ie
-                gx%p(i,j,k) = (mesh%Qi(1,i,j)*Dx(i,j) + mesh%Qi(2,i,j)*Dy(i,j))/hx
-                gy%p(i,j,k) = (mesh%Qi(3,i,j)*Dy(i,j) + mesh%Qi(2,i,j)*Dx(i,j))/hx
+                gx%p(i,j,k) = (mesh%Qi(1,i,j)*Dx(i,j) + mesh%Qi(2,i,j)*Dy(i,j))/(hx*scale)
+                gy%p(i,j,k) = (mesh%Qi(3,i,j)*Dy(i,j) + mesh%Qi(2,i,j)*Dx(i,j))/(hx*scale)
             end do
         end do
     end do

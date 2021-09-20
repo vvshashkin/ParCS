@@ -29,16 +29,18 @@ subroutine calc_grad_contra_a2(this, gx, gy, f, domain)
     call this%halo_procedure%get_halo_scalar(f,domain,halo_width)
 
     do t = domain%partition%ts, domain%partition%te
-        call calc_grad_on_tile(gx%tile(t), gy%tile(t), f%tile(t), domain%mesh_p%tile(t))
+        call calc_grad_on_tile(gx%tile(t), gy%tile(t), f%tile(t), domain%mesh_p%tile(t), &
+                              domain%mesh_p%scale)
     end do
 
 end subroutine calc_grad_contra_a2
 
-subroutine calc_grad_on_tile(gx, gy, f, mesh)
+subroutine calc_grad_on_tile(gx, gy, f, mesh, scale)
 
     type(tile_field_t),     intent(inout) :: gx, gy
     type(tile_field_t),     intent(in)    :: f
     type(tile_mesh_t),      intent(in)    :: mesh
+    real(kind=8),           intent(in)    :: scale
 
     real(kind=8) :: hx, mult_loc
     integer(kind=4) :: ks, ke, js, je, is, ie, i, j, k
@@ -53,8 +55,8 @@ subroutine calc_grad_on_tile(gx, gy, f, mesh)
     do k = ks, ke
         do j = js, je
             do i = is, ie
-                fdx = 0.5_8*(f%p(i+1,j,k)-f%p(i-1,j,k))/hx
-                fdy = 0.5_8*(f%p(i,j+1,k)-f%p(i,j-1,k))/hx
+                fdx = 0.5_8*(f%p(i+1,j,k)-f%p(i-1,j,k))/(hx*scale)
+                fdy = 0.5_8*(f%p(i,j+1,k)-f%p(i,j-1,k))/(hx*scale)
                 gx%p(i,j,k) = (mesh%Qi(1,i,j)*fdx + mesh%Qi(2,i,j)*fdy)
                 gy%p(i,j,k) = (mesh%Qi(3,i,j)*fdy + mesh%Qi(2,i,j)*fdx)
             end do

@@ -136,6 +136,7 @@ type(err_container_t) function test_grad(N,grad_oper_name,staggering) result(err
                                    xyz_grad => xyz_grad_generator
     use grad_factory_mod,   only : create_grad_operator
     use abstract_grad_mod,  only : grad_operator_t
+    use const_mod,          only : radz
 
     integer(kind=4),  intent(in) :: N
     character(len=*), intent(in) :: grad_oper_name, staggering
@@ -146,6 +147,7 @@ type(err_container_t) function test_grad(N,grad_oper_name,staggering) result(err
     type(grid_field_t)          :: gx_true, gy_true
     type(domain_t)              :: domain
     class(grad_operator_t), allocatable :: grad_op
+    real(kind=8), parameter :: default_scale = radz
 
     call create_domain(domain, "cube", staggering, N, nz)
     call create_grid_field(gx, 1, 0, domain%mesh_u)
@@ -166,8 +168,8 @@ type(err_container_t) function test_grad(N,grad_oper_name,staggering) result(err
     errs%keys(1)%str = "xyz linf"
     errs%keys(2)%str = "xyz l2"
 
-    call gx%update(-1.0_8,gx_true,domain%mesh_u)
-    call gy%update(-1.0_8,gy_true,domain%mesh_v)
+    call gx%assign(default_scale,gx,-1.0_8,gx_true,domain%mesh_u)
+    call gy%assign(default_scale,gy,-1.0_8,gy_true,domain%mesh_v)
     errs%values(1) = gx%maxabs(domain%mesh_u,domain%parcomm)+ &
                      gy%maxabs(domain%mesh_v,domain%parcomm)
     errs%values(2) = gx%algebraic_norm2(domain%mesh_u,domain%parcomm)/real(nz*N,8)+&
