@@ -175,8 +175,7 @@ function create_grad_contra_ah_sbp_operator(domain, grad_operator_name) result(g
 
     use grad_contra_ah_sbp_mod,    only : grad_contra_ah_sbp_t
     use exchange_factory_mod,      only : create_symm_halo_exchange_Ah
-    use ecs_metric_mod,            only : ecs_b1_proto, ecs_b2_proto, ecs_a1_proto, ecs_a2_proto
-    use const_mod,                 only : pi
+    use halo_factory_mod,          only : create_vector_halo_procedure
 
     type(domain_t),   intent(in)  :: domain
     character(len=*), intent(in)  :: grad_operator_name
@@ -184,9 +183,6 @@ function create_grad_contra_ah_sbp_operator(domain, grad_operator_name) result(g
 
     integer(kind=4)               :: halo_width_interior
     integer(kind=4), parameter    :: halo_width_edges=1
-
-    integer(kind=4) :: t, is, ie, js, je, i, j
-    real(kind=8)    :: alpha, beta, a(3), b(3)
 
     select case(grad_operator_name)
     case ("gradient_ah42_sbp_ecs")
@@ -203,60 +199,10 @@ function create_grad_contra_ah_sbp_operator(domain, grad_operator_name) result(g
     grad%exch_scalar_interior =  &
               create_symm_halo_exchange_Ah(domain%partition, domain%parcomm, &
                                          domain%topology,  halo_width_interior, 'full')
-    grad%exch_vector_edges =  &
-              create_symm_halo_exchange_Ah(domain%partition, domain%parcomm, &
-                                         domain%topology,  halo_width_edges, 'full')
+                                         
+    call create_vector_halo_procedure(grad%sync_edges,domain,0,"ecs_Ah_vec_sync_contra")
 
     grad%subtype = grad_operator_name
-
-    allocate(grad%q(domain%mesh_xy%ts : domain%mesh_xy%te))
-    do t=domain%mesh_xy%ts, domain%mesh_xy%te
-        is = domain%mesh_xy%tile(t)%is
-        ie = domain%mesh_xy%tile(t)%ie
-        js = domain%mesh_xy%tile(t)%js
-        je = domain%mesh_xy%tile(t)%je
-
-        if(js == 1) then
-            allocate(grad%q(t)%qb(is:ie))
-            do i = is,ie
-                alpha = -0.25_8*pi+(i-1)*domain%mesh_xy%tile(t)%hx
-                b(1:3) = ecs_b1_proto(alpha,-0.25_8*pi)
-                a(1:3) = ecs_a2_proto(alpha, 0.25_8*pi)
-                a(1:3) = [a(1),-a(3),a(2)]
-                grad%q(t)%qb(i) = sum(a(1:3)*b(1:3))
-            end do
-        end if
-        if(je == domain%mesh_xy%tile(t)%ny+1) then
-            allocate(grad%q(t)%qt(is:ie))
-            do i = is,ie
-                alpha = -0.25_8*pi+(i-1)*domain%mesh_xy%tile(t)%hx
-                b(1:3) = ecs_b1_proto(alpha, 0.25_8*pi)
-                a(1:3) = ecs_a2_proto(alpha,-0.25_8*pi)
-                a(1:3) = [a(1),a(3),-a(2)]
-                grad%q(t)%qt(i) = sum(a(1:3)*b(1:3))
-            end do
-        end if
-        if(is == 1) then
-            allocate(grad%q(t)%ql(js:je))
-            do j = js,je
-                beta = -0.25_8*pi+(j-1)*domain%mesh_xy%tile(t)%hx
-                b(1:3) = ecs_b2_proto(-0.25_8*pi, beta)
-                a(1:3) = ecs_a1_proto( 0.25_8*pi, beta)
-                a(1:3) = [-a(3),a(2),a(1)]
-                grad%q(t)%ql(j) = sum(a(1:3)*b(1:3))
-            end do
-        end if
-        if(ie == domain%mesh_xy%tile(t)%nx+1) then
-            allocate(grad%q(t)%qr(js:je))
-            do j = js,je
-                beta = -0.25_8*pi+(j-1)*domain%mesh_xy%tile(t)%hx
-                b(1:3) = ecs_b2_proto( 0.25_8*pi, beta)
-                a(1:3) = ecs_a1_proto(-0.25_8*pi, beta)
-                a(1:3) = [a(3),a(2),-a(1)]
-                grad%q(t)%qr(j) = sum(a(1:3)*b(1:3))
-            end do
-        end if
-    end do
 
 end function create_grad_contra_ah_sbp_operator
 

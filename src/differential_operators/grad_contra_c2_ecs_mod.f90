@@ -30,89 +30,74 @@ end type grad_contra_c_sbp21_t
 
 contains
 
-subroutine calc_grad_contra_c2_ecs(this, gx, gy, f, domain, multiplier)
+subroutine calc_grad_contra_c2_ecs(this, gx, gy, f, domain)
     class(grad_contra_c2_ecs_t), intent(inout) :: this
     type(grid_field_t),          intent(inout) :: gx
     type(grid_field_t),          intent(inout) :: gy
     type(grid_field_t),          intent(inout) :: f
     type(domain_t),              intent(in)    :: domain
-    real(kind=8),      optional, intent(in)    :: multiplier
 
     integer(kind=4) :: t
     integer(kind=4), parameter :: halo_width=1
-    real(kind=8)    :: mult_loc
-
-    mult_loc = 1.0_8
-    if (present(multiplier)) mult_loc = multiplier
 
     call this%halo_procedure%get_halo_scalar(f,domain,halo_width)
 
     do t = domain%partition%ts, domain%partition%te
         call calc_grad_on_tile(gx%tile(t), gy%tile(t), f%tile(t),            &
                                domain%mesh_x%tile(t), domain%mesh_y%tile(t), &
-                               domain%mesh_o%tile(t), mult_loc)
+                               domain%mesh_o%tile(t),domain%mesh_o%scale)
     end do
 
 end subroutine calc_grad_contra_c2_ecs
 
-subroutine calc_grad_contra_c2_cons(this, gx, gy, f, domain, multiplier)
+subroutine calc_grad_contra_c2_cons(this, gx, gy, f, domain)
     class(grad_contra_c2_cons_t), intent(inout) :: this
     type(grid_field_t),           intent(inout) :: gx
     type(grid_field_t),           intent(inout) :: gy
     type(grid_field_t),           intent(inout) :: f
     type(domain_t),               intent(in)    :: domain
-    real(kind=8),      optional,  intent(in)    :: multiplier
 
     integer(kind=4) :: t
     integer(kind=4), parameter :: halo_width=1
-    real(kind=8)    :: mult_loc
-
-    mult_loc = 1.0_8
-    if (present(multiplier)) mult_loc = multiplier
 
     call this%halo_procedure%get_halo_scalar(f,domain,halo_width)
 
     do t = domain%partition%ts, domain%partition%te
         call calc_grad_on_tile_cons(gx%tile(t), gy%tile(t), f%tile(t),            &
                                domain%mesh_x%tile(t), domain%mesh_y%tile(t), &
-                               domain%mesh_o%tile(t), mult_loc)
+                               domain%mesh_o%tile(t),domain%mesh_o%scale)
     end do
 
     call this%sync_procedure%get_halo_vector(gx,gy,domain,0)
 
 end subroutine calc_grad_contra_c2_cons
 
-subroutine calc_grad_contra_c_sbp21(this, gx, gy, f, domain, multiplier)
+subroutine calc_grad_contra_c_sbp21(this, gx, gy, f, domain)
     class(grad_contra_c_sbp21_t), intent(inout) :: this
     type(grid_field_t),           intent(inout) :: gx
     type(grid_field_t),           intent(inout) :: gy
     type(grid_field_t),           intent(inout) :: f
     type(domain_t),               intent(in)    :: domain
-    real(kind=8),      optional,  intent(in)    :: multiplier
 
     integer(kind=4) :: t
     integer(kind=4), parameter :: halo_width=1
-    real(kind=8)    :: mult_loc
-
-    mult_loc = 1.0_8
-    if (present(multiplier)) mult_loc = multiplier
 
     call this%exch_halo%do(f,domain%parcomm)
 
     do t = domain%partition%ts, domain%partition%te
         call calc_grad_on_tile_sbp21(gx%tile(t), gy%tile(t), f%tile(t),            &
                                      domain%mesh_x%tile(t), domain%mesh_y%tile(t), &
-                                     domain%mesh_o%tile(t), mult_loc)
+                                     domain%mesh_o%tile(t),domain%mesh_o%scale)
     end do
 
 end subroutine calc_grad_contra_c_sbp21
 
-subroutine calc_grad_on_tile(gx, gy, f, mesh_x, mesh_y, mesh_o, multiplier)
+subroutine calc_grad_on_tile(gx, gy, f, mesh_x, mesh_y, mesh_o, scale)
 
     type(tile_field_t),     intent(inout) :: gx, gy
     type(tile_field_t),     intent(in)    :: f
     type(tile_mesh_t),      intent(in)    :: mesh_x, mesh_y, mesh_o
-    real(kind=8),           intent(in)    :: multiplier
+    real(kind=8),           intent(in)    :: scale
 
     real(kind=8)    :: hx, mult_loc
     integer(kind=4) :: ks, ke
@@ -144,13 +129,13 @@ subroutine calc_grad_on_tile(gx, gy, f, mesh_x, mesh_y, mesh_o, multiplier)
 
         do j= jsx, jex
             do i= isx, iex
-                fdx(i,j) = (f%p(i,j,k)-f%p(i-1,j,k))/hx*multiplier
+                fdx(i,j) = (f%p(i,j,k)-f%p(i-1,j,k))/(hx*scale)
             end do
         end do
 
         do j= jsy, jey
             do i= isy, iey
-                fdy(i,j) = (f%p(i,j,k)-f%p(i,j-1,k))/hx*multiplier
+                fdy(i,j) = (f%p(i,j,k)-f%p(i,j-1,k))/(hx*scale)
             end do
         end do
 
@@ -171,12 +156,12 @@ subroutine calc_grad_on_tile(gx, gy, f, mesh_x, mesh_y, mesh_o, multiplier)
 
 end subroutine calc_grad_on_tile
 
-subroutine calc_grad_on_tile_cons(gx, gy, f, mesh_x, mesh_y, mesh_o, multiplier)
+subroutine calc_grad_on_tile_cons(gx, gy, f, mesh_x, mesh_y, mesh_o, scale)
 
     type(tile_field_t),     intent(inout) :: gx, gy
     type(tile_field_t),     intent(in)    :: f
     type(tile_mesh_t),      intent(in)    :: mesh_x, mesh_y, mesh_o
-    real(kind=8),           intent(in)    :: multiplier
+    real(kind=8),           intent(in)    :: scale
 
     real(kind=8)    :: hx, mult_loc
     integer(kind=4) :: ks, ke
@@ -216,13 +201,13 @@ subroutine calc_grad_on_tile_cons(gx, gy, f, mesh_x, mesh_y, mesh_o, multiplier)
 
         do j= jsx, jex
             do i= isx,iex
-                fdx(i,j) = (f%p(i,j,k)-f%p(i-1,j,k))/hx*multiplier
+                fdx(i,j) = (f%p(i,j,k)-f%p(i-1,j,k))/(hx*scale)
             end do
         end do
 
         do j= jsy,jey
             do i= isy, iey
-                fdy(i,j) = (f%p(i,j,k)-f%p(i,j-1,k))/hx*multiplier
+                fdy(i,j) = (f%p(i,j,k)-f%p(i,j-1,k))/(hx*scale)
             end do
         end do
 
@@ -259,12 +244,12 @@ subroutine calc_grad_on_tile_cons(gx, gy, f, mesh_x, mesh_y, mesh_o, multiplier)
 
 end subroutine calc_grad_on_tile_cons
 
-subroutine calc_grad_on_tile_sbp21(gx, gy, f, mesh_x, mesh_y, mesh_o, multiplier)
+subroutine calc_grad_on_tile_sbp21(gx, gy, f, mesh_x, mesh_y, mesh_o, scale)
 
     type(tile_field_t),     intent(inout) :: gx, gy
     type(tile_field_t),     intent(in)    :: f
     type(tile_mesh_t),      intent(in)    :: mesh_x, mesh_y, mesh_o
-    real(kind=8),           intent(in)    :: multiplier
+    real(kind=8),           intent(in)    :: scale
 
     real(kind=8)    :: hx, mult_loc
     integer(kind=4) :: ks, ke
@@ -303,36 +288,32 @@ subroutine calc_grad_on_tile_sbp21(gx, gy, f, mesh_x, mesh_y, mesh_o, multiplier
     do k = ks, ke
 
         do j= jsx, jex
-            !if(isx == 1) fdx(1,j) = (f%p(2,j,k)-f%p(1,j,k))/hx*multiplier
             if(isx == 1) &
                 fdx(1,j) = (0.5_8*f%p(2,j,k)+0.5_8*f%p(1,j,k)- &
-                            1.5_8*f%p(0,j,k)+0.5_8*f%p(-1,j,k))/hx*multiplier
+                            1.5_8*f%p(0,j,k)+0.5_8*f%p(-1,j,k))/(hx*scale)
             do i=max(isx,2), min(iex,mesh_o%nx)
-                fdx(i,j) = (f%p(i,j,k)-f%p(i-1,j,k))/hx*multiplier
+                fdx(i,j) = (f%p(i,j,k)-f%p(i-1,j,k))/(hx*scale)
             end do
-            !if(iex == mesh_o%nx+1) fdx(iex,j) = (f%p(iex-1,j,k)-f%p(iex-2,j,k))/hx*multiplier
             if(iex == mesh_o%nx+1) &
                 fdx(iex,j) = (-0.5_8*f%p(iex-2,j,k)-0.5_8*f%p(iex-1,j,k)+&
-                               1.5_8*f%p(iex,j,k)  -0.5_8*f%p(iex+1,j,k))/hx*multiplier
+                               1.5_8*f%p(iex,j,k)  -0.5_8*f%p(iex+1,j,k))/(hx*scale)
         end do
 
         if(jsy==1) then
             do i= isy, iey
-                !fdy(i,1) = (f%p(i,2,k)-f%p(i,1,k))/hx*multiplier
                 fdy(i,1) = (0.5_8*f%p(i,2,k)+0.5_8*f%p(i,1,k)-&
-                            1.5_8*f%p(i,0,k)+0.5_8*f%p(i,-1,k))/hx*multiplier
+                            1.5_8*f%p(i,0,k)+0.5_8*f%p(i,-1,k))/(hx*scale)
             end do
         end if
         do j= max(jsy,2), min(jey,mesh_o%ny)
             do i= isy, iey
-                fdy(i,j) = (f%p(i,j,k)-f%p(i,j-1,k))/hx*multiplier
+                fdy(i,j) = (f%p(i,j,k)-f%p(i,j-1,k))/(hx*scale)
             end do
         end do
         if(jey == mesh_o%ny+1) then
             do i= isy, iey
-                !fdy(i,jey) = (f%p(i,jey-1,k)-f%p(i,jey-2,k))/hx*multiplier
                 fdy(i,jey) = (-0.5_8*f%p(i,jey-2,k)-0.5_8*f%p(i,jey-1,k)+&
-                               1.5_8*f%p(i,jey,k)  -0.5_8*f%p(i,jey+1,k))/hx*multiplier
+                               1.5_8*f%p(i,jey,k)  -0.5_8*f%p(i,jey+1,k))/(hx*scale)
             end do
         end if
 

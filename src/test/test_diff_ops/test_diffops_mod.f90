@@ -82,21 +82,22 @@ type(err_container_t) function test_div(N,div_oper_name,staggering) result(errs)
                                  random_vec=>random_vector_field_generator
     use div_factory_mod,  only : create_div_operator
     use abstract_div_mod, only : div_operator_t
+    use const_mod,        only : radz
 
     integer(kind=4),  intent(in) :: N
     character(len=*), intent(in) :: div_oper_name, staggering
     !locals:
     integer(kind=4), parameter  :: nz = 3
     integer(kind=4), parameter  :: ex_halo_width = 8
-    type(grid_field_t)          :: u, v, div, div2, div_true
+    type(grid_field_t)          :: u, v, div, div_true
     type(domain_t)              :: domain
     class(div_operator_t), allocatable :: div_op
+    real(kind=8), parameter :: default_scale = radz
 
     call create_domain(domain, "cube", staggering, N, nz)
     call create_grid_field(u, ex_halo_width, 0, domain%mesh_u)
     call create_grid_field(v, ex_halo_width, 0, domain%mesh_v)
     call create_grid_field(div, ex_halo_width, 0, domain%mesh_p)
-    call create_grid_field(div2, ex_halo_width, 0, domain%mesh_p)
     call create_grid_field(div_true, 0, 0, domain%mesh_p)
 
     call set_vector_test_field(u,v,solid_rot, domain%mesh_u, domain%mesh_v, &
@@ -105,12 +106,7 @@ type(err_container_t) function test_div(N,div_oper_name,staggering) result(errs)
     div_op = create_div_operator(domain, div_oper_name)
 
     call div_op%calc_div(div, u,v,domain)
-    call div_op%calc_div(div2,u,v,domain,some_const)
-
-    call div2%update(-some_const,div,domain%mesh_p)
-    if(div2%maxabs(domain%mesh_p,domain%parcomm)>100e-15) then
-        call parcomm_global%abort("div_a2 test, wrong multiplier interface. Test failed!")
-    end if
+    call div%assign(default_scale, div, domain%mesh_p)
 
     allocate(errs%keys(4), errs%values(4))
     errs%keys(1)%str = "solid rotation linf"
@@ -125,7 +121,7 @@ type(err_container_t) function test_div(N,div_oper_name,staggering) result(errs)
                                0, "contravariant")
     call set_scalar_test_field(div_true,cross_polar_div, domain%mesh_p,0)
     call div_op%calc_div(div, u,v,domain)
-    call div%update(-1.0_8,div_true,domain%mesh_p)
+    call div%assign(default_scale,div,-1.0_8,div_true,domain%mesh_p)
 
     errs%values(3) = div%maxabs(domain%mesh_p,domain%parcomm)
     errs%values(4) = div%algebraic_norm2(domain%mesh_p,domain%parcomm)/real(nz*N,8)
@@ -140,6 +136,7 @@ type(err_container_t) function test_grad(N,grad_oper_name,staggering) result(err
                                    xyz_grad => xyz_grad_generator
     use grad_factory_mod,   only : create_grad_operator
     use abstract_grad_mod,  only : grad_operator_t
+    use const_mod,          only : radz
 
     integer(kind=4),  intent(in) :: N
     character(len=*), intent(in) :: grad_oper_name, staggering
@@ -150,6 +147,7 @@ type(err_container_t) function test_grad(N,grad_oper_name,staggering) result(err
     type(grid_field_t)          :: gx_true, gy_true
     type(domain_t)              :: domain
     class(grad_operator_t), allocatable :: grad_op
+    real(kind=8), parameter :: default_scale = radz
 
     call create_domain(domain, "cube", staggering, N, nz)
     call create_grid_field(gx, 1, 0, domain%mesh_u)
@@ -165,21 +163,13 @@ type(err_container_t) function test_grad(N,grad_oper_name,staggering) result(err
 
     grad_op = create_grad_operator(domain, grad_oper_name)
     call grad_op%calc_grad(gx,gy,f,domain)
-    call grad_op%calc_grad(gx1,gy1,f,domain,some_const)
-
-    call gx1%update(-some_const,gx,domain%mesh_u)
-    call gy1%update(-some_const,gy,domain%mesh_v)
-
-    if(gx1%maxabs(domain%mesh_u,domain%parcomm)+gy1%maxabs(domain%mesh_v,domain%parcomm)>1e-13) then
-        call parcomm_global%abort("grad_a2 test, wrong multiplier interface. Test failed!")
-    end if
 
     allocate(errs%keys(2), errs%values(2))
     errs%keys(1)%str = "xyz linf"
     errs%keys(2)%str = "xyz l2"
 
-    call gx%update(-1.0_8,gx_true,domain%mesh_u)
-    call gy%update(-1.0_8,gy_true,domain%mesh_v)
+    call gx%assign(default_scale,gx,-1.0_8,gx_true,domain%mesh_u)
+    call gy%assign(default_scale,gy,-1.0_8,gy_true,domain%mesh_v)
     errs%values(1) = gx%maxabs(domain%mesh_u,domain%parcomm)+ &
                      gy%maxabs(domain%mesh_v,domain%parcomm)
     errs%values(2) = gx%algebraic_norm2(domain%mesh_u,domain%parcomm)/real(nz*N,8)+&
@@ -197,6 +187,7 @@ function test_curl(N, div_oper_name, staggering) result(errs)
 
     use curl_factory_mod,  only : create_curl_operator_div_based
     use abstract_curl_mod, only : curl_operator_t
+    use const_mod,         only : radz
 
     integer(kind=4),  intent(in) :: N
     character(len=*), intent(in) :: div_oper_name, staggering
@@ -207,6 +198,7 @@ function test_curl(N, div_oper_name, staggering) result(errs)
     type(grid_field_t)          :: u, v, curl, curl_true
     type(domain_t)              :: domain
     class(curl_operator_t), allocatable :: curl_op
+    real(kind=8), parameter :: default_scale = radz
 
     call create_domain(domain, "cube", staggering, N, nz)
 
@@ -224,11 +216,13 @@ function test_curl(N, div_oper_name, staggering) result(errs)
     call set_vector_test_field(u, v, VSH_curl_free_10, domain%mesh_u, domain%mesh_v, &
                                0, "contravariant")
     call curl_op%calc_curl(curl, u, v, domain)
+    call curl%assign(default_scale, curl, domain%mesh_p)
 
     errs%values(1) = curl%maxabs(domain%mesh_p, domain%parcomm)
     errs%values(2) = curl%algebraic_norm2(domain%mesh_p,domain%parcomm)/real(N,8)
 
 end function test_curl
+<<<<<<< HEAD
 function test_coriolis(N, staggering) result(errs)
 
     use test_fields_mod,   only : set_vector_test_field, set_scalar_test_field, &
@@ -264,6 +258,9 @@ function test_coriolis(N, staggering) result(errs)
     call coriolis%calc_coriolis(cor_u, cor_v, u, v, domain)
 
 end function test_coriolis
+=======
+
+>>>>>>> d7f303af968ac33fb7bdbf2f01ddbffaa2b412fd
 subroutine test_laplace_spectre(div_operator_name, grad_operator_name, staggering)
     use test_fields_mod,   only : set_vector_test_field, solid_rot=>solid_rotation_field_generator
     use div_factory_mod,   only : create_div_operator
