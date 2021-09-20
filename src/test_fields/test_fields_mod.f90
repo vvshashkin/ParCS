@@ -12,48 +12,60 @@ public :: xyz_grad_generator_t, xyz_grad_generator
 public :: cross_polar_flow_generator_t, cross_polar_flow_generator
 public :: cross_polar_flow_div_generator_t, cross_polar_flow_div_generator
 public :: random_vector_field_generator_t, random_vector_field_generator
+public :: VSH_curl_free_10_generator_t, VSH_curl_free_10_generator
+public :: zero_scalar_field_generator_t, zero_scalar_field_generator
 
 !!!!!!!!!!!!!Abstract scalar and vector fields generators
 type, public, abstract :: scalar_field_generator_t
 contains
-procedure(get_scalar_field), deferred :: get_scalar_field
+    procedure(get_scalar_field), deferred :: get_scalar_field
 end type scalar_field_generator_t
 
 type, public, abstract :: vector_field_generator_t
 contains
-procedure(get_vector_field), deferred :: get_vector_field
+    procedure(get_vector_field), deferred :: get_vector_field
 end type vector_field_generator_t
 
 !!!!!!!!!!!!Specific fields
 type, extends(scalar_field_generator_t) :: xyz_scalar_field_generator_t
 contains
-procedure :: get_scalar_field => generate_xyz_scalar_field
+    procedure :: get_scalar_field => generate_xyz_scalar_field
 end type xyz_scalar_field_generator_t
 
 type, extends(vector_field_generator_t) :: solid_rotation_field_generator_t
 contains
-procedure :: get_vector_field => generate_solid_rotation_vector_field
+    procedure :: get_vector_field => generate_solid_rotation_vector_field
 end type solid_rotation_field_generator_t
 
 type, extends(vector_field_generator_t) :: xyz_grad_generator_t
 contains
-procedure :: get_vector_field => generate_xyz_grad_field
+    procedure :: get_vector_field => generate_xyz_grad_field
 end type xyz_grad_generator_t
 
 type, extends(vector_field_generator_t) :: cross_polar_flow_generator_t
 contains
-procedure :: get_vector_field => generate_cross_polar_flow
+    procedure :: get_vector_field => generate_cross_polar_flow
 end type cross_polar_flow_generator_t
 
 type, extends(scalar_field_generator_t) :: cross_polar_flow_div_generator_t
 contains
-procedure :: get_scalar_field => generate_cross_polar_flow_div
+    procedure :: get_scalar_field => generate_cross_polar_flow_div
 end type cross_polar_flow_div_generator_t
 
 type, extends(vector_field_generator_t) :: random_vector_field_generator_t
 contains
-procedure :: get_vector_field => generate_random_vector_field
+    procedure :: get_vector_field => generate_random_vector_field
 end type random_vector_field_generator_t
+
+type, extends(vector_field_generator_t) :: VSH_curl_free_10_generator_t
+contains
+    procedure :: get_vector_field => generate_VSH_curl_free_10
+end type VSH_curl_free_10_generator_t
+
+type, extends(scalar_field_generator_t) :: zero_scalar_field_generator_t
+contains
+    procedure :: get_scalar_field => generate_zero_scalar_field
+end type zero_scalar_field_generator_t
 
 !!!field generator instances
 type(xyz_scalar_field_generator_t)     :: xyz_scalar_field_generator
@@ -62,6 +74,8 @@ type(xyz_grad_generator_t)             :: xyz_grad_generator
 type(cross_polar_flow_generator_t)     :: cross_polar_flow_generator
 type(cross_polar_flow_div_generator_t) :: cross_polar_flow_div_generator
 type(random_vector_field_generator_t)  :: random_vector_field_generator
+type(VSH_curl_free_10_generator_t)     :: VSH_curl_free_10_generator
+type(zero_scalar_field_generator_t)    :: zero_scalar_field_generator
 
 abstract interface
     subroutine get_scalar_field(this,f,npts,nlev,x,y,z)
@@ -194,7 +208,6 @@ subroutine set_vector_test_field_1tile_1comp(u,generator,mesh,bvec,halo_width,fi
 end subroutine set_vector_test_field_1tile_1comp
 
 subroutine generate_xyz_scalar_field(this,f,npts,nlev,x,y,z)
-    import scalar_field_generator_t
     class(xyz_scalar_field_generator_t),  intent(in) :: this
     integer(kind=4), intent(in)                  :: npts, nlev
     real(kind=8),    intent(in)                  :: x(npts), y(npts), z(npts)
@@ -353,5 +366,43 @@ subroutine generate_random_vector_field(this,vx,vy,vz,npts,nlev,x,y,z)
 !        end do
 !    end do
 end subroutine generate_random_vector_field
+subroutine generate_VSH_curl_free_10(this, vx, vy, vz, npts, nlev, x, y, z)
 
+    use sph_coords_mod, only : cart2sph, sph2cart_vec
+
+    class(VSH_curl_free_10_generator_t),  intent(in)  :: this
+    integer(kind=4),                      intent(in)  :: npts, nlev
+    real(kind=8), dimension(npts),        intent(in)  :: x, y, z
+    real(kind=8), dimension(npts, nlev),  intent(out) :: vx, vy, vz
+
+    integer(kind=4) :: i, k
+    real(kind=8)    :: lam, phi, v_lam, v_phi
+
+    do k = 1, nlev
+        do i = 1, npts
+            call cart2sph(x(i), y(i), z(i), lam, phi)
+            v_lam = 0.0_8
+            v_phi = -cos(phi)
+            call sph2cart_vec(lam, phi, v_lam, v_phi, vx(i,k), vy(i,k), vz(i,k))
+        end do
+    end do
+
+end subroutine generate_VSH_curl_free_10
+
+subroutine generate_zero_scalar_field(this, f, npts, nlev, x, y, z)
+
+    class(zero_scalar_field_generator_t),  intent(in) :: this
+    integer(kind=4), intent(in)                       :: npts, nlev
+    real(kind=8),    intent(in)                       :: x(npts), y(npts), z(npts)
+    real(kind=8),    intent(out)                      :: f(npts,nlev)
+
+    integer(kind=4) :: i, k
+
+    do k = 1, nlev
+        do i=1, npts
+            f(i,k) = 0.0_8
+        end do
+    end do
+
+end subroutine generate_zero_scalar_field
 end module test_fields_mod
