@@ -7,7 +7,27 @@ use grid_field_mod,         only : grid_field_t
 
 implicit none
 
+private
+
+public :: create_coriolis
+
 contains
+
+subroutine create_coriolis(coriolis_op, coriolis_op_name, domain)
+
+    class(coriolis_operator_t), allocatable, intent(out) :: coriolis_op
+    character(len=*),                        intent(in)  :: coriolis_op_name
+    type(domain_t),                          intent(in)  :: domain
+
+    select case(coriolis_op_name)
+
+    case("coriolis_A_Ah")
+        call create_coriolis_unstaggered(coriolis_op, domain)
+    case default
+        call parcomm_global%abort("Unknown coriolis operator: "//coriolis_op_name)
+    end select
+
+end subroutine create_coriolis
 
 subroutine create_coriolis_unstaggered(coriolis_op, domain)
 
