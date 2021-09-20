@@ -330,6 +330,7 @@ $(DOBJ)halo_factory_mod.o: src/halo/halo_factory_mod.f90 \
 	$(DOBJ)ecs_halo_factory_mod.o \
 	$(DOBJ)ecs_halo_vec_a_factory_mod.o \
 	$(DOBJ)ecs_halo_vec_c_factory_mod.o \
+	$(DOBJ)ecs_ah_vec_sync_factory_mod.o \
 	$(DOBJ)halo_a_default_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
 	$(DOBJ)halo_c_default_mod.o
@@ -441,6 +442,7 @@ $(DOBJ)grad_contra_ah_sbp_mod.o: src/differential_operators/grad_contra_ah_sbp_m
 	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)sbp_mod.o \
 	$(DOBJ)grad_contra_ah2_mod.o \
+	$(DOBJ)halo_mod.o \
 	$(DOBJ)mesh_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -544,9 +546,9 @@ $(DOBJ)grad_factory_mod.o: src/differential_operators/grad_factory_mod.f90 \
 	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)grad_contra_c2_ecs_mod.o \
 	$(DOBJ)halo_factory_mod.o \
-	$(DOBJ)grad_contra_ah2_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
 	$(DOBJ)grad_contra_a2_mod.o \
+	$(DOBJ)grad_contra_ah2_mod.o \
 	$(DOBJ)ecs_metric_mod.o \
 	$(DOBJ)const_mod.o \
 	$(DOBJ)grad_contra_ah_sbp_mod.o
@@ -596,6 +598,22 @@ $(DOBJ)ecs_halo_vec_c_mod.o: src/equiang_cs/ecs_halo_vec_c_mod.f90 \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)tile_mod.o \
 	$(DOBJ)parcomm_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)ecs_ah_vec_sync_mod.o: src/equiang_cs/ecs_Ah_vec_sync_mod.f90 \
+	$(DOBJ)halo_mod.o \
+	$(DOBJ)exchange_halo_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)domain_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)ecs_ah_vec_sync_factory_mod.o: src/equiang_cs/ecs_Ah_vec_sync_factory_mod.f90 \
+	$(DOBJ)halo_mod.o \
+	$(DOBJ)ecs_ah_vec_sync_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)exchange_factory_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
