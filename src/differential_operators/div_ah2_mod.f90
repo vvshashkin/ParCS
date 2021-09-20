@@ -17,40 +17,34 @@ end type div_ah2_t
 
 contains
 
-subroutine calc_div_ah2(this, div, u, v, domain, multiplier)
+subroutine calc_div_ah2(this, div, u, v, domain)
     class(div_ah2_t),        intent(inout) :: this
     type(domain_t),         intent(in)    :: domain
     type(grid_field_t),     intent(inout) :: u, v
-    real(kind=8), optional, intent(in)    :: multiplier
     !output
     type(grid_field_t),     intent(inout) :: div
 
     integer(kind=4), parameter :: halo_width = 1
     integer(kind=4) :: t
-    real(kind=8)    :: mult_loc
-
-    mult_loc = 1.0_8
-    if (present(multiplier)) mult_loc = multiplier
 
     call this%exch_halo%do_vec(u,v,domain%parcomm)
 
     do t = domain%partition%ts, domain%partition%te
         div%tile(t)%p = 0.0_8
         call calc_div_on_tile(div%tile(t), u%tile(t), v%tile(t),  &
-                              domain%mesh_xy%tile(t), mult_loc)
+                              domain%mesh_xy%tile(t))
     end do
 
 
 end subroutine calc_div_ah2
 
-subroutine calc_div_on_tile(div, u, v, mesh, multiplier)
+subroutine calc_div_on_tile(div, u, v, mesh)
 
     use mesh_mod, only : tile_mesh_t
 
     type(tile_field_t),     intent(inout) :: div
     type(tile_field_t),     intent(in)    :: u, v
     type(tile_mesh_t),      intent(in)    :: mesh
-    real(kind=8),           intent(in)    :: multiplier
 
     real(kind=8)    :: hx, mult_loc
     integer(kind=4) :: ks, ke, js, je, is, ie, n, i, j, k
@@ -67,14 +61,14 @@ subroutine calc_div_on_tile(div, u, v, mesh, multiplier)
             div%p(1,1,k) = mesh%G(2,1)*(u%p(2,1,k)-u%p(-1,1,k)+ &
                                         v%p(1,2,k)-v%p(1,-1,k)+ &
                                         v%p(0,2,k)+u%p(2,0,k))/ &
-                                             (3.0_8*mesh%G(1,1)*hx)*multiplier
+                                             (3.0_8*mesh%G(1,1)*hx)
         end if
         n = mesh%nx
         if(js==1 .and. ie == n+1) then
             div%p(n+1,1,k) = mesh%G(n,1)*(u%p(n+3,1,k)-u%p(n,1,k)+ &
                                         v%p(n+1,2,k)-v%p(n+1,-1,k)+ &
                                         v%p(n+2,2,k)-u%p(n,0,k))/ &
-                                             (3.0_8*mesh%G(n+1,1)*hx)*multiplier
+                                             (3.0_8*mesh%G(n+1,1)*hx)
         end if
         if(ie == mesh%nx+1 .and. je==mesh%ny+1) then
             i = ie
@@ -82,7 +76,7 @@ subroutine calc_div_on_tile(div, u, v, mesh, multiplier)
             div%p(ie,je,k) = mesh%G(i-1,j)*(-u%p(i-1,j+1,k)+v%p(i,j+2,k)+ &
                                             -u%p(i-1,j  ,k)-v%p(i,j-1,k)+ &
                                              u%p(i+2,j  ,k)-v%p(i+1,j-1,k))/ &
-                                             (3.0_8*mesh%G(i,j)*hx)*multiplier
+                                             (3.0_8*mesh%G(i,j)*hx)
         end if
         if(is == 1 .and. je==mesh%ny+1) then
             i = is
@@ -90,7 +84,7 @@ subroutine calc_div_on_tile(div, u, v, mesh, multiplier)
             div%p(i,j,k) = mesh%G(i+1,j)*( u%p(i+1,j+1,k)+v%p(i,j+2,k)+ &
                                              u%p(i+1,j  ,k)-v%p(i,j-1,k)+ &
                                             -u%p(i-2,j  ,k)-v%p(i-1,j-1,k))/ &
-                                             (3.0_8*mesh%G(i,j)*hx)*multiplier
+                                             (3.0_8*mesh%G(i,j)*hx)
         end if
         !Edge cases:
         if(js == 1) then
@@ -99,7 +93,7 @@ subroutine calc_div_on_tile(div, u, v, mesh, multiplier)
                 div%p(i,j,k) = (0.5_8*mesh%G(i+1,j)*(u%p(i+1,j,k)+u%p(i+1,j-1,k))- &
                                 0.5_8*mesh%G(i-1,j)*(u%p(i-1,j,k)+u%p(i-1,j-1,k)) +&
                                 mesh%G(i,j+1)*(v%p(i,j+1,k)-v%p(i,j-2,k)))/  &
-                                (2._8*mesh%G(i,j)*hx)*multiplier
+                                (2._8*mesh%G(i,j)*hx)
             end do
         end if
         n = mesh%ny
@@ -109,7 +103,7 @@ subroutine calc_div_on_tile(div, u, v, mesh, multiplier)
                 div%p(i,j,k) = (0.5_8*mesh%G(i+1,j)*(u%p(i+1,j,k)+u%p(i+1,j+1,k))- &
                                 0.5_8*mesh%G(i-1,j)*(u%p(i-1,j,k)+u%p(i-1,j+1,k)) +&
                                 mesh%G(i,j-1)*(v%p(i,j+2,k)-v%p(i,j-1,k)))/  &
-                                (2._8*mesh%G(i,j)*hx)*multiplier
+                                (2._8*mesh%G(i,j)*hx)
             end do
         end if
         if(is == 1) then
@@ -118,7 +112,7 @@ subroutine calc_div_on_tile(div, u, v, mesh, multiplier)
                 div%p(i,j,k) = (0.5_8*mesh%G(i,j+1)*(v%p(i,j+1,k)+v%p(i-1,j+1,k))- &
                                 0.5_8*mesh%G(i,j-1)*(v%p(i,j-1,k)+v%p(i-1,j-1,k)) +&
                                 mesh%G(i+1,j)*(u%p(i+1,j,k)-u%p(i-2,j,k)))/  &
-                                (2._8*mesh%G(i,j)*hx)*multiplier
+                                (2._8*mesh%G(i,j)*hx)
             end do
         end if
         n = mesh%nx
@@ -128,7 +122,7 @@ subroutine calc_div_on_tile(div, u, v, mesh, multiplier)
                 div%p(i,j,k) = (0.5_8*mesh%G(i,j+1)*(v%p(i,j+1,k)+v%p(i+1,j+1,k))- &
                                 0.5_8*mesh%G(i,j-1)*(v%p(i,j-1,k)+v%p(i+1,j-1,k)) +&
                                 mesh%G(i-1,j)*(u%p(i+2,j,k)-u%p(i-1,j,k)))/  &
-                                (2._8*mesh%G(i,j)*hx)*multiplier
+                                (2._8*mesh%G(i,j)*hx)
             end do
         end if
         !Regular points:
@@ -136,7 +130,7 @@ subroutine calc_div_on_tile(div, u, v, mesh, multiplier)
             do i = max(is,2), min(ie,mesh%nx)
                 div%p(i,j,k) = (mesh%G(i+1,j)*u%p(i+1,j,k)-mesh%G(i-1,j)*u%p(i-1,j,k) +  &
                                 mesh%G(i,j+1)*v%p(i,j+1,k)-mesh%G(i,j-1)*v%p(i,j-1,k))/  &
-                                (2._8*mesh%G(i,j)*hx)*multiplier
+                                (2._8*mesh%G(i,j)*hx)
             end do
         end do
     end do

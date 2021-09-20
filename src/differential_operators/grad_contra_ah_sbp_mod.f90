@@ -24,32 +24,27 @@ end type grad_contra_ah_sbp_t
 
 contains
 
-subroutine calc_grad_ah_sbp(this, gx, gy, f, domain, multiplier)
+subroutine calc_grad_ah_sbp(this, gx, gy, f, domain)
     class(grad_contra_ah_sbp_t),   intent(inout) :: this
     type(domain_t),                intent(in)    :: domain
     type(grid_field_t),            intent(inout) :: f
-    real(kind=8), optional,        intent(in)    :: multiplier
     !output:
     type(grid_field_t),     intent(inout) :: gx, gy
 
     integer(kind=4) :: t
-    real(kind=8)    :: mult_loc
-
-    mult_loc = 1.0_8
-    if (present(multiplier)) mult_loc = multiplier
 
     call this%exch_scalar_interior%do(f,domain%parcomm)
 
     do t = domain%partition%ts, domain%partition%te
         call calc_grad_on_tile(gx%tile(t), gy%tile(t), f%tile(t),  &
-                               domain%mesh_xy%tile(t), this%sbp_operator_name, mult_loc)
+                               domain%mesh_xy%tile(t), this%sbp_operator_name)
     end do
 
     call this%sync_edges%get_halo_vector(gx,gy,domain,0)
 
 end subroutine calc_grad_ah_sbp
 
-subroutine calc_grad_on_tile(gx, gy, f, mesh, sbp_oper, multiplier)
+subroutine calc_grad_on_tile(gx, gy, f, mesh, sbp_oper)
 
     use mesh_mod, only : tile_mesh_t
 
@@ -57,7 +52,6 @@ subroutine calc_grad_on_tile(gx, gy, f, mesh, sbp_oper, multiplier)
     type(tile_field_t),     intent(in)    :: f
     type(tile_mesh_t),      intent(in)    :: mesh
     character(len=*),       intent(in)    :: sbp_oper
-    real(kind=8),           intent(in)    :: multiplier
 
     real(kind=8)    :: hx, mult_loc
     real(kind=8)    :: fdx, fdy, fdx1, fdy1, fdx0, fdy0
@@ -78,8 +72,8 @@ subroutine calc_grad_on_tile(gx, gy, f, mesh, sbp_oper, multiplier)
 
         do j=js,je
             do i=is,ie
-                gx%p(i,j,k) = (mesh%Qi(1,i,j)*Dx(i,j) + mesh%Qi(2,i,j)*Dy(i,j))*multiplier/hx
-                gy%p(i,j,k) = (mesh%Qi(3,i,j)*Dy(i,j) + mesh%Qi(2,i,j)*Dx(i,j))*multiplier/hx
+                gx%p(i,j,k) = (mesh%Qi(1,i,j)*Dx(i,j) + mesh%Qi(2,i,j)*Dy(i,j))/hx
+                gy%p(i,j,k) = (mesh%Qi(3,i,j)*Dy(i,j) + mesh%Qi(2,i,j)*Dx(i,j))/hx
             end do
         end do
     end do

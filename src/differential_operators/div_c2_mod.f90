@@ -24,37 +24,32 @@ end type div_c_sbp21_t
 
 contains
 
-subroutine calc_div_c2(this, div, u, v, domain, multiplier)
+subroutine calc_div_c2(this, div, u, v, domain)
 
     class(div_c2_t),        intent(inout) :: this
     type(domain_t),         intent(in)    :: domain
     type(grid_field_t),     intent(inout) :: u, v
-    real(kind=8), optional, intent(in)    :: multiplier
     !out put
     type(grid_field_t),     intent(inout) :: div
 
     integer(kind=4) :: i, j, k, t
-    real(kind=8) mult_loc, hx
-
-    mult_loc = 1.0_8
-    if(present(multiplier)) mult_loc=multiplier
+    real(kind=8) hx
 
     call this%halo_procedure%get_halo_vector(u,v,domain,1)
 
     do t = domain%partition%ts, domain%partition%te
         call calc_div_on_tile(div%tile(t), u%tile(t), v%tile(t),            &
                               domain%mesh_x%tile(t), domain%mesh_y%tile(t), &
-                              domain%mesh_o%tile(t), mult_loc)
+                              domain%mesh_o%tile(t))
     end do
 
 end subroutine calc_div_c2
 
-subroutine calc_div_on_tile(div, u, v, mesh_u, mesh_v, mesh_p, multiplier)
+subroutine calc_div_on_tile(div, u, v, mesh_u, mesh_v, mesh_p)
 
     type(tile_field_t),  intent(inout) :: div
     type(tile_field_t),  intent(in)    :: u, v
     type(tile_mesh_t),   intent(in)    :: mesh_u, mesh_v, mesh_p
-    real(kind=8), optional, intent(in) :: multiplier
 
     real(kind=8) :: hx
     integer(kind=4) :: ks, ke, js, je, is, ie, i, j, k
@@ -70,44 +65,39 @@ subroutine calc_div_on_tile(div, u, v, mesh_u, mesh_v, mesh_p, multiplier)
             do i = is, ie
                 div%p(i,j,k) = (mesh_u%G(i+1,j)*u%p(i+1,j,k)-mesh_u%G(i,j)*u%p(i,j,k)  +  &
                                 mesh_v%G(i,j+1)*v%p(i,j+1,k)-mesh_v%G(i,j)*v%p(i,j,k))/  &
-                                (mesh_p%G(i,j)*hx)*multiplier
+                                (mesh_p%G(i,j)*hx)
             end do
         end do
     end do
 
 end subroutine calc_div_on_tile
 
-subroutine calc_div_c_sbp21(this, div, u, v, domain, multiplier)
+subroutine calc_div_c_sbp21(this, div, u, v, domain)
 
     class(div_c_sbp21_t),   intent(inout) :: this
     type(domain_t),         intent(in)    :: domain
     type(grid_field_t),     intent(inout) :: u, v
-    real(kind=8), optional, intent(in)    :: multiplier
     !out put
     type(grid_field_t),     intent(inout) :: div
 
     integer(kind=4) :: i, j, k, t
-    real(kind=8) mult_loc, hx
-
-    mult_loc = 1.0_8
-    if(present(multiplier)) mult_loc=multiplier
+    real(kind=8) hx
 
     call this%exch_halo%do_vec(u,v,domain%parcomm)
 
     do t = domain%partition%ts, domain%partition%te
         call calc_div_on_tile_sbp21(div%tile(t), u%tile(t), v%tile(t),            &
                                     domain%mesh_x%tile(t), domain%mesh_y%tile(t), &
-                                    domain%mesh_o%tile(t), mult_loc)
+                                    domain%mesh_o%tile(t))
     end do
 
 end subroutine calc_div_c_sbp21
 
-subroutine calc_div_on_tile_sbp21(div, u, v, mesh_u, mesh_v, mesh_p, multiplier)
+subroutine calc_div_on_tile_sbp21(div, u, v, mesh_u, mesh_v, mesh_p)
 
     type(tile_field_t),  intent(inout) :: div
     type(tile_field_t),  intent(in)    :: u, v
     type(tile_mesh_t),   intent(in)    :: mesh_u, mesh_v, mesh_p
-    real(kind=8), optional, intent(in) :: multiplier
 
     real(kind=8)    :: hx
     integer(kind=4) :: ks, ke, js, je, is, ie, i, j, k
@@ -177,7 +167,7 @@ subroutine calc_div_on_tile_sbp21(div, u, v, mesh_u, mesh_v, mesh_p, multiplier)
 
         do j = js,je
             do i = is, ie
-                div%p(i,j,k) =  multiplier * (dx(i,j)+dy(i,j))/mesh_p%G(i,j)/hx
+                div%p(i,j,k) =  (dx(i,j)+dy(i,j))/mesh_p%G(i,j)/hx
             end do
         end do
     end do

@@ -14,12 +14,11 @@ procedure(div_calc_procedure), deferred :: calc_div
 end type div_operator_t
 
 abstract interface
-    subroutine div_calc_procedure(this, div, u, v, domain, multiplier)
+    subroutine div_calc_procedure(this, div, u, v, domain)
         import div_operator_t, grid_field_t, domain_t
         class(div_operator_t),  intent(inout) :: this
         type(domain_t),         intent(in)    :: domain
         type(grid_field_t),     intent(inout) :: u, v
-        real(kind=8), optional, intent(in)    :: multiplier
         !out put
         type(grid_field_t),     intent(inout) :: div
     end subroutine div_calc_procedure

@@ -20,26 +20,21 @@ end type div_ah_sbp_t
 
 contains
 
-subroutine calc_div_ah_sbp(this, div, u, v, domain, multiplier)
+subroutine calc_div_ah_sbp(this, div, u, v, domain)
     class(div_ah_sbp_t),    intent(inout) :: this
     type(domain_t),         intent(in)    :: domain
     type(grid_field_t),     intent(inout) :: u, v
-    real(kind=8), optional, intent(in)    :: multiplier
     !output
     type(grid_field_t),     intent(inout) :: div
 
     integer(kind=4), parameter :: halo_width = 1
     integer(kind=4) :: t
-    real(kind=8)    :: mult_loc
-
-    mult_loc = 1.0_8
-    if (present(multiplier)) mult_loc = multiplier
 
     call this%exch_uv_interior%do_vec(u,v,domain%parcomm)
 
     do t = domain%partition%ts, domain%partition%te
         call calc_div_on_tile(div%tile(t), u%tile(t), v%tile(t),  &
-                              domain%mesh_xy%tile(t), this%sbp_operator_name, mult_loc)
+                              domain%mesh_xy%tile(t), this%sbp_operator_name)
     end do
 
     call this%exch_div_edges%do(div,domain%parcomm)
@@ -49,7 +44,7 @@ subroutine calc_div_ah_sbp(this, div, u, v, domain, multiplier)
 
 end subroutine calc_div_ah_sbp
 
-subroutine calc_div_on_tile(div, u, v, mesh, sbp_oper_name, multiplier)
+subroutine calc_div_on_tile(div, u, v, mesh, sbp_oper_name)
 
     use mesh_mod, only : tile_mesh_t
 
@@ -57,7 +52,6 @@ subroutine calc_div_on_tile(div, u, v, mesh, sbp_oper_name, multiplier)
     type(tile_field_t),     intent(in)    :: u, v
     type(tile_mesh_t),      intent(in)    :: mesh
     character(len=*),       intent(in)    :: sbp_oper_name
-    real(kind=8),           intent(in)    :: multiplier
 
     real(kind=8)    :: hx
     integer(kind=4) :: ks, ke, js, je, is, ie, i, j, k
@@ -90,7 +84,7 @@ subroutine calc_div_on_tile(div, u, v, mesh, sbp_oper_name, multiplier)
 
         do j = js, je
             do i = is,ie
-                div%p(i,j,k) = (Dx(i,j)+Dy(i,j)) / (mesh%G(i,j)*hx)*multiplier
+                div%p(i,j,k) = (Dx(i,j)+Dy(i,j)) / (mesh%G(i,j)*hx)
             end do
         end do
     end do

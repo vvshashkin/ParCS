@@ -88,7 +88,7 @@ type(err_container_t) function test_div(N,div_oper_name,staggering) result(errs)
     !locals:
     integer(kind=4), parameter  :: nz = 3
     integer(kind=4), parameter  :: ex_halo_width = 8
-    type(grid_field_t)          :: u, v, div, div2, div_true
+    type(grid_field_t)          :: u, v, div, div_true
     type(domain_t)              :: domain
     class(div_operator_t), allocatable :: div_op
 
@@ -96,7 +96,6 @@ type(err_container_t) function test_div(N,div_oper_name,staggering) result(errs)
     call create_grid_field(u, ex_halo_width, 0, domain%mesh_u)
     call create_grid_field(v, ex_halo_width, 0, domain%mesh_v)
     call create_grid_field(div, ex_halo_width, 0, domain%mesh_p)
-    call create_grid_field(div2, ex_halo_width, 0, domain%mesh_p)
     call create_grid_field(div_true, 0, 0, domain%mesh_p)
 
     call set_vector_test_field(u,v,solid_rot, domain%mesh_u, domain%mesh_v, &
@@ -105,12 +104,6 @@ type(err_container_t) function test_div(N,div_oper_name,staggering) result(errs)
     div_op = create_div_operator(domain, div_oper_name)
 
     call div_op%calc_div(div, u,v,domain)
-    call div_op%calc_div(div2,u,v,domain,some_const)
-
-    call div2%update(-some_const,div,domain%mesh_p)
-    if(div2%maxabs(domain%mesh_p,domain%parcomm)>100e-15) then
-        call parcomm_global%abort("div_a2 test, wrong multiplier interface. Test failed!")
-    end if
 
     allocate(errs%keys(4), errs%values(4))
     errs%keys(1)%str = "solid rotation linf"
@@ -165,14 +158,6 @@ type(err_container_t) function test_grad(N,grad_oper_name,staggering) result(err
 
     grad_op = create_grad_operator(domain, grad_oper_name)
     call grad_op%calc_grad(gx,gy,f,domain)
-    call grad_op%calc_grad(gx1,gy1,f,domain,some_const)
-
-    call gx1%update(-some_const,gx,domain%mesh_u)
-    call gy1%update(-some_const,gy,domain%mesh_v)
-
-    if(gx1%maxabs(domain%mesh_u,domain%parcomm)+gy1%maxabs(domain%mesh_v,domain%parcomm)>1e-13) then
-        call parcomm_global%abort("grad_a2 test, wrong multiplier interface. Test failed!")
-    end if
 
     allocate(errs%keys(2), errs%values(2))
     errs%keys(1)%str = "xyz linf"
@@ -229,6 +214,7 @@ function test_curl(N, div_oper_name, staggering) result(errs)
     errs%values(2) = curl%algebraic_norm2(domain%mesh_p,domain%parcomm)/real(N,8)
 
 end function test_curl
+
 subroutine test_laplace_spectre(div_operator_name, grad_operator_name, staggering)
     use test_fields_mod,   only : set_vector_test_field, solid_rot=>solid_rotation_field_generator
     use div_factory_mod,   only : create_div_operator
