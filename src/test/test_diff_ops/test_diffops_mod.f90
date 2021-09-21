@@ -126,7 +126,7 @@ type(err_container_t) function test_div(N,div_oper_name,staggering) result(errs)
     errs%values(3) = div%maxabs(domain%mesh_p,domain%parcomm)
     errs%values(4) = div%algebraic_norm2(domain%mesh_p,domain%parcomm)/real(nz*N,8)
     !call stats(div,domain%mesh_p)
-
+    
 end function test_div
 
 type(err_container_t) function test_grad(N,grad_oper_name,staggering) result(errs)
@@ -441,14 +441,30 @@ real(kind=8) function mass(f,mesh) result(m)
     type(mesh_t),       intent(in) :: mesh
 
     integer(kind=4) t, i, j, k
+    real(kind=8), parameter :: q(3) = [13.0/12.0, 7.0/8.0, 25.0/24.0]
+    real(kind=8) wx, wy
 
     m = 0.0_8
 
     do t=1,6
         do k = mesh%tile(t)%ks,mesh%tile(t)%ke
             do j=mesh%tile(t)%js, mesh%tile(t)%je
+                if(j<=3) then
+                    wy = q(j)
+                else if(j>=mesh%tile(t)%ny-2) then
+                    wy = q(mesh%tile(t)%ny-j+1)
+                else
+                    wy = 1.0_8
+                end if
                 do i=mesh%tile(t)%is,mesh%tile(t)%ie
-                    m = m+mesh%tile(t)%G(i,j)*f%tile(t)%p(i,j,k)
+                    if(i<=3) then
+                        wx = q(i)
+                    else if(i>=mesh%tile(t)%nx-2) then
+                        wx = q(mesh%tile(t)%nx-i+1)
+                    else
+                        wx = 1.0_8
+                    end if
+                    m = m+wx*wy*mesh%tile(t)%G(i,j)*f%tile(t)%p(i,j,k)
                 end do
             end do
         end do

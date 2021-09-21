@@ -90,13 +90,6 @@ $(DEXE)TEST_GRID_FIELD: $(MKDIRS) $(DOBJ)test_grid_field.o \
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_GRID_FIELD
-$(DEXE)TEST_MESH_MAIN: $(MKDIRS) $(DOBJ)test_mesh_main.o \
-	$(DOBJ)avost.o \
-	$(DOBJ)auxhs.o
-	@rm -f $(filter-out $(DOBJ)test_mesh_main.o,$(EXESOBJ))
-	@echo $(LITEXT)
-	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
-EXES := $(EXES) TEST_MESH_MAIN
 $(DEXE)TEST_METRIC_MAIN: $(MKDIRS) $(DOBJ)test_metric_main.o \
 	$(DOBJ)avost.o \
 	$(DOBJ)auxhs.o
@@ -458,6 +451,7 @@ $(DOBJ)div_factory_mod.o: src/differential_operators/div_factory_mod.f90 \
 	$(DOBJ)div_c2_mod.o \
 	$(DOBJ)halo_factory_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
+	$(DOBJ)div_c_sbp42_mod.o \
 	$(DOBJ)div_a2_mod.o \
 	$(DOBJ)div_ah2_mod.o \
 	$(DOBJ)div_ah_sbp_mod.o
@@ -518,6 +512,16 @@ $(DOBJ)div_ah_sbp_mod.o: src/differential_operators/div_ah_sbp_mod.f90 \
 	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)sbp_mod.o \
 	$(DOBJ)mesh_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)div_c_sbp42_mod.o: src/differential_operators/div_c_sbp42_mod.f90 \
+	$(DOBJ)abstract_div_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)exchange_halo_mod.o \
+	$(DOBJ)halo_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -821,6 +825,7 @@ $(DOBJ)test_diffops_mod.o: src/test/test_diff_ops/test_diffops_mod.f90 \
 	$(DOBJ)test_fields_mod.o \
 	$(DOBJ)div_factory_mod.o \
 	$(DOBJ)abstract_div_mod.o \
+	$(DOBJ)const_mod.o \
 	$(DOBJ)grad_factory_mod.o \
 	$(DOBJ)abstract_grad_mod.o \
 	$(DOBJ)curl_factory_mod.o \
@@ -891,19 +896,6 @@ $(DOBJ)test_grid_field_mod.o: src/test/test_grid_field/test_grid_field_mod.f90 \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)domain_factory_mod.o \
 	$(DOBJ)grid_field_factory_mod.o \
-	$(DOBJ)mesh_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
-$(DOBJ)test_mesh_main.o: src/test/test_mesh/test_mesh_main.f90 \
-	$(DOBJ)test_mesh_mod.o \
-	$(DOBJ)parcomm_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
-$(DOBJ)test_mesh_mod.o: src/test/test_mesh/test_mesh_mod.f90 \
-	$(DOBJ)partition_mod.o \
-	$(DOBJ)mesh_factory_mod.o \
 	$(DOBJ)mesh_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
