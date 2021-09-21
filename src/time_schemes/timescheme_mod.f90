@@ -13,15 +13,12 @@ end type timescheme_t
 
 abstract interface
     subroutine step(this, v0, operator, domain, dt)
-        import operator_t
-        import timescheme_t
-        import stvec_t
-        import domain_t
+        import operator_t, timescheme_t, stvec_t, domain_t
 
         class(timescheme_t), intent(inout) :: this
         class(stvec_t),      intent(inout) :: v0
         class(operator_t),   intent(inout) :: operator
-        class(domain_t),     intent(in)    :: domain
+        type(domain_t),      intent(in)    :: domain
         real(kind=8),        intent(in)    :: dt
     end subroutine step
 end interface

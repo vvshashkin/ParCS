@@ -15,6 +15,8 @@ public :: random_vector_field_generator_t, random_vector_field_generator
 public :: VSH_curl_free_10_generator_t, VSH_curl_free_10_generator
 public :: zero_scalar_field_generator_t, zero_scalar_field_generator
 
+public :: gaussian_hill_scalar_field_generator_t, gaussian_hill_scalar_field_generator
+
 public :: coriolis_force_field_generator_t!, coriolis_force_field_generator
 
 !!!!!!!!!!!!!Abstract scalar and vector fields generators
@@ -33,6 +35,11 @@ type, extends(scalar_field_generator_t) :: xyz_scalar_field_generator_t
 contains
     procedure :: get_scalar_field => generate_xyz_scalar_field
 end type xyz_scalar_field_generator_t
+
+type, extends(scalar_field_generator_t) :: gaussian_hill_scalar_field_generator_t
+contains
+    procedure :: get_scalar_field => generate_gaussian_hill_scalar_field
+end type gaussian_hill_scalar_field_generator_t
 
 type, extends(vector_field_generator_t) :: solid_rotation_field_generator_t
 contains
@@ -84,6 +91,7 @@ type(cross_polar_flow_div_generator_t) :: cross_polar_flow_div_generator
 type(random_vector_field_generator_t)  :: random_vector_field_generator
 type(VSH_curl_free_10_generator_t)     :: VSH_curl_free_10_generator
 type(zero_scalar_field_generator_t)    :: zero_scalar_field_generator
+type(gaussian_hill_scalar_field_generator_t) :: gaussian_hill_scalar_field_generator
 ! type(coriolis_force_field_generator_t) :: coriolis_force_field_generator = &
 
 
@@ -235,6 +243,30 @@ subroutine generate_xyz_scalar_field(this,f,npts,nlev,x,y,z)
         end do
     end do
 end subroutine generate_xyz_scalar_field
+
+subroutine generate_gaussian_hill_scalar_field(this, f, npts, nlev, x, y, z)
+
+    use const_mod,      only : pi
+    use sph_coords_mod, only : cart2sph
+
+    class(gaussian_hill_scalar_field_generator_t),  intent(in)  :: this
+    integer(kind=4),                                intent(in)  :: npts, nlev
+    real(kind=8),                                   intent(in)  :: x(npts), y(npts), z(npts)
+    real(kind=8),                                   intent(out) :: f(npts,nlev)
+
+    integer(kind=4) :: i, k
+    real(kind=8)    :: lam, phi, r, gamma
+
+    gamma = pi/2
+
+    do k = 1, nlev
+        do i=1, npts
+            call cart2sph(x(i), y(i), z(i), lam, phi)
+            r = acos(sin(phi)*sin(gamma)+cos(phi)*cos(gamma)*(cos(lam)))
+            f(i,k) = exp(-(4.0_8*r)**2)
+        end do
+    end do
+end subroutine generate_gaussian_hill_scalar_field
 
 subroutine generate_solid_rotation_vector_field(this,vx,vy,vz,npts,nlev,x,y,z)
     class(solid_rotation_field_generator_t),  intent(in)  :: this

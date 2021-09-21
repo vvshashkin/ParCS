@@ -29,7 +29,7 @@ end type stvec_t
 
 contains
 
-subroutine copy_stvec_to(this,destination)
+subroutine copy_stvec_to(this, destination)
     class(stvec_t),              intent(in)    :: this
     class(stvec_t), allocatable, intent(inout) :: destination
 
