@@ -5,6 +5,7 @@ use domain_factory_mod,     only : create_domain
 use grid_field_mod,         only : grid_field_t
 use grid_field_factory_mod, only : create_grid_field
 use parcomm_mod,            only : parcomm_global
+use vec_math_mod,           only : l2norm
 
 implicit none
 
@@ -82,7 +83,6 @@ type(err_container_t) function test_div(N,div_oper_name,staggering) result(errs)
                                  random_vec=>random_vector_field_generator
     use div_factory_mod,  only : create_div_operator
     use abstract_div_mod, only : div_operator_t
-    use const_mod,        only : Earth_radii
 
     integer(kind=4),  intent(in) :: N
     character(len=*), intent(in) :: div_oper_name, staggering
@@ -114,7 +114,7 @@ type(err_container_t) function test_div(N,div_oper_name,staggering) result(errs)
     errs%keys(4)%str = "cross polar l2"
 
     errs%values(1) = div%maxabs(domain%mesh_p,domain%parcomm)
-    errs%values(2) = div%algebraic_norm2(domain%mesh_p,domain%parcomm)/real(N,8)
+    errs%values(2) = l2norm(div, domain%mesh_p,domain%parcomm)
 
     call set_vector_test_field(u,v,cross_polar, domain%mesh_u, domain%mesh_v, &
                                0, "contravariant")
@@ -123,7 +123,7 @@ type(err_container_t) function test_div(N,div_oper_name,staggering) result(errs)
     call div%assign(domain%mesh_p%scale, div, -1.0_8, div_true, domain%mesh_p)
 
     errs%values(3) = div%maxabs(domain%mesh_p,domain%parcomm)
-    errs%values(4) = div%algebraic_norm2(domain%mesh_p,domain%parcomm)/real(nz*N,8)
+    errs%values(4) = l2norm(div, domain%mesh_p,domain%parcomm)
     !call stats(div,domain%mesh_p)
 
 end function test_div
@@ -135,7 +135,6 @@ type(err_container_t) function test_grad(N,grad_oper_name,staggering) result(err
                                    xyz_grad => xyz_grad_generator
     use grad_factory_mod,   only : create_grad_operator
     use abstract_grad_mod,  only : grad_operator_t
-    use const_mod,          only : Earth_radii
 
     integer(kind=4),  intent(in) :: N
     character(len=*), intent(in) :: grad_oper_name, staggering
@@ -168,10 +167,10 @@ type(err_container_t) function test_grad(N,grad_oper_name,staggering) result(err
 
     call gx%assign(domain%mesh_u%scale, gx, -1.0_8, gx_true, domain%mesh_u)
     call gy%assign(domain%mesh_v%scale, gy, -1.0_8, gy_true, domain%mesh_v)
-    errs%values(1) = gx%maxabs(domain%mesh_u,domain%parcomm)+ &
-                     gy%maxabs(domain%mesh_v,domain%parcomm)
-    errs%values(2) = gx%algebraic_norm2(domain%mesh_u,domain%parcomm)/real(nz*N,8)+&
-                     gy%algebraic_norm2(domain%mesh_v,domain%parcomm)/real(nz*N,8)
+    errs%values(1) = gx%maxabs(domain%mesh_u, domain%parcomm)  + &
+                     gy%maxabs(domain%mesh_v, domain%parcomm)
+    errs%values(2) = l2norm(gx, domain%mesh_u, domain%parcomm) + &
+                     l2norm(gy, domain%mesh_v, domain%parcomm)
 
     !call stats(gx,domain%mesh_u)
     !call stats(gy,domain%mesh_v)
@@ -185,7 +184,6 @@ function test_curl(N, div_oper_name, staggering) result(errs)
 
     use curl_factory_mod,  only : create_curl_operator_div_based
     use abstract_curl_mod, only : curl_operator_t
-    use const_mod,         only : Earth_radii
 
     integer(kind=4),  intent(in) :: N
     character(len=*), intent(in) :: div_oper_name, staggering
@@ -216,7 +214,7 @@ function test_curl(N, div_oper_name, staggering) result(errs)
     call curl%assign(domain%mesh_p%scale, curl, domain%mesh_p)
 
     errs%values(1) = curl%maxabs(domain%mesh_p, domain%parcomm)
-    errs%values(2) = curl%algebraic_norm2(domain%mesh_p,domain%parcomm)/real(N,8)
+    errs%values(2) = l2norm(curl, domain%mesh_p, domain%parcomm)
 
 end function test_curl
 function test_coriolis(N, coriolis_op_name, staggering) result(errs)
@@ -273,10 +271,10 @@ function test_coriolis(N, coriolis_op_name, staggering) result(errs)
     call cor_u%update(-1.0_8, cor_u_true, domain%mesh_u)
     call cor_v%update(-1.0_8, cor_v_true, domain%mesh_v)
 
-    errs%values(1) = cor_u%maxabs(domain%mesh_u,domain%parcomm)+ &
+    errs%values(1) = cor_u%maxabs(domain%mesh_u,domain%parcomm)   + &
                      cor_v%maxabs(domain%mesh_v,domain%parcomm)
-    errs%values(2) = cor_u%algebraic_norm2(domain%mesh_u,domain%parcomm)/real(nz*N,8)+&
-                     cor_v%algebraic_norm2(domain%mesh_v,domain%parcomm)/real(nz*N,8)
+    errs%values(2) = l2norm(cor_u, domain%mesh_u, domain%parcomm) + &
+                     l2norm(cor_v, domain%mesh_v, domain%parcomm)
 
 end function test_coriolis
 subroutine test_laplace_spectre(div_operator_name, grad_operator_name, staggering)

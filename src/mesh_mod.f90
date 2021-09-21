@@ -23,7 +23,7 @@ type, public :: tile_mesh_t
     real(kind=8), allocatable    :: Q(:,:,:)                  !metric tensor at mesh-points
     real(kind=8), allocatable    :: QI(:,:,:)                 !inverse metric tensor at mesh-points
     real(kind=8), allocatable    :: G(:,:)                    !sqrt of metric tensor det at mesh-points
-    real(kind=8)                 :: hx                        !horizontal grid step
+    real(kind=8)                 :: hx, hy                    !horizontal grid step
     real(kind=8)                 :: shift_i, shift_j          !determines shift of the first grid point from the boundary
     real(kind=8)                 :: alpha_0, beta_0           !determines coord start
 
@@ -86,7 +86,7 @@ pure function get_beta(this, j) result(beta)
 
     real(kind=8) :: beta
 
-    beta = this%beta_0 + (j-1+this%shift_j)*this%hx
+    beta = this%beta_0 + (j-1+this%shift_j)*this%hy
 
 end function get_beta
 

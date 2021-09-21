@@ -72,10 +72,12 @@ subroutine create_mesh(mesh, partition, metric, halo_width, points_type)
 
         call mesh%tile(t)%init(is, ie, js, je, ks, ke, halo_width)
 
+        !WORKAROUND
         mesh%tile(t)%nx = nh
         mesh%tile(t)%ny = nh
 
-        mesh%tile(t)%hx = (metric%alpha1-metric%beta0)/real(nh,8)
+        mesh%tile(t)%hx = (metric%alpha1 - metric%alpha0)/real(nh,8)
+        mesh%tile(t)%hy = (metric%beta1  - metric%beta0 )/real(nh,8)
 
         mesh%tile(t)%shift_i = shift_i
         mesh%tile(t)%shift_j = shift_j
@@ -89,20 +91,21 @@ subroutine create_mesh(mesh, partition, metric, halo_width, points_type)
             do i = is - halo_width, ie + halo_width
                 alpha = mesh%tile(t)%get_alpha(i)
 
-                vec = metric%point_r(pind,alpha,beta)
+                vec(1:3) = metric%point_r(pind, alpha, beta)
 
                 mesh%tile(t)%rx(i,j) = vec(1)
                 mesh%tile(t)%ry(i,j) = vec(2)
                 mesh%tile(t)%rz(i,j) = vec(3)
 
-                mesh%tile(t)%a1(1:3,i,j) = metric%a1(pind,alpha,beta)
-                mesh%tile(t)%a2(1:3,i,j) = metric%a2(pind,alpha,beta)
-                mesh%tile(t)%b1(1:3,i,j) = metric%b1(pind,alpha,beta)
-                mesh%tile(t)%b2(1:3,i,j) = metric%b2(pind,alpha,beta)
+                mesh%tile(t)%a1(1:3,i,j) = metric%a1(pind, alpha, beta)
+                mesh%tile(t)%a2(1:3,i,j) = metric%a2(pind, alpha, beta)
+                mesh%tile(t)%b1(1:3,i,j) = metric%b1(pind, alpha, beta)
+                mesh%tile(t)%b2(1:3,i,j) = metric%b2(pind, alpha, beta)
 
-                mesh%tile(t)%Q (1:3,i,j) = metric%Q(pind,alpha, beta)
-                mesh%tile(t)%Qi(1:3,i,j) = metric%QI(pind,alpha, beta)
-                mesh%tile(t)%G(i,j)      = metric%G(pind,alpha, beta)
+                mesh%tile(t)%Q (1:3,i,j) = metric%Q (pind, alpha, beta)
+                mesh%tile(t)%Qi(1:3,i,j) = metric%QI(pind, alpha, beta)
+
+                mesh%tile(t)%G(i,j)= metric%G(pind, alpha, beta)
             end do
         end do
     end do
