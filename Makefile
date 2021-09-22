@@ -62,6 +62,20 @@ $(DEXE)TEST_CMD_LINE: $(MKDIRS) $(DOBJ)test_cmd_line.o \
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_CMD_LINE
+$(DEXE)TEST_DIFFOPS_ALL: $(MKDIRS) $(DOBJ)test_diffops_all.o \
+	$(DOBJ)avost.o \
+	$(DOBJ)auxhs.o
+	@rm -f $(filter-out $(DOBJ)test_diffops_all.o,$(EXESOBJ))
+	@echo $(LITEXT)
+	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
+EXES := $(EXES) TEST_DIFFOPS_ALL
+$(DEXE)TEST_DIFFOPS_CONV: $(MKDIRS) $(DOBJ)test_diffops_conv.o \
+	$(DOBJ)avost.o \
+	$(DOBJ)auxhs.o
+	@rm -f $(filter-out $(DOBJ)test_diffops_conv.o,$(EXESOBJ))
+	@echo $(LITEXT)
+	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
+EXES := $(EXES) TEST_DIFFOPS_CONV
 $(DEXE)TEST_DIFFOPS: $(MKDIRS) $(DOBJ)test_diffops.o \
 	$(DOBJ)avost.o \
 	$(DOBJ)auxhs.o
@@ -819,6 +833,18 @@ $(DOBJ)cmd_args_test_mod.o: src/test/test_cmd_line/cmd_args_test_mod.f90 \
 $(DOBJ)test_cmd_line.o: src/test/test_cmd_line/test_cmd_line.f90 \
 	$(DOBJ)cmd_args_test_mod.o \
 	$(DOBJ)parcomm_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)test_diffops_all.o: src/test/test_diff_ops/test_diffops_all.f90 \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)test_diffops_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)test_diffops_conv.o: src/test/test_diff_ops/test_diffops_conv.f90 \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)test_diffops_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

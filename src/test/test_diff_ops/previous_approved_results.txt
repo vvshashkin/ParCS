@@ -1,0 +1,38 @@
+ divergence_a2_ecs
+Err:   0.3863087E-02  0.4181950E-02  0.1190266E-01  0.3889042E-02
+ divergence_a2_cons
+Err:   0.4870246E+00  0.3795852E+00  0.6245387E+00  0.1433711E+00
+ divergence_a2_fv
+Err:   0.2424860E+00  0.1501980E+00  0.5721728E+00  0.8870121E-01
+ divergence_c2
+Err:   0.9560508E-03  0.1045574E-02  0.2998986E-02  0.9755317E-03
+ divergence_c_sbp21
+Err:   0.9560508E-03  0.1045574E-02  0.2998986E-02  0.9755317E-03
+ divergence_c_sbp42
+Err:   0.1240310E-02  0.7014964E-03  0.3873332E-02  0.7764075E-03
+ divergence_ah2
+Err:   0.2336033E-01  0.2062381E-01  0.8849502E-01  0.1733666E-01
+ divergence_ah42_sbp
+Err:   0.3421411E-02  0.2508728E-02  0.1652535E-01  0.3825134E-02
+ divergence_ah43_sbp
+Err:   0.2207585E-03  0.2082783E-03  0.1706081E-02  0.4618946E-03
+ gradient_a2_ecs
+Err:   0.1639116E-02  0.7422495E-03
+ gradient_a2_cons
+Err:   0.5266195E+00  0.7933695E-01
+ gradient_ah2_ecs
+Err:   0.2830452E-01  0.4093098E-02
+ gradient_ah42_sbp_ecs
+Err:   0.1465101E-02  0.4343315E-03
+ gradient_ah43_sbp_ecs
+Err:   0.1780659E-03  0.3763481E-04
+ gradient_c2_ecs
+Err:   0.1220630E-02  0.2951338E-03
+ gradient_c2_cons
+Err:   0.2589956E+00  0.3393164E-01
+ gradient_c_sbp21
+Err:   0.8407566E-01  0.2152237E-01
+ gradient_c_sbp42
+Err:   0.9713472E-02  0.1342500E-02
+ curl_divergence_ah42_sbp
+Err:   0.3421411E-02  0.2508728E-02
