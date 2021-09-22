@@ -21,8 +21,6 @@ private
 public :: err_container_t, test_div, test_grad, test_conv, &
           test_laplace_spectre, test_curl
 
-real(kind=8), parameter :: some_const = 12.34567_8
-
 contains
 
 
@@ -159,8 +157,8 @@ type(err_container_t) function test_grad(N,grad_oper_name,staggering) result(err
     call create_grid_field(f, ex_halo_width, 0, domain%mesh_p)
 
     call set_scalar_test_field(f,xyz_f, domain%mesh_p,0)
-    !call set_vector_test_field(gx_true, gy_true, xyz_grad, domain%mesh_u, domain%mesh_v, 0, "contravariant")
-    call set_vector_test_field(gx_true, gy_true, xyz_grad, domain%mesh_u, domain%mesh_v, 0, "covariant")
+    call set_vector_test_field(gx_true, gy_true, xyz_grad, domain%mesh_u, domain%mesh_v, 0, "contravariant")
+    !call set_vector_test_field(gx_true, gy_true, xyz_grad, domain%mesh_u, domain%mesh_v, 0, "covariant")
 
     grad_op = create_grad_operator(domain, grad_oper_name)
     call grad_op%calc_grad(gx,gy,f,domain)
@@ -303,7 +301,7 @@ subroutine test_laplace_spectre(div_operator_name, grad_operator_name, staggerin
                     do j1 = js1, je1
                         do i1= is1, ie1
                             ind1 = (t1-ts)*nx**2+(j1-js1)*nx+(i1-is1+1)
-                            lapM(ind1,ind) = lap%tile(t1)%p(i1,j1,1)
+                            lapM(ind1,ind) = lap%tile(t1)%p(i1,j1,1)*domain%mesh_p%scale**2
                         end do
                     end do
                 end do

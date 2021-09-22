@@ -535,6 +535,16 @@ $(DOBJ)div_c2_mod.o: src/differential_operators/div_c2_mod.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)grad_contra_c_sbp42_mod.o: src/differential_operators/grad_contra_c_sbp42_mod.f90 \
+	$(DOBJ)abstract_grad_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)exchange_abstract_mod.o \
+	$(DOBJ)sbp_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)grad_contra_c2_ecs_mod.o: src/differential_operators/grad_contra_c2_ecs_mod.f90 \
 	$(DOBJ)abstract_grad_mod.o \
 	$(DOBJ)grid_field_mod.o \
@@ -563,6 +573,8 @@ $(DOBJ)grad_factory_mod.o: src/differential_operators/grad_factory_mod.f90 \
 	$(DOBJ)grad_contra_c2_ecs_mod.o \
 	$(DOBJ)halo_factory_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
+	$(DOBJ)grad_contra_c_sbp42_mod.o \
+	$(DOBJ)grid_field_factory_mod.o \
 	$(DOBJ)grad_contra_a2_mod.o \
 	$(DOBJ)grad_contra_ah2_mod.o \
 	$(DOBJ)ecs_metric_mod.o \
