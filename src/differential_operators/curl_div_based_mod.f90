@@ -12,7 +12,7 @@ implicit none
 !Where u,v - contravariant vector components
 !Curl in curvilinear coords curl(U,V) = (d/dx(V)-d/dy(U))/G
 !Here U,V - covariant vector components.
-!Thus div(V/G,-U/G) = curl(U,V)
+!Thus div(V/G,-U/G) = curl(U,V), or curl(\vec{u}) = div(\vec{u}^\perp)
 
 type, public, extends(curl_operator_t) :: curl_div_based_t
     class(div_operator_t), allocatable :: div_op

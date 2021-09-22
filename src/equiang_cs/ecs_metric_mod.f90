@@ -9,7 +9,6 @@ implicit none
 
 type, extends(metric_t) :: ecs_metric_t
     class(cubed_sphere_topology_t), allocatable :: topology
-    real(kind=8) :: rotation_matrix(3,3) ! R^T*R must be I
 contains
     procedure :: point_r => ecs_point_r
     procedure :: a1      => ecs_a1

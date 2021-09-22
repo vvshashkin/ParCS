@@ -8,6 +8,11 @@ type, abstract :: metric_t
     real(kind=8) alpha0, beta0 ! lower bound of panel coordinates
     real(kind=8) alpha1, beta1 ! upper bound of panel coordinates
 
+    real(kind=8) :: omega ! rotation speed of the coord system
+    real(kind=8), allocatable :: rotation_axis(:)!direction of the angular velocity vector
+
+    real(kind=8), allocatable :: rotation_matrix(:,:)
+
 contains
 
     procedure(vector_cart), deferred :: point_r !Cartesian 3d coordinates of points

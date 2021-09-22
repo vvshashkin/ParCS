@@ -8,8 +8,7 @@ implicit none
 
 contains
 
-subroutine create_metric(metric,topology,metric_type)
-    use cubed_sphere_topology_mod, only : cubed_sphere_topology_t
+subroutine create_metric(metric, topology, metric_type)
     use ecs_metric_mod,            only : ecs_metric_t
     use ecs_metric_factory_mod,    only : create_ecs_metric
 
@@ -19,13 +18,7 @@ subroutine create_metric(metric,topology,metric_type)
 
     select case(metric_type)
     case("ecs")
-        select type(topology)
-        class is (cubed_sphere_topology_t)
-            call create_ecs_metric(metric,topology)
-        class default
-            call parcomm_global%abort( &
-                 "Wrong topology class in metric_factory_mod. ecs case")
-        end select
+        call create_ecs_metric(metric, topology)
     case default
         call parcomm_global%abort("Unknown metric_type var " // metric_type // &
                                                     " in metric_factory_mod")

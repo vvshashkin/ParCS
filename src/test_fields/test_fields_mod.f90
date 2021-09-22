@@ -15,6 +15,8 @@ public :: random_vector_field_generator_t, random_vector_field_generator
 public :: VSH_curl_free_10_generator_t, VSH_curl_free_10_generator
 public :: zero_scalar_field_generator_t, zero_scalar_field_generator
 
+public :: coriolis_force_field_generator_t!, coriolis_force_field_generator
+
 !!!!!!!!!!!!!Abstract scalar and vector fields generators
 type, public, abstract :: scalar_field_generator_t
 contains
@@ -36,6 +38,12 @@ type, extends(vector_field_generator_t) :: solid_rotation_field_generator_t
 contains
     procedure :: get_vector_field => generate_solid_rotation_vector_field
 end type solid_rotation_field_generator_t
+
+type, extends(vector_field_generator_t) :: coriolis_force_field_generator_t
+    class(vector_field_generator_t), allocatable :: input_field
+contains
+    procedure :: get_vector_field => generate_coriolis_force_field
+end type coriolis_force_field_generator_t
 
 type, extends(vector_field_generator_t) :: xyz_grad_generator_t
 contains
@@ -76,6 +84,8 @@ type(cross_polar_flow_div_generator_t) :: cross_polar_flow_div_generator
 type(random_vector_field_generator_t)  :: random_vector_field_generator
 type(VSH_curl_free_10_generator_t)     :: VSH_curl_free_10_generator
 type(zero_scalar_field_generator_t)    :: zero_scalar_field_generator
+! type(coriolis_force_field_generator_t) :: coriolis_force_field_generator = &
+
 
 abstract interface
     subroutine get_scalar_field(this,f,npts,nlev,x,y,z)
@@ -246,6 +256,32 @@ subroutine generate_solid_rotation_vector_field(this,vx,vy,vz,npts,nlev,x,y,z)
         end do
     end do
 end subroutine generate_solid_rotation_vector_field
+
+subroutine generate_coriolis_force_field(this, vx, vy, vz, npts, nlev, x, y, z)
+
+    use sph_coords_mod, only : cart2sph, sph2cart_vec, cart2sph_vec
+
+    class(coriolis_force_field_generator_t),  intent(in)  :: this
+    integer(kind=4),                          intent(in)  :: npts, nlev
+    real(kind=8),       dimension(npts),      intent(in)  :: x, y, z
+    real(kind=8),       dimension(npts,nlev), intent(out) :: vx, vy, vz
+
+    real(kind=8)    :: v_lam, v_phi, lam, phi, pcori, f_lam, f_phi
+    integer(kind=4) :: i, k
+
+    call this%input_field%get_vector_field(vx, vy, vz, npts, nlev, x, y, z)
+
+    do k = 1, nlev
+        do i=1, npts
+            call cart2sph(x(i), y(i), z(i), lam, phi)
+            call cart2sph_vec(lam, phi, vx(i,k), vy(i,k), vz(i,k), v_lam, v_phi)
+            pcori = 2*sin(phi)
+            f_lam =  pcori*v_phi
+            f_phi = -pcori*v_lam
+            call sph2cart_vec(lam, phi, f_lam, f_phi, vx(i,k), vy(i,k), vz(i,k))
+        end do
+    end do
+end subroutine generate_coriolis_force_field
 
 subroutine generate_xyz_grad_field(this,vx,vy,vz,npts,nlev,x,y,z)
     class(xyz_grad_generator_t),              intent(in)  :: this
