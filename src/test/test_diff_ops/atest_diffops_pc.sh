@@ -4,7 +4,7 @@ TESTNAME="Horizontal differential operators test"
 EXE=./$1/TEST_DIFFOPS_ALL
 echo $TESTNAME $EXE
 
-PREV_RESULTS=./$1"/src/test/test_diff_ops/previous_approved_results.txt"
+PREV_RESULTS=./$1"/src/test/test_diff_ops/reference_results.txt"
 
 $EXE > results.txt && \
 diff $PREV_RESULTS  results.txt > /dev/null && \
