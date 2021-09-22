@@ -43,7 +43,7 @@ function calc_l2norm_squared_on_tile(f, mesh) result(out)
 
     do k = mesh%ks, mesh%ke
         do j = mesh%js, mesh%je
-            do i = mesh%is, mesh%js
+            do i = mesh%is, mesh%ie
                 out = out + f%p(i,j,k)**2*mesh%G(i,j)*mesh%hx*mesh%hy
             end do
         end do
