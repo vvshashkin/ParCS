@@ -126,7 +126,7 @@ type(err_container_t) function test_div(N,div_oper_name,staggering) result(errs)
     errs%values(3) = div%maxabs(domain%mesh_p,domain%parcomm)
     errs%values(4) = div%algebraic_norm2(domain%mesh_p,domain%parcomm)/real(nz*N,8)
     !call stats(div,domain%mesh_p)
-    
+
 end function test_div
 
 type(err_container_t) function test_grad(N,grad_oper_name,staggering) result(errs)
@@ -159,7 +159,8 @@ type(err_container_t) function test_grad(N,grad_oper_name,staggering) result(err
     call create_grid_field(f, ex_halo_width, 0, domain%mesh_p)
 
     call set_scalar_test_field(f,xyz_f, domain%mesh_p,0)
-    call set_vector_test_field(gx_true, gy_true, xyz_grad, domain%mesh_u, domain%mesh_v, 0, "contravariant")
+    !call set_vector_test_field(gx_true, gy_true, xyz_grad, domain%mesh_u, domain%mesh_v, 0, "contravariant")
+    call set_vector_test_field(gx_true, gy_true, xyz_grad, domain%mesh_u, domain%mesh_v, 0, "covariant")
 
     grad_op = create_grad_operator(domain, grad_oper_name)
     call grad_op%calc_grad(gx,gy,f,domain)
@@ -177,6 +178,8 @@ type(err_container_t) function test_grad(N,grad_oper_name,staggering) result(err
 
     !call stats(gx,domain%mesh_u)
     !call stats(gy,domain%mesh_v)
+    !print *, "grad",gy%tile(1)%p(16,1:6,1)
+    !print *, "grad",gy%tile(1)%p(16,27:33,1)
 
 end function test_grad
 function test_curl(N, div_oper_name, staggering) result(errs)
