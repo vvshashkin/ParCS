@@ -5,7 +5,7 @@ use parcomm_mod,            only : parcomm_global
 implicit none
 
 private
-public :: sbp_diff
+public :: sbp_diff, sbp_apply
 
 !boundary block of SBP diff matrix (inv(H)*Q)
 real(kind=8), parameter :: Q42(6,4) = reshape( &
@@ -24,18 +24,25 @@ real(kind=8), parameter :: Q43(6,4) = reshape( &
                                               [6,4])
 integer(kind=4), parameter :: lastnonzeroQ43(4) =[6,6,6,6]
 
+!4-th order diff non-staggered inner stencil and shift
+real(kind=8),    parameter :: Da4_in(5) = [1._8/12._8,-2._8/3.,0._8,2._8/3._8,-1._8/12._8]
+integer(kind=4), parameter :: Da4_inshift = -2
+
 contains
 
-subroutine sbp_diff(direction,opername,f,is,ie,js,je,n,is1,ie1,js1,je1,df)
+subroutine sbp_diff(df,is1,ie1,js1,je1,is,ie,js,je, &
+                    direction,opername,f,is0,ie0,js0,je0,nsrc,ntarg)
     !dimensions of input function
     character(len=*), intent(in)    :: direction, opername
-    integer(kind=4),  intent(in)    :: is, ie, js, je
-    !global mesh dimension in the direction of differentiation:
-    integer(kind=4),  intent(in)    :: n
+    integer(kind=4),  intent(in)    :: is0, ie0, js0, je0
+    !global source and target mesh dimensions in the direction of differentiation:
+    integer(kind=4),  intent(in)    :: nsrc, ntarg
     !output function dimensions:
-    integer(kind=4),  intent(in)    :: is1,ie1,js1,je1
 
-    real(kind=8),     intent(in)    :: f(is:ie,js:je)
+    real(kind=8),     intent(in)    :: f(is0:ie0,js0:je0)
+
+    integer(kind=4),  intent(in)    :: is1,ie1,js1,je1
+    integer(kind=4),  intent(in)    :: is,ie,js,je
     real(kind=8),     intent(inout) :: df(is1:ie1,js1:je1)
 
     if(direction /= 'x' .and. direction /= 'y') then
@@ -45,89 +52,89 @@ subroutine sbp_diff(direction,opername,f,is,ie,js,je,n,is1,ie1,js1,je1,df)
 
     select case(opername)
     case ("d42")
-        if(direction == "x") then
-            call sbp_dx(Q42,lastnonzeroQ42,f,is,ie,js,je,n,is1,ie1,js1,je1,df)
-        else !(direction == "y")
-            call sbp_dy(Q42,lastnonzeroQ42,f,is,ie,js,je,n,is1,ie1,js1,je1,df)
-        end if
+        call sbp_apply(df,is1,ie1,js1,je1,is,ie,js,je, &
+                       f,is0,ie0,js0,je0,nsrc,ntarg,   &
+                       Q42,lastnonzeroQ42,Da4_in,Da4_inshift,-1.0_8, &
+                       direction)
+
     case ("d43")
-        if(direction == "x") then
-            call sbp_dx(Q43,lastnonzeroQ43,f,is,ie,js,je,n,is1,ie1,js1,je1,df)
-        else !(direction == "y")
-            call sbp_dy(Q43,lastnonzeroQ43,f,is,ie,js,je,n,is1,ie1,js1,je1,df)
-        end if
+        call sbp_apply(df,is1,ie1,js1,je1,is,ie,js,je, &
+                       f,is0,ie0,js0,je0,nsrc,ntarg,   &
+                       Q43,lastnonzeroQ43,Da4_in,Da4_inshift,-1.0_8, &
+                       direction)
     case default
         call parcomm_global%abort("sbp_mod, sbp_diff - unkonwn operator: "//opername)
     end select
 
 end subroutine sbp_diff
 
-subroutine sbp_dx(Q,last_nonzero,f,is,ie,js,je,nx,is1,ie1,js1,je1,dfdx)
+subroutine sbp_apply(df,is1,ie1,js1,je1,is,ie,js,je, &
+                     f,is0,ie0,js0,je0,nsrc,ntarg,       &
+                     Q,last_nonzero,Qin,inshift,right_edge_sign,direction)
     !dimensions of input function
     real(kind=8),     intent(in)    :: Q(:,:)
     integer(kind=4),  intent(in)    :: last_nonzero(:)
-    integer(kind=4),  intent(in)    :: is, ie, js, je
+    real(kind=8),     intent(in)    :: Qin(:)
+    integer(kind=4),  intent(in)    :: inshift
+    integer(kind=4),  intent(in)    :: is0, ie0, js0, je0
     !global mesh dimension in x:
-    integer(kind=4),  intent(in)    :: nx
+    integer(kind=4),  intent(in)    :: nsrc, ntarg
     !output function dimensions:
     integer(kind=4),  intent(in)    :: is1,ie1,js1,je1
+    integer(kind=4),  intent(in)    :: is, ie, js, je
 
-    real(kind=8),     intent(in)    :: f(is:ie,js:je)
-    real(kind=8),     intent(inout) :: dfdx(is1:ie1,js1:je1)
+    real(kind=8),     intent(in)    :: f(is0:ie0,js0:je0)
+    character(len=*), intent(in)    :: direction
+    real(kind=8),     intent(in)  :: right_edge_sign
 
-    integer(kind=4) i, j, mx, bs
+    real(kind=8),     intent(inout) :: df(is1:ie1,js1:je1)
+
+    integer(kind=4) :: i, j, mx, my, bs, inwidth, inend
 
     bs = size(Q,2)
+    inwidth = size(Qin)
+    inend = inwidth+inshift-1
 
-    do j=js1,je1
-        do i = max(is1,1),min(bs,ie1)
+    select case(direction)
+    case('x')
+
+    do j=js,je
+        do i = max(is,1),min(bs,ie)
             mx = last_nonzero(i)
-            dfdx(i,j) = sum(Q(1:mx,i)*f(1:mx,j))
+            df(i,j) = sum(Q(1:mx,i)*f(1:mx,j))
         end do
-        do i = max(bs+1,is1), min(ie1,nx-bs)
-            dfdx(i,j) = (f(i-2,j)-8._8*f(i-1,j)+8._8*f(i+1,j)-f(i+2,j))/12.0_8
+        do i = max(bs+1,is), min(ie,ntarg-bs)
+            df(i,j) = sum(Qin(1:inwidth)*f(i+inshift:i+inend,j))
         end do
-        do i=max(is1,nx-bs+1),min(ie1,nx)
-            mx = last_nonzero(nx-i+1)
-            dfdx(i,j) =-sum(Q(mx:1:-1,nx-i+1)*f(nx-mx+1:nx,j))
+        do i=max(is,ntarg-bs+1),min(ie,ntarg)
+            mx = last_nonzero(ntarg-i+1)
+            df(i,j) = right_edge_sign*sum(Q(mx:1:-1,ntarg-i+1)*f(nsrc-mx+1:nsrc,j))
         end do
     end do
-end subroutine sbp_dx
 
-subroutine sbp_dy(Q,last_nonzero,f,is,ie,js,je,ny,is1,ie1,js1,je1,dfdy)
-    !dimensions of input function
-    real(kind=8),     intent(in)    :: Q(:,:)
-    integer(kind=4),  intent(in)    :: last_nonzero(:)
-    integer(kind=4),  intent(in)    :: is, ie, js, je
-    !global mesh dimension in x:
-    integer(kind=4),  intent(in)    :: ny
-    !output function dimensions:
-    integer(kind=4),  intent(in)    :: is1,ie1,js1,je1
+    case('y')
 
-    real(kind=8),     intent(in)    :: f(is:ie,js:je)
-    real(kind=8),     intent(inout) :: dfdy(is1:ie1,js1:je1)
-
-    integer(kind=4) i, j, my, bs
-
-    bs = size(Q,2)
-
-    do j = max(js1,1),min(bs,je1)
-        do i=is1,ie1
+    do j = max(js,1),min(bs,je)
+        do i=is,ie
             my = last_nonzero(j)
-            dfdy(i,j) = sum(Q(1:my,j)*f(i,1:my))
+            df(i,j) = sum(Q(1:my,j)*f(i,1:my))
         end do
     end do
-    do j = max(bs+1,js1), min(je1,ny-bs)
-        do i=is1,ie1
-            dfdy(i,j) = (f(i,j-2)-8._8*f(i,j-1)+8._8*f(i,j+1)-f(i,j+2))/12.0_8
+    do j = max(bs+1,js), min(je,ntarg-bs)
+        do i=is,ie
+            df(i,j) = sum(Qin(1:inwidth)*f(i,j+inshift:j+inend))
         end do
     end do
-    do j=max(js1,ny-bs+1),min(je1,ny)
-        do i=is1,ie1
-            my = last_nonzero(ny-j+1)
-            dfdy(i,j) =-sum(Q(my:1:-1,ny-j+1)*f(i,ny-my+1:ny))
+    do j=max(js,ntarg-bs+1),min(je,ntarg)
+        do i=is,ie
+            my = last_nonzero(ntarg-j+1)
+            df(i,j) = right_edge_sign*sum(Q(my:1:-1,ntarg-j+1)*f(i,nsrc-my+1:nsrc))
         end do
     end do
-end subroutine sbp_dy
+
+    case default
+    call parcomm_global%abort("unknown direction in sbp_apply: "//direction)
+    end select
+end subroutine sbp_apply
 
 end module sbp_mod

@@ -69,8 +69,12 @@ subroutine calc_grad_on_tile(gx, gy, f, mesh, sbp_oper, scale)
     hx = mesh%hx
 
     do k = ks, ke
-        call sbp_diff("x",sbp_oper,f%p(f%is:f%ie,f%js:f%je,k),f%is,f%ie,f%js,f%je,mesh%nx+1,is,ie,js,je,Dx)
-        call sbp_diff("y",sbp_oper,f%p(f%is:f%ie,f%js:f%je,k),f%is,f%ie,f%js,f%je,mesh%ny+1,is,ie,js,je,Dy)
+        call sbp_diff(Dx,is,ie,js,je,is,ie,js,je,"x",sbp_oper, &
+                      f%p(f%is:f%ie,f%js:f%je,k),f%is,f%ie,f%js,f%je, &
+                      mesh%nx+1,mesh%nx+1)
+        call sbp_diff(Dy,is,ie,js,je,is,ie,js,je,"y",sbp_oper, &
+                      f%p(f%is:f%ie,f%js:f%je,k),  &
+                      f%is,f%ie,f%js,f%je,mesh%ny+1,mesh%ny+1)
 
         do j=js,je
             do i=is,ie

@@ -22,8 +22,6 @@ private
 public :: err_container_t, test_div, test_grad, test_conv, &
           test_laplace_spectre, test_curl, test_coriolis
 
-real(kind=8), parameter :: some_const = 12.34567_8
-
 contains
 
 
@@ -157,6 +155,7 @@ type(err_container_t) function test_grad(N,grad_oper_name,staggering) result(err
 
     call set_scalar_test_field(f,xyz_f, domain%mesh_p,0)
     call set_vector_test_field(gx_true, gy_true, xyz_grad, domain%mesh_u, domain%mesh_v, 0, "contravariant")
+    !call set_vector_test_field(gx_true, gy_true, xyz_grad, domain%mesh_u, domain%mesh_v, 0, "covariant")
 
     grad_op = create_grad_operator(domain, grad_oper_name)
     call grad_op%calc_grad(gx,gy,f,domain)
@@ -174,6 +173,8 @@ type(err_container_t) function test_grad(N,grad_oper_name,staggering) result(err
 
     !call stats(gx,domain%mesh_u)
     !call stats(gy,domain%mesh_v)
+    !print *, "grad",gy%tile(1)%p(16,1:6,1)
+    !print *, "grad",gy%tile(1)%p(16,27:33,1)
 
 end function test_grad
 function test_curl(N, div_oper_name, staggering) result(errs)
@@ -354,7 +355,7 @@ subroutine test_laplace_spectre(div_operator_name, grad_operator_name, staggerin
                     do j1 = js1, je1
                         do i1= is1, ie1
                             ind1 = (t1-ts)*nx**2+(j1-js1)*nx+(i1-is1+1)
-                            lapM(ind1,ind) = lap%tile(t1)%p(i1,j1,1)
+                            lapM(ind1,ind) = lap%tile(t1)%p(i1,j1,1)*domain%mesh_p%scale**2
                         end do
                     end do
                 end do
@@ -495,14 +496,30 @@ real(kind=8) function mass(f,mesh) result(m)
     type(mesh_t),       intent(in) :: mesh
 
     integer(kind=4) t, i, j, k
+    real(kind=8), parameter :: q(3) = [13.0/12.0, 7.0/8.0, 25.0/24.0]
+    real(kind=8) wx, wy
 
     m = 0.0_8
 
     do t=1,6
         do k = mesh%tile(t)%ks,mesh%tile(t)%ke
             do j=mesh%tile(t)%js, mesh%tile(t)%je
+                if(j<=3) then
+                    wy = q(j)
+                else if(j>=mesh%tile(t)%ny-2) then
+                    wy = q(mesh%tile(t)%ny-j+1)
+                else
+                    wy = 1.0_8
+                end if
                 do i=mesh%tile(t)%is,mesh%tile(t)%ie
-                    m = m+mesh%tile(t)%G(i,j)*f%tile(t)%p(i,j,k)
+                    if(i<=3) then
+                        wx = q(i)
+                    else if(i>=mesh%tile(t)%nx-2) then
+                        wx = q(mesh%tile(t)%nx-i+1)
+                    else
+                        wx = 1.0_8
+                    end if
+                    m = m+wx*wy*mesh%tile(t)%G(i,j)*f%tile(t)%p(i,j,k)
                 end do
             end do
         end do

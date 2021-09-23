@@ -72,17 +72,21 @@ subroutine calc_div_on_tile(div, u, v, mesh, sbp_oper_name,scale)
 
         do j = max(js-3,1), min(je+3,mesh%ny+1)
             do i = max(is-3,1),min(ie+3,mesh%nx+1)
-                Gv(i,j) = mesh%G(i,j)*v%p(i,j,k)
-            end do
-        end do
-        call sbp_diff("y",sbp_oper_name,Gv,v%is,v%ie,v%js,v%je,mesh%ny+1,is,ie,js,je,Dy)
-
-        do j = max(js-3,1), min(je+3,mesh%ny+1)
-            do i = max(is-3,1),min(ie+3,mesh%nx+1)
                 Gu(i,j) = mesh%G(i,j)*u%p(i,j,k)
             end do
         end do
-        call sbp_diff("x",sbp_oper_name,Gu,u%is,u%ie,u%js,u%je,mesh%nx+1,is,ie,js,je,Dx)
+        call sbp_diff(Dx,is,ie,js,je,is,ie,js,je,"x",sbp_oper_name, &
+                      Gu,u%is,u%ie,u%js,u%je,           &
+                      mesh%nx+1,mesh%nx+1)
+
+        do j = max(js-3,1), min(je+3,mesh%ny+1)
+            do i = max(is-3,1),min(ie+3,mesh%nx+1)
+                Gv(i,j) = mesh%G(i,j)*v%p(i,j,k)
+            end do
+        end do
+        call sbp_diff(Dy,is,ie,js,je,is,ie,js,je,"y",sbp_oper_name, &
+                      Gv,v%is,v%ie,v%js,v%je,           &
+                      mesh%ny+1,mesh%ny+1)
 
         do j = js, je
             do i = is,ie
