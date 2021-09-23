@@ -24,8 +24,8 @@ subroutine create_advection_operator(operator, div_operator_name, domain)
     advection_operator%div_op = create_div_operator(domain, div_operator_name)
 
     !WORKAROUND
-    call create_grid_field(advection_operator%hu, 5, 0, domain%mesh_p)
-    call create_grid_field(advection_operator%hv, 5, 0, domain%mesh_p)
+    call create_grid_field(advection_operator%hu, 10, 0, domain%mesh_p)
+    call create_grid_field(advection_operator%hv, 10, 0, domain%mesh_p)
 
     call move_alloc(advection_operator, operator)
 

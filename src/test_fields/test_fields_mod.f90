@@ -18,14 +18,20 @@ public :: zero_scalar_field_generator_t, zero_scalar_field_generator
 public :: gaussian_hill_scalar_field_generator_t, gaussian_hill_scalar_field_generator
 
 public :: coriolis_force_field_generator_t!, coriolis_force_field_generator
+public :: solid_rotation_t
+
+public :: solid_rotated_scalar_field_t
+
 
 !!!!!!!!!!!!!Abstract scalar and vector fields generators
 type, public, abstract :: scalar_field_generator_t
+    real(kind=8) :: time = 0.0_8
 contains
     procedure(get_scalar_field), deferred :: get_scalar_field
 end type scalar_field_generator_t
 
 type, public, abstract :: vector_field_generator_t
+    real(kind=8) :: time = 0.0_8
 contains
     procedure(get_vector_field), deferred :: get_vector_field
 end type vector_field_generator_t
@@ -82,6 +88,20 @@ contains
     procedure :: get_scalar_field => generate_zero_scalar_field
 end type zero_scalar_field_generator_t
 
+type, extends(vector_field_generator_t) :: solid_rotation_t
+    real(kind=8) :: alpha = 0.0_8 !rotation axis angle
+    real(kind=8) :: u0 = 1.0_8    ! equator speed
+contains
+    procedure :: get_vector_field => gen_solid_rotation_vec_field
+end type solid_rotation_t
+
+type, extends(scalar_field_generator_t) :: solid_rotated_scalar_field_t
+    type(solid_rotation_t),          allocatable :: solid_rotation_vector_field
+    class(scalar_field_generator_t), allocatable :: scalar_field
+contains
+    procedure :: get_scalar_field => generate_solid_rotated_scalar_field
+end type solid_rotated_scalar_field_t
+
 !!!field generator instances
 type(xyz_scalar_field_generator_t)     :: xyz_scalar_field_generator
 type(solid_rotation_field_generator_t) :: solid_rotation_field_generator
@@ -98,10 +118,10 @@ type(gaussian_hill_scalar_field_generator_t) :: gaussian_hill_scalar_field_gener
 abstract interface
     subroutine get_scalar_field(this,f,npts,nlev,x,y,z)
         import scalar_field_generator_t
-        class(scalar_field_generator_t),  intent(in) :: this
-        integer(kind=4), intent(in)                  :: npts, nlev
-        real(kind=8),    intent(in)                  :: x(npts), y(npts), z(npts)
-        real(kind=8),    intent(out)                 :: f(npts,nlev)
+        class(scalar_field_generator_t), intent(in)  :: this
+        integer(kind=4),                 intent(in)  :: npts, nlev
+        real(kind=8),                    intent(in)  :: x(npts), y(npts), z(npts)
+        real(kind=8),                    intent(out) :: f(npts,nlev)
     end subroutine get_scalar_field
     subroutine get_vector_field(this,vx,vy,vz,npts,nlev,x,y,z)
         import vector_field_generator_t
@@ -257,7 +277,7 @@ subroutine generate_gaussian_hill_scalar_field(this, f, npts, nlev, x, y, z)
     integer(kind=4) :: i, k
     real(kind=8)    :: lam, phi, r, gamma
 
-    gamma = pi/2
+    gamma = 0.0_8
 
     do k = 1, nlev
         do i=1, npts
@@ -280,7 +300,7 @@ subroutine generate_solid_rotation_vector_field(this,vx,vy,vz,npts,nlev,x,y,z)
                                             0.0_8, 0.0_8, 1.0_8],[3,3])
 
     do k = 1, nlev
-        k1 = mod(k-1,3)+1  !1,2,3,1,2,3,1,2 etc
+        k1 = mod(k-2,3)+1  !1,2,3,1,2,3,1,2 etc
         do i=1, npts
             vx(i,k) = axis(2,k1)*z(i)-axis(3,k1)*y(i)
             vy(i,k) =-axis(1,k1)*z(i)+axis(3,k1)*x(i)
@@ -288,6 +308,33 @@ subroutine generate_solid_rotation_vector_field(this,vx,vy,vz,npts,nlev,x,y,z)
         end do
     end do
 end subroutine generate_solid_rotation_vector_field
+
+subroutine gen_solid_rotation_vec_field(this, vx, vy, vz, npts, nlev, x, y, z)
+
+    use sph_coords_mod, only : rotate_3D_y, cart2sph, sph2cart_vec
+
+    class(solid_rotation_t),                  intent(in)  :: this
+    integer(kind=4),                          intent(in)  :: npts, nlev
+    real(kind=8),       dimension(npts),      intent(in)  :: x, y, z
+    real(kind=8),       dimension(npts,nlev), intent(out) :: vx, vy, vz
+
+    integer(kind=4) :: i, k
+    real(kind=8) :: lam, phi, v_lam, v_phi, xn, yn, zn, vxn, vyn, vzn
+
+    do k = 1, nlev
+        do i=1, npts
+            !translate north pole from [0, pi/2] to [0, pi/2-alpha]
+            call rotate_3D_y(x(i), y(i), z(i), -this%alpha, xn, yn, zn)
+            call cart2sph(xn, yn, zn, lam, phi)
+
+            v_lam = this%u0*cos(phi)
+            v_phi = 0.0_8
+
+            call sph2cart_vec(lam, phi, v_lam, v_phi, vxn, vyn, vzn)
+            call rotate_3D_y(vxn, vyn, vzn, this%alpha, vx(i,k), vy(i,k), vz(i,k))
+        end do
+    end do
+end subroutine gen_solid_rotation_vec_field
 
 subroutine generate_coriolis_force_field(this, vx, vy, vz, npts, nlev, x, y, z)
 
@@ -456,6 +503,35 @@ subroutine generate_VSH_curl_free_10(this, vx, vy, vz, npts, nlev, x, y, z)
     end do
 
 end subroutine generate_VSH_curl_free_10
+subroutine generate_solid_rotated_scalar_field(this, f, npts, nlev, x, y, z)
+
+    use sph_coords_mod, only : rotate_3D_y, cart2sph, sph2cart_vec, sph2cart
+
+    class(solid_rotated_scalar_field_t), intent(in)  :: this
+    integer(kind=4),                     intent(in)  :: npts, nlev
+    real(kind=8),                        intent(in)  :: x(npts), y(npts), z(npts)
+    real(kind=8),                        intent(out) :: f(npts,nlev)
+
+    integer(kind=4) :: i, k
+    real(kind=8) :: lam, phi, v_lam, v_phi, xn(npts), yn(npts), zn(npts)
+    real(kind=8) :: alpha, u0
+
+    alpha = this%solid_rotation_vector_field%alpha
+    u0    = this%solid_rotation_vector_field%u0
+
+    do i=1, npts
+        !translate north pole from [0, pi/2] to [0, pi/2-alpha]
+        call rotate_3D_y(x(i), y(i), z(i), -alpha, xn(i), yn(i), zn(i))
+        call cart2sph(xn(i), yn(i), zn(i), lam, phi)
+
+        lam =  lam - u0*this%time
+
+        call sph2cart(lam, phi, xn(i), yn(i), zn(i))
+    end do
+
+        call this%scalar_field%get_scalar_field(f, npts, nlev, xn, yn, zn)
+
+end subroutine generate_solid_rotated_scalar_field
 
 subroutine generate_zero_scalar_field(this, f, npts, nlev, x, y, z)
 
