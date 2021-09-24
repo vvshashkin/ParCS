@@ -12,6 +12,7 @@ type, public :: domain_t
 
     class(topology_t), allocatable  :: topology
     class(metric_t),   allocatable  :: metric
+    character(len=:),  allocatable  :: horizontal_staggering
     type(parcomm_t)   :: parcomm
     type(partition_t) :: partition
     type(mesh_t)      :: mesh_o, mesh_x, mesh_y, mesh_xy

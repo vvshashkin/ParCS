@@ -32,6 +32,8 @@ subroutine create_domain(domain, topology_type, staggering_type, nh, nz)
 
     call create_metric(domain%metric,domain%topology,"ecs")
 
+    domain%horizontal_staggering = staggering_type
+
     call create_parcomm(parcomm_global%comm_w, domain%parcomm)
 
     call domain%partition%init(nh, nz, max(1,domain%parcomm%np/6), domain%parcomm%myid, domain%parcomm%Np, &
