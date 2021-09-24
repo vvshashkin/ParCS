@@ -11,6 +11,7 @@ type, extends(metric_t) :: ecs_metric_t
     class(cubed_sphere_topology_t), allocatable :: topology
 contains
     procedure :: point_r => ecs_point_r
+    procedure :: transform_cartesian_to_native => transform_cartesian_to_native_ecs
     procedure :: a1      => ecs_a1
     procedure :: a2      => ecs_a2
     procedure :: b1      => ecs_b1
@@ -246,5 +247,33 @@ function ecs_G(this,panel_ind,alpha,beta) result(G)
 
     G = (1._8+ta**2)*(1._8+tb**2) / sigm**3
 end function ecs_G
+
+subroutine transform_cartesian_to_native_ecs(this,panel_ind, alpha, beta, r)
+    import metric_t
+    class(ecs_metric_t), intent(in)  :: this
+    integer(kind=4),     intent(out) :: panel_ind
+    real(kind=8),        intent(out) :: alpha, beta
+    real(kind=8),        intent(in)  :: r(3)
+
+    real(kind=8)    :: r_dot_n, r_dot_n_max, r_loc(3)
+    integer(kind=8) :: ipanel
+
+    !find panel with maximum projection of r onto cube outer normal
+    !this will be the panel the point r belongs to
+    panel_ind = 1
+    r_dot_n_max = 0.0_8
+    do ipanel=1,6
+        !minus sign because of inner normal stored in topology
+        r_dot_n =-sum(r(1:3)*this%topology%n(1:3,ipanel))
+        if(r_dot_n > r_dot_n_max) then
+            panel_ind = ipanel
+            r_dot_n_max = r_dot_n
+        end if
+    end do
+
+    !it is assumed that ||r|| == 1
+    alpha = atan( sum(this%topology%ex(1:3,panel_ind)*r(1:3)) / r_dot_n_max)
+    beta  = atan( sum(this%topology%ey(1:3,panel_ind)*r(1:3)) / r_dot_n_max)
+end subroutine transform_cartesian_to_native_ecs
 
 end module ecs_metric_mod

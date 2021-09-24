@@ -95,7 +95,7 @@ integer(kind=4), parameter :: ey(3,6) = reshape( (/  (/0, 1, 0/), &
                                                      (/0, 1, 0/), &
                                                      (/0, 0, 1/), &
                                                      (/0, 0,-1/)    /),  (/3 ,6/) )
-
+!INNER normal to cube face
 integer(kind=4), parameter :: n(3,6) = reshape( (/   (/ 0, 0,  1/), &
                                                      (/-1, 0,  0/), &
                                                      (/ 0, 0, -1/), &

@@ -15,16 +15,17 @@ type, abstract :: metric_t
 
 contains
 
-    procedure(vector_cart), deferred :: point_r !Cartesian 3d coordinates of points
+    procedure(vector_cart),    deferred :: point_r !Cartesian 3d coordinates of points
+    procedure(cart_to_native_transform), deferred :: transform_cartesian_to_native
     !3d cartesian coordinates of grid basis vectors
-    procedure(vector_cart), deferred :: a1 !covariant dr/dx
-    procedure(vector_cart), deferred :: a2 !covariant dr/dy
-    procedure(vector_cart), deferred :: b1 !contravariant x direction
-    procedure(vector_cart), deferred :: b2 !contravariant y direction
+    procedure(vector_cart),    deferred :: a1 !covariant dr/dx
+    procedure(vector_cart),    deferred :: a2 !covariant dr/dy
+    procedure(vector_cart),    deferred :: b1 !contravariant x direction
+    procedure(vector_cart),    deferred :: b2 !contravariant y direction
     !Metric tensor etc
-    procedure(symtensor2),  deferred :: Q !metric tensor (a1*a1 a1*a2; a1*a2 a2*a2)
-    procedure(symtensor2),  deferred :: QI !inversed metric tensor
-    procedure(tensor0),     deferred :: G !sqrt of metric tensor det
+    procedure(symtensor2),     deferred :: Q !metric tensor (a1*a1 a1*a2; a1*a2 a2*a2)
+    procedure(symtensor2),     deferred :: QI !inversed metric tensor
+    procedure(tensor0),        deferred :: G !sqrt of metric tensor det
 
 end type metric_t
 
@@ -36,6 +37,14 @@ abstract interface
         real(kind=8),    intent(in) :: alpha, beta
         real(kind=8)                :: r(3)
     end function vector_cart
+
+    subroutine cart_to_native_transform(this,panel_ind, alpha, beta, r)
+        import metric_t
+        class(metric_t), intent(in)  :: this
+        integer(kind=4), intent(out) :: panel_ind
+        real(kind=8),    intent(out) :: alpha, beta
+        real(kind=8),    intent(in)  :: r(3)
+    end subroutine cart_to_native_transform
 
     function symtensor2(this,panel_ind,alpha,beta) result(Q)
         import metric_t
