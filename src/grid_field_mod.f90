@@ -16,6 +16,9 @@ contains
     procedure, public :: assign_s1         => assign_grid_field_s1 !v = s1
     procedure, public :: assign_s1v1s2v2   => assign_grid_field_s1v1s2v2 !v = s1*v1+s2*v2
     generic :: assign => assign_s1v1, assign_s1, assign_s1v1s2v2
+
+    procedure, public :: assign_prod => assign_grid_field_prod_s1v1v2
+
     procedure, public :: copy => copy_grid_field
     procedure, public :: create_similar => create_similar_grid_field
     procedure, public :: algebraic_norm2 => compute_grid_field_algebraic_norm2
@@ -43,6 +46,8 @@ contains
     procedure, public :: assign_s1v1s2v2 => tile_field_assign_s1v1s2v2!v = s1*v1+s2*v2
     !assign -- generic procedure for v = ... operations
     generic :: assign => assign_s1v1, assign_s1, assign_s1v1s2v2
+
+    procedure, public :: assign_prod => tile_field_assign_prod_s1v1v2
 
     procedure, public :: algebraic_norm2 => compute_tile_field_algebraic_norm2
     procedure, public :: algebraic_dot => compute_tile_field_algebraic_dot
@@ -279,6 +284,40 @@ subroutine assign_grid_field_s1v1s2v2(this, scalar1, f1, scalar2, f2, mesh)
     end do
 
 end subroutine assign_grid_field_s1v1s2v2
+
+subroutine assign_grid_field_prod_s1v1v2(this, scalar1, f1, f2, mesh)
+
+    class(grid_field_t), intent(inout) :: this
+    type(grid_field_t),  intent(in)    :: f1, f2
+    real(kind=8),        intent(in)    :: scalar1
+    type(mesh_t),        intent(in)    :: mesh
+
+    integer(kind=4) :: t
+
+    do t = mesh%ts, mesh%te
+        call this%tile(t)%assign_prod(scalar1, f1%tile(t), f2%tile(t), mesh%tile(t))
+    end do
+
+end subroutine assign_grid_field_prod_s1v1v2
+
+subroutine tile_field_assign_prod_s1v1v2(this, scalar1, v1, v2, mesh)
+
+    class(tile_field_t), intent(inout) :: this
+    type(tile_field_t),  intent(in)    :: v1, v2
+    real(kind=8),        intent(in)    :: scalar1
+    type(tile_mesh_t),   intent(in)    :: mesh
+
+    integer(kind=4) :: k, j, i
+
+    do k = mesh%ks, mesh%ke
+        do j = mesh%js, mesh%je
+            do i = mesh%is, mesh%ie
+                this%p(i,j,k) = scalar1*v1%p(i,j,k)*v2%p(i,j,k)
+            end do
+        end do
+    end do
+
+end subroutine tile_field_assign_prod_s1v1v2
 
 subroutine tile_field_update_s1v1(this, scalar1, v1, mesh)
 

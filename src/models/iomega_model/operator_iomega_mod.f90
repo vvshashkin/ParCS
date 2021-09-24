@@ -17,7 +17,7 @@ type, public, extends(operator_t) :: operator_iomega_t
     complex(kind=8), allocatable :: omega(:) !eigen values, imag == oscillation frequency,
                                              !              real == amplification/decay
     contains
-    procedure, public :: apply_to => apply_iomega_to
+    procedure, public :: apply => apply_iomega
     procedure, public :: solve => solve_iomega
 end type operator_iomega_t
 
@@ -32,11 +32,11 @@ subroutine init_iomega_operator(operator, omega)
     operator%omega = omega
 end
 
-subroutine apply_iomega_to(this,vout,vin,domain)
+subroutine apply_iomega(this,vout,vin,domain)
     class(operator_iomega_t),  intent(inout) :: this
     class(stvec_t),            intent(inout) :: vout !inout to enable preallocated vectors
-    class(stvec_t),            intent(in)    :: vin
-    class(domain_t),           intent(in)    :: domain
+    class(stvec_t),            intent(inout) :: vin
+    type(domain_t),            intent(in)    :: domain
 
     integer i
 
@@ -54,14 +54,14 @@ subroutine apply_iomega_to(this,vout,vin,domain)
         call parcomm_global%abort("iomega operator failure: vout of wrong type")
     end select
 
-end subroutine apply_iomega_to
+end subroutine apply_iomega
 
 subroutine solve_iomega(this, vout, rhs, dt, domain)
-    class(operator_iomega_t),  intent(inout) :: this
-    class(stvec_t),            intent(inout) :: vout !inout to enable preallocated bectors
-    class(stvec_t),            intent(in)    :: rhs
-    real(kind=8),              intent(in)    :: dt
-    class(domain_t),           intent(in)    :: domain
+    class(operator_iomega_t), intent(inout) :: this
+    class(stvec_t),           intent(inout) :: vout !inout to enable preallocated vectors
+    class(stvec_t),           intent(inout) :: rhs
+    real(kind=8),             intent(in)    :: dt
+    type(domain_t),           intent(in)    :: domain
 
     integer(kind=4) i
 
