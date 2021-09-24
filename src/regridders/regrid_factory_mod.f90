@@ -1,5 +1,7 @@
 module regrid_factory_mod
 
+use parcomm_mod,            only : parcomm_global
+
 implicit none
 
 contains
@@ -9,9 +11,7 @@ subroutine create_latlon_regrid(regrid_out, domain, Nlon, Nlat,interp_type, &
 
     use abstract_regrid_mod,    only : regrid_t
     use latlon_regrid_mod,      only : latlon_regrid_t, latlon_interp_t
-    !use grid_field_mod,         only : grid_field_t
     use domain_mod,             only : domain_t
-    use parcomm_mod,            only : parcomm_global
     use halo_factory_mod,       only : create_halo_procedure
     use grid_field_factory_mod, only : create_grid_field
     use tile_mod,               only : tile_t
@@ -57,9 +57,114 @@ subroutine create_latlon_regrid(regrid_out, domain, Nlon, Nlat,interp_type, &
     call move_alloc(regrid,regrid_out)
 end subroutine create_latlon_regrid
 
+subroutine create_latlon_vector_regrid(regrid_out, domain, Nlon, Nlat, interp_type, &
+                                       vector_grid_type,components_type)
+
+    use abstract_regrid_mod,    only : regrid_vec_t
+    use latlon_regrid_mod,      only : latlon_regrid_vec_t, latlon_interp_t
+    use domain_mod,             only : domain_t
+    use halo_factory_mod,       only : create_halo_procedure
+    use grid_field_factory_mod, only : create_grid_field
+    use tile_mod,               only : tile_t
+
+    use const_mod,              only : pi
+
+    class(regrid_vec_t), allocatable, intent(out) :: regrid_out
+    type(domain_t),                   intent(in)  :: domain
+    integer(kind=4),                  intent(in)  :: Nlon, Nlat
+    character(len=*),                 intent(in)  :: interp_type
+    character(len=*),                 intent(in)  :: vector_grid_type
+    character(len=*),                 intent(in)  :: components_type
+
+    class(latlon_regrid_vec_t), allocatable :: regrid
+    type(tile_t) :: stencil_bounds
+    integer(kind=4), parameter :: A_halo_width = 2, A_ex_halo_width = 8
+    real(kind=8) :: hlon, hlat, lon, lat
+    real(kind=8) :: r(3), iv(3), jv(3), a1(3), a2(3), b1(3), b2(3)
+    real(kind=8) :: alpha, beta
+    integer(kind=4) :: i, j, panel_ind
+
+    !Check:
+    if(domain%partition%ts /= 1 .or. &
+       domain%partition%te /= domain%partition%num_tiles*domain%partition%num_panels) then
+       call parcomm_global%abort("cannot create latlon interpolator for distributed domains")
+    end if
+
+    allocate(regrid)
+
+    regrid%Nlon = Nlon
+    regrid%Nlat = Nlat
+    regrid%vector_grid_type = vector_grid_type
+    regrid%components_type = components_type
+    regrid%ks = domain%mesh_o%tile(domain%mesh_o%ts)%ks
+    regrid%ke = domain%mesh_o%tile(domain%mesh_o%ts)%ke
+
+    allocate(regrid%u2u(Nlon,Nlat),regrid%u2v(Nlon,Nlat),&
+             regrid%v2u(Nlon,Nlat),regrid%v2v(Nlon,Nlat))
+
+!    if(regrid%vector_grid_type == "Ah") then
+        call stencil_bounds%init(is=1,ie=domain%mesh_o%tile(1)%nx+1,&
+                                 js=1,je=domain%mesh_o%tile(1)%ny+1,&
+                                 ks=domain%mesh_o%tile(1)%ks,ke=domain%mesh_o%tile(1)%ke)
+        call create_latlon_interp(regrid%interp_components,domain,domain%mesh_xy, &
+                                  stencil_bounds, Nlat, Nlon, interp_type)
+    ! else if(regrid%scalar_grid_type == "A") then
+    !     call create_halo_procedure(regrid%scalar_halo,domain,A_halo_width,"ECS_O")
+    !     call create_grid_field(regrid%work_field,A_ex_halo_width,0,domain%mesh_o)
+    !     call stencil_bounds%init(is=1-A_halo_width,ie=domain%mesh_o%tile(1)%nx+A_halo_width,&
+    !                              js=1-A_halo_width,je=domain%mesh_o%tile(1)%ny+A_halo_width,&
+    !                              ks=domain%mesh_o%tile(1)%ks,ke=domain%mesh_o%tile(1)%ke)
+    !     call create_latlon_interp(regrid%interp_scalar,domain,domain%mesh_o, &
+    !                               stencil_bounds, Nlat, Nlon, interp_type)
+    ! end if
+
+    hlon = 2._8*pi / real(Nlon,8)
+    hlat = pi / (Nlat-1.0_8)
+    if(components_type == "covariant") then
+        do j = 1,Nlat
+            lat = -0.5_8*pi+hlat*(j-1)
+            do i = 1,Nlon
+                lon = hlon*(i-1)
+
+                r(1:3)  = [cos(lat)*cos(lon),cos(lat)*sin(lon),sin(lat)]
+                iv(1:3) = [-sin(lon),cos(lon),0.0_8]
+                jv(1:3) = [-sin(lat)*cos(lon),-sin(lat)*sin(lon),cos(lat)]
+                call domain%metric%transform_cartesian_to_native(panel_ind, alpha, beta, r)
+                b1(1:3) = domain%metric%b1(panel_ind,alpha,beta)
+                b2(1:3) = domain%metric%b2(panel_ind,alpha,beta)
+                regrid%u2u(i,j) = sum(iv(1:3)*b1(1:3))
+                regrid%u2v(i,j) = sum(jv(1:3)*b1(1:3))
+                regrid%v2u(i,j) = sum(iv(1:3)*b2(1:3))
+                regrid%v2v(i,j) = sum(jv(1:3)*b2(1:3))
+            end do
+        end do
+    else if(components_type == "contravariant") then
+        do j = 1,Nlat
+            lat = -0.5_8*pi+hlat*(j-1)
+            do i = 1,Nlon
+                lon = hlon*(i-1)
+
+                r(1:3)  = [cos(lat)*cos(lon),cos(lat)*sin(lon),sin(lat)]
+                iv(1:3) = [-sin(lon),cos(lon),0.0_8]
+                jv(1:3) = [-sin(lat)*cos(lon),-sin(lat)*sin(lon),cos(lat)]
+                call domain%metric%transform_cartesian_to_native(panel_ind, alpha, beta, r)
+                a1(1:3) = domain%metric%a1(panel_ind,alpha,beta)
+                a2(1:3) = domain%metric%a2(panel_ind,alpha,beta)
+                regrid%u2u(i,j) = sum(iv(1:3)*a1(1:3))
+                regrid%u2v(i,j) = sum(jv(1:3)*a1(1:3))
+                regrid%v2u(i,j) = sum(iv(1:3)*a2(1:3))
+                regrid%v2v(i,j) = sum(jv(1:3)*a2(1:3))
+            end do
+        end do
+    else
+        call parcomm_global%abort("regrid_factory_mod, create_latlon_vector_regrid" // &
+                                  " - unknown vector components type:" // components_type)
+    end if
+    call move_alloc(regrid,regrid_out)
+end subroutine create_latlon_vector_regrid
+
 subroutine create_latlon_interp(interp,domain,mesh,stencil_bounds,Nlat,Nlon,interp_type)
     use latlon_regrid_mod,      only : latlon_interp_t
-    use parcomm_mod,            only : parcomm_global
     use domain_mod,             only : domain_t
     use tile_mod,               only : tile_t
     use mesh_mod,               only : mesh_t

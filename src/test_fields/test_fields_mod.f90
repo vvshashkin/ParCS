@@ -300,7 +300,7 @@ subroutine generate_solid_rotation_vector_field(this,vx,vy,vz,npts,nlev,x,y,z)
                                             0.0_8, 0.0_8, 1.0_8],[3,3])
 
     do k = 1, nlev
-        k1 = mod(k-2,3)+1  !1,2,3,1,2,3,1,2 etc
+        k1 = mod(k-1,3)+1  !1,2,3,1,2,3,1,2 etc
         do i=1, npts
             vx(i,k) = axis(2,k1)*z(i)-axis(3,k1)*y(i)
             vy(i,k) =-axis(1,k1)*z(i)+axis(3,k1)*x(i)

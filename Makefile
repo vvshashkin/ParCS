@@ -420,27 +420,30 @@ $(DOBJ)explicit_eul1_mod.o: src/time_schemes/explicit_Eul1_mod.f90 \
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)regrid_factory_mod.o: src/regridders/regrid_factory_mod.f90 \
+	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)abstract_regridder_mod.o \
 	$(DOBJ)regrid_to_latlon_mod.o \
-	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)domain_mod.o \
-	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)halo_factory_mod.o \
+	$(DOBJ)grid_field_factory_mod.o \
 	$(DOBJ)tile_mod.o \
-	$(DOBJ)mesh_mod.o \
-	$(DOBJ)const_mod.o
+	$(DOBJ)const_mod.o \
+	$(DOBJ)mesh_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)regrid_to_latlon_mod.o: src/regridders/regrid_to_latlon_mod.f90 \
 	$(DOBJ)abstract_regridder_mod.o \
+	$(DOBJ)domain_mod.o \
 	$(DOBJ)grid_field_mod.o \
-	$(DOBJ)halo_mod.o
+	$(DOBJ)halo_mod.o \
+	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)abstract_regridder_mod.o: src/regridders/abstract_regridder_mod.f90 \
-	$(DOBJ)grid_field_mod.o
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)domain_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -916,7 +919,10 @@ $(DOBJ)test_regrid_mod.o: src/test/test_regrid/test_regrid_mod.f90 \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)grid_field_factory_mod.o \
 	$(DOBJ)domain_mod.o \
-	$(DOBJ)domain_factory_mod.o
+	$(DOBJ)domain_factory_mod.o \
+	$(DOBJ)const_mod.o \
+	$(DOBJ)test_fields_mod.o \
+	$(DOBJ)latlon_functions_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
