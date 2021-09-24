@@ -11,6 +11,10 @@ program main
 
     call test_regrid_vec('Ah','covariant')
     call test_regrid_vec('Ah','contravariant')
+    call test_regrid_vec('A','covariant')
+    call test_regrid_vec('A','contravariant')
+    call test_regrid_vec('C','covariant')
+    call test_regrid_vec('C','contravariant')
 
     call deinit_global_parallel_enviroment()
 

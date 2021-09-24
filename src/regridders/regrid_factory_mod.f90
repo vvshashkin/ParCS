@@ -52,6 +52,10 @@ subroutine create_latlon_regrid(regrid_out, domain, Nlon, Nlat,interp_type, &
                                  ks=domain%mesh_o%tile(1)%ks,ke=domain%mesh_o%tile(1)%ke)
         call create_latlon_interp(regrid%interp_scalar,domain,domain%mesh_o, &
                                   stencil_bounds, Nlat, Nlon, interp_type)
+    else
+       call parcomm_global%abort(scalar_grid_type//&
+                                 " scalar grid type is not supported in latlon regrid,"//&
+                                 " use A or Ah")
     end if
 
     call move_alloc(regrid,regrid_out)
@@ -63,7 +67,7 @@ subroutine create_latlon_vector_regrid(regrid_out, domain, Nlon, Nlat, interp_ty
     use abstract_regrid_mod,    only : regrid_vec_t
     use latlon_regrid_mod,      only : latlon_regrid_vec_t, latlon_interp_t
     use domain_mod,             only : domain_t
-    use halo_factory_mod,       only : create_halo_procedure
+    use halo_factory_mod,       only : create_vector_halo_procedure
     use grid_field_factory_mod, only : create_grid_field
     use tile_mod,               only : tile_t
 
@@ -102,43 +106,36 @@ subroutine create_latlon_vector_regrid(regrid_out, domain, Nlon, Nlat, interp_ty
     allocate(regrid%u2u(Nlon,Nlat),regrid%u2v(Nlon,Nlat),&
              regrid%v2u(Nlon,Nlat),regrid%v2v(Nlon,Nlat))
 
-!    if(regrid%vector_grid_type == "Ah") then
+    if(regrid%vector_grid_type == "Ah") then
         call stencil_bounds%init(is=1,ie=domain%mesh_o%tile(1)%nx+1,&
                                  js=1,je=domain%mesh_o%tile(1)%ny+1,&
                                  ks=domain%mesh_o%tile(1)%ks,ke=domain%mesh_o%tile(1)%ke)
         call create_latlon_interp(regrid%interp_components,domain,domain%mesh_xy, &
                                   stencil_bounds, Nlat, Nlon, interp_type)
-    ! else if(regrid%scalar_grid_type == "A") then
-    !     call create_halo_procedure(regrid%scalar_halo,domain,A_halo_width,"ECS_O")
-    !     call create_grid_field(regrid%work_field,A_ex_halo_width,0,domain%mesh_o)
-    !     call stencil_bounds%init(is=1-A_halo_width,ie=domain%mesh_o%tile(1)%nx+A_halo_width,&
-    !                              js=1-A_halo_width,je=domain%mesh_o%tile(1)%ny+A_halo_width,&
-    !                              ks=domain%mesh_o%tile(1)%ks,ke=domain%mesh_o%tile(1)%ke)
-    !     call create_latlon_interp(regrid%interp_scalar,domain,domain%mesh_o, &
-    !                               stencil_bounds, Nlat, Nlon, interp_type)
-    ! end if
+    else if(regrid%vector_grid_type == "A" .or. &
+            regrid%vector_grid_type == "C") then
+        call create_vector_halo_procedure(regrid%halo,domain,A_halo_width,"ecs_A_vec")
+        call create_grid_field(regrid%work_u,A_ex_halo_width,0,domain%mesh_o)
+        call create_grid_field(regrid%work_v,A_ex_halo_width,0,domain%mesh_o)
+        call stencil_bounds%init(is=1-A_halo_width,ie=domain%mesh_o%tile(1)%nx+A_halo_width,&
+                                 js=1-A_halo_width,je=domain%mesh_o%tile(1)%ny+A_halo_width,&
+                                 ks=domain%mesh_o%tile(1)%ks,ke=domain%mesh_o%tile(1)%ke)
+        call create_latlon_interp(regrid%interp_components,domain,domain%mesh_o, &
+                                  stencil_bounds, Nlat, Nlon, interp_type)
+    else
+       call parcomm_global%abort(vector_grid_type//&
+                                 " scalar grid type is not supported in latlon vector regrid,"//&
+                                 " use A, Ah or C")
+    end if
 
     hlon = 2._8*pi / real(Nlon,8)
     hlat = pi / (Nlat-1.0_8)
-    if(components_type == "covariant") then
-        do j = 1,Nlat
-            lat = -0.5_8*pi+hlat*(j-1)
-            do i = 1,Nlon
-                lon = hlon*(i-1)
 
-                r(1:3)  = [cos(lat)*cos(lon),cos(lat)*sin(lon),sin(lat)]
-                iv(1:3) = [-sin(lon),cos(lon),0.0_8]
-                jv(1:3) = [-sin(lat)*cos(lon),-sin(lat)*sin(lon),cos(lat)]
-                call domain%metric%transform_cartesian_to_native(panel_ind, alpha, beta, r)
-                b1(1:3) = domain%metric%b1(panel_ind,alpha,beta)
-                b2(1:3) = domain%metric%b2(panel_ind,alpha,beta)
-                regrid%u2u(i,j) = sum(iv(1:3)*b1(1:3))
-                regrid%u2v(i,j) = sum(jv(1:3)*b1(1:3))
-                regrid%v2u(i,j) = sum(iv(1:3)*b2(1:3))
-                regrid%v2v(i,j) = sum(jv(1:3)*b2(1:3))
-            end do
-        end do
-    else if(components_type == "contravariant") then
+    !Init transform from curvilinear grid components to 
+    if(components_type == "contravariant" .or. &
+       vector_grid_type == "A" .or. vector_grid_type == "C") then
+       !Only contravariant halo-procedures are currently implemented for A and C grids
+       !Thus vector components will be (anyway) transformed to contravariant
         do j = 1,Nlat
             lat = -0.5_8*pi+hlat*(j-1)
             do i = 1,Nlon
@@ -154,6 +151,24 @@ subroutine create_latlon_vector_regrid(regrid_out, domain, Nlon, Nlat, interp_ty
                 regrid%u2v(i,j) = sum(jv(1:3)*a1(1:3))
                 regrid%v2u(i,j) = sum(iv(1:3)*a2(1:3))
                 regrid%v2v(i,j) = sum(jv(1:3)*a2(1:3))
+            end do
+        end do
+    else if(components_type == "covariant") then
+        do j = 1,Nlat
+            lat = -0.5_8*pi+hlat*(j-1)
+            do i = 1,Nlon
+                lon = hlon*(i-1)
+
+                r(1:3)  = [cos(lat)*cos(lon),cos(lat)*sin(lon),sin(lat)]
+                iv(1:3) = [-sin(lon),cos(lon),0.0_8]
+                jv(1:3) = [-sin(lat)*cos(lon),-sin(lat)*sin(lon),cos(lat)]
+                call domain%metric%transform_cartesian_to_native(panel_ind, alpha, beta, r)
+                b1(1:3) = domain%metric%b1(panel_ind,alpha,beta)
+                b2(1:3) = domain%metric%b2(panel_ind,alpha,beta)
+                regrid%u2u(i,j) = sum(iv(1:3)*b1(1:3))
+                regrid%u2v(i,j) = sum(jv(1:3)*b1(1:3))
+                regrid%v2u(i,j) = sum(iv(1:3)*b2(1:3))
+                regrid%v2v(i,j) = sum(jv(1:3)*b2(1:3))
             end do
         end do
     else
