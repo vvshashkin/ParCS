@@ -1,8 +1,10 @@
 module latlon_regrid_mod
 
 use abstract_regrid_mod,    only : regrid_t
+use domain_mod,             only : domain_t
 use grid_field_mod,         only : grid_field_t
 use halo_mod,               only : halo_t, halo_vec_t
+use parcomm_mod,            only : parcomm_global
 
 implicit none
 
@@ -26,6 +28,7 @@ type, public, extends(regrid_t) :: latlon_regrid_t
     character(len=:), allocatable :: scalar_grid_type
     type(latlon_interp_t)         :: interp_scalar
     class(halo_t), allocatable    :: scalar_halo
+    type(grid_field_t)            :: work_field
 
     contains
     procedure :: do_regrid     => do_latlon_scalar_regrid
@@ -34,14 +37,26 @@ end type latlon_regrid_t
 
 contains
 
-subroutine do_latlon_scalar_regrid(this,fout,f)
+subroutine do_latlon_scalar_regrid(this,fout,f,domain)
     class(latlon_regrid_t),    intent(inout) :: this
     real(kind=8),              intent(inout) :: fout(:,:,:)
     type(grid_field_t),        intent(in)    :: f
+    type(domain_t),            intent(in)    :: domain
 
     integer i, j
 
-    call this%interp_scalar%interpolate(fout,f)
+    if(this%scalar_grid_type == "Ah") then
+        call this%interp_scalar%interpolate(fout,f)
+    else if(this%scalar_grid_type == "A") then
+        call this%work_field%assign(f,domain%mesh_o)
+        call this%scalar_halo%get_halo_scalar(this%work_field,&
+                                     domain,this%interp_scalar%stencil_width/2)
+        call this%interp_scalar%interpolate(fout,this%work_field)
+    else
+        call parcomm_global%abort(this%scalar_grid_type//&
+                                  " scalar grid type is not supported in latlon regrid,"//&
+                                  " use A or Ah")
+    end if
 
 end subroutine do_latlon_scalar_regrid
 

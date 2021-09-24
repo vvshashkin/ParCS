@@ -48,11 +48,11 @@ subroutine test_regrid(staggering)
 
     call create_latlon_regrid(regrid,domain,Nlat=Nlat,Nlon=Nlon,interp_type="linear",&
                               scalar_grid_type=staggering)
-    call regrid%do_regrid(ptest,f)
+    call regrid%do_regrid(ptest,f,domain)
 
     call create_latlon_regrid(regrid,domain,Nlat=Nlat,Nlon=Nlon,interp_type="cubic",&
                               scalar_grid_type=staggering)
-    call regrid%do_regrid(ptest_cub,f)
+    call regrid%do_regrid(ptest_cub,f,domain)
 
     print *, "Interpolation error (linear)", maxval(abs(ptest-ptrue))
     print *, "Interpolation error (cubic) ", maxval(abs(ptest_cub-ptrue))

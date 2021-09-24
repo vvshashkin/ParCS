@@ -6,6 +6,7 @@ program main
 
     call init_global_parallel_enviroment()
 
+    call test_regrid('A')
     call test_regrid('Ah')
 
     call deinit_global_parallel_enviroment()

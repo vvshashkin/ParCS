@@ -9,10 +9,11 @@ subroutine create_latlon_regrid(regrid_out, domain, Nlon, Nlat,interp_type, &
 
     use abstract_regrid_mod,    only : regrid_t
     use latlon_regrid_mod,      only : latlon_regrid_t, latlon_interp_t
-    use grid_field_mod,         only : grid_field_t
+    !use grid_field_mod,         only : grid_field_t
     use domain_mod,             only : domain_t
     use parcomm_mod,            only : parcomm_global
     use halo_factory_mod,       only : create_halo_procedure
+    use grid_field_factory_mod, only : create_grid_field
     use tile_mod,               only : tile_t
 
     class(regrid_t), allocatable, intent(out) :: regrid_out
@@ -23,7 +24,7 @@ subroutine create_latlon_regrid(regrid_out, domain, Nlon, Nlat,interp_type, &
 
     class(latlon_regrid_t), allocatable :: regrid
     type(tile_t) :: stencil_bounds
-    integer(kind=4), parameter :: A_halo_width = 2
+    integer(kind=4), parameter :: A_halo_width = 2, A_ex_halo_width = 8
 
     allocate(regrid)
 
@@ -45,6 +46,7 @@ subroutine create_latlon_regrid(regrid_out, domain, Nlon, Nlat,interp_type, &
                                   stencil_bounds, Nlat, Nlon, interp_type)
     else if(regrid%scalar_grid_type == "A") then
         call create_halo_procedure(regrid%scalar_halo,domain,A_halo_width,"ECS_O")
+        call create_grid_field(regrid%work_field,A_ex_halo_width,0,domain%mesh_o)
         call stencil_bounds%init(is=1-A_halo_width,ie=domain%mesh_o%tile(1)%nx+A_halo_width,&
                                  js=1-A_halo_width,je=domain%mesh_o%tile(1)%ny+A_halo_width,&
                                  ks=domain%mesh_o%tile(1)%ks,ke=domain%mesh_o%tile(1)%ke)
@@ -91,7 +93,8 @@ subroutine create_latlon_interp(interp,domain,mesh,stencil_bounds,Nlat,Nlon,inte
         interp%stencil_width = 4
     case default
         call parcomm_global%abort("regrid_factory_mod, create_latlon_interp"//&
-                                  " - unknown interpolation type: "//interp_type)
+                                  " - unknown interpolation type: "//interp_type //&
+                                  ", use linear or cubic")
     end select
 
     allocate(interp%wx(interp%stencil_width,Nlon,Nlat))

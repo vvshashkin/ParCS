@@ -14,8 +14,9 @@ contains
 
     procedure, public :: assign_s1v1       => assign_grid_field_s1v1 !v = s1*v1
     procedure, public :: assign_s1         => assign_grid_field_s1 !v = s1
+    procedure, public :: assign_v1         => assign_grid_field_v1 !v = v1
     procedure, public :: assign_s1v1s2v2   => assign_grid_field_s1v1s2v2 !v = s1*v1+s2*v2
-    generic :: assign => assign_s1v1, assign_s1, assign_s1v1s2v2
+    generic :: assign => assign_s1v1, assign_s1, assign_v1, assign_s1v1s2v2
 
     procedure, public :: assign_prod => assign_grid_field_prod_s1v1v2
 
@@ -42,10 +43,11 @@ contains
     generic :: update => update_s1v1, update_s1v1s2v2
 
     procedure, public :: assign_s1       => tile_field_assign_s1  !v = s1
+    procedure, public :: assign_v1       => tile_field_assign_v1  !v = v1
     procedure, public :: assign_s1v1     => tile_field_assign_s1v1!v = s1*v1
     procedure, public :: assign_s1v1s2v2 => tile_field_assign_s1v1s2v2!v = s1*v1+s2*v2
     !assign -- generic procedure for v = ... operations
-    generic :: assign => assign_s1v1, assign_s1, assign_s1v1s2v2
+    generic :: assign => assign_s1v1, assign_s1, assign_v1, assign_s1v1s2v2
 
     procedure, public :: assign_prod => tile_field_assign_prod_s1v1v2
 
@@ -255,6 +257,20 @@ subroutine assign_grid_field_s1(this, scalar1, mesh)
 
 end subroutine assign_grid_field_s1
 
+subroutine assign_grid_field_v1(this, v1, mesh)
+
+    class(grid_field_t), intent(inout) :: this
+    class(grid_field_t), intent(in)    :: v1
+    type(mesh_t),        intent(in)    :: mesh
+
+    integer(kind=4) :: t
+
+    do t = mesh%ts, mesh%te
+        call this%tile(t)%assign(v1%tile(t), mesh%tile(t))
+    end do
+
+end subroutine assign_grid_field_v1
+
 subroutine assign_grid_field_s1v1(this, scalar1, f1, mesh)
 
     class(grid_field_t), intent(inout) :: this
@@ -412,6 +428,24 @@ subroutine tile_field_assign_s1(this, scalar1, mesh)
     end do
 
 end subroutine tile_field_assign_s1
+
+subroutine tile_field_assign_v1(this, v1, mesh)
+
+    class(tile_field_t), intent(inout) :: this
+    class(tile_field_t),  intent(in)   :: v1
+    type(tile_mesh_t),   intent(in)    :: mesh
+
+    integer(kind=4) :: k, j, i
+
+    do k = mesh%ks, mesh%ke
+        do j = mesh%js, mesh%je
+            do i = mesh%is, mesh%ie
+                this%p(i,j,k) = v1%p(i,j,k)
+            end do
+        end do
+    end do
+
+end subroutine tile_field_assign_v1
 
 function compute_grid_field_maximum(this, mesh, parcomm) result(maximum_value)
     use parcomm_mod, only : parcomm_t

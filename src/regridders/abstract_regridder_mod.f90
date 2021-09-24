@@ -1,6 +1,7 @@
 module abstract_regrid_mod
 
 use grid_field_mod, only : grid_field_t
+use domain_mod,     only : domain_t
 
 
 implicit none
@@ -16,11 +17,12 @@ end type regrid_t
 
 
 interface
-    subroutine do_regrid_scalar_interface(this,fout,f)
-        import grid_field_t, regrid_t
+    subroutine do_regrid_scalar_interface(this,fout,f,domain)
+        import grid_field_t, regrid_t, domain_t
         class(regrid_t),     intent(inout) :: this
         real(kind=8),        intent(inout) :: fout(:,:,:)
         type(grid_field_t),  intent(in)    :: f
+        type(domain_t),      intent(in)    :: domain
     end subroutine do_regrid_scalar_interface
 
     subroutine do_regrid_vector_interface(this,uout,vout,u,v)
