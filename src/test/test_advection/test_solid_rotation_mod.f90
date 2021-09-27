@@ -10,7 +10,8 @@ use operator_advection_factory_mod, only : create_advection_operator
 use timescheme_mod,                 only : timescheme_t
 use timescheme_factory_mod,         only : create_timescheme
 use outputer_abstract_mod,          only : outputer_t
-use outputer_factory_mod,           only : create_master_paneled_outputer
+use outputer_factory_mod,           only : create_master_paneled_outputer,&
+                                           create_latlon_outputer
 use parcomm_mod,                    only : parcomm_global
 
 use test_fields_mod, only : solid_rotation_t, solid_rotated_scalar_field_t
@@ -54,7 +55,8 @@ subroutine test_solid_rotation()
 
     call create_timescheme(timescheme, state, 'rk4')
 
-    call create_master_paneled_outputer(outputer, "p", domain)
+    !call create_master_paneled_outputer(outputer, "p", domain)
+    call create_latlon_outputer(outputer, 2*N+1, 4*N, "A", domain)
 
     call init_field_generators(rotation_period, rotation_axis_angle)
 
