@@ -118,6 +118,13 @@ $(DEXE)TEST_ADVECTION_MAIN: $(MKDIRS) $(DOBJ)test_advection_main.o \
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_ADVECTION_MAIN
+$(DEXE)TEST_LATLON_OUTPUT: $(MKDIRS) $(DOBJ)test_latlon_output.o \
+	$(DOBJ)avost.o \
+	$(DOBJ)auxhs.o
+	@rm -f $(filter-out $(DOBJ)test_latlon_output.o,$(EXESOBJ))
+	@echo $(LITEXT)
+	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
+EXES := $(EXES) TEST_LATLON_OUTPUT
 $(DEXE)TEST_METRIC_MAIN: $(MKDIRS) $(DOBJ)test_metric_main.o \
 	$(DOBJ)avost.o \
 	$(DOBJ)auxhs.o
@@ -311,10 +318,15 @@ $(DOBJ)metric_factory_mod.o: src/metric/metric_factory_mod.f90 \
 $(DOBJ)outputer_factory_mod.o: src/outputer/outputer_factory_mod.f90 \
 	$(DOBJ)outputer_abstract_mod.o \
 	$(DOBJ)domain_mod.o \
+	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)master_paneled_outputer_mod.o \
 	$(DOBJ)grid_field_factory_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
-	$(DOBJ)tile_mod.o
+	$(DOBJ)tile_mod.o \
+	$(DOBJ)latlon_outputer_mod.o \
+	$(DOBJ)domain_factory_mod.o \
+	$(DOBJ)parcomm_factory_mod.o \
+	$(DOBJ)regrid_factory_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -324,7 +336,18 @@ $(DOBJ)mpi_paneled_outputer_mod.o: src/outputer/mpi_paneled_outputer_mod.f90
 
 $(DOBJ)outputer_abstract_mod.o: src/outputer/outputer_abstract_mod.f90 \
 	$(DOBJ)grid_field_mod.o \
-	$(DOBJ)domain_mod.o
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)parcomm_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)latlon_outputer_mod.o: src/outputer/latlon_outputer_mod.f90 \
+	$(DOBJ)outputer_abstract_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)exchange_abstract_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)tiles_mod.o \
+	$(DOBJ)abstract_regridder_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -437,7 +460,8 @@ $(DOBJ)regrid_to_latlon_mod.o: src/regridders/regrid_to_latlon_mod.f90 \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)halo_mod.o \
-	$(DOBJ)parcomm_mod.o
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)mesh_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -1094,6 +1118,24 @@ $(DOBJ)test_solid_rotation_mod.o: src/test/test_advection/test_solid_rotation_mo
 	$(DOBJ)test_fields_mod.o \
 	$(DOBJ)const_mod.o \
 	$(DOBJ)vec_math_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)test_latlon_output.o: src/test/test_latlon_output/test_latlon_output.f90 \
+	$(DOBJ)test_latlon_output_mod.o \
+	$(DOBJ)parcomm_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)test_latlon_output_mod.o: src/test/test_latlon_output/test_latlon_output_mod.f90 \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)domain_factory_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)grid_field_factory_mod.o \
+	$(DOBJ)outputer_abstract_mod.o \
+	$(DOBJ)outputer_factory_mod.o \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)test_fields_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

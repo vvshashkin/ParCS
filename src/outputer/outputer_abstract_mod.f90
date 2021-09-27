@@ -14,6 +14,7 @@ type, abstract, public :: outputer_t
 contains
 
     procedure(write_proc), deferred :: write
+    procedure, public  :: write_horizontal_vec => write_horizontal_vec
 
 end type outputer_t
 
@@ -30,5 +31,19 @@ abstract interface
 end interface
 
 contains
+
+subroutine write_horizontal_vec(this,u,v,domain,file_name,rec_num)
+
+    use parcomm_mod,  only : parcomm_global
+
+    class(outputer_t),   intent(inout) :: this
+    type(grid_field_t),  intent(inout) :: u, v
+    type(domain_t),      intent(in)    :: domain
+    character(*),        intent(in)    :: file_name
+    integer(kind=4),     intent(in)    :: rec_num
+
+    call parcomm_global%abort("write_horizontal_vector is not implemented for this outputer")
+
+end subroutine write_horizontal_vec
 
 end module outputer_abstract_mod

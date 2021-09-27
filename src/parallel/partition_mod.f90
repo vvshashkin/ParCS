@@ -315,6 +315,14 @@ subroutine get_points_type_tile(this, points_type, tile)
     type(tile_t),              intent(out) :: tile(this%num_panels*this%num_tiles)
 
     select case(points_type)
+    case('o')
+        tile = this%tile_o
+    case('x')
+        tile = this%tile_x
+    case('y')
+        tile = this%tile_y
+    case('xy')
+        tile = this%tile_xy
     case('p')
         tile = this%tile_p
     case('u')
@@ -322,7 +330,7 @@ subroutine get_points_type_tile(this, points_type, tile)
     case('v')
         tile = this%tile_v
     case default
-        call parcomm_global%abort("Wrong points_type in get_points_type_tile")
+        call parcomm_global%abort("Wrong points_type in get_points_type_tile "//points_type)
     end select
 
 end subroutine
@@ -336,6 +344,14 @@ subroutine get_points_type_tiles(this, points_type, tiles)
     type(tiles_t),      intent(out) :: tiles
 
     select case(points_type)
+    case('o')
+        tiles = this%tiles_o
+    case('x')
+        tiles = this%tiles_x
+    case('y')
+        tiles = this%tiles_y
+    case('xy')
+        tiles = this%tiles_xy
     case('p')
         tiles = this%tiles_p
     case('u')
@@ -343,7 +359,7 @@ subroutine get_points_type_tiles(this, points_type, tiles)
     case('v')
         tiles = this%tiles_v
     case default
-        call parcomm_global%abort("Wrong points_type in get_points_type_tiles")
+        call parcomm_global%abort("Wrong points_type in get_points_type_tiles: "//points_type)
     end select
 
 end subroutine

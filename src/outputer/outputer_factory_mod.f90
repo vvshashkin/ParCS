@@ -2,6 +2,7 @@ module outputer_factory_mod
 
 use outputer_abstract_mod, only : outputer_t
 use domain_mod,            only : domain_t
+use parcomm_mod,           only : parcomm_global
 
 implicit none
 
@@ -41,6 +42,82 @@ subroutine create_master_paneled_outputer(outputer, points_type, domain, master_
     call move_alloc(master_outputer, outputer)
 
 end subroutine create_master_paneled_outputer
+
+subroutine create_latlon_outputer(outputer, Nlat, Nlon, scalar_grid_type, domain, master_id)
+
+    use latlon_outputer_mod,         only : latlon_outputer_t
+    use grid_field_factory_mod,      only : create_grid_field_global, &
+                                            create_grid_field
+    use exchange_factory_mod,        only : create_gather_exchange
+    use tile_mod,                    only : tile_t
+    use domain_factory_mod,          only : create_domain
+    use parcomm_mod,                 only : parcomm_t
+    use parcomm_factory_mod,         only : create_group_parcomm
+    use regrid_factory_mod,          only : create_latlon_regrid
+
+    class(outputer_t), allocatable, intent(out) :: outputer
+    integer(kind=4),                intent(in)  :: Nlon, Nlat
+    character(len=*),               intent(in)  :: scalar_grid_type
+    type(domain_t),                 intent(in)  :: domain
+    integer(kind=4),  optional,     intent(in)  :: master_id
+
+    type(latlon_outputer_t), allocatable :: latlon_outputer
+    integer(kind=4) :: i, master_id_loc
+    character(len=:), allocatable :: points_type
+    type(parcomm_t) :: master_parcomm
+
+    master_id_loc = 0
+    if (present(master_id)) master_id_loc = master_id
+
+    allocate(latlon_outputer)
+
+    call create_group_parcomm(master_parcomm, domain%parcomm, [master_id_loc])
+
+    if(domain%parcomm%myid == master_id_loc) then
+        !A - staggering is WORKAROUND
+        call create_domain(latlon_outputer%regrid_domain, "cube", 'A', &
+                           domain%partition%nh, 1, parcomm=master_parcomm)
+
+        call create_latlon_regrid(latlon_outputer%regrid, &
+                                  latlon_outputer%regrid_domain,&
+                                  Nlat=Nlat,Nlon=Nlon,&
+                                  interp_type="cubic",&
+                                  scalar_grid_type=scalar_grid_type)
+
+        if(scalar_grid_type == "A") then
+            call create_grid_field(latlon_outputer%regrid_work, 0, 0, &
+                                   latlon_outputer%regrid_domain%mesh_o)
+        else if(scalar_grid_type == "Ah") then
+            call create_grid_field(latlon_outputer%regrid_work, 0, 0, &
+                                   latlon_outputer%regrid_domain%mesh_xy)
+        end if
+        latlon_outputer%Nlat = Nlat
+        latlon_outputer%Nlon = Nlon
+        allocate(latlon_outputer%buffer(Nlon,Nlat,1))
+    end if
+
+    if(scalar_grid_type == 'A') then
+        latlon_outputer%tiles = domain%partition%tiles_o
+        points_type = "o"
+    else if(scalar_grid_type == 'Ah') then
+        latlon_outputer%tiles = domain%partition%tiles_xy
+        points_type = "xy"
+    else
+        call parcomm_global%abort("latlon outputer supports only A and Ah scalar grids")
+    end if
+
+    if (domain%parcomm%myid == master_id_loc) then
+        call create_grid_field_global(latlon_outputer%exchange_buf, 0, 0,  latlon_outputer%tiles)
+    end if
+
+    latlon_outputer%master_id = master_id_loc
+
+    call create_gather_exchange(latlon_outputer%gather_exch, points_type, &
+                                domain%parcomm, domain%partition, master_id_loc)
+
+    call move_alloc(latlon_outputer, outputer)
+
+end subroutine create_latlon_outputer
 
 
 ! function create_mpi_paneled_outputer(partition) result(outputer)
