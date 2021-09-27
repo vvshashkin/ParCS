@@ -14,7 +14,7 @@ subroutine create_parcomm(comm_w, parcomm)
 
     integer(kind=4) :: ierr
 
-    parcomm%comm_w = mpi_comm_world
+    parcomm%comm_w = comm_w!mpi_comm_world
     parcomm%myid = parcomm%get_mpi_rank()
     parcomm%np   = parcomm%get_mpi_proc_number()
 
