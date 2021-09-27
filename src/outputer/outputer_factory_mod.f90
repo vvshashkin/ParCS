@@ -1,6 +1,6 @@
 module outputer_factory_mod
 
-use outputer_abstract_mod, only : outputer_t
+use outputer_abstract_mod, only : outputer_t, outputer_vector_t
 use domain_mod,            only : domain_t
 use parcomm_mod,           only : parcomm_global
 
@@ -118,6 +118,89 @@ subroutine create_latlon_outputer(outputer, Nlat, Nlon, scalar_grid_type, domain
     call move_alloc(latlon_outputer, outputer)
 
 end subroutine create_latlon_outputer
+
+subroutine create_latlon_vec_outputer(outputer, Nlat, Nlon, staggering, &
+                                      components_type, domain, master_id)
+
+    use latlon_outputer_mod,         only : latlon_vec_outputer_t
+    use grid_field_factory_mod,      only : create_grid_field_global, &
+                                            create_grid_field
+    use exchange_factory_mod,        only : create_gather_exchange
+    use tile_mod,                    only : tile_t
+    use domain_factory_mod,          only : create_domain
+    use parcomm_mod,                 only : parcomm_t
+    use parcomm_factory_mod,         only : create_group_parcomm
+    use regrid_factory_mod,          only : create_latlon_vector_regrid
+
+    class(outputer_vector_t), allocatable, intent(out) :: outputer
+    integer(kind=4),                       intent(in)  :: Nlon, Nlat
+    character(len=*),                      intent(in)  :: staggering
+    character(len=*),                      intent(in)  :: components_type
+    type(domain_t),                        intent(in)  :: domain
+    integer(kind=4),  optional,            intent(in)  :: master_id
+
+    type(latlon_vec_outputer_t), allocatable :: latlon_vec_outputer
+    integer(kind=4) :: i, master_id_loc
+    type(parcomm_t) :: master_parcomm
+
+    master_id_loc = 0
+    if (present(master_id)) master_id_loc = master_id
+
+    allocate(latlon_vec_outputer)
+
+    call create_group_parcomm(master_parcomm, domain%parcomm, [master_id_loc])
+
+    if(domain%parcomm%myid == master_id_loc) then
+        call create_domain(latlon_vec_outputer%regrid_domain, "cube", staggering, &
+                           domain%partition%nh, nz=1, parcomm=master_parcomm)
+
+        call create_latlon_vector_regrid(latlon_vec_outputer%regrid, &
+                                         latlon_vec_outputer%regrid_domain,&
+                                         Nlat=Nlat,Nlon=Nlon,&
+                                         interp_type="cubic",&
+                                         vector_grid_type=staggering, &
+                                         components_type=components_type)
+
+        call create_grid_field(latlon_vec_outputer%regrid_work_u, 0, 0, &
+                               latlon_vec_outputer%regrid_domain%mesh_u)
+        call create_grid_field(latlon_vec_outputer%regrid_work_v, 0, 0, &
+                               latlon_vec_outputer%regrid_domain%mesh_v)
+
+        latlon_vec_outputer%Nlat = Nlat
+        latlon_vec_outputer%Nlon = Nlon
+        allocate(latlon_vec_outputer%ulatlon(Nlon,Nlat,1))
+        allocate(latlon_vec_outputer%vlatlon(Nlon,Nlat,1))
+    end if
+
+    latlon_vec_outputer%tiles_u = domain%partition%tiles_u
+    latlon_vec_outputer%tiles_v = domain%partition%tiles_v
+
+    if (domain%parcomm%myid == master_id_loc) then
+        call create_grid_field_global(latlon_vec_outputer%exchange_buf_u, 0, 0, &
+                                      latlon_vec_outputer%tiles_u)
+        if(staggering == "A" .or. &
+           staggering == "Ah") then
+            latlon_vec_outputer%exchange_buf_v = latlon_vec_outputer%exchange_buf_u
+        else
+            call create_grid_field_global(latlon_vec_outputer%exchange_buf_v, 0, 0,&
+                                          latlon_vec_outputer%tiles_v)
+        end if
+    end if
+
+    latlon_vec_outputer%master_id = master_id_loc
+
+    call create_gather_exchange(latlon_vec_outputer%gather_exch_u, "u", &
+                                domain%parcomm, domain%partition, master_id_loc)
+    if(staggering == "A" .or. staggering == "Ah") then
+        latlon_vec_outputer%gather_exch_v = latlon_vec_outputer%gather_exch_u
+    else
+        call create_gather_exchange(latlon_vec_outputer%gather_exch_v, "v", &
+                                    domain%parcomm, domain%partition, master_id_loc)
+    end if
+
+    call move_alloc(latlon_vec_outputer, outputer)
+
+end subroutine create_latlon_vec_outputer
 
 
 ! function create_mpi_paneled_outputer(partition) result(outputer)

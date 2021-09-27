@@ -336,8 +336,7 @@ $(DOBJ)mpi_paneled_outputer_mod.o: src/outputer/mpi_paneled_outputer_mod.f90
 
 $(DOBJ)outputer_abstract_mod.o: src/outputer/outputer_abstract_mod.f90 \
 	$(DOBJ)grid_field_mod.o \
-	$(DOBJ)domain_mod.o \
-	$(DOBJ)parcomm_mod.o
+	$(DOBJ)domain_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
