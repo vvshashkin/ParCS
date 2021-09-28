@@ -539,7 +539,9 @@ $(DOBJ)massflux_factory_mod.o: src/differential_operators/massflux_factory_mod.f
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)abstract_massflux_mod.o \
 	$(DOBJ)massflux_colocated_mod.o \
-	$(DOBJ)parcomm_mod.o
+	$(DOBJ)massflux_cgrid_mod.o \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)halo_factory_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -690,6 +692,15 @@ $(DOBJ)grad_contra_c2_ecs_mod.o: src/differential_operators/grad_contra_c2_ecs_m
 
 $(DOBJ)sbp_mod.o: src/differential_operators/sbp_mod.f90 \
 	$(DOBJ)parcomm_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)massflux_cgrid_mod.o: src/differential_operators/massflux_Cgrid_mod.f90 \
+	$(DOBJ)abstract_massflux_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)halo_mod.o \
+	$(DOBJ)mesh_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

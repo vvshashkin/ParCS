@@ -45,7 +45,7 @@ subroutine test_solid_rotation()
     real(kind=8)    :: time, l2err
     integer(kind=4) :: it
 
-    call create_domain(domain, "cube", "Ah", N, nz)
+    call create_domain(domain, "cube", "C", N, nz)
 
     !WORKAROUND
     if (parcomm_global%myid==0) print*, "CFL = ", real(dt*2*pi/rotation_period/(2*pi/4/N),4)
@@ -53,12 +53,15 @@ subroutine test_solid_rotation()
     call create_stvec_advection(state,     domain, halo_width, 0)
     call create_stvec_advection(state_err, domain,          0, 0)
 
-    call create_advection_operator(operator, "massflux_colocated", "divergence_ah42_sbp", domain)
+    !Ah
+    !call create_advection_operator(operator, "massflux_colocated", "divergence_ah42_sbp", domain)
+    !C
+    call create_advection_operator(operator, "massflux_c4", "divergence_c2", domain)
 
     call create_timescheme(timescheme, state, 'rk4')
 
     !call create_master_paneled_outputer(outputer, "p", domain)
-    call create_latlon_outputer(outputer, 2*N+1, 4*N, "Ah", domain)
+    call create_latlon_outputer(outputer, 2*N+1, 4*N, "A", domain)
 
     call init_field_generators(rotation_period, rotation_axis_angle)
 
