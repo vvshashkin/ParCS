@@ -33,7 +33,7 @@ Err:   0.2589956E+00  0.1399085E+00
  gradient_c_sbp21
 Err:   0.8407566E-01  0.8715783E-01
  gradient_c_sbp42
-Err:   0.9713472E-02  0.5527657E-02
+Err:   0.8510696E-02  0.3931415E-02
  curl_divergence_ah42_sbp
 Err:   0.3421411E-02  0.3440305E-02
  coriolis_A_Ah
