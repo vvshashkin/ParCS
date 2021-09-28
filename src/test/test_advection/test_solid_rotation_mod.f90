@@ -34,7 +34,7 @@ subroutine test_solid_rotation()
     integer(kind=4), parameter :: N_periods=2
 
     real(kind=8), parameter    :: dt = 0.01_8
-    real(kind=8), parameter    :: tau_write = 0.1_8
+    real(kind=8), parameter    :: tau_write = 0.01_8
     integer(kind=4), parameter :: nstep_write = nint(tau_write/dt)
 
     class(stvec_t),      allocatable :: state, state_err
@@ -56,7 +56,8 @@ subroutine test_solid_rotation()
     !Ah
     !call create_advection_operator(operator, "massflux_colocated", "divergence_ah42_sbp", domain)
     !C
-    call create_advection_operator(operator, "massflux_c4", "divergence_c2", domain)
+    !call create_advection_operator(operator, "massflux_c4", "divergence_c2", domain)
+    call create_advection_operator(operator, "massflux_c_sbp42", "divergence_c_sbp42", domain)
 
     call create_timescheme(timescheme, state, 'rk4')
 

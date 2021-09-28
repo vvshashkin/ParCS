@@ -88,21 +88,22 @@ subroutine create_A_vec_default_halo_procedure(halo,domain,halo_width)
     end select
 end
 
-subroutine create_C_vec_default_halo_procedure(halo,domain,halo_width)
+subroutine create_C_vec_default_halo_procedure(halo_out,domain,halo_width)
     use halo_mod,               only : halo_vec_t
     use domain_mod,             only : domain_t
     use halo_C_default_mod,     only : halo_C_vec_default_t
     use exchange_factory_mod,   only : create_symmetric_halo_vec_exchange_C
 
-    class(halo_vec_t), allocatable, intent(out) :: halo
+    class(halo_vec_t), allocatable, intent(out) :: halo_out
     class(domain_t),            intent(in)      :: domain
     integer(kind=4),            intent(in)      :: halo_width
 
+    type(halo_C_vec_default_t), allocatable :: halo
     integer(kind=4) :: t
 
-    allocate(halo_C_vec_default_t :: halo)
-    select type(halo)
-    type is (halo_C_vec_default_t)
+    allocate(halo)
+    !select type(halo)
+    !type is (halo_C_vec_default_t)
         halo%exch_halo = create_symmetric_halo_vec_exchange_C(domain%partition, &
                                        domain%parcomm, domain%topology, halo_width, 'full')
 
@@ -122,7 +123,8 @@ subroutine create_C_vec_default_halo_procedure(halo,domain,halo_width)
             halo%is_top_edge(t)    = (domain%mesh_v%tile(t)%je == domain%partition%nh+1)
         end do
 
-    end select
+    !end select
+    call move_alloc(halo,halo_out)
 end
 
 end module halo_factory_mod

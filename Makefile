@@ -700,7 +700,9 @@ $(DOBJ)massflux_cgrid_mod.o: src/differential_operators/massflux_Cgrid_mod.f90 \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)halo_mod.o \
-	$(DOBJ)mesh_mod.o
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)sbp_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
