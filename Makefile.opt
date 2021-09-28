@@ -529,6 +529,20 @@ $(DOBJ)grad_contra_ah_sbp_mod.o: src/differential_operators/grad_contra_ah_sbp_m
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)abstract_massflux_mod.o: src/differential_operators/abstract_massflux_mod.f90 \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)domain_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)massflux_factory_mod.o: src/differential_operators/massflux_factory_mod.f90 \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)abstract_massflux_mod.o \
+	$(DOBJ)massflux_colocated_mod.o \
+	$(DOBJ)parcomm_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)div_factory_mod.o: src/differential_operators/div_factory_mod.f90 \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)mesh_mod.o \
@@ -565,6 +579,13 @@ $(DOBJ)grad_contra_a2_mod.o: src/differential_operators/grad_contra_a2_mod.f90 \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)mesh_mod.o \
 	$(DOBJ)halo_mod.o \
+	$(DOBJ)domain_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)massflux_colocated_mod.o: src/differential_operators/massflux_colocated_mod.f90 \
+	$(DOBJ)abstract_massflux_mod.o \
+	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)domain_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -1073,6 +1094,7 @@ $(DOBJ)operator_advection_mod.o: src/test/test_advection/operator_advection_mod.
 	$(DOBJ)operator_mod.o \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)abstract_div_mod.o \
+	$(DOBJ)abstract_massflux_mod.o \
 	$(DOBJ)stvec_advection_mod.o \
 	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
@@ -1083,6 +1105,7 @@ $(DOBJ)operator_advection_factory_mod.o: src/test/test_advection/operator_advect
 	$(DOBJ)operator_mod.o \
 	$(DOBJ)operator_advection_mod.o \
 	$(DOBJ)div_factory_mod.o \
+	$(DOBJ)massflux_factory_mod.o \
 	$(DOBJ)grid_field_factory_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@

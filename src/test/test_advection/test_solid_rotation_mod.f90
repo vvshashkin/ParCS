@@ -33,7 +33,9 @@ subroutine test_solid_rotation()
     real(kind=8),    parameter :: rotation_period = 1.0_8, rotation_axis_angle = pi/8
     integer(kind=4), parameter :: N_periods=2
 
-    real(kind=8) :: dt = 0.01_8
+    real(kind=8), parameter    :: dt = 0.01_8
+    real(kind=8), parameter    :: tau_write = 0.1_8
+    integer(kind=4), parameter :: nstep_write = nint(tau_write/dt)
 
     class(stvec_t),      allocatable :: state, state_err
     class(operator_t),   allocatable :: operator
@@ -43,7 +45,7 @@ subroutine test_solid_rotation()
     real(kind=8)    :: time, l2err
     integer(kind=4) :: it
 
-    call create_domain(domain, "cube", "A", N, nz)
+    call create_domain(domain, "cube", "Ah", N, nz)
 
     !WORKAROUND
     if (parcomm_global%myid==0) print*, "CFL = ", real(dt*2*pi/rotation_period/(2*pi/4/N),4)
@@ -51,12 +53,12 @@ subroutine test_solid_rotation()
     call create_stvec_advection(state,     domain, halo_width, 0)
     call create_stvec_advection(state_err, domain,          0, 0)
 
-    call create_advection_operator(operator, "divergence_a2_ecs", domain)
+    call create_advection_operator(operator, "massflux_colocated", "divergence_ah42_sbp", domain)
 
     call create_timescheme(timescheme, state, 'rk4')
 
     !call create_master_paneled_outputer(outputer, "p", domain)
-    call create_latlon_outputer(outputer, 2*N+1, 4*N, "A", domain)
+    call create_latlon_outputer(outputer, 2*N+1, 4*N, "Ah", domain)
 
     call init_field_generators(rotation_period, rotation_axis_angle)
 
@@ -71,17 +73,20 @@ subroutine test_solid_rotation()
         call get_exact_solution(state_err, domain, time)
         call state_err%update(-1.0_8, state, domain)
 
-        select type(state)
-        class is (stvec_advection_t)
-            call outputer%write(state%h, domain, 'h_adv.dat', it)
-        end select
-        select type(state_err)
-        class is (stvec_advection_t)
-            call outputer%write(state_err%h, domain, 'h_adv_err.dat', it)
-            l2err = l2norm(state_err%h, domain%mesh_p, domain%parcomm)
-            if (parcomm_global%myid==0) print*, "Periods = ", real(time ,4), &
-                                                "L2err =", real(l2err,4)
-        end select
+        if(mod(it,nstep_write) == 0) then
+
+            select type(state)
+            class is (stvec_advection_t)
+                call outputer%write(state%h, domain, 'h_adv.dat', int(it/nstep_write))
+            end select
+            select type(state_err)
+            class is (stvec_advection_t)
+                call outputer%write(state_err%h, domain, 'h_adv_err.dat', int(it/nstep_write))
+                l2err = l2norm(state_err%h, domain%mesh_p, domain%parcomm)
+                if (parcomm_global%myid==0) print*, "Periods = ", real(time ,4), &
+                                                    "L2err =", real(l2err,4)
+            end select
+        end if
 
     end do
 
