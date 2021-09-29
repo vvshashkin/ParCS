@@ -8,12 +8,14 @@ module ecs_halo_Ah_vec_sync_mod
 
 use halo_mod,          only : halo_vec_t
 use exchange_halo_mod, only : exchange_t
+use parcomm_mod,       only : parcomm_global
 
 implicit none
 
 type, extends(halo_vec_t) :: ecs_halo_Ah_vec_sync_t
 
     integer(kind=4)                        :: ts, te
+    character(len=:),          allocatable :: components_type
     class(exchange_t),         allocatable :: exch_edges
     type(tile_sync_t),         allocatable :: tile(:)
 
@@ -43,8 +45,17 @@ subroutine sync_ecs_Ah_vector(this,u,v,domain,halo_width)
     call this%exch_edges%do_vec(u,v, domain%parcomm)
 
     do t = this%ts, this%te
-        call syncronize_grad_on_edges(u%tile(t), v%tile(t), this%tile(t), &
-                                      domain%mesh_xy%tile(t))
+        if(this%components_type == "contravariant") then
+            call syncronize_grad_on_edges(u%tile(t), v%tile(t), this%tile(t), &
+                                          domain%mesh_xy%tile(t))
+        else if(this%components_type == "covariant") then
+            call syncronize_grad_on_edges(v%tile(t), u%tile(t), this%tile(t), &
+                                          domain%mesh_xy%tile(t))
+        else
+            call parcomm_global%abort("ecs_Ah vector sync"// &
+                                       " -unknown type of vector components"// &
+                                       this%components_type)
+        end if
     end do
 end subroutine sync_ecs_Ah_vector
 

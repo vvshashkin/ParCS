@@ -46,6 +46,8 @@ subroutine create_vector_halo_procedure(halo,domain,halo_width,halo_type)
         call create_ecs_C_vec_halo_procedure(halo,domain,halo_width)
     elseif(halo_type=="ecs_Ah_vec_sync_contra") then
         call create_ecs_Ah_vec_sync(halo,domain,halo_width,"contravariant")
+    elseif(halo_type=="ecs_Ah_vec_sync_covariant") then
+        call create_ecs_Ah_vec_sync(halo,domain,halo_width,"covariant")
     else
         call domain%parcomm%abort("unknown halo_type in create_vector_halo_procedure: "// &
                                    halo_type)

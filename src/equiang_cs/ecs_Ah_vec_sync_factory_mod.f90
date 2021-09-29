@@ -41,6 +41,8 @@ subroutine create_ecs_Ah_vec_sync(halo_out,domain,halo_width,components_type)
 
     allocate(halo%tile(halo%ts:halo%te))
 
+    halo%components_type = components_type
+
     select case(components_type)
     case("contravariant")
 
@@ -93,7 +95,6 @@ subroutine create_ecs_Ah_vec_sync(halo_out,domain,halo_width,components_type)
     end do
 
     case("covariant")
-    call parcomm_global%print("Ah covariant edge sync is not tested yet")
     do t=domain%mesh_xy%ts, domain%mesh_xy%te
         is = domain%mesh_xy%tile(t)%is
         ie = domain%mesh_xy%tile(t)%ie
