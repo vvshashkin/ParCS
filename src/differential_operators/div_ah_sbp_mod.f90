@@ -7,12 +7,14 @@ use halo_mod,               only : halo_vec_t
 use exchange_abstract_mod,  only : exchange_t
 use parcomm_mod,            only : parcomm_global
 use sbp_mod,                only : sbp_diff
+use halo_mod,               only : halo_t
 
 implicit none
 
 type, public, extends(div_operator_t) :: div_ah_sbp_t
     class(exchange_t), allocatable     :: exch_uv_interior
-    class(exchange_t), allocatable     :: exch_div_edges
+    !class(exchange_t), allocatable     :: exch_div_edges
+    class(halo_t), allocatable         :: sync_edges
     character(:),      allocatable     :: sbp_operator_name
 contains
     procedure, public :: calc_div => calc_div_ah_sbp
@@ -38,10 +40,7 @@ subroutine calc_div_ah_sbp(this, div, u, v, domain)
                               domain%mesh_xy%scale)
     end do
 
-    call this%exch_div_edges%do(div,domain%parcomm)
-    do t = domain%partition%ts, domain%partition%te
-        call sync_div_on_edges(div%tile(t), domain%mesh_xy%tile(t))
-    end do
+    call this%sync_edges%get_halo_scalar(div,domain,1)
 
 end subroutine calc_div_ah_sbp
 
@@ -96,59 +95,5 @@ subroutine calc_div_on_tile(div, u, v, mesh, sbp_oper_name,scale)
     end do
 
 end subroutine calc_div_on_tile
-
-subroutine sync_div_on_edges(div,mesh)
-    use mesh_mod, only : tile_mesh_t
-
-    type(tile_field_t),     intent(inout) :: div
-    type(tile_mesh_t),      intent(in)    :: mesh
-
-    integer(kind=4) :: ks, ke, js, je, is, ie, i, j, k, ip1,im1,jp1,jm1,mx,my
-
-    is = mesh%is; ie = mesh%ie
-    js = mesh%js; je = mesh%je
-    ks = mesh%ks; ke = mesh%ke
-
-    if(is == 1) then
-        do k=ks,ke
-            if(js == 1) then
-                div%p(1,1,k) = (div%p(1,1,k)+div%p(0,1,k)+div%p(1,0,k))/3.0_8
-            end if
-            do j = max(2,js),min(mesh%ny,je)
-                div%p(1,j,k) = 0.5_8*(div%p(0,j,k)+div%p(1,j,k))
-            end do
-            if(je == mesh%ny+1) then
-                div%p(1,je,k) = (div%p(1,je,k)+div%p(0,je,k)+div%p(1,je+1,k))/3.0_8
-            end if
-        end do
-    end if
-    if(ie == mesh%nx+1) then
-        do k=ks,ke
-            if(js == 1) then
-                div%p(ie,1,k) = (div%p(ie,1,k)+div%p(ie+1,1,k)+div%p(ie,0,k))/3.0_8
-            end if
-            do j = max(2,js),min(mesh%ny,je)
-                div%p(ie,j,k) = 0.5_8*(div%p(ie,j,k)+div%p(ie+1,j,k))
-            end do
-            if(je == mesh%ny+1) then
-                div%p(ie,je,k) = (div%p(ie,je,k)+div%p(ie+1,je,k)+div%p(ie,je+1,k))/3.0_8
-            end if
-        end do
-    end if
-    if(js == 1) then
-        do k=ks,ke
-            do i = max(2,is),min(mesh%nx,ie)
-                div%p(i,1,k) = 0.5_8*(div%p(i,1,k)+div%p(i,0,k))
-            end do
-        end do
-    end if
-    if(je == mesh%ny+1) then
-        do k=ks,ke
-            do i = max(2,is),min(mesh%nx,ie)
-                div%p(i,je,k) = 0.5_8*(div%p(i,je,k)+div%p(i,je+1,k))
-            end do
-        end do
-    end if
-end subroutine sync_div_on_edges
 
 end module div_ah_sbp_mod

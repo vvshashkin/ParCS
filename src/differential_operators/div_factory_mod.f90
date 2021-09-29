@@ -124,6 +124,7 @@ function create_div_ah_sbp_operator(domain, div_operator_name) result(div)
 
     use div_ah_sbp_mod,       only : div_ah_sbp_t
     use exchange_factory_mod, only : create_symm_halo_exchange_Ah
+    use halo_factory_mod,     only : create_halo_procedure
 
     type(domain_t),   intent(in)  :: domain
     character(len=*), intent(in)  :: div_operator_name
@@ -147,9 +148,7 @@ function create_div_ah_sbp_operator(domain, div_operator_name) result(div)
     div%exch_uv_interior =  &
                     create_symm_halo_exchange_Ah(domain%partition, domain%parcomm, &
                                                  domain%topology,  halo_width_interior, 'full')
-    div%exch_div_edges =  &
-                    create_symm_halo_exchange_Ah(domain%partition, domain%parcomm, &
-                                                 domain%topology,  halo_width_edges, 'full')
+    call create_halo_procedure(div%sync_edges,domain,1,"Ah_scalar_sync")
 
 end function create_div_ah_sbp_operator
 

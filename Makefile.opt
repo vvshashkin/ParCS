@@ -360,6 +360,14 @@ $(DOBJ)master_paneled_outputer_mod.o: src/outputer/master_paneled_outputer_mod.f
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)halo_ah_scalar_sync_mod.o: src/halo/halo_Ah_scalar_sync_mod.f90 \
+	$(DOBJ)halo_mod.o \
+	$(DOBJ)exchange_halo_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)domain_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)halo_mod.o: src/halo/halo_mod.f90 \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)domain_mod.o
@@ -375,6 +383,7 @@ $(DOBJ)halo_factory_mod.o: src/halo/halo_factory_mod.f90 \
 	$(DOBJ)ecs_ah_vec_sync_factory_mod.o \
 	$(DOBJ)halo_a_default_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
+	$(DOBJ)halo_ah_scalar_sync_mod.o \
 	$(DOBJ)halo_c_default_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -771,6 +780,7 @@ $(DOBJ)ecs_halo_vec_c_mod.o: src/equiang_cs/ecs_halo_vec_c_mod.f90 \
 $(DOBJ)ecs_ah_vec_sync_mod.o: src/equiang_cs/ecs_Ah_vec_sync_mod.f90 \
 	$(DOBJ)halo_mod.o \
 	$(DOBJ)exchange_halo_mod.o \
+	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)mesh_mod.o
@@ -1021,6 +1031,8 @@ $(DOBJ)test_diffops_mod.o: src/test/test_diff_ops/test_diffops_mod.f90 \
 	$(DOBJ)abstract_grad_mod.o \
 	$(DOBJ)curl_factory_mod.o \
 	$(DOBJ)abstract_curl_mod.o \
+	$(DOBJ)halo_mod.o \
+	$(DOBJ)halo_factory_mod.o \
 	$(DOBJ)coriolis_factory_mod.o \
 	$(DOBJ)abstract_coriolis_mod.o \
 	$(DOBJ)exchange_abstract_mod.o \
