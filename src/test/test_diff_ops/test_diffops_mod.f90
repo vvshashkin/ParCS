@@ -20,7 +20,8 @@ end type err_container_t
 
 private
 public :: err_container_t, test_div, test_grad, test_conv, &
-          test_laplace_spectre, test_curl, test_coriolis
+          test_laplace_spectre, test_curl, test_coriolis,  &
+          test_curl_grad
 
 contains
 
@@ -218,6 +219,63 @@ function test_curl(N, div_oper_name, staggering) result(errs)
     errs%values(2) = l2norm(curl, domain%mesh_p, domain%parcomm)
 
 end function test_curl
+
+function test_curl_grad(N, div_oper_name, grad_oper_name, staggering) result(errs)
+
+    use test_fields_mod,   only : set_scalar_test_field, &
+                                  rand_f => random_scalar_field_generator
+
+    use curl_factory_mod,  only : create_curl_operator_div_based
+    use grad_factory_mod,  only : create_grad_operator
+    use abstract_curl_mod, only : curl_operator_t
+    use abstract_grad_mod, only : grad_operator_t
+    use halo_mod,          only : halo_t
+    use halo_factory_mod,  only : create_halo_procedure
+
+    integer(kind=4),  intent(in) :: N
+    character(len=*), intent(in) :: div_oper_name, grad_oper_name, staggering
+    type(err_container_t)        :: errs
+    !locals:
+    integer(kind=4), parameter  :: nz = 3
+    integer(kind=4), parameter  :: ex_halo_width = 8
+    type(grid_field_t)          :: curl
+    type(grid_field_t)          :: gx, gy, f
+    type(domain_t)              :: domain
+    class(curl_operator_t), allocatable :: curl_op
+    class(grad_operator_t), allocatable :: grad_op
+    class(halo_t), allocatable :: Ah_sync
+
+    call create_domain(domain, "cube", staggering, N, nz)
+
+    call create_curl_operator_div_based(curl_op, div_oper_name, domain)
+    grad_op = create_grad_operator(domain, grad_oper_name)
+
+    call create_grid_field(gx, 1, 0, domain%mesh_u)
+    call create_grid_field(gy, 1, 0, domain%mesh_v)
+    call create_grid_field(f, ex_halo_width, 0, domain%mesh_p)
+    call create_grid_field(curl, ex_halo_width, 0, domain%mesh_p)
+
+    call set_scalar_test_field(f,rand_f, domain%mesh_p,0)
+
+    !unify values of random field at boundaries of Ah grid
+    if(staggering=="Ah") then
+        call create_halo_procedure(Ah_sync,domain,1,"Ah_scalar_sync")
+        call Ah_sync%get_halo_scalar(f,domain,1)
+    end if
+
+    allocate(errs%keys(2), errs%values(2))
+    errs%keys(1)%str = "VSH_curl_free_10 linf"
+    errs%keys(2)%str = "VSH_curl_free_10 l2"
+
+    call grad_op%calc_grad(gx,gy,f,domain)
+    call curl_op%calc_curl(curl, gx, gy, domain)
+    call curl%assign(domain%mesh_p%scale, curl, domain%mesh_p)
+
+    errs%values(1) = curl%maxabs(domain%mesh_p, domain%parcomm)
+    errs%values(2) = l2norm(curl, domain%mesh_p, domain%parcomm)
+
+end function test_curl_grad
+
 function test_coriolis(N, coriolis_op_name, staggering) result(errs)
 
     use test_fields_mod,   only : set_vector_test_field, set_scalar_test_field, &

@@ -14,6 +14,7 @@ public :: cross_polar_flow_div_generator_t, cross_polar_flow_div_generator
 public :: random_vector_field_generator_t, random_vector_field_generator
 public :: VSH_curl_free_10_generator_t, VSH_curl_free_10_generator
 public :: zero_scalar_field_generator_t, zero_scalar_field_generator
+public :: random_scalar_field_generator_t, random_scalar_field_generator
 
 public :: gaussian_hill_scalar_field_generator_t, gaussian_hill_scalar_field_generator
 
@@ -41,6 +42,11 @@ type, extends(scalar_field_generator_t) :: xyz_scalar_field_generator_t
 contains
     procedure :: get_scalar_field => generate_xyz_scalar_field
 end type xyz_scalar_field_generator_t
+
+type, extends(scalar_field_generator_t) :: random_scalar_field_generator_t
+contains
+    procedure :: get_scalar_field => generate_random_scalar_field
+end type random_scalar_field_generator_t
 
 type, extends(scalar_field_generator_t) :: gaussian_hill_scalar_field_generator_t
 contains
@@ -109,6 +115,7 @@ type(xyz_grad_generator_t)             :: xyz_grad_generator
 type(cross_polar_flow_generator_t)     :: cross_polar_flow_generator
 type(cross_polar_flow_div_generator_t) :: cross_polar_flow_div_generator
 type(random_vector_field_generator_t)  :: random_vector_field_generator
+type(random_scalar_field_generator_t)  :: random_scalar_field_generator
 type(VSH_curl_free_10_generator_t)     :: VSH_curl_free_10_generator
 type(zero_scalar_field_generator_t)    :: zero_scalar_field_generator
 type(gaussian_hill_scalar_field_generator_t) :: gaussian_hill_scalar_field_generator
@@ -549,4 +556,17 @@ subroutine generate_zero_scalar_field(this, f, npts, nlev, x, y, z)
     end do
 
 end subroutine generate_zero_scalar_field
+
+subroutine generate_random_scalar_field(this, f, npts, nlev, x, y, z)
+
+    class(random_scalar_field_generator_t),  intent(in) :: this
+    integer(kind=4), intent(in)                         :: npts, nlev
+    real(kind=8),    intent(in)                         :: x(npts), y(npts), z(npts)
+    real(kind=8),    intent(out)                        :: f(npts,nlev)
+
+    integer(kind=4) :: i, k
+
+    call random_number(f)
+
+end subroutine generate_random_scalar_field
 end module test_fields_mod
