@@ -29,7 +29,7 @@ function create_grad_operator(domain, grad_operator_name) result(grad)
         grad = create_grad_contra_ah2_operator(domain, grad_operator_name)
     else if(grad_operator_name == 'gradient_ah42_sbp_ecs' .or. &
             grad_operator_name == 'gradient_ah43_sbp_ecs') then
-        grad = create_grad_contra_ah_sbp_operator(domain, grad_operator_name)
+        grad = create_grad_ah_sbp_operator(domain, grad_operator_name)
     else
         call parcomm_global%abort("unknown gradient operator: "//grad_operator_name)
     end if
@@ -194,15 +194,15 @@ function create_grad_contra_ah2_operator(domain, grad_operator_name) result(grad
     end do
 end function create_grad_contra_ah2_operator
 
-function create_grad_contra_ah_sbp_operator(domain, grad_operator_name) result(grad)
+function create_grad_ah_sbp_operator(domain, grad_operator_name) result(grad)
 
-    use grad_contra_ah_sbp_mod,    only : grad_contra_ah_sbp_t
+    use grad_ah_sbp_mod,           only : grad_ah_sbp_t
     use exchange_factory_mod,      only : create_symm_halo_exchange_Ah
     use halo_factory_mod,          only : create_vector_halo_procedure
 
     type(domain_t),   intent(in)  :: domain
     character(len=*), intent(in)  :: grad_operator_name
-    type(grad_contra_ah_sbp_t)    :: grad
+    type(grad_ah_sbp_t)           :: grad
 
     integer(kind=4)               :: halo_width_interior
     integer(kind=4), parameter    :: halo_width_edges=1
@@ -223,10 +223,10 @@ function create_grad_contra_ah_sbp_operator(domain, grad_operator_name) result(g
               create_symm_halo_exchange_Ah(domain%partition, domain%parcomm, &
                                          domain%topology,  halo_width_interior, 'full')
 
-    call create_vector_halo_procedure(grad%sync_edges,domain,0,"ecs_Ah_vec_sync_contra")
+    call create_vector_halo_procedure(grad%sync_edges,domain,0,"ecs_Ah_vec_sync_covariant")
 
     grad%subtype = grad_operator_name
 
-end function create_grad_contra_ah_sbp_operator
+end function create_grad_ah_sbp_operator
 
 end module grad_factory_mod

@@ -1,4 +1,4 @@
-module grad_contra_ah_sbp_mod
+module grad_ah_sbp_mod
 
 use domain_mod,             only : domain_t
 use abstract_grad_mod,      only : grad_operator_t
@@ -12,7 +12,7 @@ implicit none
 
 private
 
-type, public, extends(grad_operator_t) :: grad_contra_ah_sbp_t
+type, public, extends(grad_operator_t) :: grad_ah_sbp_t
     class(exchange_t), allocatable     :: exch_scalar_interior
     character(:),      allocatable     :: subtype
     !syncronize gradient components accross edges:
@@ -20,14 +20,14 @@ type, public, extends(grad_operator_t) :: grad_contra_ah_sbp_t
     class(halo_vec_t),           allocatable :: sync_edges
 contains
     procedure, public :: calc_grad => calc_grad_ah_sbp
-end type grad_contra_ah_sbp_t
+end type grad_ah_sbp_t
 
 contains
 
 subroutine calc_grad_ah_sbp(this, gx, gy, f, domain)
-    class(grad_contra_ah_sbp_t),   intent(inout) :: this
-    type(domain_t),                intent(in)    :: domain
-    type(grid_field_t),            intent(inout) :: f
+    class(grad_ah_sbp_t),   intent(inout) :: this
+    type(domain_t),         intent(in)    :: domain
+    type(grid_field_t),     intent(inout) :: f
     !output:
     type(grid_field_t),     intent(inout) :: gx, gy
 
@@ -78,12 +78,12 @@ subroutine calc_grad_on_tile(gx, gy, f, mesh, sbp_oper, scale)
 
         do j=js,je
             do i=is,ie
-                gx%p(i,j,k) = (mesh%Qi(1,i,j)*Dx(i,j) + mesh%Qi(2,i,j)*Dy(i,j))/(hx*scale)
-                gy%p(i,j,k) = (mesh%Qi(3,i,j)*Dy(i,j) + mesh%Qi(2,i,j)*Dx(i,j))/(hx*scale)
+                gx%p(i,j,k) = Dx(i,j) / (hx*scale)!(mesh%Qi(1,i,j)*Dx(i,j) + mesh%Qi(2,i,j)*Dy(i,j))/(hx*scale)
+                gy%p(i,j,k) = Dy(i,j) / (hx*scale)!(mesh%Qi(3,i,j)*Dy(i,j) + mesh%Qi(2,i,j)*Dx(i,j))/(hx*scale)
             end do
         end do
     end do
 
 end subroutine calc_grad_on_tile
 
-end module grad_contra_ah_sbp_mod
+end module grad_ah_sbp_mod
