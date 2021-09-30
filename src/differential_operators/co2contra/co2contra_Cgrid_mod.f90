@@ -6,6 +6,7 @@ use mesh_mod,               only : tile_mesh_t
 use domain_mod,             only : domain_t
 use exchange_abstract_mod,  only : exchange_t
 use parcomm_mod,            only : parcomm_global
+use halo_mod,               only : halo_vec_t
 
 implicit none
 
@@ -15,6 +16,12 @@ type, extends(co2contra_operator_t), public :: co2contra_c_sbp_t
     contains
         procedure :: transform => transform_co2contra_c_sbp
 end type co2contra_c_sbp_t
+
+! type, extends(co2contra_operator_t), public :: co2contra_c_halo_t
+!     class(halo_vec_t), allocatable :: halo
+!     contains
+!         procedure :: transform => transform_co2contra_c_halo
+! end type co2contra_c_halo_t
 
 contains
 
@@ -48,6 +55,28 @@ subroutine transform_co2contra_c_sbp(this, u_contra, v_contra, u_cov, v_cov, dom
         call parcomm_global%abort("unknown co2contra_c_sbp operator "// this%operator_name)
     end select
 end subroutine transform_co2contra_c_sbp
+
+! subroutine transform_co2contra_c_halo(this, u_contra, v_contra, u_cov, v_cov, domain)
+!     class(co2contra_c_halo_t), intent(inout) :: this
+!     type(domain_t),            intent(in)    :: domain
+!     type(grid_field_t),        intent(inout) :: u_cov, v_cov
+!     !output:
+!     type(grid_field_t),        intent(inout) :: u_contra, v_contra
+!
+!     integer(kind=4) :: t
+!
+!   call parcomm_global%abort("this subroutine is not working, no C-halo procedure for covariant vectors")
+!
+!     call this%halo%get_halo_vector(u_cov, v_cov, domain, 1)
+!
+!     do t=domain%mesh_o%ts, domain%mesh_o%te
+!         call transform_co2contra_c_halo_tile(u_contra%tile(t), v_contra%tile(t),&
+!                                               u_cov%tile(t), v_cov%tile(t),      &
+!                                               domain%mesh_u%tile(t), domain%mesh_v%tile(t), &
+!                                               domain%mesh_o%tile(t))
+!     end do
+!
+! end subroutine transform_co2contra_c_halo
 
 subroutine transform_co2contra_c_sbp21_tile(u_contra, v_contra, u_cov, v_cov, mesh_u, mesh_v, mesh_o)
 
@@ -297,5 +326,41 @@ subroutine transform_co2contra_c_sbp42_tile(gx, gy, dx, dy, mesh_x, mesh_y, mesh
     end
 end subroutine transform_co2contra_c_sbp42_tile
 
+! subroutine transform_co2contra_c_halo_tile(u_contra, v_contra, u_cov, v_cov, mesh_u, mesh_v, mesh_o)
+!
+!     type(tile_field_t), intent(in)    :: u_cov, v_cov
+!     type(tile_mesh_t),  intent(in)    :: mesh_u, mesh_v, mesh_o
+!     !output
+!     type(tile_field_t), intent(inout) :: u_contra, v_contra
+!
+!     integer(kind=4) :: i, j, k, is, ie, js, je, ks, ke
+!     real(kind=8)    :: u_at_v, v_at_u
+!
+!     u_contra%p = 0.0
+!     v_contra%p = 0.0
+!
+!     ks = mesh_o%ks; ke = mesh_o%ke
+!
+!     do k = ks, ke
+!         is = mesh_u%is; ie = mesh_u%ie
+!         js = mesh_u%js; je = mesh_u%je
+!         do j = js, je
+!             do i = is, ie
+!                 v_at_u = 0.25_8*(v_cov%p(i,j,k)+v_cov%p(i-1,j,k)+v_cov%p(i,j+1,k)+v_cov%p(i-1,j+1,k))
+!                 u_contra%p(i,j,k) = u_cov%p(i,j,k)!mesh_u%Qi(1,i,j)*u_cov%p(i,j,k)+mesh_u%Qi(2,i,j)*v_at_u
+!             end do
+!         end do
+!
+!         is = mesh_v%is; ie = mesh_v%ie
+!         js = mesh_v%js; je = mesh_v%je
+!         do j = js, je
+!             do i = is, ie
+!                 u_at_v = 0.25_8*(u_cov%p(i,j,k)+u_cov%p(i,j-1,k)+u_cov%p(i+1,j,k)+u_cov%p(i+1,j-1,k))
+!                 v_contra%p(i,j,k) = v_cov%p(i,j,k)!mesh_v%Qi(3,i,j)*v_cov%p(i,j,k)+mesh_v%Qi(2,i,j)*u_at_v
+!             end do
+!         end do
+!     end do
+!
+! end subroutine transform_co2contra_c_halo_tile
 
 end module co2contra_Cgrid_mod

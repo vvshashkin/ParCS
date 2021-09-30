@@ -9,11 +9,11 @@ use exchange_abstract_mod,  only : exchange_t
 
 implicit none
 
-type, public, extends(grad_operator_t) :: grad_contra_c2_ecs_t
+type, public, extends(grad_operator_t) :: grad_c2_ecs_t
     class(halo_t), allocatable :: halo_procedure
 contains
-    procedure, public :: calc_grad => calc_grad_contra_c2_ecs
-end type grad_contra_c2_ecs_t
+    procedure, public :: calc_grad => calc_grad_c2_ecs
+end type grad_c2_ecs_t
 
 type, public, extends(grad_operator_t) :: grad_contra_c2_cons_t
     class(halo_t),     allocatable :: halo_procedure
@@ -30,12 +30,12 @@ end type grad_c_sbp21_t
 
 contains
 
-subroutine calc_grad_contra_c2_ecs(this, gx, gy, f, domain)
-    class(grad_contra_c2_ecs_t), intent(inout) :: this
-    type(grid_field_t),          intent(inout) :: gx
-    type(grid_field_t),          intent(inout) :: gy
-    type(grid_field_t),          intent(inout) :: f
-    type(domain_t),              intent(in)    :: domain
+subroutine calc_grad_c2_ecs(this, gx, gy, f, domain)
+    class(grad_c2_ecs_t),  intent(inout) :: this
+    type(grid_field_t),    intent(inout) :: gx
+    type(grid_field_t),    intent(inout) :: gy
+    type(grid_field_t),    intent(inout) :: f
+    type(domain_t),        intent(in)    :: domain
 
     integer(kind=4) :: t
     integer(kind=4), parameter :: halo_width=1
@@ -48,7 +48,7 @@ subroutine calc_grad_contra_c2_ecs(this, gx, gy, f, domain)
                                domain%mesh_o%tile(t),domain%mesh_o%scale)
     end do
 
-end subroutine calc_grad_contra_c2_ecs
+end subroutine calc_grad_c2_ecs
 
 subroutine calc_grad_contra_c2_cons(this, gx, gy, f, domain)
     class(grad_contra_c2_cons_t), intent(inout) :: this
@@ -129,29 +129,16 @@ subroutine calc_grad_on_tile(gx, gy, f, mesh_x, mesh_y, mesh_o, scale)
 
         do j= jsx, jex
             do i= isx, iex
-                fdx(i,j) = (f%p(i,j,k)-f%p(i-1,j,k))/(hx*scale)
+                gx%p(i,j,k) = (f%p(i,j,k)-f%p(i-1,j,k))/(hx*scale)
             end do
         end do
 
         do j= jsy, jey
             do i= isy, iey
-                fdy(i,j) = (f%p(i,j,k)-f%p(i,j-1,k))/(hx*scale)
+                gy%p(i,j,k) = (f%p(i,j,k)-f%p(i,j-1,k))/(hx*scale)
             end do
         end do
 
-        !transform to contravariant components
-        do j=jsu,jeu
-            do i=isu,ieu
-                fdy_at_x = 0.25_8*(fdy(i,j)+fdy(i-1,j)+fdy(i,j+1)+fdy(i-1,j+1))
-                gx%p(i,j,k) = mesh_x%Qi(1,i,j)*fdx(i,j) + mesh_x%Qi(2,i,j)*fdy_at_x
-            end do
-        end do
-        do j=jsv,jev
-            do i=isv,iev
-                fdx_at_y = 0.25_8*(fdx(i,j)+fdx(i+1,j)+fdx(i,j-1)+fdx(i+1,j-1))
-                gy%p(i,j,k) = mesh_y%Qi(3,i,j)*fdy(i,j) + mesh_y%Qi(2,i,j)*fdx_at_y
-            end do
-        end do
     end do
 
 end subroutine calc_grad_on_tile
