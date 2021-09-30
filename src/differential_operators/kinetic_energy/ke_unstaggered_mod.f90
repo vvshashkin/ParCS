@@ -1,12 +1,13 @@
 module ke_unstaggered_mod
 
+use abstract_KE_mod, only : KE_operator_t
 use grid_field_mod,  only : grid_field_t, tile_field_t
 use domain_mod,      only : domain_t
 use mesh_mod,        only : tile_mesh_t
 
 implicit none
 
-type, public :: ke_unstaggered_t
+type, public, extends(KE_operator_t) :: ke_unstaggered_t
 contains
     procedure, public :: calc_KE
 end type ke_unstaggered_t

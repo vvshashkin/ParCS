@@ -16,7 +16,7 @@ subroutine create_KE_operator(ke_operator, ke_operator_name, domain)
     character(len=*),                  intent(in)  :: ke_operator_name
     type(domain_t),                    intent(in)  :: domain
 
-    select case(coriolis_op_name)
+    select case(ke_operator_name)
 
     case("KE_A_Ah")
         ke_operator = ke_unstaggered_t()

@@ -9,7 +9,7 @@ use abstract_div_mod,      only : div_operator_t
 use abstract_grad_mod,     only : grad_operator_t
 use abstract_coriolis_mod, only : coriolis_operator_t
 use abstract_curl_mod,     only : curl_operator_t
-use KE_mod,                only : KE_operator_t
+use abstract_KE_mod,       only : KE_operator_t
 use abstract_massflux_mod, only : massflux_operator_t
 
 use stvec_swm_mod, only : stvec_swm_t
