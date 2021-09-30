@@ -19,7 +19,7 @@ function create_grad_operator(domain, grad_operator_name) result(grad)
     else if(grad_operator_name == 'gradient_c2_cons') then
         grad = create_grad_contra_c2_cons_operator(domain)
     else if(grad_operator_name == 'gradient_c_sbp21') then
-        grad = create_grad_contra_c_sbp21_operator(domain)
+        grad = create_grad_c_sbp21_operator(domain)
     else if(grad_operator_name == 'gradient_c_sbp42') then
         grad = create_grad_contra_c_sbp42_operator(domain)
     else if(grad_operator_name == 'gradient_a2_ecs' .or. &
@@ -49,19 +49,19 @@ function create_grad_contra_c2_ecs_operator(domain) result(grad)
 
 end function create_grad_contra_c2_ecs_operator
 
-function create_grad_contra_c_sbp21_operator(domain) result(grad)
+function create_grad_c_sbp21_operator(domain) result(grad)
 
-    use grad_contra_c2_ecs_mod,   only : grad_contra_c_sbp21_t
-    use exchange_factory_mod,     only : create_symm_halo_exchange_A
+    use grad_contra_c2_ecs_mod,       only : grad_c_sbp21_t
+    use exchange_factory_mod,  only : create_symm_halo_exchange_A
 
     type(domain_t),   intent(in)      :: domain
-    type(grad_contra_c_sbp21_t)       :: grad
+    type(grad_c_sbp21_t)       :: grad
 
     integer(kind=4), parameter :: halo_width=2
 
     grad%exch_halo = create_symm_halo_exchange_A( &
                     domain%partition, domain%parcomm, domain%topology,  halo_width, 'full')
-end function create_grad_contra_c_sbp21_operator
+end function create_grad_c_sbp21_operator
 
 function create_grad_contra_c_sbp42_operator(domain) result(grad)
 
