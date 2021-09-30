@@ -24,7 +24,7 @@ function create_grad_operator(domain, grad_operator_name) result(grad)
         grad = create_grad_contra_c_sbp42_operator(domain)
     else if(grad_operator_name == 'gradient_a2_ecs' .or. &
             grad_operator_name == 'gradient_a2_cons') then
-        grad = create_grad_contra_a2_operator(domain,grad_operator_name)
+        grad = create_grad_a2_operator(domain,grad_operator_name)
     else if(grad_operator_name == 'gradient_ah2_ecs') then
         grad = create_grad_contra_ah2_operator(domain, grad_operator_name)
     else if(grad_operator_name == 'gradient_ah42_sbp_ecs' .or. &
@@ -101,18 +101,18 @@ function create_grad_contra_c2_cons_operator(domain) result(grad)
 
 end function create_grad_contra_c2_cons_operator
 
-function create_grad_contra_a2_operator(domain, grad_operator_name) result(grad)
+function create_grad_a2_operator(domain, grad_operator_name) result(grad)
 
-    use grad_contra_a2_mod, only : grad_contra_a2_t
+    use grad_a2_mod,        only : grad_a2_t
     use halo_factory_mod,   only : create_halo_procedure
 
     type(domain_t),   intent(in)  :: domain
     character(len=*), intent(in)  :: grad_operator_name
-    type(grad_contra_a2_t) :: grad
+    type(grad_a2_t)               :: grad
 
     integer(kind=4), parameter :: ecs_halo_width=2, default_halo_width=1
 
-    grad = grad_contra_a2_t()
+    grad = grad_a2_t()
     if(grad_operator_name=="gradient_a2_ecs") then
         call create_halo_procedure(grad%halo_procedure,domain,ecs_halo_width,"ECS_O")
     else if(grad_operator_name=="gradient_a2_cons") then
@@ -122,7 +122,7 @@ function create_grad_contra_a2_operator(domain, grad_operator_name) result(grad)
                                   "unknown gradient_a2 subtype: "// grad_operator_name)
     end if
 
-end function create_grad_contra_a2_operator
+end function create_grad_a2_operator
 
 function create_grad_contra_ah2_operator(domain, grad_operator_name) result(grad)
 

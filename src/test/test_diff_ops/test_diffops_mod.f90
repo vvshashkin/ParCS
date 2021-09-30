@@ -155,8 +155,8 @@ type(err_container_t) function test_grad(N,grad_oper_name,staggering) result(err
     call create_grid_field(f, ex_halo_width, 0, domain%mesh_p)
 
     call set_scalar_test_field(f,xyz_f, domain%mesh_p,0)
-    call set_vector_test_field(gx_true, gy_true, xyz_grad, domain%mesh_u, domain%mesh_v, 0, "contravariant")
-    !call set_vector_test_field(gx_true, gy_true, xyz_grad, domain%mesh_u, domain%mesh_v, 0, "covariant")
+    !call set_vector_test_field(gx_true, gy_true, xyz_grad, domain%mesh_u, domain%mesh_v, 0, "contravariant")
+    call set_vector_test_field(gx_true, gy_true, xyz_grad, domain%mesh_u, domain%mesh_v, 0, "covariant")
 
     grad_op = create_grad_operator(domain, grad_oper_name)
     call grad_op%calc_grad(gx,gy,f,domain)
