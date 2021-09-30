@@ -69,42 +69,42 @@ call init_global_parallel_enviroment()
 !     print "(A,4E15.7)", "Err: ", errs%values
 ! end if
 !
-errs = test_grad(N=32,grad_oper_name="gradient_a2_ecs",staggering="A")
-if(parcomm_global%myid == 0) then
-    print *, "gradient_a2_ecs"
-    print "(A,4E15.7)", "Err: ", errs%values
-end if
-
-errs = test_grad(N=32,grad_oper_name="gradient_a2_cons",staggering="A")
-if(parcomm_global%myid == 0) then
-    print *, "gradient_a2_cons"
-    print "(A,4E15.7)", "Err: ", errs%values
-end if
-
-errs = test_grad(N=32,grad_oper_name="gradient_ah2_ecs",staggering="Ah")
-if(parcomm_global%myid == 0) then
-    print *, "gradient_ah2_ecs"
-    print "(A,4E15.7)", "Err: ", errs%values
-end if
-
-errs = test_grad(N=32,grad_oper_name="gradient_ah42_sbp_ecs",staggering="Ah")
-if(parcomm_global%myid == 0) then
-    print *, "gradient_ah42_sbp_ecs"
-    print "(A,4E15.7)", "Err: ", errs%values
-end if
-
-errs = test_grad(N=32,grad_oper_name="gradient_ah43_sbp_ecs",staggering="Ah")
-if(parcomm_global%myid == 0) then
-    print *, "gradient_ah43_sbp_ecs"
-    print "(A,4E15.7)", "Err: ", errs%values
-end if
+! errs = test_grad(N=32,grad_oper_name="gradient_a2_ecs",staggering="A")
+! if(parcomm_global%myid == 0) then
+!     print *, "gradient_a2_ecs"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+!
+! errs = test_grad(N=32,grad_oper_name="gradient_a2_cons",staggering="A")
+! if(parcomm_global%myid == 0) then
+!     print *, "gradient_a2_cons"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+!
+! errs = test_grad(N=32,grad_oper_name="gradient_ah21_sbp_ecs",staggering="Ah")
+! if(parcomm_global%myid == 0) then
+!     print *, "gradient_ah21_ecs"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+!
+! errs = test_grad(N=32,grad_oper_name="gradient_ah42_sbp_ecs",staggering="Ah")
+! if(parcomm_global%myid == 0) then
+!     print *, "gradient_ah42_sbp_ecs"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+!
+! errs = test_grad(N=32,grad_oper_name="gradient_ah43_sbp_ecs",staggering="Ah")
+! if(parcomm_global%myid == 0) then
+!     print *, "gradient_ah43_sbp_ecs"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
 
 ! errs = test_grad(N=32,grad_oper_name="gradient_c2_ecs",staggering="C")
 ! if(parcomm_global%myid == 0) then
 !     print *, "gradient_c2_ecs"
 !     print "(A,4E15.7)", "Err: ", errs%values
 ! end if
-!
+
 ! errs = test_grad(N=32,grad_oper_name="gradient_c2_cons",staggering="C")
 ! if(parcomm_global%myid == 0) then
 !     print *, "gradient_c2_cons"
@@ -116,13 +116,13 @@ end if
 !     print *, "gradient_c_sbp21"
 !     print "(A,4E15.7)", "Err: ", errs%values
 ! end if
-
+!
 ! errs = test_grad(N=32,grad_oper_name="gradient_c_sbp42",staggering="C")
 ! if(parcomm_global%myid == 0) then
 !     print *, "gradient_c_sbp42"
 !     print "(A,4E15.7)", "Err: ", errs%values
 ! end if
-!
+
 ! errs = test_curl(N=32,div_oper_name="divergence_ah42_sbp",staggering="Ah")
 ! if(parcomm_global%myid == 0) then
 !     print *, "curl_divergence_ah42_sbp"
@@ -135,7 +135,7 @@ end if
 !     print "(A,4E15.7)", "Err: ", errs%values
 ! end if
 !
-! 
+!
 ! errs = test_co2contra(N=32,co2contra_oper_name="co2contra_colocated",staggering="A")
 ! if(parcomm_global%myid == 0) then
 !     print *, "co2contra_colocated, A-grid"
@@ -147,6 +147,18 @@ end if
 !     print *, "co2contra_colocated, Ah-grid"
 !     print "(A,4E15.7)", "Err: ", errs%values
 ! end if
+
+! errs = test_co2contra(N=32,co2contra_oper_name="co2contra_c_sbp21",staggering="C")
+! if(parcomm_global%myid == 0) then
+!     print *, "co2contra c sbp21, C-grid"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+!
+errs = test_co2contra(N=32,co2contra_oper_name="co2contra_c_sbp42",staggering="C")
+if(parcomm_global%myid == 0) then
+    print *, "co2contra c sbp42, C-grid"
+    print "(A,4E15.7)", "Err: ", errs%values
+end if
 
 ! call test_conv(operator_name="gradient_c_sbp21",staggering="C",Ns=Ns)
 ! call test_conv(operator_name="divergence_c_sbp21",staggering="C",Ns=Ns)

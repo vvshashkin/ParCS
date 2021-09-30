@@ -16,8 +16,8 @@ function create_grad_operator(domain, grad_operator_name) result(grad)
 
     if(grad_operator_name == 'gradient_c2_ecs') then
         grad = create_grad_c2_ecs_operator(domain)
-    else if(grad_operator_name == 'gradient_c2_cons') then
-        grad = create_grad_contra_c2_cons_operator(domain)
+    ! else if(grad_operator_name == 'gradient_c2_cons') then
+    !     grad = create_grad_contra_c2_cons_operator(domain)
     else if(grad_operator_name == 'gradient_c_sbp21') then
         grad = create_grad_c_sbp21_operator(domain)
     else if(grad_operator_name == 'gradient_c_sbp42') then
@@ -36,7 +36,7 @@ end
 
 function create_grad_c2_ecs_operator(domain) result(grad)
 
-    use grad_contra_c2_ecs_mod, only : grad_c2_ecs_t
+    use grad_c2_ecs_mod, only : grad_c2_ecs_t
     use halo_factory_mod,       only : create_halo_procedure
 
     type(domain_t),   intent(in)  :: domain
@@ -51,7 +51,7 @@ end function create_grad_c2_ecs_operator
 
 function create_grad_c_sbp21_operator(domain) result(grad)
 
-    use grad_contra_c2_ecs_mod,       only : grad_c_sbp21_t
+    use grad_c2_ecs_mod,       only : grad_c_sbp21_t
     use exchange_factory_mod,  only : create_symm_halo_exchange_A
 
     type(domain_t),   intent(in)      :: domain
@@ -80,21 +80,21 @@ function create_grad_c_sbp42_operator(domain) result(grad)
 
 end function create_grad_c_sbp42_operator
 
-function create_grad_contra_c2_cons_operator(domain) result(grad)
-
-    use grad_contra_c2_ecs_mod, only : grad_contra_c2_cons_t
-    use halo_factory_mod,   only : create_halo_procedure, create_vector_halo_procedure
-
-    type(domain_t),   intent(in)  :: domain
-    type(grad_contra_c2_cons_t)   :: grad
-
-    integer(kind=4), parameter :: halo_width=1
-
-    grad = grad_contra_c2_cons_t()
-    call create_halo_procedure(grad%halo_procedure,domain,halo_width,"A_default")
-    call create_vector_halo_procedure(grad%sync_procedure,domain,0,"C_vec_default")
-
-end function create_grad_contra_c2_cons_operator
+! function create_grad_contra_c2_cons_operator(domain) result(grad)
+!
+!     use grad_contra_c2_ecs_mod, only : grad_contra_c2_cons_t
+!     use halo_factory_mod,   only : create_halo_procedure, create_vector_halo_procedure
+!
+!     type(domain_t),   intent(in)  :: domain
+!     type(grad_contra_c2_cons_t)   :: grad
+!
+!     integer(kind=4), parameter :: halo_width=1
+!
+!     grad = grad_contra_c2_cons_t()
+!     call create_halo_procedure(grad%halo_procedure,domain,halo_width,"A_default")
+!     call create_vector_halo_procedure(grad%sync_procedure,domain,0,"C_vec_default")
+!
+! end function create_grad_contra_c2_cons_operator
 
 function create_grad_a2_operator(domain, grad_operator_name) result(grad)
 
@@ -113,7 +113,7 @@ function create_grad_a2_operator(domain, grad_operator_name) result(grad)
     else if(grad_operator_name=="gradient_a2_cons") then
         call create_halo_procedure(grad%halo_procedure,domain,default_halo_width,"A_default")
     else
-        call parcomm_global%abort("grad_factory_mod, create_grad_contra_a2_operator "//&
+        call parcomm_global%abort("grad_factory_mod, create_grad_a2_operator "//&
                                   "unknown gradient_a2 subtype: "// grad_operator_name)
     end if
 

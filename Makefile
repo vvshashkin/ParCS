@@ -551,8 +551,7 @@ $(DOBJ)co2contra_factory_mod.o: src/differential_operators/co2contra/co2contra_f
 	$(DOBJ)co2contra_colocated_mod.o \
 	$(DOBJ)co2contra_cgrid_mod.o \
 	$(DOBJ)parcomm_mod.o \
-	$(DOBJ)exchange_factory_mod.o \
-	$(DOBJ)halo_factory_mod.o
+	$(DOBJ)exchange_factory_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -683,7 +682,7 @@ $(DOBJ)abstract_grad_mod.o: src/differential_operators/gradient/abstract_grad_mo
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
-$(DOBJ)grad_contra_ah_sbp_mod.o: src/differential_operators/gradient/grad_contra_ah_sbp_mod.f90 \
+$(DOBJ)grad_ah_sbp_mod.o: src/differential_operators/gradient/grad_ah_sbp_mod.f90 \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)abstract_grad_mod.o \
 	$(DOBJ)grid_field_mod.o \
@@ -692,6 +691,16 @@ $(DOBJ)grad_contra_ah_sbp_mod.o: src/differential_operators/gradient/grad_contra
 	$(DOBJ)sbp_mod.o \
 	$(DOBJ)halo_mod.o \
 	$(DOBJ)mesh_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)grad_c2_ecs_mod.o: src/differential_operators/gradient/grad_c2_ecs_mod.f90 \
+	$(DOBJ)abstract_grad_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)halo_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)exchange_abstract_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -704,27 +713,17 @@ $(DOBJ)grad_c_sbp42_mod.o: src/differential_operators/gradient/grad_c_sbp42_mod.
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
-$(DOBJ)grad_contra_c2_ecs_mod.o: src/differential_operators/gradient/grad_contra_c2_ecs_mod.f90 \
-	$(DOBJ)abstract_grad_mod.o \
-	$(DOBJ)grid_field_mod.o \
-	$(DOBJ)mesh_mod.o \
-	$(DOBJ)halo_mod.o \
-	$(DOBJ)domain_mod.o \
-	$(DOBJ)exchange_abstract_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
 $(DOBJ)grad_factory_mod.o: src/differential_operators/gradient/grad_factory_mod.f90 \
 	$(DOBJ)abstract_grad_mod.o \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)parcomm_mod.o \
-	$(DOBJ)grad_contra_c2_ecs_mod.o \
+	$(DOBJ)grad_c2_ecs_mod.o \
 	$(DOBJ)halo_factory_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
 	$(DOBJ)grad_c_sbp42_mod.o \
 	$(DOBJ)grid_field_factory_mod.o \
 	$(DOBJ)grad_a2_mod.o \
-	$(DOBJ)grad_contra_ah_sbp_mod.o
+	$(DOBJ)grad_ah_sbp_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
