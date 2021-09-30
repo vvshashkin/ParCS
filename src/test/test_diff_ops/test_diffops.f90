@@ -5,7 +5,7 @@ program test_diffops
 use parcomm_mod,         only : init_global_parallel_enviroment, &
                                 deinit_global_parallel_enviroment, parcomm_global
 use test_diffops_mod, only: err_container_t, test_div, test_grad, test_conv, test_curl, &
-                            test_coriolis, test_curl_grad
+                            test_coriolis, test_curl_grad, test_co2contra
 
 implicit none
 
@@ -81,9 +81,9 @@ call init_global_parallel_enviroment()
 !     print "(A,4E15.7)", "Err: ", errs%values
 ! end if
 !
-! errs = test_grad(N=32,grad_oper_name="gradient_ah2_ecs",staggering="Ah")
+! errs = test_grad(N=128,grad_oper_name="gradient_ah21_sbp_ecs",staggering="Ah")
 ! if(parcomm_global%myid == 0) then
-!     print *, "gradient_ah2_ecs"
+!     print *, "gradient_ah21_ecs"
 !     print "(A,4E15.7)", "Err: ", errs%values
 ! end if
 !
@@ -98,13 +98,13 @@ call init_global_parallel_enviroment()
 !     print *, "gradient_ah43_sbp_ecs"
 !     print "(A,4E15.7)", "Err: ", errs%values
 ! end if
-!
+
 ! errs = test_grad(N=32,grad_oper_name="gradient_c2_ecs",staggering="C")
 ! if(parcomm_global%myid == 0) then
 !     print *, "gradient_c2_ecs"
 !     print "(A,4E15.7)", "Err: ", errs%values
 ! end if
-!
+
 ! errs = test_grad(N=32,grad_oper_name="gradient_c2_cons",staggering="C")
 ! if(parcomm_global%myid == 0) then
 !     print *, "gradient_c2_cons"
@@ -116,13 +116,13 @@ call init_global_parallel_enviroment()
 !     print *, "gradient_c_sbp21"
 !     print "(A,4E15.7)", "Err: ", errs%values
 ! end if
-
+!
 ! errs = test_grad(N=32,grad_oper_name="gradient_c_sbp42",staggering="C")
 ! if(parcomm_global%myid == 0) then
 !     print *, "gradient_c_sbp42"
 !     print "(A,4E15.7)", "Err: ", errs%values
 ! end if
-!
+
 ! errs = test_curl(N=32,div_oper_name="divergence_ah42_sbp",staggering="Ah")
 ! if(parcomm_global%myid == 0) then
 !     print *, "curl_divergence_ah42_sbp"
@@ -135,6 +135,31 @@ call init_global_parallel_enviroment()
 !     print "(A,4E15.7)", "Err: ", errs%values
 ! end if
 !
+!
+! errs = test_co2contra(N=32,co2contra_oper_name="co2contra_colocated",staggering="A")
+! if(parcomm_global%myid == 0) then
+!     print *, "co2contra_colocated, A-grid"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+!
+! errs = test_co2contra(N=32,co2contra_oper_name="co2contra_colocated",staggering="Ah")
+! if(parcomm_global%myid == 0) then
+!     print *, "co2contra_colocated, Ah-grid"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+
+! errs = test_co2contra(N=32,co2contra_oper_name="co2contra_c_sbp21",staggering="C")
+! if(parcomm_global%myid == 0) then
+!     print *, "co2contra c sbp21, C-grid"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+!
+! errs = test_co2contra(N=32,co2contra_oper_name="co2contra_c_sbp42",staggering="C")
+! if(parcomm_global%myid == 0) then
+!     print *, "co2contra c sbp42, C-grid"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+
 ! call test_conv(operator_name="gradient_c_sbp21",staggering="C",Ns=Ns)
 ! call test_conv(operator_name="divergence_c_sbp21",staggering="C",Ns=Ns)
 ! call test_conv(operator_name="gradient_c_sbp42",staggering="C",Ns=Ns)
@@ -145,19 +170,19 @@ call init_global_parallel_enviroment()
 ! call test_conv(operator_name="curl_divergence_ah42_sbp",staggering="Ah",Ns=Ns)
 ! call test_conv(operator_name="curl_divergence_ah43_sbp",staggering="Ah",Ns=Ns)
 
-errs = test_curl_grad(N=32,grad_oper_name="gradient_ah42_sbp_ecs",&
-                           div_oper_name="divergence_ah42_sbp",staggering="Ah")
-if(parcomm_global%myid == 0) then
-    print *, "curl of grad _ah42_sbp_ecs test"
-    print "(A,4E15.7)", "Err: ", errs%values
-end if
-
-errs = test_curl_grad(N=32,grad_oper_name="gradient_ah2_ecs",&
-                           div_oper_name="divergence_ah2",staggering="Ah")
-if(parcomm_global%myid == 0) then
-    print *, "curl of grad _ah2_ecs test"
-    print "(A,4E15.7)", "Err: ", errs%values
-end if
+! errs = test_curl_grad(N=32,grad_oper_name="gradient_ah42_sbp_ecs",&
+!                            div_oper_name="divergence_ah42_sbp",staggering="Ah")
+! if(parcomm_global%myid == 0) then
+!     print *, "curl of grad _ah42_sbp_ecs test"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+!
+! errs = test_curl_grad(N=32,grad_oper_name="gradient_ah2_ecs",&
+!                            div_oper_name="divergence_ah2",staggering="Ah")
+! if(parcomm_global%myid == 0) then
+!     print *, "curl of grad _ah2_ecs test"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
 
 call deinit_global_parallel_enviroment()
 

@@ -1,4 +1,4 @@
-module grad_contra_a2_mod
+module grad_a2_mod
 
 use abstract_grad_mod,  only : grad_operator_t
 use grid_field_mod,     only : grid_field_t, tile_field_t
@@ -8,20 +8,20 @@ use domain_mod,         only : domain_t
 
 implicit none
 
-type, public, extends(grad_operator_t) :: grad_contra_a2_t
+type, public, extends(grad_operator_t) :: grad_a2_t
     class(halo_t), allocatable :: halo_procedure
 contains
-    procedure, public :: calc_grad => calc_grad_contra_a2
-end type grad_contra_a2_t
+    procedure, public :: calc_grad => calc_grad_a2
+end type grad_a2_t
 
 contains
 
-subroutine calc_grad_contra_a2(this, gx, gy, f, domain)
-    class(grad_contra_a2_t), intent(inout) :: this
-    type(grid_field_t),      intent(inout) :: gx
-    type(grid_field_t),      intent(inout) :: gy
-    type(grid_field_t),      intent(inout) :: f
-    type(domain_t),          intent(in)    :: domain
+subroutine calc_grad_a2(this, gx, gy, f, domain)
+    class(grad_a2_t),     intent(inout) :: this
+    type(grid_field_t),   intent(inout) :: gx
+    type(grid_field_t),   intent(inout) :: gy
+    type(grid_field_t),   intent(inout) :: f
+    type(domain_t),       intent(in)    :: domain
 
     integer(kind=4) :: t
     integer(kind=4), parameter :: halo_width=1
@@ -33,7 +33,7 @@ subroutine calc_grad_contra_a2(this, gx, gy, f, domain)
                               domain%mesh_p%scale)
     end do
 
-end subroutine calc_grad_contra_a2
+end subroutine calc_grad_a2
 
 subroutine calc_grad_on_tile(gx, gy, f, mesh, scale)
 
@@ -55,14 +55,17 @@ subroutine calc_grad_on_tile(gx, gy, f, mesh, scale)
     do k = ks, ke
         do j = js, je
             do i = is, ie
-                fdx = 0.5_8*(f%p(i+1,j,k)-f%p(i-1,j,k))/(hx*scale)
-                fdy = 0.5_8*(f%p(i,j+1,k)-f%p(i,j-1,k))/(hx*scale)
-                gx%p(i,j,k) = (mesh%Qi(1,i,j)*fdx + mesh%Qi(2,i,j)*fdy)
-                gy%p(i,j,k) = (mesh%Qi(3,i,j)*fdy + mesh%Qi(2,i,j)*fdx)
+                !Inplace co->contra transform
+                ! fdx = 0.5_8*(f%p(i+1,j,k)-f%p(i-1,j,k))/(hx*scale)
+                ! fdy = 0.5_8*(f%p(i,j+1,k)-f%p(i,j-1,k))/(hx*scale)
+                ! gx%p(i,j,k) = (mesh%Qi(1,i,j)*fdx + mesh%Qi(2,i,j)*fdy)
+                ! gy%p(i,j,k) = (mesh%Qi(3,i,j)*fdy + mesh%Qi(2,i,j)*fdx)
+                gx%p(i,j,k) = 0.5_8*(f%p(i+1,j,k)-f%p(i-1,j,k))/(hx*scale)
+                gy%p(i,j,k) = 0.5_8*(f%p(i,j+1,k)-f%p(i,j-1,k))/(hx*scale)
             end do
         end do
     end do
 
 end subroutine calc_grad_on_tile
 
-end module grad_contra_a2_mod
+end module grad_a2_mod

@@ -7,6 +7,13 @@ implicit none
 private
 public :: sbp_diff, sbp_apply
 
+!Ah 2-1 scheme written as SBP
+real(kind=8), parameter :: Q21(2,1) = reshape( [-1._8, 1._8],  [2,1])
+integer(kind=4), parameter :: lastnonzeroQ21(1) =[2]
+!2-th order diff non-staggered inner stencil and shift
+real(kind=8),    parameter :: Da2_in(3) = [-0.5_8,0._8,0.5_8]
+integer(kind=4), parameter :: Da2_inshift = -1
+
 !boundary block of SBP diff matrix (inv(H)*Q)
 real(kind=8), parameter :: Q42(6,4) = reshape( &
 [-1.4117647058823528_8,   1.7352941176470589_8, -0.2352941176470588_8, -0.08823529411764705_8, 0.0_8,                 0.0_8, &
@@ -51,6 +58,12 @@ subroutine sbp_diff(df,is1,ie1,js1,je1,is,ie,js,je, &
     end if
 
     select case(opername)
+    case ("d21")
+        call sbp_apply(df,is1,ie1,js1,je1,is,ie,js,je, &
+                       f,is0,ie0,js0,je0,nsrc,ntarg,   &
+                       Q21,lastnonzeroQ21,Da2_in,Da2_inshift,-1.0_8, &
+                       direction)
+
     case ("d42")
         call sbp_apply(df,is1,ie1,js1,je1,is,ie,js,je, &
                        f,is0,ie0,js0,je0,nsrc,ntarg,   &
