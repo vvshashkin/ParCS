@@ -21,7 +21,7 @@ end type err_container_t
 private
 public :: err_container_t, test_div, test_grad, test_conv, &
           test_laplace_spectre, test_curl, test_coriolis,  &
-          test_curl_grad
+          test_curl_grad, test_co2contra
 
 contains
 
@@ -178,6 +178,54 @@ type(err_container_t) function test_grad(N,grad_oper_name,staggering) result(err
     !print *, "grad",gy%tile(1)%p(16,27:33,1)
 
 end function test_grad
+
+type(err_container_t) function test_co2contra(N,co2contra_oper_name,staggering) result(errs)
+
+    use test_fields_mod,    only : set_vector_test_field, set_scalar_test_field, &
+                                   vec_field_gen => cross_polar_flow_generator
+
+    use abstract_co2contra_mod,  only : co2contra_operator_t
+    use co2contra_factory_mod,   only : create_co2contra_operator
+
+    integer(kind=4),  intent(in) :: N
+    character(len=*), intent(in) :: co2contra_oper_name, staggering
+    !locals:
+    integer(kind=4), parameter  :: nz = 3
+    integer(kind=4), parameter  :: ex_halo_width = 8
+    type(grid_field_t)          :: u_cov, v_cov, u_test, v_test, u_true, v_true
+    type(domain_t)              :: domain
+    class(co2contra_operator_t), allocatable :: co2contra_op
+
+    call create_domain(domain, "cube", staggering, N, nz)
+    call create_grid_field(u_cov, ex_halo_width, 0, domain%mesh_u)
+    call create_grid_field(v_cov, ex_halo_width, 0, domain%mesh_v)
+    call create_grid_field(u_test, ex_halo_width, 0, domain%mesh_u)
+    call create_grid_field(v_test, ex_halo_width, 0, domain%mesh_v)
+    call create_grid_field(u_true, ex_halo_width, 0, domain%mesh_u)
+    call create_grid_field(v_true, ex_halo_width, 0, domain%mesh_v)
+
+
+    call set_vector_test_field(u_cov, v_cov, vec_field_gen, domain%mesh_u, domain%mesh_v, 0, "covariant")
+    call set_vector_test_field(u_true, v_true, vec_field_gen, domain%mesh_u, domain%mesh_v, 0, "contravariant")
+
+    co2contra_op = create_co2contra_operator(domain, co2contra_oper_name)
+    call co2contra_op%transform(u_test,v_test,u_cov,v_cov,domain)
+
+    allocate(errs%keys(2), errs%values(2))
+    errs%keys(1)%str = "crosspolar linf"
+    errs%keys(2)%str = "crosspolar l2"
+
+
+
+    call u_test%update(-1.0_8, u_true, domain%mesh_u)
+    call v_test%update(-1.0_8, v_true, domain%mesh_v)
+    errs%values(1) = u_test%maxabs(domain%mesh_u, domain%parcomm)  + &
+                     v_test%maxabs(domain%mesh_v, domain%parcomm)
+    errs%values(2) = l2norm(u_test, domain%mesh_u, domain%parcomm) + &
+                     l2norm(v_test, domain%mesh_v, domain%parcomm)
+
+end function test_co2contra
+
 function test_curl(N, div_oper_name, staggering) result(errs)
 
     use test_fields_mod,   only : set_vector_test_field, set_scalar_test_field, &

@@ -364,7 +364,8 @@ $(DOBJ)halo_ah_scalar_sync_mod.o: src/halo/halo_Ah_scalar_sync_mod.f90 \
 	$(DOBJ)halo_mod.o \
 	$(DOBJ)exchange_halo_mod.o \
 	$(DOBJ)grid_field_mod.o \
-	$(DOBJ)domain_mod.o
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)mesh_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -601,6 +602,12 @@ $(DOBJ)massflux_colocated_mod.o: src/differential_operators/massflux_colocated_m
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)abstract_co2contra_mod.o: src/differential_operators/abstract_co2contra_mod.f90 \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)domain_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)coriolis_factory_mod.o: src/differential_operators/coriolis_factory_mod.f90 \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)abstract_coriolis_mod.o \
@@ -699,7 +706,23 @@ $(DOBJ)grad_contra_c2_ecs_mod.o: src/differential_operators/grad_contra_c2_ecs_m
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)co2contra_colocated_mod.o: src/differential_operators/co2contra_colocated_mod.f90 \
+	$(DOBJ)abstract_co2contra_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)mesh_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)sbp_mod.o: src/differential_operators/sbp_mod.f90 \
+	$(DOBJ)parcomm_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)co2contra_factory_mod.o: src/differential_operators/co2contra_factory_mod.f90 \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)abstract_co2contra_mod.o \
+	$(DOBJ)co2contra_colocated_mod.o \
 	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -1029,6 +1052,8 @@ $(DOBJ)test_diffops_mod.o: src/test/test_diff_ops/test_diffops_mod.f90 \
 	$(DOBJ)abstract_div_mod.o \
 	$(DOBJ)grad_factory_mod.o \
 	$(DOBJ)abstract_grad_mod.o \
+	$(DOBJ)abstract_co2contra_mod.o \
+	$(DOBJ)co2contra_factory_mod.o \
 	$(DOBJ)curl_factory_mod.o \
 	$(DOBJ)abstract_curl_mod.o \
 	$(DOBJ)halo_mod.o \
