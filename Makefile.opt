@@ -560,7 +560,9 @@ $(DOBJ)co2contra_cgrid_mod.o: src/differential_operators/co2contra/co2contra_Cgr
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)exchange_abstract_mod.o \
-	$(DOBJ)mesh_mod.o
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)sbp_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -696,8 +698,7 @@ $(DOBJ)grad_contra_c_sbp42_mod.o: src/differential_operators/gradient/grad_contr
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)mesh_mod.o \
 	$(DOBJ)domain_mod.o \
-	$(DOBJ)exchange_abstract_mod.o \
-	$(DOBJ)sbp_mod.o
+	$(DOBJ)exchange_abstract_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
