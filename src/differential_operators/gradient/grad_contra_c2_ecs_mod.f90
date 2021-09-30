@@ -255,7 +255,7 @@ subroutine calc_grad_on_tile_sbp21(gx, gy, f, mesh_x, mesh_y, mesh_o, scale)
     integer(kind=4) :: ks, ke
     integer(kind=4) :: is, ie, js, je
     integer(kind=4) :: nx, ny
-    integer(kind=4) :: i, j, k!, im1, i0, jm1, j0
+    integer(kind=4) :: i, j, k
 
     nx = mesh_o%nx
     ny = mesh_o%ny

@@ -21,7 +21,7 @@ function create_grad_operator(domain, grad_operator_name) result(grad)
     else if(grad_operator_name == 'gradient_c_sbp21') then
         grad = create_grad_c_sbp21_operator(domain)
     else if(grad_operator_name == 'gradient_c_sbp42') then
-        grad = create_grad_contra_c_sbp42_operator(domain)
+        grad = create_grad_c_sbp42_operator(domain)
     else if(grad_operator_name == 'gradient_a2_ecs' .or. &
             grad_operator_name == 'gradient_a2_cons') then
         grad = create_grad_a2_operator(domain,grad_operator_name)
@@ -63,26 +63,22 @@ function create_grad_c_sbp21_operator(domain) result(grad)
                     domain%partition, domain%parcomm, domain%topology,  halo_width, 'full')
 end function create_grad_c_sbp21_operator
 
-function create_grad_contra_c_sbp42_operator(domain) result(grad)
+function create_grad_c_sbp42_operator(domain) result(grad)
 
-    use grad_contra_c_sbp42_mod, only : grad_contra_c_sbp42_t
+    use grad_c_sbp42_mod,        only : grad_c_sbp42_t
     use exchange_factory_mod,    only : create_symm_halo_exchange_A, &
                                         create_symmetric_halo_vec_exchange_C
     use grid_field_factory_mod,  only : create_grid_field
 
     type(domain_t),   intent(in)      :: domain
-    type(grad_contra_c_sbp42_t)       :: grad
+    type(grad_c_sbp42_t)              :: grad
 
     integer(kind=4), parameter :: halo_width=3
 
     grad%exch_f = create_symm_halo_exchange_A( &
                     domain%partition, domain%parcomm, domain%topology,  halo_width, 'cross')
-    grad%exch_covariant = create_symmetric_halo_vec_exchange_C(domain%partition, domain%parcomm, &
-                           domain%topology, halo_width, 'full')
-    call create_grid_field(grad%dx, halo_width+1, 0, domain%mesh_x)
-    call create_grid_field(grad%dy, halo_width+1, 0, domain%mesh_y)
 
-end function create_grad_contra_c_sbp42_operator
+end function create_grad_c_sbp42_operator
 
 function create_grad_contra_c2_cons_operator(domain) result(grad)
 

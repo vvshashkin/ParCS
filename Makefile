@@ -558,10 +558,10 @@ $(DOBJ)co2contra_factory_mod.o: src/differential_operators/co2contra/co2contra_f
 $(DOBJ)co2contra_cgrid_mod.o: src/differential_operators/co2contra/co2contra_Cgrid_mod.f90 \
 	$(DOBJ)abstract_co2contra_mod.o \
 	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)mesh_mod.o \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)exchange_abstract_mod.o \
 	$(DOBJ)parcomm_mod.o \
-	$(DOBJ)mesh_mod.o \
 	$(DOBJ)sbp_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -693,7 +693,7 @@ $(DOBJ)grad_contra_ah_sbp_mod.o: src/differential_operators/gradient/grad_contra
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
-$(DOBJ)grad_contra_c_sbp42_mod.o: src/differential_operators/gradient/grad_contra_c_sbp42_mod.f90 \
+$(DOBJ)grad_c_sbp42_mod.o: src/differential_operators/gradient/grad_c_sbp42_mod.f90 \
 	$(DOBJ)abstract_grad_mod.o \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)mesh_mod.o \
@@ -719,7 +719,7 @@ $(DOBJ)grad_factory_mod.o: src/differential_operators/gradient/grad_factory_mod.
 	$(DOBJ)grad_contra_c2_ecs_mod.o \
 	$(DOBJ)halo_factory_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
-	$(DOBJ)grad_contra_c_sbp42_mod.o \
+	$(DOBJ)grad_c_sbp42_mod.o \
 	$(DOBJ)grid_field_factory_mod.o \
 	$(DOBJ)grad_a2_mod.o \
 	$(DOBJ)grad_contra_ah_sbp_mod.o
