@@ -123,17 +123,23 @@ call init_global_parallel_enviroment()
 !     print "(A,4E15.7)", "Err: ", errs%values
 ! end if
 
-errs = test_curl(N=32,curl_oper_name="curl_divergence_ah2",staggering="Ah")
-if(parcomm_global%myid == 0) then
-    print *, "curl_divergence_ah42_sbp"
-    print "(A,4E15.7)", "Err: ", errs%values
-end if
-
-errs = test_curl(N=32,curl_oper_name="curl_divergence_ah42_sbp",staggering="Ah")
-if(parcomm_global%myid == 0) then
-    print *, "curl_divergence_ah42_sbp"
-    print "(A,4E15.7)", "Err: ", errs%values
-end if
+! errs = test_curl(N=32,curl_oper_name="curl_divergence_ah2",staggering="Ah")
+! if(parcomm_global%myid == 0) then
+!     print *, "curl_divergence_ah42_sbp"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+!
+! errs = test_curl(N=32,curl_oper_name="curl_divergence_ah42_sbp",staggering="Ah")
+! if(parcomm_global%myid == 0) then
+!     print *, "curl_divergence_ah42_sbp"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+!
+! errs = test_curl(N=32,curl_oper_name="curl_c_sbp42",staggering="C")
+! if(parcomm_global%myid == 0) then
+!     print *, "curl_divergence_ah42_sbp"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
 !
 ! errs = test_coriolis(N=16, coriolis_op_name="coriolis_A_Ah", staggering="A")
 ! if (parcomm_global%myid==0) then
@@ -176,12 +182,19 @@ end if
 ! call test_conv(operator_name="curl_divergence_ah42_sbp",staggering="Ah",Ns=Ns)
 ! call test_conv(operator_name="curl_divergence_ah43_sbp",staggering="Ah",Ns=Ns)
 
-! errs = test_curl_grad(N=32,grad_oper_name="gradient_ah42_sbp_ecs",&
-!                            div_oper_name="divergence_ah42_sbp",staggering="Ah")
-! if(parcomm_global%myid == 0) then
-!     print *, "curl of grad _ah42_sbp_ecs test"
-!     print "(A,4E15.7)", "Err: ", errs%values
-! end if
+errs = test_curl_grad(N=32,grad_oper_name="gradient_ah42_sbp_ecs",&
+                           curl_oper_name="curl_divergence_ah42_sbp",staggering="Ah")
+if(parcomm_global%myid == 0) then
+    print *, "curl of grad _ah42_sbp_ecs test"
+    print "(A,4E15.7)", "Err: ", errs%values
+end if
+errs = test_curl_grad(N=32,grad_oper_name="gradient_c_sbp42",&
+                           curl_oper_name="curl_c_sbp42",staggering="C")
+if(parcomm_global%myid == 0) then
+    print *, "curl of grad _c_sbp42_ecs test"
+    print "(A,4E15.7)", "Err: ", errs%values
+end if
+
 !
 ! errs = test_curl_grad(N=32,grad_oper_name="gradient_ah2_ecs",&
 !                            div_oper_name="divergence_ah2",staggering="Ah")

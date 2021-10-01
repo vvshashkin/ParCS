@@ -260,19 +260,21 @@ function test_curl(N, curl_oper_name, staggering) result(errs)
     call set_vector_test_field(u, v, VSH_curl_free_10, domain%mesh_u, domain%mesh_v, &
                                0, "covariant")
     call curl_op%calc_curl(curl, u, v, domain)
-    call curl%assign(domain%mesh_p%scale, curl, domain%mesh_p)
+
+    !WORKAROUND: neew mesh%w here
+    call curl%assign(domain%mesh_p%scale, curl, domain%mesh_xy)
 
     errs%values(1) = curl%maxabs(domain%mesh_p, domain%parcomm)
     errs%values(2) = l2norm(curl, domain%mesh_p, domain%parcomm)
 
 end function test_curl
 
-function test_curl_grad(N, div_oper_name, grad_oper_name, staggering) result(errs)
+function test_curl_grad(N, curl_oper_name, grad_oper_name, staggering) result(errs)
 
     use test_fields_mod,   only : set_scalar_test_field, &
                                   rand_f => random_scalar_field_generator
 
-    use curl_factory_mod,  only : create_curl_operator_div_based
+    use curl_factory_mod,  only : create_curl_operator
     use grad_factory_mod,  only : create_grad_operator
     use abstract_curl_mod, only : curl_operator_t
     use abstract_grad_mod, only : grad_operator_t
@@ -280,7 +282,7 @@ function test_curl_grad(N, div_oper_name, grad_oper_name, staggering) result(err
     use halo_factory_mod,  only : create_halo_procedure
 
     integer(kind=4),  intent(in) :: N
-    character(len=*), intent(in) :: div_oper_name, grad_oper_name, staggering
+    character(len=*), intent(in) :: curl_oper_name, grad_oper_name, staggering
     type(err_container_t)        :: errs
     !locals:
     integer(kind=4), parameter  :: nz = 3
@@ -294,11 +296,11 @@ function test_curl_grad(N, div_oper_name, grad_oper_name, staggering) result(err
 
     call create_domain(domain, "cube", staggering, N, nz)
 
-    call create_curl_operator_div_based(curl_op, div_oper_name, domain)
+    call create_curl_operator(curl_op, curl_oper_name, domain)
     grad_op = create_grad_operator(domain, grad_oper_name)
 
-    call create_grid_field(gx, 1, 0, domain%mesh_u)
-    call create_grid_field(gy, 1, 0, domain%mesh_v)
+    call create_grid_field(gx, ex_halo_width, 0, domain%mesh_u)
+    call create_grid_field(gy, ex_halo_width, 0, domain%mesh_v)
     call create_grid_field(f, ex_halo_width, 0, domain%mesh_p)
     call create_grid_field(curl, ex_halo_width, 0, domain%mesh_p)
 
@@ -311,12 +313,13 @@ function test_curl_grad(N, div_oper_name, grad_oper_name, staggering) result(err
     end if
 
     allocate(errs%keys(2), errs%values(2))
-    errs%keys(1)%str = "VSH_curl_free_10 linf"
-    errs%keys(2)%str = "VSH_curl_free_10 l2"
+    errs%keys(1)%str = "random field linf"
+    errs%keys(2)%str = "random_field l2"
 
     call grad_op%calc_grad(gx,gy,f,domain)
     call curl_op%calc_curl(curl, gx, gy, domain)
-    call curl%assign(domain%mesh_p%scale, curl, domain%mesh_p)
+    !WORKAROUND: neew mesh%w here
+    call curl%assign(domain%mesh_p%scale, curl, domain%mesh_xy)
 
     errs%values(1) = curl%maxabs(domain%mesh_p, domain%parcomm)
     errs%values(2) = l2norm(curl, domain%mesh_p, domain%parcomm)

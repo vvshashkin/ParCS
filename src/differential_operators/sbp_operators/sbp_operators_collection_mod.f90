@@ -86,4 +86,16 @@ real(kind=8), parameter :: W42_staggered_in(4) = [-1._8/16._8, 9._8/16._8, 9._8/
 real(kind=8), parameter :: W42_staggered_i2c_in_shift = -1
 real(kind=8), parameter :: W42_staggered_c2i_in_shift = -2
 
+
+!SBP staggered differences
+real(kind=8), parameter :: D42_staggered_c2i(5,4) = reshape( &
+                           [-2.0_8,       3.0_8,     -1.0_8,       0.0_8,       0.0_8,       &
+                            -1.0_8,       1.0_8,      0.0_8,       0.0_8,       0.0_8,       &
+                             1._8/24._8, -9._8/8._8,  9._8/8._8,  -1._8/24._8,  0.0_8,       &
+                            -1._8/71._8,  6._8/71._8,-83._8/71._8, 81._8/71._8,-3._8/71._8], &
+                            [5,4])
+integer(kind=4), parameter :: D42_staggered_c2i_last_nonzero(4) = [3,2,4,5]
+real(kind=8), parameter :: D42_staggered_in(4) = [1.0_8/24.0_8, -9.0_8/8.0_8, 9.0_8/8.0_8, -1.0/24.0_8]
+real(kind=8), parameter :: D42_staggered_c2i_in_shift = -2
+
 end module sbp_operators_collection_mod

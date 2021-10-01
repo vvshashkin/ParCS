@@ -11,7 +11,9 @@ use sbp_operators_collection_mod, only : Q21, lastnonzeroQ21, Da2_in, Da2_inshif
                                          W42_staggered_c2i_noopt, W42_staggered_c2i_opt1, &
                                          W42_staggered_c2i_opt2, W42_staggered_c2i_last_nonzero, &
                                          W42_staggered_in, W42_staggered_c2i_in_shift, &
-                                         W42_staggered_c2i_in_shift,  W42_staggered_i2c_in_shift
+                                         W42_staggered_c2i_in_shift,  W42_staggered_i2c_in_shift, &
+                                         D42_staggered_c2i, D42_staggered_c2i_last_nonzero, &
+                                         D42_staggered_in, D42_staggered_c2i_in_shift
 
 implicit none
 
@@ -66,6 +68,13 @@ function create_sbp_operator(sbp_operator_name) result(sbp_op)
         sbp_op%in_shift    = W42_staggered_i2c_in_shift
         sbp_op%dnx = -1
         right_side_sign = 1.0_8
+    else if(sbp_operator_name == "D42_staggered_c2i") then
+        sbp_op%W_edge_l    = D42_staggered_c2i
+        sbp_op%edge_last_l = D42_staggered_c2i_last_nonzero
+        sbp_op%W_in        = D42_staggered_in
+        sbp_op%in_shift    = D42_staggered_c2i_in_shift
+        sbp_op%dnx = 1
+        right_side_sign =-1.0_8
     else
         call parcomm_global%abort("sbp_factory_mod, unknown sbp operator name: "// sbp_operator_name)
     end if

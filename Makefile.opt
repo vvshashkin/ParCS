@@ -20,13 +20,20 @@ COTEXT  = "Compiling $(<F)"
 LITEXT  = "Assembling $@"
 
 #building rules
-$(DEXE)TEST_SWM_MAIN: $(MKDIRS) $(DOBJ)test_swm_main.o \
+$(DEXE)RH4_WAVE_MAIN: $(MKDIRS) $(DOBJ)rh4_wave_main.o \
 	$(DOBJ)avost.o \
 	$(DOBJ)auxhs.o
-	@rm -f $(filter-out $(DOBJ)test_swm_main.o,$(EXESOBJ))
+	@rm -f $(filter-out $(DOBJ)rh4_wave_main.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
-EXES := $(EXES) TEST_SWM_MAIN
+EXES := $(EXES) RH4_WAVE_MAIN
+$(DEXE)TS2_MAIN: $(MKDIRS) $(DOBJ)ts2_main.o \
+	$(DOBJ)avost.o \
+	$(DOBJ)auxhs.o
+	@rm -f $(filter-out $(DOBJ)ts2_main.o,$(EXESOBJ))
+	@echo $(LITEXT)
+	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
+EXES := $(EXES) TS2_MAIN
 $(DEXE)TEST_DOMAIN_MAIN: $(MKDIRS) $(DOBJ)test_domain_main.o \
 	$(DOBJ)avost.o \
 	$(DOBJ)auxhs.o
@@ -313,6 +320,12 @@ $(DOBJ)exchange_gather_mod.o: src/parallel/exchange_gather_mod.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)config_metric_mod.o: src/metric/config_metric_mod.f90 \
+	$(DOBJ)config_mod.o \
+	$(DOBJ)parcomm_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)metric_mod.o: src/metric/metric_mod.f90
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -321,6 +334,7 @@ $(DOBJ)metric_factory_mod.o: src/metric/metric_factory_mod.f90 \
 	$(DOBJ)metric_mod.o \
 	$(DOBJ)topology_mod.o \
 	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)config_metric_mod.o \
 	$(DOBJ)ecs_metric_mod.o \
 	$(DOBJ)ecs_metric_factory_mod.o
 	@echo $(COTEXT)
@@ -497,6 +511,7 @@ $(DOBJ)domain_factory_mod.o: src/domain/domain_factory_mod.f90 \
 	$(DOBJ)cubed_sphere_topology_mod.o \
 	$(DOBJ)metric_mod.o \
 	$(DOBJ)metric_factory_mod.o \
+	$(DOBJ)config_domain_mod.o \
 	$(DOBJ)mesh_factory_mod.o \
 	$(DOBJ)parcomm_factory_mod.o \
 	$(DOBJ)parcomm_mod.o
@@ -512,6 +527,13 @@ $(DOBJ)domain_mod.o: src/domain/domain_mod.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)config_domain_mod.o: src/domain/config_domain_mod.f90 \
+	$(DOBJ)config_mod.o \
+	$(DOBJ)config_metric_mod.o \
+	$(DOBJ)parcomm_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)sbp_mod.o: src/differential_operators/sbp_mod.f90 \
 	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
@@ -523,7 +545,19 @@ $(DOBJ)curl_factory_mod.o: src/differential_operators/curl/curl_factory_mod.f90 
 	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)curl_div_based_mod.o \
 	$(DOBJ)div_factory_mod.o \
-	$(DOBJ)grid_field_factory_mod.o
+	$(DOBJ)grid_field_factory_mod.o \
+	$(DOBJ)curl_c_sbp_mod.o \
+	$(DOBJ)sbp_factory_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)curl_c_sbp_mod.o: src/differential_operators/curl/curl_c_sbp_mod.f90 \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)abstract_curl_mod.o \
+	$(DOBJ)sbp_operator_mod.o \
+	$(DOBJ)tile_mod.o \
+	$(DOBJ)mesh_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -798,7 +832,8 @@ $(DOBJ)massflux_cgrid_mod.o: src/differential_operators/massflux/massflux_Cgrid_
 	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)sbp_operator_mod.o \
 	$(DOBJ)mesh_mod.o \
-	$(DOBJ)sbp_mod.o
+	$(DOBJ)sbp_mod.o \
+	$(DOBJ)tile_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -997,6 +1032,7 @@ $(DOBJ)operator_swm_mod.o: src/models/shallow_water/operator/operator_swm_mod.f9
 	$(DOBJ)abstract_curl_mod.o \
 	$(DOBJ)abstract_ke_mod.o \
 	$(DOBJ)abstract_massflux_mod.o \
+	$(DOBJ)abstract_co2contra_mod.o \
 	$(DOBJ)stvec_swm_mod.o \
 	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
@@ -1013,24 +1049,19 @@ $(DOBJ)operator_swm_factory_mod.o: src/models/shallow_water/operator/operator_sw
 	$(DOBJ)coriolis_factory_mod.o \
 	$(DOBJ)ke_factory_mod.o \
 	$(DOBJ)massflux_factory_mod.o \
+	$(DOBJ)co2contra_factory_mod.o \
 	$(DOBJ)grid_field_factory_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)config_swm_mod.o: src/models/shallow_water/config/config_swm_mod.f90 \
 	$(DOBJ)config_mod.o \
-	$(DOBJ)namelist_read_mod.o \
+	$(DOBJ)config_domain_mod.o \
 	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
-$(DOBJ)test_swm_main.o: src/models/shallow_water/test/test_swm/test_swm_main.f90 \
-	$(DOBJ)parcomm_mod.o \
-	$(DOBJ)test_swm_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
-$(DOBJ)test_swm_mod.o: src/models/shallow_water/test/test_swm/test_swm_mod.f90 \
+$(DOBJ)rh4_wave_mod.o: src/models/shallow_water/test/RH4_wave/RH4_wave_mod.f90 \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)domain_factory_mod.o \
 	$(DOBJ)stvec_mod.o \
@@ -1043,7 +1074,52 @@ $(DOBJ)test_swm_mod.o: src/models/shallow_water/test/test_swm/test_swm_mod.f90 \
 	$(DOBJ)outputer_abstract_mod.o \
 	$(DOBJ)outputer_factory_mod.o \
 	$(DOBJ)parcomm_mod.o \
-	$(DOBJ)config_swm_mod.o
+	$(DOBJ)config_swm_mod.o \
+	$(DOBJ)const_mod.o \
+	$(DOBJ)test_fields_mod.o \
+	$(DOBJ)vec_math_mod.o \
+	$(DOBJ)namelist_read_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)rh4_wave_main.o: src/models/shallow_water/test/RH4_wave/RH4_wave_main.f90 \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)rh4_wave_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)ts2_mod.o: src/models/shallow_water/test/ts2/ts2_mod.f90 \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)domain_factory_mod.o \
+	$(DOBJ)stvec_mod.o \
+	$(DOBJ)stvec_swm_mod.o \
+	$(DOBJ)stvec_swm_factory_mod.o \
+	$(DOBJ)operator_mod.o \
+	$(DOBJ)operator_swm_factory_mod.o \
+	$(DOBJ)timescheme_mod.o \
+	$(DOBJ)timescheme_factory_mod.o \
+	$(DOBJ)outputer_abstract_mod.o \
+	$(DOBJ)outputer_factory_mod.o \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)config_swm_mod.o \
+	$(DOBJ)config_ts2_mod.o \
+	$(DOBJ)test_fields_mod.o \
+	$(DOBJ)const_mod.o \
+	$(DOBJ)vec_math_mod.o \
+	$(DOBJ)namelist_read_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)config_ts2_mod.o: src/models/shallow_water/test/ts2/config_ts2_mod.f90 \
+	$(DOBJ)config_mod.o \
+	$(DOBJ)const_mod.o \
+	$(DOBJ)parcomm_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)ts2_main.o: src/models/shallow_water/test/ts2/ts2_main.f90 \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)ts2_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
