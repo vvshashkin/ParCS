@@ -224,7 +224,6 @@ end subroutine calc_c_sbp42_massflux
 
 subroutine calc_c_sbp42_massflux_tile(fx,fy,f,u,v,sbp_interp_h2v,mesh_x,mesh_y, mesh_o)
 
-    use sbp_mod, only : sbp_apply
     use tile_mod,   only : tile_t
 
     use grid_field_mod, only : tile_field_t
