@@ -121,7 +121,7 @@ if(parcomm_global%myid == 0) then
     print "(A,4E15.7)", "Err: ", errs%values
 end if
 
-errs = test_curl(N=32,div_oper_name="divergence_ah42_sbp",staggering="Ah")
+errs = test_curl(N=32,curl_oper_name="curl_divergence_ah42_sbp",staggering="Ah")
 if(parcomm_global%myid == 0) then
     print *, "curl_divergence_ah42_sbp"
     print "(A,4E15.7)", "Err: ", errs%values

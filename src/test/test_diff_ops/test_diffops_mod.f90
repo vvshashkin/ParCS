@@ -225,17 +225,17 @@ type(err_container_t) function test_co2contra(N,co2contra_oper_name,staggering) 
 
 end function test_co2contra
 
-function test_curl(N, div_oper_name, staggering) result(errs)
+function test_curl(N, curl_oper_name, staggering) result(errs)
 
     use test_fields_mod,   only : set_vector_test_field, set_scalar_test_field, &
                                   VSH_curl_free_10 => VSH_curl_free_10_generator, &
                                   zero_field => zero_scalar_field_generator
 
-    use curl_factory_mod,  only : create_curl_operator_div_based
+    use curl_factory_mod,  only : create_curl_operator
     use abstract_curl_mod, only : curl_operator_t
 
     integer(kind=4),  intent(in) :: N
-    character(len=*), intent(in) :: div_oper_name, staggering
+    character(len=*), intent(in) :: curl_oper_name, staggering
     type(err_container_t)        :: errs
     !locals:
     integer(kind=4), parameter  :: nz = 3
@@ -246,7 +246,7 @@ function test_curl(N, div_oper_name, staggering) result(errs)
 
     call create_domain(domain, "cube", staggering, N, nz)
 
-    call create_curl_operator_div_based(curl_op, div_oper_name, domain)
+    call create_curl_operator(curl_op, curl_oper_name, domain)
 
     call create_grid_field(u,         ex_halo_width, 0, domain%mesh_u)
     call create_grid_field(v,         ex_halo_width, 0, domain%mesh_v)

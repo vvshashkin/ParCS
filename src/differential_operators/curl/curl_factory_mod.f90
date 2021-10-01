@@ -8,6 +8,19 @@ implicit none
 
 contains
 
+subroutine create_curl_operator(curl, curl_operator_name, domain)
+
+    class(curl_operator_t), allocatable, intent(out) :: curl
+    character(len=*),                    intent(in)  :: curl_operator_name
+    type(domain_t),                      intent(in)  :: domain
+
+    if(curl_operator_name(1:8) == "curl_div") then
+        call create_curl_operator_div_based(curl, curl_operator_name(6:), domain)
+    else
+        call parcomm_global%abort("unknown curl operator name: "// curl_operator_name)
+    end if
+end subroutine create_curl_operator
+
 subroutine create_curl_operator_div_based(curl, div_operator_name, domain)
 
     use curl_div_based_mod,     only : curl_div_based_t
