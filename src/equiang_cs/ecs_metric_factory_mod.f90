@@ -46,7 +46,7 @@ subroutine create_ecs_metric(metric, topology, sphere_r, sphere_omega, rotation_
     ecs_metric%omega = local_sphere_omega
 
     ecs_metric%rotation_matrix = local_rotation_matrix
-    ecs_metric%rotation_axis = local_rotation_axis
+    ecs_metric%rotation_axis   = local_rotation_axis
 
     select type(topology)
     class is (cubed_sphere_topology_t)

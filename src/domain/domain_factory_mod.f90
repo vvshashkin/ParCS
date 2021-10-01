@@ -4,7 +4,7 @@ use domain_mod,                only : domain_t
 use topology_factory_mod,      only : create_topology
 use cubed_sphere_topology_mod, only : cubed_sphere_topology_t
 use metric_mod,                only : metric_t
-use metric_factory_mod,        only : create_metric
+use metric_factory_mod,        only : create_metric, create_metric_by_config
 use config_domain_mod,         only : config_domain_t
 use mpi
 
@@ -33,7 +33,8 @@ contains
 
         domain%topology = create_topology(config%topology_type)
 
-        call create_metric(domain%metric, domain%topology, config%metric_type)
+        call create_metric_by_config(domain%metric, domain%topology, &
+            config%metric_type, config%config_metric)
 
         domain%horizontal_staggering = config%staggering_type
 

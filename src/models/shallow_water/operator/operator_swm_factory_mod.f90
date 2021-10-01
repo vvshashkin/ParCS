@@ -8,7 +8,7 @@ implicit none
 
 contains
 
-subroutine create_swm_operator(operator, swm_config, domain)
+subroutine create_swm_operator(operator, grav, swm_config, domain)
 
     use operator_swm_mod,       only : operator_swm_t
     use div_factory_mod,        only : create_div_operator
@@ -23,6 +23,7 @@ subroutine create_swm_operator(operator, swm_config, domain)
 
     type(domain_t),                 intent(in)  :: domain
     type(config_swm_t),             intent(in)  :: swm_config
+    real(kind=8),                   intent(in)  :: grav
     class(operator_t), allocatable, intent(out) :: operator
 
     type(operator_swm_t), allocatable :: swm_op
@@ -69,7 +70,8 @@ subroutine create_swm_operator(operator, swm_config, domain)
     call create_grid_field(swm_op%h_surf,    halo_width_xy, 0, domain%mesh_p)
 
     !WORKAROUND
-    swm_op%grav = 1.0_8
+    swm_op%grav = grav
+    !WORKAROUND
     do t = domain%partition%ts, domain%partition%te
         swm_op%h_surf%tile(t)%p = 0.0_8
     end do

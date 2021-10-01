@@ -1,6 +1,7 @@
 module config_domain_mod
 
-use config_mod, only : config_t
+use config_mod,        only : config_t
+use config_metric_mod, only : config_metric_t
 
 implicit none
 
@@ -11,6 +12,8 @@ type, public, extends(config_t) :: config_domain_t
     character(len=:), allocatable :: staggering_type
     character(len=:), allocatable :: topology_type
     character(len=:), allocatable :: metric_type
+
+    type(config_metric_t) :: config_metric
 
 contains
     procedure, public :: parse
@@ -41,6 +44,8 @@ subroutine parse(this, config_string)
     this%staggering_type = trim(staggering_type)
     this%topology_type   = trim(topology_type)
     this%metric_type     = trim(metric_type)
+
+    call this%config_metric%parse(config_string)
 
 end subroutine parse
 
