@@ -27,11 +27,12 @@ type sbp_operator_t
     !do we really need it?
     !procedure, public :: apply_gf_to_gf_mesh    => apply_sbp_gf_to_gf_mesh
     !procedure, public :: apply_gf_to_gf_tile    => apply_sbp_gf_to_gf_tile
+
     !Grid field in -> array out
     procedure, public :: apply_gf_to_array      => apply_sbp_gf_to_array
     !array in -> array out
-    !procedure, public :: apply_array_to_array   => apply_array_to_array
-    generic :: apply => apply_gf_to_array!, apply_array_to_array
+    procedure, public :: apply_array_to_array   => apply_sbp_array_to_array
+    generic :: apply => apply_gf_to_array, apply_array_to_array
 
 end type sbp_operator_t
 
@@ -71,6 +72,44 @@ subroutine apply_sbp_gf_to_array(this, a_out, work_tile, out_tile, &
     end do
 
 end subroutine apply_sbp_gf_to_array
+
+subroutine apply_sbp_array_to_array(this, a_out, work_tile, out_tile, &
+                                      nx_out_grid, direction, a_in, in_tile)
+    class(sbp_operator_t), intent(in) :: this
+    !work_tile = indices where operator action will be calculated
+    !bounding_tile = output arrat bounds
+    type(tile_t),          intent(in) :: work_tile, out_tile
+    integer(kind=4),       intent(in) :: nx_out_grid
+    character(len=*),      intent(in) :: direction
+    type(tile_t),          intent(in) :: in_tile
+    real(kind=8),          intent(in) :: a_in(in_tile%is:in_tile%ie, &
+                                              in_tile%js:in_tile%je, &
+                                              in_tile%ks:in_tile%ke)
+    !output:
+    real(kind=8), intent(out) :: a_out(out_tile%is:out_tile%ie, &
+                                       out_tile%js:out_tile%je, &
+                                       out_tile%ks:out_tile%ke)
+
+
+    integer(kind=4) :: nx_in_grid, k, f_is, f_ie, f_js, f_je
+
+    nx_in_grid = nx_out_grid-this%dnx
+
+    do k=work_tile%ks, work_tile%ke
+        f_is = in_tile%is; f_ie = in_tile%ie
+        f_js = in_tile%js; f_je = in_tile%je
+
+        call sbp_apply(a_out(out_tile%is:out_tile%ie, out_tile%js:out_tile%je, k),&
+                       out_tile%is,  out_tile%ie,  out_tile%js,  out_tile%je,     &
+                       work_tile%is, work_tile%ie, work_tile%js, work_tile%je,    &
+                       a_in(f_is:f_ie,f_js:f_je,k), f_is, f_ie, f_js, f_je,     &
+                       nx_in_grid, nx_out_grid,                                   &
+                       this%W_edge_l, this%edge_last_l,                           &
+                       this%W_edge_r, this%edge_first_shift_r, &
+                       this%W_in, this%in_shift, direction)
+    end do
+
+end subroutine apply_sbp_array_to_array
 
 subroutine sbp_apply(df,is1,ie1,js1,je1,is,ie,js,je,                          &
                      f,is0,ie0,js0,je0,nsrc,ntarg,                            &

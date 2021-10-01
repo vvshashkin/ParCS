@@ -5,7 +5,6 @@ use abstract_grad_mod,      only : grad_operator_t
 use grid_field_mod,         only : grid_field_t, tile_field_t
 use exchange_abstract_mod,  only : exchange_t
 use parcomm_mod,            only : parcomm_global
-use sbp_mod,                only : sbp_diff
 use sbp_operator_mod,       only : sbp_operator_t
 use halo_mod,               only : halo_vec_t
 

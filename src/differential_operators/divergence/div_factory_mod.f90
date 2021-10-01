@@ -125,6 +125,7 @@ function create_div_ah_sbp_operator(domain, div_operator_name) result(div)
     use div_ah_sbp_mod,       only : div_ah_sbp_t
     use exchange_factory_mod, only : create_symm_halo_exchange_Ah
     use halo_factory_mod,     only : create_halo_procedure
+    use sbp_factory_mod,      only : create_sbp_operator
 
     type(domain_t),   intent(in)  :: domain
     character(len=*), intent(in)  :: div_operator_name
@@ -136,10 +137,10 @@ function create_div_ah_sbp_operator(domain, div_operator_name) result(div)
     select case(div_operator_name)
     case ("divergence_ah42_sbp")
         halo_width_interior = 3
-        div%sbp_operator_name="d42"
+        div%sbp_op = create_sbp_operator("d42")
     case ("divergence_ah43_sbp")
         halo_width_interior = 5
-        div%sbp_operator_name="d43"
+        div%sbp_op = create_sbp_operator("d43")
     case default
         call parcomm_global%abort("div_factory_mod, create_div_ah_sbp_operator"// &
                                   " - unknown SBP operator: "//div_operator_name)

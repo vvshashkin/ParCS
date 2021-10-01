@@ -625,7 +625,8 @@ $(DOBJ)div_factory_mod.o: src/differential_operators/divergence/div_factory_mod.
 	$(DOBJ)div_c_sbp42_mod.o \
 	$(DOBJ)div_a2_mod.o \
 	$(DOBJ)div_ah2_mod.o \
-	$(DOBJ)div_ah_sbp_mod.o
+	$(DOBJ)div_ah_sbp_mod.o \
+	$(DOBJ)sbp_factory_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -648,7 +649,9 @@ $(DOBJ)div_ah_sbp_mod.o: src/differential_operators/divergence/div_ah_sbp_mod.f9
 	$(DOBJ)exchange_abstract_mod.o \
 	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)sbp_mod.o \
-	$(DOBJ)mesh_mod.o
+	$(DOBJ)sbp_operator_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)tile_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -702,7 +705,8 @@ $(DOBJ)grad_ah_sbp_mod.o: src/differential_operators/gradient/grad_ah_sbp_mod.f9
 	$(DOBJ)sbp_mod.o \
 	$(DOBJ)sbp_operator_mod.o \
 	$(DOBJ)halo_mod.o \
-	$(DOBJ)mesh_mod.o
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)tile_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
