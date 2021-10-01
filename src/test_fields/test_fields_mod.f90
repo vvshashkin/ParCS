@@ -24,6 +24,7 @@ public :: solid_rotation_t
 public :: solid_rotated_scalar_field_t
 
 public :: ts2_height_generator_t
+public :: rh4_wave_height_generator_t, rh4_wave_wind_generator_t
 
 !!!!!!!!!!!!!Abstract scalar and vector fields generators
 type, public, abstract :: scalar_field_generator_t
@@ -119,6 +120,21 @@ type, extends(scalar_field_generator_t) :: ts2_height_generator_t
 contains
     procedure :: get_scalar_field => generate_ts2_height_field
 end type ts2_height_generator_t
+
+type, extends(scalar_field_generator_t) :: rh4_wave_height_generator_t
+    real(kind=8) :: h_mean = 1.0_8
+    real(kind=8) :: omega  = 1.0_8 !angular velocity of the sphere
+    real(kind=8) :: a      = 1.0_8 !radii of the sphere
+    real(kind=8) :: grav   = 1.0_8 !gravity acceleration
+contains
+    procedure :: get_scalar_field => generate_rh4_wave_height_field
+end type rh4_wave_height_generator_t
+type, extends(vector_field_generator_t) :: rh4_wave_wind_generator_t
+    real(kind=8) :: omega  = 1.0_8 !angular velocity of the sphere
+    real(kind=8) :: a      = 1.0_8 !radii of the sphere
+contains
+    procedure :: get_vector_field => generate_rh4_wave_wind_field
+end type rh4_wave_wind_generator_t
 
 !!!field generator instances
 type(xyz_scalar_field_generator_t)     :: xyz_scalar_field_generator
@@ -581,7 +597,87 @@ subroutine generate_ts2_height_field(this, f, npts, nlev, x, y, z)
     end do
 
 end subroutine generate_ts2_height_field
+subroutine generate_rh4_wave_wind_field(this, vx, vy, vz, npts, nlev, x, y, z)
 
+    use sph_coords_mod, only : rotate_3D_y, cart2sph, sph2cart_vec
+
+    class(rh4_wave_wind_generator_t),         intent(in)  :: this
+    integer(kind=4),                          intent(in)  :: npts, nlev
+    real(kind=8),       dimension(npts),      intent(in)  :: x, y, z
+    real(kind=8),       dimension(npts,nlev), intent(out) :: vx, vy, vz
+
+    integer(kind=4) :: i, k
+    real(kind=8) :: lam, phi, v_lam, v_phi, xn, yn, zn, vxn, vyn, vzn
+    real(kind=8) :: a, omega
+    real(kind=8) :: rW, rK, R
+
+    omega  = this%omega
+    a      = this%a
+
+    rW = 7.848*10.0_8**(-6)
+    rK = 7.848*10.0_8**(-6)
+    R  = 4
+
+    do k = 1, nlev
+        do i=1, npts
+            !translate north pole from [0, pi/2] to [0, pi/2-alpha]
+            ! call rotate_3D_y(x(i), y(i), z(i), -this%alpha, xn, yn, zn)
+            ! call cart2sph(xn, yn, zn, lam, phi)
+
+            call cart2sph(x(i), y(i), z(i), lam, phi)
+
+            v_lam = a*(rW*cos(phi)+ &
+                      +rK*(cos(phi)**(R-1)) &
+                      *(R*sin(phi)**2-cos(phi)**2)*cos(R*lam))
+            v_phi = -a*rK*R*(cos(phi)**(R-1))*sin(phi)*sin(R*lam)
+
+            call sph2cart_vec(lam, phi, v_lam, v_phi, vx(i,k), vy(i,k), vz(i,k))
+        end do
+    end do
+end subroutine generate_rh4_wave_wind_field
+subroutine generate_rh4_wave_height_field(this, f, npts, nlev, x, y, z)
+
+    use sph_coords_mod, only : rotate_3D_y, cart2sph, sph2cart_vec, sph2cart
+
+    class(rh4_wave_height_generator_t), intent(in)  :: this
+    integer(kind=4),                    intent(in)  :: npts, nlev
+    real(kind=8),                       intent(in)  :: x(npts), y(npts), z(npts)
+    real(kind=8),                       intent(out) :: f(npts,nlev)
+
+    integer(kind=4) :: i, k
+    real(kind=8) :: lam, phi, v_lam, v_phi, xn(npts), yn(npts), zn(npts)
+    real(kind=8) :: h_mean, a, omega, grav
+    real(kind=8) :: rA, rB, rC, rW, rK, R
+
+    h_mean = this%h_mean
+    omega  = this%omega
+    a      = this%a
+    grav   = this%grav
+
+    rW = 7.848*10.0_8**(-6)
+    rK = 7.848*10.0_8**(-6)
+    R  = 4
+
+    do k = 1, nlev
+        do i=1, npts
+            !translate north pole from [0, pi/2] to [0, pi/2-alpha]
+            ! call rotate_3D_y(x(i), y(i), z(i), -alpha, xn(i), yn(i), zn(i))
+            ! call cart2sph(xn(i), yn(i), zn(i), lam, phi)
+
+            call cart2sph(x(i), y(i), z(i), lam, phi)
+
+            rA = rW/2*(2*omega+rW)*cos(phi)**2 + &
+               + 0.25*rK**2*(cos(phi)**(2*R))*( (R+1)*cos(phi)**2 + &
+                 (2*R**2-R-2) -2*R**2*cos(phi)**(-2) )
+            rB = 2*((omega+rW)*rK/(R+1)/(R+2))*(cos(phi)**R)*( (R**2+2*R+2) &
+               - (R+1)**2*cos(phi)**2 )
+            rC = 0.25*rK**2*(cos(phi)**(2*R))*( (R+1)*cos(phi)**2-(R+2) )
+
+            f(i,k) = h_mean + a**2/grav*(rA+rB*cos(R*lam)+rC*cos(2*R*lam))
+        end do
+    end do
+
+end subroutine generate_rh4_wave_height_field
 subroutine generate_zero_scalar_field(this, f, npts, nlev, x, y, z)
 
     class(zero_scalar_field_generator_t),  intent(in) :: this
