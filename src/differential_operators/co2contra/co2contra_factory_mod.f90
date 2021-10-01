@@ -6,6 +6,7 @@ use co2contra_colocated_mod, only : co2contra_colocated_t
 use co2contra_Cgrid_mod,     only : co2contra_c_sbp_t!, co2contra_c_halo_t
 use parcomm_mod,             only : parcomm_global
 use exchange_factory_mod,    only : create_symmetric_halo_vec_exchange_C
+use sbp_factory_mod,         only : create_sbp_operator
 
 implicit none
 
@@ -45,6 +46,8 @@ function create_co2contra_c_sbp_operator(domain, co2contra_operator_name) result
         halo_width = 1
     case("co2contra_c_sbp42")
         halo_width = 3
+        co2contra%sbp_interp_h2v = create_sbp_operator("W42_stagered_interp_c2i")
+        co2contra%sbp_interp_v2h = create_sbp_operator("W42_stagered_interp_i2c")
     case default
         call parcomm_global%abort("unknown co2contra_c_sbp operator "// co2contra_operator_name)
     end select
