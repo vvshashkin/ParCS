@@ -81,7 +81,7 @@ end if
 
 errs = test_grad(N=32,grad_oper_name="gradient_ah21_sbp_ecs",staggering="Ah")
 if(parcomm_global%myid == 0) then
-    print *, "gradient_ah2_ecs"
+    print *, "gradient_ah21_sbp_ecs"
     print "(A,4E15.7)", "Err: ", errs%values
 end if
 

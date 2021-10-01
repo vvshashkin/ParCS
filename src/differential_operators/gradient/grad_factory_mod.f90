@@ -124,6 +124,7 @@ function create_grad_ah_sbp_operator(domain, grad_operator_name) result(grad)
     use grad_ah_sbp_mod,           only : grad_ah_sbp_t
     use exchange_factory_mod,      only : create_symm_halo_exchange_Ah
     use halo_factory_mod,          only : create_vector_halo_procedure
+    use sbp_factory_mod,           only : create_sbp_operator
 
     type(domain_t),   intent(in)  :: domain
     character(len=*), intent(in)  :: grad_operator_name
@@ -135,13 +136,13 @@ function create_grad_ah_sbp_operator(domain, grad_operator_name) result(grad)
     select case(grad_operator_name)
     case ("gradient_ah21_sbp_ecs")
         halo_width_interior = 1
-        grad%sbp_operator_name="d21"
+        grad%sbp_op = create_sbp_operator("d21")
     case ("gradient_ah42_sbp_ecs")
         halo_width_interior = 3
-        grad%sbp_operator_name="d42"
+        grad%sbp_op = create_sbp_operator("d42")
     case ("gradient_ah43_sbp_ecs")
         halo_width_interior = 5
-        grad%sbp_operator_name="d43"
+        grad%sbp_op = create_sbp_operator("d43")
     case default
         call parcomm_global%abort("grad_factory_mod, create_grad_ah_sbp_operator"// &
                                   " - unknown SBP operator: "//grad_operator_name)
@@ -152,8 +153,6 @@ function create_grad_ah_sbp_operator(domain, grad_operator_name) result(grad)
                                          domain%topology,  halo_width_interior, 'full')
 
     call create_vector_halo_procedure(grad%sync_edges,domain,0,"ecs_Ah_vec_sync_covariant")
-
-    grad%subtype = grad_operator_name
 
 end function create_grad_ah_sbp_operator
 

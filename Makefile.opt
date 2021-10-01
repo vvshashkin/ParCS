@@ -20,6 +20,13 @@ COTEXT  = "Compiling $(<F)"
 LITEXT  = "Assembling $@"
 
 #building rules
+$(DEXE)TEST_SWM_MAIN: $(MKDIRS) $(DOBJ)test_swm_main.o \
+	$(DOBJ)avost.o \
+	$(DOBJ)auxhs.o
+	@rm -f $(filter-out $(DOBJ)test_swm_main.o,$(EXESOBJ))
+	@echo $(LITEXT)
+	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
+EXES := $(EXES) TEST_SWM_MAIN
 $(DEXE)TEST_DOMAIN_MAIN: $(MKDIRS) $(DOBJ)test_domain_main.o \
 	$(DOBJ)avost.o \
 	$(DOBJ)auxhs.o
@@ -222,6 +229,10 @@ $(DOBJ)vec_math_mod.o: src/vec_math_mod.f90 \
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)container_abstract_mod.o: src/container_abstract_mod.f90
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)config_mod.o: src/config_mod.f90
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -689,6 +700,7 @@ $(DOBJ)grad_ah_sbp_mod.o: src/differential_operators/gradient/grad_ah_sbp_mod.f9
 	$(DOBJ)exchange_abstract_mod.o \
 	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)sbp_mod.o \
+	$(DOBJ)sbp_operator_mod.o \
 	$(DOBJ)halo_mod.o \
 	$(DOBJ)mesh_mod.o
 	@echo $(COTEXT)
@@ -723,7 +735,30 @@ $(DOBJ)grad_factory_mod.o: src/differential_operators/gradient/grad_factory_mod.
 	$(DOBJ)grad_c_sbp42_mod.o \
 	$(DOBJ)grid_field_factory_mod.o \
 	$(DOBJ)grad_a2_mod.o \
-	$(DOBJ)grad_ah_sbp_mod.o
+	$(DOBJ)grad_ah_sbp_mod.o \
+	$(DOBJ)sbp_factory_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)ke_unstaggered_mod.o: src/differential_operators/kinetic_energy/ke_unstaggered_mod.f90 \
+	$(DOBJ)abstract_ke_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)mesh_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)ke_factory_mod.o: src/differential_operators/kinetic_energy/KE_factory_mod.f90 \
+	$(DOBJ)abstract_ke_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)ke_unstaggered_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)abstract_ke_mod.o: src/differential_operators/kinetic_energy/abstract_KE_mod.f90 \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)domain_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -758,6 +793,24 @@ $(DOBJ)massflux_cgrid_mod.o: src/differential_operators/massflux/massflux_Cgrid_
 	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)mesh_mod.o \
 	$(DOBJ)sbp_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)sbp_operator_mod.o: src/differential_operators/sbp_operators/sbp_operator_mod.f90 \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)tile_mod.o \
+	$(DOBJ)parcomm_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)sbp_operators_collection_mod.o: src/differential_operators/sbp_operators/sbp_operators_collection_mod.f90
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)sbp_factory_mod.o: src/differential_operators/sbp_operators/sbp_factory_mod.f90 \
+	$(DOBJ)sbp_operator_mod.o \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)sbp_operators_collection_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -908,6 +961,83 @@ $(DOBJ)operator_iomega_mod.o: src/models/iomega_model/operator_iomega_mod.f90 \
 	$(DOBJ)stvec_iomega_mod.o \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)parcomm_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)stvec_swm_factory_mod.o: src/models/shallow_water/stvec/stvec_swm_factory_mod.f90 \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)stvec_mod.o \
+	$(DOBJ)stvec_swm_mod.o \
+	$(DOBJ)grid_field_factory_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)stvec_swm_mod.o: src/models/shallow_water/stvec/stvec_swm_mod.f90 \
+	$(DOBJ)stvec_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)domain_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)operator_swm_mod.o: src/models/shallow_water/operator/operator_swm_mod.f90 \
+	$(DOBJ)stvec_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)operator_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)abstract_div_mod.o \
+	$(DOBJ)abstract_grad_mod.o \
+	$(DOBJ)abstract_coriolis_mod.o \
+	$(DOBJ)abstract_curl_mod.o \
+	$(DOBJ)abstract_ke_mod.o \
+	$(DOBJ)abstract_massflux_mod.o \
+	$(DOBJ)stvec_swm_mod.o \
+	$(DOBJ)parcomm_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)operator_swm_factory_mod.o: src/models/shallow_water/operator/operator_swm_factory_mod.f90 \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)operator_mod.o \
+	$(DOBJ)config_swm_mod.o \
+	$(DOBJ)operator_swm_mod.o \
+	$(DOBJ)div_factory_mod.o \
+	$(DOBJ)grad_factory_mod.o \
+	$(DOBJ)curl_factory_mod.o \
+	$(DOBJ)coriolis_factory_mod.o \
+	$(DOBJ)ke_factory_mod.o \
+	$(DOBJ)massflux_factory_mod.o \
+	$(DOBJ)grid_field_factory_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)config_swm_mod.o: src/models/shallow_water/config/config_swm_mod.f90 \
+	$(DOBJ)config_mod.o \
+	$(DOBJ)namelist_read_mod.o \
+	$(DOBJ)parcomm_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)test_swm_main.o: src/models/shallow_water/test/test_swm/test_swm_main.f90 \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)test_swm_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)test_swm_mod.o: src/models/shallow_water/test/test_swm/test_swm_mod.f90 \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)domain_factory_mod.o \
+	$(DOBJ)stvec_mod.o \
+	$(DOBJ)stvec_swm_mod.o \
+	$(DOBJ)stvec_swm_factory_mod.o \
+	$(DOBJ)operator_mod.o \
+	$(DOBJ)operator_swm_factory_mod.o \
+	$(DOBJ)timescheme_mod.o \
+	$(DOBJ)timescheme_factory_mod.o \
+	$(DOBJ)outputer_abstract_mod.o \
+	$(DOBJ)outputer_factory_mod.o \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)config_swm_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
