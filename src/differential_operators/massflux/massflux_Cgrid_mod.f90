@@ -5,6 +5,7 @@ use grid_field_mod,        only : grid_field_t
 use domain_mod,            only : domain_t
 use halo_mod,              only : halo_t, halo_vec_t
 use parcomm_mod,           only : parcomm_global
+use sbp_operator_mod,      only : sbp_operator_t
 
 implicit none
 
@@ -29,6 +30,8 @@ type, extends(massflux_operator_t), public :: massflux_c_sbp21_t
 end type massflux_c_sbp21_t
 
 type, extends(massflux_operator_t), public :: massflux_c_sbp42_t
+
+    class(sbp_operator_t), allocatable :: sbp_interp_h2v
 
     contains
 
@@ -211,6 +214,7 @@ subroutine calc_c_sbp42_massflux(this, fx, fy, f, u, v, domain)
 
         call calc_c_sbp42_massflux_tile(fx%tile(t), fy%tile(t), &
                                         f%tile(t), u%tile(t), v%tile(t), &
+                                        this%sbp_interp_h2v, &
                                         domain%mesh_x%tile(t), domain%mesh_y%tile(t),&
                                         domain%mesh_o%tile(t))
 
@@ -218,49 +222,33 @@ subroutine calc_c_sbp42_massflux(this, fx, fy, f, u, v, domain)
 
 end subroutine calc_c_sbp42_massflux
 
-subroutine calc_c_sbp42_massflux_tile(fx,fy,f,u,v,mesh_x,mesh_y, mesh_o)
+subroutine calc_c_sbp42_massflux_tile(fx,fy,f,u,v,sbp_interp_h2v,mesh_x,mesh_y, mesh_o)
 
     use sbp_mod, only : sbp_apply
+    use tile_mod,   only : tile_t
 
     use grid_field_mod, only : tile_field_t
     use mesh_mod,       only : tile_mesh_t
 
-    type(tile_field_t), intent(inout) :: fx, fy
-    type(tile_field_t), intent(in)    :: f, u, v
-    type(tile_mesh_t),  intent(in)    :: mesh_x, mesh_y, mesh_o
+    type(tile_field_t),    intent(inout) :: fx, fy
+    type(tile_field_t),    intent(in)    :: f, u, v
+    class(sbp_operator_t), intent(in)    :: sbp_interp_h2v
+    type(tile_mesh_t),     intent(in)    :: mesh_x, mesh_y, mesh_o
 
     integer(kind=4) :: k, ks, ke
     integer(kind=4) :: i, j
     integer(kind=4) :: is, ie, js, je
-    integer(kind=4) :: isf, ief, jsf, jef
-    integer(kind=4) :: isv, iev, jsv, jev
 
-    real(kind=8)    :: fp(f%is:f%ie,f%js:f%je)
+    real(kind=8)    :: fp(f%is:f%ie,f%js:f%je,1)
+    type(tile_t)    :: fp_tile, fx_tile, fx_work_tile,  fy_tile, fy_work_tile
 
-     !interpolation from p-points to vector points
-    real(kind=8), parameter :: wp_edge(5,4) = reshape( &
-    [0.9988019158947662_8,  0.37629049812372334_8, -0.24898674393171474_8, -0.12610567008674245_8,  0.0_8, &
-     0.5893172370190968_8,  0.2849441265403871_8,   0.16216003586193575_8, -0.03642139942141965_8,  0.0_8, &
-     0.21710064816314334_8, 0.23237013413978796_8,  0.3839577872309932_8,   0.16657143046607598_8,  0.0_8, &
-    -0.18778023255417622_8, 0.17820763584084146_8,  0.6435451442907053_8,   0.42940773411277094_8, -0.06338028169014084_8],&
-        [5,4])
-    !optimized only vector to scalar interp
-    ! real(kind=8), parameter :: wp_edge(5,4) = reshape( &
-    ! [1.3630402181345285_8, -0.17804474904273135_8, -0.23303115631809243_8,  0.048035687226327554_8, 0.0_8, &
-    !  0.46340770044238916_8, 0.4765661872892848_8,   0.15664452409426372_8, -0.09661841182593758_8,  0.0_8, &
-    !  0.07545241951434666_8, 0.44794495248229815_8,  0.37775283649236274_8,  0.09884979151099299_8,  0.0_8, &
-    ! -0.04413695843145285_8,-0.04040344754874627_8,  0.649837488701711_8,    0.4980831989686297_8,  -0.06338028169014084_8],&
-    !    [5,4])
-    !optimize both vector to scalar and scalar to vector interp
-    ! real(kind=8), parameter :: wp_edge(5,4) = reshape( &
-    ! [1.5033318188124725_8, -0.3057736326590643_8, -0.3984481911192596_8, 0.2008900049658833_8, 0.0_8, &
-    !  0.43098284048835733_8, 0.5061952466249993_8, 0.194660985284931_8, -0.13183907239828724_8, 0.0_8, &
-    ! -0.01526517971334979_8, 0.5302965998626628_8, 0.485202339414723_8, -0.00023375956403533802_8, 0.0_8, &
-    !  0.029523830043030195_8, -0.1073451894687714_8, 0.5627386071183124_8, 0.5784630339975705_8, -0.06338028169014084_8],&
-    !    [5,4])
-    integer(kind=4), parameter :: wp_last_nonzero(4) = [4,4,4,5]
-    !inner interpolation stencil
-    real(kind=8), parameter :: w_in(4) = [-1._8/16._8, 9._8/16._8, 9._8/16._8, -1._8/16._8]
+    fp_tile = tile_t(is = f%is, ie = f%ie, js = f%js, je = f%je, ks = 1, ke = 1)
+    fx_tile = tile_t(is = fx%is, ie = fx%ie, js = fx%js, je = fx%je, ks = fx%ks, ke = fx%ke)
+    fx_work_tile = tile_t(is = mesh_x%is, ie = mesh_x%ie, js = mesh_x%js, je = mesh_x%je, &
+                          ks = 1, ke = 1)
+    fy_tile = tile_t(is = fy%is, ie = fy%ie, js = fy%js, je = fy%je, ks = fy%ks, ke = fy%ke)
+    fy_work_tile = tile_t(is = mesh_y%is, ie = mesh_y%ie, js = mesh_y%js, je = mesh_y%je, &
+                          ks = 1, ke = 1)
 
     do k = mesh_o%ks, mesh_o%ke
 
@@ -269,42 +257,25 @@ subroutine calc_c_sbp42_massflux_tile(fx,fy,f,u,v,mesh_x,mesh_y, mesh_o)
 
         do j=js,je
             do i=is,ie
-                fp(i,j) = f%p(i,j,k)!mesh_o%G(i,j)*f%p(i,j,k)
+                fp(i,j,1) = f%p(i,j,k)!mesh_o%G(i,j)*f%p(i,j,k)
             end do
         end do
 
-        isv = fx%is; iev = fx%ie
-        jsv = fx%js; jev = fx%je
-        isf = f%is ; ief = f%ie
-        jsf = f%js ; jef = f%je
+        fp_tile%ks = k; fp_tile%ke = k
+        call sbp_interp_h2v%apply(fx%p,fx_work_tile,fx_tile, mesh_o%nx+1, 'x', fp, fp_tile)
+
         is = mesh_x%is; ie = mesh_x%ie
         js = mesh_x%js; je = mesh_x%je
-
-        call sbp_apply(fx%p(isv:iev,jsv:jev,k),isv,iev,jsv,jev, &
-                       is,ie,js,je,            &
-                       fp(isf:ief,jsf:jef), isf, ief, jsf, jef, &
-                       mesh_o%nx, mesh_o%nx+1,   &
-                       wp_edge,wp_last_nonzero,w_in,-2,1.0_8,'x')
-
         do j=js, je
             do i=is, ie
                 fx%p(i,j,k) = u%p(i,j,k)*fx%p(i,j,k)! / mesh_x%G(i,j)
             end do
         end do
 
-        isv = fx%is; iev = fx%ie
-        jsv = fx%js; jev = fx%je
-        isf = f%is ; ief = f%ie
-        jsf = f%js ; jef = f%je
+        call sbp_interp_h2v%apply(fy%p,fy_work_tile,fy_tile, mesh_o%ny+1, 'y', fp, fp_tile)
+
         is = mesh_y%is; ie = mesh_y%ie
         js = mesh_y%js; je = mesh_y%je
-
-        call sbp_apply(fy%p(isv:iev,jsv:jev,k),isv,iev,jsv,jev, &
-                       is,ie,js,je,            &
-                       fp(isf:ief,jsf:jef), isf, ief, jsf, jef, &
-                       mesh_o%ny, mesh_o%ny+1,   &
-                       wp_edge,wp_last_nonzero,w_in,-2,1.0_8,'y')
-
         do j=js, je
             do i=is, ie
                 fy%p(i,j,k) = v%p(i,j,k)*fy%p(i,j,k)! / mesh_y%G(i,j)

@@ -562,7 +562,8 @@ $(DOBJ)co2contra_factory_mod.o: src/differential_operators/co2contra/co2contra_f
 	$(DOBJ)co2contra_colocated_mod.o \
 	$(DOBJ)co2contra_cgrid_mod.o \
 	$(DOBJ)parcomm_mod.o \
-	$(DOBJ)exchange_factory_mod.o
+	$(DOBJ)exchange_factory_mod.o \
+	$(DOBJ)sbp_factory_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -574,7 +575,8 @@ $(DOBJ)co2contra_cgrid_mod.o: src/differential_operators/co2contra/co2contra_Cgr
 	$(DOBJ)exchange_abstract_mod.o \
 	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)halo_mod.o \
-	$(DOBJ)sbp_mod.o
+	$(DOBJ)sbp_operator_mod.o \
+	$(DOBJ)tile_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -648,7 +650,6 @@ $(DOBJ)div_ah_sbp_mod.o: src/differential_operators/divergence/div_ah_sbp_mod.f9
 	$(DOBJ)halo_mod.o \
 	$(DOBJ)exchange_abstract_mod.o \
 	$(DOBJ)parcomm_mod.o \
-	$(DOBJ)sbp_mod.o \
 	$(DOBJ)sbp_operator_mod.o \
 	$(DOBJ)mesh_mod.o \
 	$(DOBJ)tile_mod.o
@@ -702,7 +703,6 @@ $(DOBJ)grad_ah_sbp_mod.o: src/differential_operators/gradient/grad_ah_sbp_mod.f9
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)exchange_abstract_mod.o \
 	$(DOBJ)parcomm_mod.o \
-	$(DOBJ)sbp_mod.o \
 	$(DOBJ)sbp_operator_mod.o \
 	$(DOBJ)halo_mod.o \
 	$(DOBJ)mesh_mod.o \
@@ -778,7 +778,8 @@ $(DOBJ)massflux_factory_mod.o: src/differential_operators/massflux/massflux_fact
 	$(DOBJ)massflux_colocated_mod.o \
 	$(DOBJ)massflux_cgrid_mod.o \
 	$(DOBJ)parcomm_mod.o \
-	$(DOBJ)halo_factory_mod.o
+	$(DOBJ)halo_factory_mod.o \
+	$(DOBJ)sbp_factory_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -795,6 +796,7 @@ $(DOBJ)massflux_cgrid_mod.o: src/differential_operators/massflux/massflux_Cgrid_
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)halo_mod.o \
 	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)sbp_operator_mod.o \
 	$(DOBJ)mesh_mod.o \
 	$(DOBJ)sbp_mod.o
 	@echo $(COTEXT)
