@@ -9,10 +9,10 @@ end type config_t
 
 contains
 
-subroutine parse(this, config_filename)
+subroutine parse(this, config_string)
 
     class(config_t),  intent(inout) :: this
-    character(len=*), intent(in)    :: config_filename
+    character(len=*), intent(in)    :: config_string
 
 end subroutine parse
 

@@ -258,7 +258,7 @@ function test_curl(N, div_oper_name, staggering) result(errs)
     errs%keys(2)%str = "VSH_curl_free_10 l2"
 
     call set_vector_test_field(u, v, VSH_curl_free_10, domain%mesh_u, domain%mesh_v, &
-                               0, "contravariant")
+                               0, "covariant")
     call curl_op%calc_curl(curl, u, v, domain)
     call curl%assign(domain%mesh_p%scale, curl, domain%mesh_p)
 
@@ -372,7 +372,7 @@ function test_coriolis(N, coriolis_op_name, staggering) result(errs)
     exact_field = coriolis_force_field_generator_t(input_field = test_field)
 
     call set_vector_test_field(cor_u_true, cor_v_true, exact_field, domain%mesh_u, domain%mesh_v, &
-                               0, "contravariant")
+                               0, "covariant")
 
     call cor_u%update(-1.0_8, cor_u_true, domain%mesh_u)
     call cor_v%update(-1.0_8, cor_v_true, domain%mesh_v)

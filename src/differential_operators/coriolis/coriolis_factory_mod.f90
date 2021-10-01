@@ -51,7 +51,7 @@ end subroutine create_coriolis_unstaggered
 
 subroutine calc_coriolis_parameter(f, mesh)
 
-    use mesh_mod, only : mesh_t
+    use mesh_mod,       only : mesh_t
     use sph_coords_mod, only : cart2sph
 
     type(grid_field_t), intent(inout) :: f
