@@ -60,21 +60,18 @@ subroutine apply(this, vout, vin, domain)
             !momentum eq part
             call this%KE_op%calc_KE(this%KE, vin%u, vin%v, domain)
 
-            !store g*grad(h+hs+KE) in KE array
-            call this%KE%update(this%grav, vin%h, this%grav, this%h_surf, domain%mesh_p)
+            !store grav*grad(h+hs+KE) in KE array
+            call this%KE%update(1.0_8, vin%h, 1.0_8, this%h_surf, domain%mesh_p)
 
             call this%grad_op%calc_grad(this%grad_x, this%grad_y, this%KE, domain)
 
-            call this%coriolis_op%calc_coriolis(this%cor_u, this%cor_v, this%ut, this%vt, domain)
-
             call this%curl_op%calc_curl(this%curl, vin%u, vin%v, domain)
 
-            !combine u/v eq terms together
-            call vout%u%assign_prod( 1.0_8, this%curl, this%vt, domain%mesh_u)
-            call vout%v%assign_prod(-1.0_8, this%curl, this%ut, domain%mesh_v)
+            call this%coriolis_op%calc_coriolis_curl(this%cor_u, this%cor_v, &
+                                            this%ut, this%vt, this%curl, domain)
 
-            call vout%u%update(-1.0_8, this%grad_x, domain%mesh_u)
-            call vout%v%update(-1.0_8, this%grad_y, domain%mesh_u)
+            call vout%u%assign(-this%grav, this%grad_x, 1.0_8, this%cor_u, domain%mesh_u)
+            call vout%v%assign(-this%grav, this%grad_y, 1.0_8, this%cor_v, domain%mesh_u)
 
             !continuty eq part
 

@@ -23,6 +23,7 @@ public :: solid_rotation_t
 
 public :: solid_rotated_scalar_field_t
 
+public :: ts2_height_generator_t
 
 !!!!!!!!!!!!!Abstract scalar and vector fields generators
 type, public, abstract :: scalar_field_generator_t
@@ -107,6 +108,17 @@ type, extends(scalar_field_generator_t) :: solid_rotated_scalar_field_t
 contains
     procedure :: get_scalar_field => generate_solid_rotated_scalar_field
 end type solid_rotated_scalar_field_t
+
+type, extends(scalar_field_generator_t) :: ts2_height_generator_t
+    real(kind=8) :: h_mean = 1.0_8
+    real(kind=8) :: alpha  = 0.0_8 !rotation axis angle
+    real(kind=8) :: u0     = 1.0_8 !equator speed
+    real(kind=8) :: omega  = 1.0_8 !angular velocity of the sphere
+    real(kind=8) :: a      = 1.0_8 !radii of the sphere
+    real(kind=8) :: grav   = 1.0_8 !gravity acceleration
+contains
+    procedure :: get_scalar_field => generate_ts2_height_field
+end type ts2_height_generator_t
 
 !!!field generator instances
 type(xyz_scalar_field_generator_t)     :: xyz_scalar_field_generator
@@ -539,6 +551,36 @@ subroutine generate_solid_rotated_scalar_field(this, f, npts, nlev, x, y, z)
         call this%scalar_field%get_scalar_field(f, npts, nlev, xn, yn, zn)
 
 end subroutine generate_solid_rotated_scalar_field
+
+subroutine generate_ts2_height_field(this, f, npts, nlev, x, y, z)
+
+    use sph_coords_mod, only : rotate_3D_y, cart2sph, sph2cart_vec, sph2cart
+
+    class(ts2_height_generator_t), intent(in)  :: this
+    integer(kind=4),               intent(in)  :: npts, nlev
+    real(kind=8),                  intent(in)  :: x(npts), y(npts), z(npts)
+    real(kind=8),                  intent(out) :: f(npts,nlev)
+
+    integer(kind=4) :: i, k
+    real(kind=8) :: lam, phi, v_lam, v_phi, xn(npts), yn(npts), zn(npts)
+    real(kind=8) :: alpha, u0, h_mean, a, omega, grav
+
+    alpha  = this%alpha
+    u0     = this%u0
+    h_mean = this%h_mean
+    omega  = this%omega
+    a      = this%a
+    grav   = this%grav
+    do k = 1, nlev
+        do i=1, npts
+            !translate north pole from [0, pi/2] to [0, pi/2-alpha]
+            call rotate_3D_y(x(i), y(i), z(i), -alpha, xn(i), yn(i), zn(i))
+            call cart2sph(xn(i), yn(i), zn(i), lam, phi)
+            f(i,k) = h_mean - (a*omega*u0+0.5_8*u0**2)/grav*sin(phi)**2
+        end do
+    end do
+
+end subroutine generate_ts2_height_field
 
 subroutine generate_zero_scalar_field(this, f, npts, nlev, x, y, z)
 

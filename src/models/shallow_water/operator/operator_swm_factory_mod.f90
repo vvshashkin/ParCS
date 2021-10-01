@@ -27,7 +27,7 @@ subroutine create_swm_operator(operator, swm_config, domain)
 
     type(operator_swm_t), allocatable :: swm_op
 
-    integer(kind=4) :: halo_width_xy
+    integer(kind=4) :: halo_width_xy, t
 
     !WORKAROUND
     halo_width_xy = 8
@@ -57,6 +57,9 @@ subroutine create_swm_operator(operator, swm_config, domain)
     call create_grid_field(swm_op%hu, halo_width_xy, 0, domain%mesh_u)
     call create_grid_field(swm_op%hv, halo_width_xy, 0, domain%mesh_v)
 
+    call create_grid_field(swm_op%cor_u, halo_width_xy, 0, domain%mesh_u)
+    call create_grid_field(swm_op%cor_v, halo_width_xy, 0, domain%mesh_v)
+
     call create_grid_field(swm_op%ut, halo_width_xy, 0, domain%mesh_u)
     call create_grid_field(swm_op%vt, halo_width_xy, 0, domain%mesh_v)
 
@@ -64,6 +67,12 @@ subroutine create_swm_operator(operator, swm_config, domain)
     call create_grid_field(swm_op%grad_y, halo_width_xy, 0, domain%mesh_v)
 
     call create_grid_field(swm_op%h_surf,    halo_width_xy, 0, domain%mesh_p)
+
+    !WORKAROUND
+    swm_op%grav = 1.0_8
+    do t = domain%partition%ts, domain%partition%te
+        swm_op%h_surf%tile(t)%p = 0.0_8
+    end do
 
     call move_alloc(swm_op, operator)
 

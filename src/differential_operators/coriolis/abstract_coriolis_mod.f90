@@ -7,7 +7,8 @@ implicit none
 
 type, abstract, public :: coriolis_operator_t
 contains
-    procedure(calc_coriolis_i), deferred :: calc_coriolis
+    procedure(calc_coriolis_i),      deferred :: calc_coriolis
+    procedure(calc_coriolis_curl_i), deferred :: calc_coriolis_curl
 end type coriolis_operator_t
 
 abstract interface
@@ -18,6 +19,14 @@ abstract interface
         type(grid_field_t),         intent(inout) :: ut, vt!contravariant components
         type(grid_field_t),         intent(inout) :: cor_u, cor_v!covariant components
     end subroutine calc_coriolis_i
+    subroutine calc_coriolis_curl_i(this, cor_u, cor_v, ut, vt, curl, domain)
+        import coriolis_operator_t, grid_field_t, domain_t
+        class(coriolis_operator_t), intent(inout) :: this
+        type(domain_t),             intent(in)    :: domain
+        type(grid_field_t),         intent(inout) :: ut, vt!contravariant components
+        type(grid_field_t),         intent(inout) :: curl
+        type(grid_field_t),         intent(inout) :: cor_u, cor_v!covariant components
+    end subroutine calc_coriolis_curl_i
 end interface
 
 contains
