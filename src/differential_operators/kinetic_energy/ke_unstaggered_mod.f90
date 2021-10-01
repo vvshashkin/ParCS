@@ -43,7 +43,7 @@ subroutine calc_KE_on_tile(KE, u, v, mesh_p)
                 !transform to contravariant components
                 u_contra = mesh_p%Qi(1,i,j)*u%p(i,j,k)+mesh_p%Qi(2,i,j)*v%p(i,j,k)
                 v_contra = mesh_p%Qi(2,i,j)*u%p(i,j,k)+mesh_p%Qi(3,i,j)*v%p(i,j,k)
-                KE%p = u%p(i,j,k)*u_contra + v%p(i,j,k)*v_contra
+                KE%p = (u%p(i,j,k)*u_contra + v%p(i,j,k)*v_contra)/2.0_8
             end do
         end do
     end do

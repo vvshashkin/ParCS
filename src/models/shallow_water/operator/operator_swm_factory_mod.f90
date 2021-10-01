@@ -17,6 +17,7 @@ subroutine create_swm_operator(operator, swm_config, domain)
     use coriolis_factory_mod,   only : create_coriolis
     use KE_factory_mod,         only : create_KE_operator
     use massflux_factory_mod,   only : create_massflux_operator
+    use co2contra_factory_mod,  only : create_co2contra_operator
 
     use grid_field_factory_mod, only : create_grid_field
 
@@ -45,6 +46,8 @@ subroutine create_swm_operator(operator, swm_config, domain)
 
     swm_op%massflux_op = create_massflux_operator(domain, swm_config%massflux_op_name)
 
+    swm_op%co2contra_op = create_co2contra_operator(domain, swm_config%co2contra_op_name)
+
     call create_grid_field(swm_op%KE,  halo_width_xy, 0, domain%mesh_p)
     call create_grid_field(swm_op%div, halo_width_xy, 0, domain%mesh_p)
 
@@ -54,12 +57,13 @@ subroutine create_swm_operator(operator, swm_config, domain)
     call create_grid_field(swm_op%hu, halo_width_xy, 0, domain%mesh_u)
     call create_grid_field(swm_op%hv, halo_width_xy, 0, domain%mesh_v)
 
+    call create_grid_field(swm_op%ut, halo_width_xy, 0, domain%mesh_u)
+    call create_grid_field(swm_op%vt, halo_width_xy, 0, domain%mesh_v)
+
     call create_grid_field(swm_op%grad_x, halo_width_xy, 0, domain%mesh_u)
     call create_grid_field(swm_op%grad_y, halo_width_xy, 0, domain%mesh_v)
 
     call create_grid_field(swm_op%h_surf,    halo_width_xy, 0, domain%mesh_p)
-    call create_grid_field(swm_op%gx_h_surf, halo_width_xy, 0, domain%mesh_u)
-    call create_grid_field(swm_op%gy_h_surf, halo_width_xy, 0, domain%mesh_v)
 
     call move_alloc(swm_op, operator)
 

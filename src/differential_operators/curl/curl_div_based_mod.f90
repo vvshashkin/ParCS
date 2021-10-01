@@ -27,7 +27,7 @@ subroutine calc_curl(this, curl, u, v, domain)
 
     class(curl_div_based_t),  intent(inout) :: this
     type(domain_t),           intent(in)    :: domain
-    type(grid_field_t),       intent(inout) :: u, v !contravariant components
+    type(grid_field_t),       intent(inout) :: u, v !covariant components
     type(grid_field_t),       intent(inout) :: curl
 
     integer(kind=4) :: t
@@ -47,20 +47,17 @@ subroutine transform_vectors(u, v, ut, vt, mesh_u, mesh_v)
     use mesh_mod, only : tile_mesh_t
 
     type(tile_field_t), intent(in)    :: u, v
-    type(tile_field_t), intent(inout) :: ut, vt
+    type(tile_field_t), intent(inout) :: ut, vt !contravariant components of perp vec
     type(tile_mesh_t),  intent(in)    :: mesh_u, mesh_v
 
     integer(kind=4) :: i, j, k
-    real(kind=8)    :: u_covariant, v_covariant
 
 !This implementation works only for unstaggered case, so mesh_u==mesh_v==mesh_p
     do k = mesh_u%ks, mesh_u%ke
         do j = mesh_u%js, mesh_u%je
             do i = mesh_u%is, mesh_u%ie
-                u_covariant = mesh_u%Q(1,i,j)*u%p(i,j,k)+mesh_u%Q(2,i,j)*v%p(i,j,k)
-                v_covariant = mesh_u%Q(2,i,j)*u%p(i,j,k)+mesh_u%Q(3,i,j)*v%p(i,j,k)
-                ut%p(i,j,k) =  v_covariant/mesh_u%G(i,j)
-                vt%p(i,j,k) = -u_covariant/mesh_u%G(i,j)
+                ut%p(i,j,k) =  v%p(i,j,k)/mesh_u%G(i,j)
+                vt%p(i,j,k) = -u%p(i,j,k)/mesh_u%G(i,j)
             end do
         end do
     end do

@@ -14,16 +14,16 @@ end type coriolis_unstag_t
 
 contains
 
-subroutine calc_coriolis(this, cor_u, cor_v, u, v, domain)
+subroutine calc_coriolis(this, cor_u, cor_v, ut, vt, domain)
     class(coriolis_unstag_t), intent(inout) :: this
     type(domain_t),         intent(in)    :: domain
-    type(grid_field_t),     intent(inout) :: u, v
+    type(grid_field_t),     intent(inout) :: ut, vt!contravariant components
     type(grid_field_t),     intent(inout) :: cor_u, cor_v
 
     integer(kind=4) :: t
 
     do t = domain%partition%ts, domain%partition%te
-        call calc_coriolis_on_tile(u%tile(t), v%tile(t), this%f%tile(t), &
+        call calc_coriolis_on_tile(ut%tile(t), vt%tile(t), this%f%tile(t), &
                                    cor_u%tile(t), cor_v%tile(t), &
                                    domain%mesh_u%tile(t), domain%mesh_v%tile(t))
     end do
@@ -31,13 +31,13 @@ subroutine calc_coriolis(this, cor_u, cor_v, u, v, domain)
 
 end subroutine calc_coriolis
 
-subroutine calc_coriolis_on_tile(u, v, f, cor_u, cor_v, mesh_u, mesh_v)
+subroutine calc_coriolis_on_tile(ut, vt, f, cor_u, cor_v, mesh_u, mesh_v)
 
     !coriolis(\vec{u}) = f*\vec{u}^\perp
 
     use mesh_mod, only : tile_mesh_t
 
-    type(tile_field_t), intent(in)    :: u, v, f
+    type(tile_field_t), intent(in)    :: ut, vt, f
     type(tile_field_t), intent(inout) :: cor_u, cor_v
     type(tile_mesh_t),  intent(in)    :: mesh_u, mesh_v
 
@@ -48,13 +48,8 @@ subroutine calc_coriolis_on_tile(u, v, f, cor_u, cor_v, mesh_u, mesh_v)
     do k = mesh_u%ks, mesh_u%ke
         do j = mesh_u%js, mesh_u%je
             do i = mesh_u%is, mesh_u%ie
-                !transform to covariant components
-                u_covariant = mesh_u%Q(1,i,j)*u%p(i,j,k)+mesh_u%Q(2,i,j)*v%p(i,j,k)
-                v_covariant = mesh_u%Q(2,i,j)*u%p(i,j,k)+mesh_u%Q(3,i,j)*v%p(i,j,k)
-                !find contravariant components of perpendicular vector and multiply
-                !them by coriolis parameter
-                cor_u%p(i,j,k) =  f%p(i,j,1)*v_covariant/mesh_u%G(i,j)
-                cor_v%p(i,j,k) = -f%p(i,j,1)*u_covariant/mesh_u%G(i,j)
+                cor_u%p(i,j,k) =  f%p(i,j,1)*vt%p(i,j,k)*mesh_u%G(i,j)
+                cor_v%p(i,j,k) = -f%p(i,j,1)*ut%p(i,j,k)*mesh_u%G(i,j)
             end do
         end do
     end do
