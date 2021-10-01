@@ -383,25 +383,29 @@ function test_coriolis(N, coriolis_op_name, staggering) result(errs)
                      l2norm(cor_v, domain%mesh_v, domain%parcomm)
 
 end function test_coriolis
-subroutine test_laplace_spectre(div_operator_name, grad_operator_name, staggering)
-    use test_fields_mod,   only : set_vector_test_field, solid_rot=>solid_rotation_field_generator
-    use div_factory_mod,   only : create_div_operator
-    use abstract_div_mod,  only : div_operator_t
-    use grad_factory_mod,  only : create_grad_operator
-    use abstract_grad_mod, only : grad_operator_t
+subroutine test_laplace_spectre(div_operator_name, grad_operator_name, &
+                                co2contra_operator_name, staggering)
+    use test_fields_mod,        only : set_vector_test_field, solid_rot=>solid_rotation_field_generator
+    use div_factory_mod,        only : create_div_operator
+    use abstract_div_mod,       only : div_operator_t
+    use grad_factory_mod,       only : create_grad_operator
+    use abstract_grad_mod,      only : grad_operator_t
+    use co2contra_factory_mod,  only : create_co2contra_operator
+    use abstract_co2contra_mod, only : co2contra_operator_t
     use exchange_abstract_mod,  only : exchange_t
     use exchange_factory_mod,   only : create_symm_halo_exchange_Ah
 
-    character(len=*), intent(in) :: div_operator_name, grad_operator_name, staggering
+    character(len=*), intent(in) :: div_operator_name, grad_operator_name, &
+                                    co2contra_operator_name, staggering
 
     integer(kind=4), parameter  :: nz = 1, nh = 12
     integer(kind=4), parameter  :: ex_halo_width = 8
-    type(grid_field_t)          :: f, gx, gy, lap
+    type(grid_field_t)          :: f, gx, gy, gxt, gyt, lap
     type(domain_t)              :: domain
     class(div_operator_t),  allocatable :: div_op
     class(grad_operator_t), allocatable :: grad_op
+    class(co2contra_operator_t), allocatable :: co2contra_op
     real(kind=8), allocatable :: lapM(:,:)
-    class(exchange_t), allocatable :: Ah_exchange
     integer(kind=4) :: npts, ts, te, is, ie, js, je
     integer(kind=4) :: is1, ie1, js1, je1
     integer(kind=4) :: i, j, t, i1, j1, t1, ind, ind1, nx
@@ -416,15 +420,13 @@ subroutine test_laplace_spectre(div_operator_name, grad_operator_name, staggerin
     call create_grid_field(f,  ex_halo_width, 0, domain%mesh_p)
     call create_grid_field(gx, ex_halo_width, 0, domain%mesh_u)
     call create_grid_field(gy, ex_halo_width, 0, domain%mesh_v)
+    call create_grid_field(gxt, ex_halo_width, 0, domain%mesh_u)
+    call create_grid_field(gyt, ex_halo_width, 0, domain%mesh_v)
     call create_grid_field(lap, 1, 0, domain%mesh_p)
-
-    if(staggering == "Ah") then
-        Ah_exchange = create_symm_halo_exchange_Ah(domain%partition, domain%parcomm, &
-                                                   domain%topology,  1, 'full')
-    end if
 
     grad_op = create_grad_operator(domain, grad_operator_name)
     div_op  = create_div_operator (domain, div_operator_name)
+    co2contra_op = create_co2contra_operator(domain, co2contra_operator_name)
 
     ts = domain%mesh_p%ts
     te = domain%mesh_p%te
@@ -444,11 +446,9 @@ subroutine test_laplace_spectre(div_operator_name, grad_operator_name, staggerin
         do j=js,je
             do i=is,ie
                 f%tile(t)%p(i,j,1) = 1.0_8
-                !if(staggering == "Ah") then
-                !    call make_consistent_AH_field(f,domain%parcomm,domain%mesh_p,Ah_exchange)
-                !end if
                 call grad_op%calc_grad(gx,gy,f,domain)
-                call div_op%calc_div(lap,gx,gy,domain)
+                call co2contra_op%transform(gxt,gyt,gx,gy,domain)
+                call div_op%calc_div(lap,gxt,gyt,domain)
 
                 ind = (t-ts)*nx**2+(j-js)*nx+(i-is+1)
 

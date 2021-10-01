@@ -11,23 +11,26 @@ implicit none
 
 type(cmd_arg_t), allocatable :: cmd_args(:)
 integer(kind=4)              :: nargs, iarg
-character(:), allocatable :: div_op_name
-character(:), allocatable :: grad_op_name
-character(:), allocatable :: staggering
+character(:), allocatable    :: div_op_name
+character(:), allocatable    :: grad_op_name
+character(:), allocatable    :: co2contra_name
+character(:), allocatable    :: staggering
 
-div_op_name = "divergence_a2_cons"
-grad_op_name = "gradient_a2_cons"
-staggering = "A"
+div_op_name    = "divergence_a2_cons"
+grad_op_name   = "gradient_a2_cons"
+co2contra_name = "co2contra_colocated"
+staggering     = "A"
 
 call get_cmd_args(cmd_args,nargs)
 
 if(nargs >=2) div_op_name = cmd_args(2)%str
 if(nargs >=3) grad_op_name = cmd_args(3)%str
-if(nargs >=4) staggering = cmd_args(4)%str
+if(nargs >=4) co2contra_name = cmd_args(4)%str
+if(nargs >=5) staggering = cmd_args(5)%str
 
 call init_global_parallel_enviroment()
 
-call test_laplace_spectre(div_op_name, grad_op_name, staggering)
+call test_laplace_spectre(div_op_name, grad_op_name, co2contra_name, staggering)
 
 call deinit_global_parallel_enviroment()
 
