@@ -23,6 +23,8 @@ call test_conv(operator_name="divergence_c_sbp42",staggering="C",Ns=Ns)
 call test_conv(operator_name="divergence_ah42_sbp",staggering="Ah",Ns=Ns)
 call test_conv(operator_name="divergence_ah43_sbp",staggering="Ah",Ns=Ns)
 ! call test_conv(operator_name="curl_divergence_ah42_sbp",staggering="Ah",Ns=Ns)
+! call test_conv(operator_name="curl_c_sbp21",staggering="C",Ns=Ns)
+! call test_conv(operator_name="curl_c_sbp42",staggering="C",Ns=Ns)
 ! call test_conv(operator_name="curl_divergence_ah43_sbp",staggering="Ah",Ns=Ns)
 
 call deinit_global_parallel_enviroment()

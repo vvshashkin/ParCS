@@ -16,7 +16,7 @@ type, public :: domain_t
     type(parcomm_t)   :: parcomm
     type(partition_t) :: partition
     type(mesh_t)      :: mesh_o, mesh_x, mesh_y, mesh_xy
-    type(mesh_t)      :: mesh_u, mesh_v, mesh_p
+    type(mesh_t)      :: mesh_u, mesh_v, mesh_p, mesh_w
 
 contains
 

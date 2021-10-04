@@ -543,7 +543,8 @@ $(DOBJ)curl_factory_mod.o: src/differential_operators/curl/curl_factory_mod.f90 
 	$(DOBJ)grid_field_factory_mod.o \
 	$(DOBJ)curl_c_sbp_mod.o \
 	$(DOBJ)sbp_factory_mod.o \
-	$(DOBJ)exchange_factory_mod.o
+	$(DOBJ)exchange_factory_mod.o \
+	$(DOBJ)halo_factory_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -553,6 +554,7 @@ $(DOBJ)curl_c_sbp_mod.o: src/differential_operators/curl/curl_c_sbp_mod.f90 \
 	$(DOBJ)abstract_curl_mod.o \
 	$(DOBJ)sbp_operator_mod.o \
 	$(DOBJ)exchange_abstract_mod.o \
+	$(DOBJ)halo_mod.o \
 	$(DOBJ)tile_mod.o \
 	$(DOBJ)mesh_mod.o
 	@echo $(COTEXT)

@@ -11,6 +11,7 @@ public :: solid_rotation_field_generator_t, solid_rotation_field_generator
 public :: xyz_grad_generator_t, xyz_grad_generator
 public :: cross_polar_flow_generator_t, cross_polar_flow_generator
 public :: cross_polar_flow_div_generator_t, cross_polar_flow_div_generator
+public :: cross_polar_flow_zeta_generator_t, cross_polar_flow_zeta_generator
 public :: random_vector_field_generator_t, random_vector_field_generator
 public :: VSH_curl_free_10_generator_t, VSH_curl_free_10_generator
 public :: zero_scalar_field_generator_t, zero_scalar_field_generator
@@ -81,6 +82,11 @@ contains
     procedure :: get_scalar_field => generate_cross_polar_flow_div
 end type cross_polar_flow_div_generator_t
 
+type, extends(scalar_field_generator_t) :: cross_polar_flow_zeta_generator_t
+contains
+    procedure :: get_scalar_field => generate_cross_polar_flow_zeta
+end type cross_polar_flow_zeta_generator_t
+
 type, extends(vector_field_generator_t) :: random_vector_field_generator_t
 contains
     procedure :: get_vector_field => generate_random_vector_field
@@ -142,6 +148,7 @@ type(solid_rotation_field_generator_t) :: solid_rotation_field_generator
 type(xyz_grad_generator_t)             :: xyz_grad_generator
 type(cross_polar_flow_generator_t)     :: cross_polar_flow_generator
 type(cross_polar_flow_div_generator_t) :: cross_polar_flow_div_generator
+type(cross_polar_flow_zeta_generator_t) :: cross_polar_flow_zeta_generator
 type(random_vector_field_generator_t)  :: random_vector_field_generator
 type(random_scalar_field_generator_t)  :: random_scalar_field_generator
 type(VSH_curl_free_10_generator_t)     :: VSH_curl_free_10_generator
@@ -486,6 +493,22 @@ subroutine generate_cross_polar_flow_div(this,f,npts,nlev,x,y,z)
         end do
     end do
 end subroutine generate_cross_polar_flow_div
+
+subroutine generate_cross_polar_flow_zeta(this,f,npts,nlev,x,y,z)
+    import scalar_field_generator_t
+    class(cross_polar_flow_zeta_generator_t),  intent(in) :: this
+    integer(kind=4), intent(in)                  :: npts, nlev
+    real(kind=8),    intent(in)                  :: x(npts), y(npts), z(npts)
+    real(kind=8),    intent(out)                 :: f(npts,nlev)
+
+    integer(kind=4) :: i, k
+
+    do k = 1, nlev
+        do i=1, npts
+            f(i,k) = (16._8*(1-z(i)**2)*y(i)-13._8*y(i)-z(i)) / (x(i)**2+y(i)**2+z(i)**2)
+        end do
+    end do
+end subroutine generate_cross_polar_flow_zeta
 
 subroutine generate_random_vector_field(this,vx,vy,vz,npts,nlev,x,y,z)
     use latlon_functions_mod, only : sin_phi, cos_phi, sin_lam, cos_lam

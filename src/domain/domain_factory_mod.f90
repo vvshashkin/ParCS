@@ -60,14 +60,17 @@ contains
             domain%mesh_p = domain%mesh_o
             domain%mesh_u = domain%mesh_o
             domain%mesh_v = domain%mesh_o
+            domain%mesh_w = domain%mesh_o
         case ('Ah') !all degrees of freedom at corner points
             domain%mesh_p = domain%mesh_xy
             domain%mesh_u = domain%mesh_xy
             domain%mesh_v = domain%mesh_xy
+            domain%mesh_w = domain%mesh_xy
         case ('C')
             domain%mesh_p = domain%mesh_o
             domain%mesh_u = domain%mesh_x
             domain%mesh_v = domain%mesh_y
+            domain%mesh_w = domain%mesh_xy
         case default
             call parcomm_global%abort("domain_factory_mod, unknown staggering type: "//config%staggering_type)
         end select
@@ -121,14 +124,17 @@ subroutine create_domain_by_arguments(domain, topology_type, staggering_type, nh
         domain%mesh_p = domain%mesh_o
         domain%mesh_u = domain%mesh_o
         domain%mesh_v = domain%mesh_o
+        domain%mesh_w = domain%mesh_o
     case ('Ah') !all degrees of freedom at corner points
         domain%mesh_p = domain%mesh_xy
         domain%mesh_u = domain%mesh_xy
         domain%mesh_v = domain%mesh_xy
+        domain%mesh_w = domain%mesh_xy
     case ('C')
         domain%mesh_p = domain%mesh_o
         domain%mesh_u = domain%mesh_x
         domain%mesh_v = domain%mesh_y
+        domain%mesh_w = domain%mesh_xy
     case default
         call parcomm_global%abort("domain_factory_mod, unknown staggering type: "//staggering_type)
     end select

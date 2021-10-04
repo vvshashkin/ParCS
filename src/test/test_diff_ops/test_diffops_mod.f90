@@ -49,7 +49,7 @@ subroutine test_conv(operator_name,staggering,Ns)
         else if (operator_name(1:3) == "div") then
             errs(kn) = test_div(Ns(kn),operator_name,staggering)
         else if (operator_name(1:4) == "curl") then
-            errs(kn) = test_curl(Ns(kn),operator_name(6:),staggering)
+            errs(kn) = test_curl(Ns(kn),operator_name,staggering)
         else
             call parcomm_global%abort("test_conv: unknown type of operator: " // &
                                                                  operator_name)
@@ -229,7 +229,9 @@ function test_curl(N, curl_oper_name, staggering) result(errs)
 
     use test_fields_mod,   only : set_vector_test_field, set_scalar_test_field, &
                                   VSH_curl_free_10 => VSH_curl_free_10_generator, &
-                                  zero_field => zero_scalar_field_generator
+                                  zero_field => zero_scalar_field_generator, &
+                                  cross_polar => cross_polar_flow_generator, &
+                                  cross_polar_zeta => cross_polar_flow_zeta_generator
 
     use curl_factory_mod,  only : create_curl_operator
     use abstract_curl_mod, only : curl_operator_t
@@ -250,22 +252,34 @@ function test_curl(N, curl_oper_name, staggering) result(errs)
 
     call create_grid_field(u,         ex_halo_width, 0, domain%mesh_u)
     call create_grid_field(v,         ex_halo_width, 0, domain%mesh_v)
-    call create_grid_field(curl,      ex_halo_width, 0, domain%mesh_p)
-    call create_grid_field(curl_true, 0,             0, domain%mesh_p)
+    call create_grid_field(curl,      ex_halo_width, 0, domain%mesh_w)
+    call create_grid_field(curl_true, 0,             0, domain%mesh_w)
 
-    allocate(errs%keys(2), errs%values(2))
+    allocate(errs%keys(4), errs%values(4))
     errs%keys(1)%str = "VSH_curl_free_10 linf"
     errs%keys(2)%str = "VSH_curl_free_10 l2"
+    errs%keys(3)%str = "Cross polar flow linf"
+    errs%keys(4)%str = "Cross polar flow l2"
 
     call set_vector_test_field(u, v, VSH_curl_free_10, domain%mesh_u, domain%mesh_v, &
                                0, "covariant")
     call curl_op%calc_curl(curl, u, v, domain)
 
-    !WORKAROUND: neew mesh%w here
-    call curl%assign(domain%mesh_p%scale, curl, domain%mesh_xy)
+    call curl%assign(domain%mesh_p%scale, curl, domain%mesh_w)
 
-    errs%values(1) = curl%maxabs(domain%mesh_p, domain%parcomm)
-    errs%values(2) = l2norm(curl, domain%mesh_p, domain%parcomm)
+    errs%values(1) = curl%maxabs(domain%mesh_w, domain%parcomm)
+    errs%values(2) = l2norm(curl, domain%mesh_w, domain%parcomm)
+
+    call set_vector_test_field(u, v, cross_polar, domain%mesh_u, domain%mesh_v, &
+                               0, "covariant")
+    call set_scalar_test_field(curl_true, cross_polar_zeta, domain%mesh_w, 0)
+
+    call curl_op%calc_curl(curl, u, v, domain)
+
+    call curl%assign(domain%mesh_xy%scale, curl, -1.0_8, curl_true, domain%mesh_w)
+
+    errs%values(3) = curl%maxabs(domain%mesh_w, domain%parcomm)
+    errs%values(4) = l2norm(curl, domain%mesh_w, domain%parcomm)
 
 end function test_curl
 
@@ -319,10 +333,10 @@ function test_curl_grad(N, curl_oper_name, grad_oper_name, staggering) result(er
     call grad_op%calc_grad(gx,gy,f,domain)
     call curl_op%calc_curl(curl, gx, gy, domain)
     !WORKAROUND: neew domain%mesh_w here
-    call curl%assign(domain%mesh_p%scale, curl, domain%mesh_xy)
+    call curl%assign(domain%mesh_p%scale, curl, domain%mesh_w)
 
-    errs%values(1) = curl%maxabs(domain%mesh_p, domain%parcomm)
-    errs%values(2) = l2norm(curl, domain%mesh_p, domain%parcomm)
+    errs%values(1) = curl%maxabs(domain%mesh_w, domain%parcomm)
+    errs%values(2) = l2norm(curl, domain%mesh_w, domain%parcomm)
 
 end function test_curl_grad
 
