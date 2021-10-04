@@ -45,7 +45,6 @@ subroutine apply_sbp_gf_to_gf(this, f_out, work_tile, &
                                                 nx_out_grid, direction, f_in)
     class(sbp_operator_t), intent(in) :: this
     !work_tile = indices where operator action will be calculated
-    !bounding_tile = output arrat bounds
     type(tile_t),          intent(in) :: work_tile
     integer(kind=4),       intent(in) :: nx_out_grid
     character(len=*),      intent(in) :: direction
