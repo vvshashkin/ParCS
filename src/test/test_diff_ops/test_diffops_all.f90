@@ -141,7 +141,7 @@ end if
 
 errs = test_KE(N=32, KE_oper_name="KE_Cgrid", staggering="C")
 if (parcomm_global%myid==0) then
-    print *, "KE_colocated"
+    print *, "KE_Cgrid"
     print "(A,4E15.7)", "Err: ", errs%values
 end if
 
