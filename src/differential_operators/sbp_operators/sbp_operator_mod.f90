@@ -31,13 +31,48 @@ type sbp_operator_t
 
     !Grid field in -> array out
     procedure, public :: apply_gf_to_array      => apply_sbp_gf_to_array
+    !grid field in (+tile) -> grid field out
+    procedure, public :: apply_gf_to_gf         => apply_sbp_gf_to_gf_tile
     !array in -> array out
     procedure, public :: apply_array_to_array   => apply_sbp_array_to_array
-    generic :: apply => apply_gf_to_array, apply_array_to_array
+    generic :: apply => apply_gf_to_array, apply_array_to_array, apply_gf_to_gf
 
 end type sbp_operator_t
 
 contains
+
+subroutine apply_sbp_gf_to_gf(this, f_out, work_tile, &
+                                                nx_out_grid, direction, f_in)
+    class(sbp_operator_t), intent(in) :: this
+    !work_tile = indices where operator action will be calculated
+    !bounding_tile = output arrat bounds
+    type(tile_t),          intent(in) :: work_tile
+    integer(kind=4),       intent(in) :: nx_out_grid
+    character(len=*),      intent(in) :: direction
+    type(tile_field_t),    intent(in) :: f_in
+    !output:
+    type(tile_field_t),    intent(in) :: f_out
+
+
+    integer(kind=4) :: nx_in_grid, k, f_is, f_ie, f_js, f_je
+
+    nx_in_grid = nx_out_grid-this%dnx
+
+    do k=work_tile%ks, work_tile%ke
+        f_is = f_in%is; f_ie = f_in%ie
+        f_js = f_in%js; f_je = f_in%je
+
+        call sbp_apply(f_out%p(f_out%is:f_out%ie,f_out%js:f_out%je,k),&
+                       f_out%is,  f_out%ie,  f_out%js,  f_out%je,     &
+                       work_tile%is, work_tile%ie, work_tile%js, work_tile%je,    &
+                       f_in%p(f_is:f_ie,f_js:f_je,k), f_is, f_ie, f_js, f_je,     &
+                       nx_in_grid, nx_out_grid,                                   &
+                       this%W_edge_l, this%edge_last_l,                           &
+                       this%W_edge_r, this%edge_first_shift_r, &
+                       this%W_in, this%in_shift, direction)
+    end do
+
+end subroutine apply_sbp_gf_to_gf
 
 subroutine apply_sbp_gf_to_array(this, a_out, work_tile, out_tile, &
                                                 nx_out_grid, direction, f_in)
