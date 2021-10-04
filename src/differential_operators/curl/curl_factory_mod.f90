@@ -16,7 +16,8 @@ subroutine create_curl_operator(curl, curl_operator_name, domain)
 
     if(curl_operator_name(1:8) == "curl_div") then
         call create_curl_operator_div_based(curl, curl_operator_name(6:), domain)
-    else if(curl_operator_name == "curl_c_sbp42") then
+    else if(curl_operator_name == "curl_c_sbp42" .or. &
+            curl_operator_name == "curl_c_sbp21") then
         call create_curl_operator_c_sbp(curl, curl_operator_name, domain)
     else
         call parcomm_global%abort("unknown curl operator name: "// curl_operator_name)
@@ -57,20 +58,31 @@ subroutine create_curl_operator_c_sbp(curl_out, curl_operator_name, domain)
     use curl_c_sbp_mod,  only : curl_c_sbp_t
     use sbp_factory_mod, only : create_sbp_operator
     use exchange_factory_mod, only : create_symmetric_halo_vec_exchange_C
+    use halo_factory_mod,     only : create_halo_procedure
 
     class(curl_operator_t), allocatable, intent(out) :: curl_out
     character(len=*),                    intent(in)  :: curl_operator_name
     type(domain_t),                      intent(in)  :: domain
 
     type(curl_c_sbp_t), allocatable :: curl
-    integer(kind=4) :: halo_width = 4
+    integer(kind=4) :: halo_width
 
     allocate(curl)
 
-    curl%sbp_diff = create_sbp_operator("D42_staggered_c2i")
+    select case(curl_operator_name)
+    case("curl_c_sbp21")
+        curl%sbp_diff = create_sbp_operator("D21_staggered_c2i")
+        halo_width = 2
+    case("curl_c_sbp42")
+        curl%sbp_diff = create_sbp_operator("D42_staggered_c2i")
+        halo_width = 4
+    case default
+        call parcomm_global%abort("unknown sbp curl operator: "//curl_operator_name)
+    end select
     curl%exchange = create_symmetric_halo_vec_exchange_C(domain%partition, domain%parcomm, &
                                                          domain%topology, halo_width, 'full')
 
+    call create_halo_procedure(curl%sync_edges,domain,1,"Ah_scalar_sync")
     call move_alloc(curl, curl_out)
 
 end subroutine create_curl_operator_c_sbp

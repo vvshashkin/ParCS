@@ -13,7 +13,11 @@ use sbp_operators_collection_mod, only : Q21, lastnonzeroQ21, Da2_in, Da2_inshif
                                          W42_staggered_in, W42_staggered_c2i_in_shift, &
                                          W42_staggered_c2i_in_shift,  W42_staggered_i2c_in_shift, &
                                          D42_staggered_c2i, D42_staggered_c2i_last_nonzero, &
-                                         D42_staggered_in, D42_staggered_c2i_in_shift
+                                         D42_staggered_in, D42_staggered_c2i_in_shift, &
+                                         D42_boundary_proj, D42_A_centers, D42_A_interfaces, &
+                                         D21_staggered_c2i, D21_staggered_c2i_last_nonzero, &
+                                         D21_staggered_in, D21_staggered_c2i_in_shift, &
+                                         D21_boundary_proj, D21_A_centers, D21_A_interfaces
 
 implicit none
 
@@ -27,7 +31,7 @@ function create_sbp_operator(sbp_operator_name) result(sbp_op)
     !should be -1 for derivatives, 1 for interpolations
     real(kind=8)                 :: right_side_sign
     !size of edge matrix block
-    integer(kind=4)              :: n_edge, nw_edge
+    integer(kind=4)              :: n_edge, nw_edge, ne
     !
 
     !Initialization of Left-side and inner matrix coefficients
@@ -68,6 +72,16 @@ function create_sbp_operator(sbp_operator_name) result(sbp_op)
         sbp_op%in_shift    = W42_staggered_i2c_in_shift
         sbp_op%dnx = -1
         right_side_sign = 1.0_8
+    else if(sbp_operator_name == "D21_staggered_c2i") then
+        sbp_op%W_edge_l    = D21_staggered_c2i
+        sbp_op%edge_last_l = D21_staggered_c2i_last_nonzero
+        sbp_op%W_in        = D21_staggered_in
+        sbp_op%in_shift    = D21_staggered_c2i_in_shift
+        sbp_op%dnx = 1
+        right_side_sign =-1.0_8
+        sbp_op%proj_operator_l = D21_boundary_proj
+        sbp_op%Al_in = D21_A_centers
+        sbp_op%Al_out = D21_A_interfaces
     else if(sbp_operator_name == "D42_staggered_c2i") then
         sbp_op%W_edge_l    = D42_staggered_c2i
         sbp_op%edge_last_l = D42_staggered_c2i_last_nonzero
@@ -75,6 +89,9 @@ function create_sbp_operator(sbp_operator_name) result(sbp_op)
         sbp_op%in_shift    = D42_staggered_c2i_in_shift
         sbp_op%dnx = 1
         right_side_sign =-1.0_8
+        sbp_op%proj_operator_l = D42_boundary_proj
+        sbp_op%Al_in = D42_A_centers
+        sbp_op%Al_out = D42_A_interfaces
     else
         call parcomm_global%abort("sbp_factory_mod, unknown sbp operator name: "// sbp_operator_name)
     end if
@@ -83,6 +100,18 @@ function create_sbp_operator(sbp_operator_name) result(sbp_op)
     n_edge  = size(sbp_op%W_edge_l,2)
     sbp_op%W_edge_r = right_side_sign * sbp_op%W_edge_l(nw_edge:1:-1,n_edge:1:-1)
     sbp_op%edge_first_shift_r = -sbp_op%edge_last_l(n_edge:1:-1)+1
+    if(allocated(sbp_op%Al_in)) then
+        ne = size(sbp_op%Al_in)
+        sbp_op%Ar_in = sbp_op%Al_in(ne:1:-1)
+    end if
+    if(allocated(sbp_op%Al_out)) then
+        ne = size(sbp_op%Al_out)
+        sbp_op%Ar_out = sbp_op%Al_out(ne:1:-1)
+    end if
+    if(allocated(sbp_op%proj_operator_l)) then
+        ne = size(sbp_op%proj_operator_l)
+        sbp_op%proj_operator_r = sbp_op%proj_operator_l(ne:1:-1)
+    end if
 
 end function create_sbp_operator
 

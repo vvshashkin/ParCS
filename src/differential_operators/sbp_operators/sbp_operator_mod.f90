@@ -16,11 +16,12 @@ type sbp_operator_t
     real(kind=8), allocatable    :: W_in(:)         !inner stencil weights
     integer(kind=4)              :: in_shift        !shift of inner stencil first element with respect to
                                                     !the index of calculated element
-!    real(kind=8), allocatable    :: Al_out(:,:), Al_in(:,:) !Mass matrices at output and input grids left side
-!    real(kind=8), allocatable    :: Ar_out(:,:), Ar_in(:,:) !Mass matrices at output and input grids right side
+    real(kind=8), allocatable    :: Al_out(:), Al_in(:) !Mass matrices at output and input grids left side
+    real(kind=8), allocatable    :: Ar_out(:), Ar_in(:) !Mass matrices at output and input grids right side
     integer(kind=4)              :: dnx  ! difference of the dimensions of output and input grids
                                          ! in the direction of operator application
                                          ! nx_output - nx_input
+    real(kind=8), allocatable    :: proj_operator_l(:), proj_operator_r(:)
 
     contains
     !specialization on different types of input/output arguments

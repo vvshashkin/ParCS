@@ -88,6 +88,16 @@ real(kind=8), parameter :: W42_staggered_c2i_in_shift = -2
 
 
 !SBP staggered differences
+real(kind=8), parameter :: D21_staggered_c2i(2,1) = reshape( [-1.0_8, 1.0_8], [2,1])
+integer(kind=4), parameter :: D21_staggered_c2i_last_nonzero(1) = [2]
+real(kind=8), parameter :: D21_staggered_in(2) = [-1.0_8, 1.0_8]
+real(kind=8), parameter :: D21_staggered_c2i_in_shift = -1
+!Projection operator for left side os stencil
+real(kind=8), parameter :: D21_boundary_proj(2) = [1.5_8,-0.5_8]
+!Mass matrices for cell-center and cell-interface variables (left sude of stencil)
+real(kind=8), parameter :: D21_A_interfaces(2) = [0.5_8, 1._8]
+real(kind=8), parameter :: D21_A_centers(2) = [1._8, 1._8]
+
 real(kind=8), parameter :: D42_staggered_c2i(5,4) = reshape( &
                            [-2.0_8,       3.0_8,     -1.0_8,       0.0_8,       0.0_8,       &
                             -1.0_8,       1.0_8,      0.0_8,       0.0_8,       0.0_8,       &
@@ -97,5 +107,10 @@ real(kind=8), parameter :: D42_staggered_c2i(5,4) = reshape( &
 integer(kind=4), parameter :: D42_staggered_c2i_last_nonzero(4) = [3,2,4,5]
 real(kind=8), parameter :: D42_staggered_in(4) = [1.0_8/24.0_8, -9.0_8/8.0_8, 9.0_8/8.0_8, -1.0/24.0_8]
 real(kind=8), parameter :: D42_staggered_c2i_in_shift = -2
+!Projection operator for left side os stencil
+real(kind=8), parameter :: D42_boundary_proj(3) = [15.0_8/8.0_8, -5.0_8/4.0_8, 3.0_8/8.0_8]
+!Mass matrices for cell-center and cell-interface variables (left sude of stencil)
+real(kind=8), parameter :: D42_A_interfaces(5) = [7._8/18._8, 9._8/8._8, 1._8, 71._8/72._8, 1._8]
+real(kind=8), parameter :: D42_A_centers(4) = [13._8/12._8, 7._8/8._8, 25._8/24._8, 1._8]
 
 end module sbp_operators_collection_mod

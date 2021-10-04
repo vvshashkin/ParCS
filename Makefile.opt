@@ -534,11 +534,6 @@ $(DOBJ)config_domain_mod.o: src/domain/config_domain_mod.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
-$(DOBJ)sbp_mod.o: src/differential_operators/sbp_mod.f90 \
-	$(DOBJ)parcomm_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
 $(DOBJ)curl_factory_mod.o: src/differential_operators/curl/curl_factory_mod.f90 \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)abstract_curl_mod.o \
@@ -547,7 +542,8 @@ $(DOBJ)curl_factory_mod.o: src/differential_operators/curl/curl_factory_mod.f90 
 	$(DOBJ)div_factory_mod.o \
 	$(DOBJ)grid_field_factory_mod.o \
 	$(DOBJ)curl_c_sbp_mod.o \
-	$(DOBJ)sbp_factory_mod.o
+	$(DOBJ)sbp_factory_mod.o \
+	$(DOBJ)exchange_factory_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -556,6 +552,7 @@ $(DOBJ)curl_c_sbp_mod.o: src/differential_operators/curl/curl_c_sbp_mod.f90 \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)abstract_curl_mod.o \
 	$(DOBJ)sbp_operator_mod.o \
+	$(DOBJ)exchange_abstract_mod.o \
 	$(DOBJ)tile_mod.o \
 	$(DOBJ)mesh_mod.o
 	@echo $(COTEXT)
@@ -832,7 +829,6 @@ $(DOBJ)massflux_cgrid_mod.o: src/differential_operators/massflux/massflux_Cgrid_
 	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)sbp_operator_mod.o \
 	$(DOBJ)mesh_mod.o \
-	$(DOBJ)sbp_mod.o \
 	$(DOBJ)tile_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@

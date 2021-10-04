@@ -318,7 +318,7 @@ function test_curl_grad(N, curl_oper_name, grad_oper_name, staggering) result(er
 
     call grad_op%calc_grad(gx,gy,f,domain)
     call curl_op%calc_curl(curl, gx, gy, domain)
-    !WORKAROUND: neew mesh%w here
+    !WORKAROUND: neew domain%mesh_w here
     call curl%assign(domain%mesh_p%scale, curl, domain%mesh_xy)
 
     errs%values(1) = curl%maxabs(domain%mesh_p, domain%parcomm)
