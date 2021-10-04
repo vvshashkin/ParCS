@@ -32,7 +32,7 @@ type sbp_operator_t
     !Grid field in -> array out
     procedure, public :: apply_gf_to_array      => apply_sbp_gf_to_array
     !grid field in (+tile) -> grid field out
-    procedure, public :: apply_gf_to_gf         => apply_sbp_gf_to_gf_tile
+    procedure, public :: apply_gf_to_gf         => apply_sbp_gf_to_gf
     !array in -> array out
     procedure, public :: apply_array_to_array   => apply_sbp_array_to_array
     generic :: apply => apply_gf_to_array, apply_array_to_array, apply_gf_to_gf
@@ -45,12 +45,12 @@ subroutine apply_sbp_gf_to_gf(this, f_out, work_tile, &
                                                 nx_out_grid, direction, f_in)
     class(sbp_operator_t), intent(in) :: this
     !work_tile = indices where operator action will be calculated
-    type(tile_t),          intent(in) :: work_tile
-    integer(kind=4),       intent(in) :: nx_out_grid
-    character(len=*),      intent(in) :: direction
-    type(tile_field_t),    intent(in) :: f_in
+    type(tile_t),          intent(in)  :: work_tile
+    integer(kind=4),       intent(in)  :: nx_out_grid
+    character(len=*),      intent(in)  :: direction
+    type(tile_field_t),    intent(in)  :: f_in
     !output:
-    type(tile_field_t),    intent(in) :: f_out
+    type(tile_field_t),    intent(out) :: f_out
 
 
     integer(kind=4) :: nx_in_grid, k, f_is, f_ie, f_js, f_je
