@@ -54,12 +54,9 @@ subroutine run_RH4_wave()
 
     character(:), allocatable :: namelist_string
 
-    ! real(kind=8),    parameter :: rotation_period = 1.0_8, rotation_axis_angle = 0.0_8*pi/8
-    ! integer(kind=4), parameter :: N_periods=2
-
-    real(kind=8), parameter    :: dt = 900._8
-    real(kind=8), parameter    :: tau_write = 1800._8
-    integer(kind=4), parameter :: nstep_write = nint(tau_write/dt)
+    real(kind=8)      :: dt
+    real(kind=8)      :: tau_write
+    integer(kind=4)   :: nstep_write
 
     real(kind=8)    :: time, l2err, l2_ex
     integer(kind=4) :: it
@@ -71,14 +68,15 @@ subroutine run_RH4_wave()
     config%config_domain%config_metric%omega = omega
     config%config_domain%config_metric%scale = a
 
+    dt = config%dt
+    tau_write = config%tau_write
+    nstep_write = nint(tau_write/dt)
+
     height_field = rh4_wave_height_generator_t(h_mean = h_mean, omega = omega, &
            a = a, grav = grav)
 
     velocity_field = rh4_wave_wind_generator_t(a = a, omega = omega)
-    !
-    ! if (parcomm_global%myid==0) print*, "Advective CFL = ", &
-    !         real(dt*config_ts2%u0/(2*pi/4/config%config_domain%N)/config_ts2%a,4)
-    !
+
     if (parcomm_global%myid==0) print*, "Gravity Wave CFL = ", &
             real(dt*sqrt(h_mean*grav)    &
             /(2*pi/4/config%config_domain%N)/a,4)
@@ -107,12 +105,8 @@ subroutine run_RH4_wave()
         call outputer%write(state%h, domain, 'h_swm.dat',1)
         call outputer_vec%write(state%u,state%v,domain,"u.dat","v.dat",1)
     end select
-    ! select type(state_ex)
-    ! class is (stvec_swm_t)
-    !     l2_ex = l2norm(state_ex%h,  domain%mesh_p, domain%parcomm)
-    ! end select
-    !
-    do it = 1, int(20*24*3600/dt)
+
+    do it = 1, int(config%simulation_time/dt)
 
         call timescheme%step(state, operator, domain, dt)
 
