@@ -21,33 +21,33 @@ subroutine create_coriolis(coriolis_op, coriolis_op_name, domain)
 
     select case(coriolis_op_name)
 
-    case("coriolis_A_Ah")
-        call create_coriolis_unstaggered(coriolis_op, domain)
+    case("coriolis_colocated")
+        call create_coriolis_colocated(coriolis_op, domain)
     case default
         call parcomm_global%abort("Unknown coriolis operator: "//coriolis_op_name)
     end select
 
 end subroutine create_coriolis
 
-subroutine create_coriolis_unstaggered(coriolis_op, domain)
+subroutine create_coriolis_colocated(coriolis_op, domain)
 
-    use coriolis_unstag_mod,    only : coriolis_unstag_t
+    use coriolis_colocated_mod, only : coriolis_colocated_t
     use grid_field_factory_mod, only : create_grid_field
 
     class(coriolis_operator_t), allocatable, intent(out) :: coriolis_op
     type(domain_t),                          intent(in)  :: domain
 
-    type(coriolis_unstag_t), allocatable :: coriolis_unstag
+    type(coriolis_colocated_t), allocatable :: coriolis_colocated
 
-    allocate(coriolis_unstag)
+    allocate(coriolis_colocated)
 
-    call create_grid_field(coriolis_unstag%f, 0, 0, domain%mesh_u)
+    call create_grid_field(coriolis_colocated%f, 0, 0, domain%mesh_u)
 
-    call calc_coriolis_parameter(coriolis_unstag%f, domain%mesh_p)
+    call calc_coriolis_parameter(coriolis_colocated%f, domain%mesh_p)
 
-    call move_alloc(coriolis_unstag, coriolis_op)
+    call move_alloc(coriolis_colocated, coriolis_op)
 
-end subroutine create_coriolis_unstaggered
+end subroutine create_coriolis_colocated
 
 subroutine calc_coriolis_parameter(f, mesh)
 

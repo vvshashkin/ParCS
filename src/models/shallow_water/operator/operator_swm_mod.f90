@@ -58,7 +58,7 @@ subroutine apply(this, vout, vin, domain)
             call this%co2contra_op%transform(this%ut, this%vt, vin%u, vin%v, domain)
 
             !momentum eq part
-            call this%KE_op%calc_KE(this%KE, vin%u, vin%v, domain)
+            call this%KE_op%calc_KE(this%KE, vin%u, vin%v, this%ut, this%vt, domain)
 
             !store grav*grad(h+hs+KE) in KE array
             call this%KE%update(this%grav, vin%h, this%grav, this%h_surf, domain%mesh_p)

@@ -11,11 +11,11 @@ contains
 end type
 
 abstract interface
-    subroutine calc_KE_i(this, KE, u, v, domain)
+    subroutine calc_KE_i(this, KE, u, v, ut, vt, domain)
         import KE_operator_t, grid_field_t, domain_t
         class(KE_operator_t), intent(inout)  :: this
         type(domain_t),       intent(in)    :: domain
-        type(grid_field_t),   intent(inout) :: u, v
+        type(grid_field_t),   intent(inout) :: u, v, ut, vt
         type(grid_field_t),   intent(inout) :: KE
     end subroutine calc_KE_i
 end interface

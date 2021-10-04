@@ -10,7 +10,7 @@ contains
 
 subroutine create_KE_operator(ke_operator, ke_operator_name, domain)
 
-    use ke_unstaggered_mod, only : ke_unstaggered_t
+    use ke_colocated_mod, only : ke_colocated_t
 
     class(KE_operator_t), allocatable, intent(out) :: ke_operator
     character(len=*),                  intent(in)  :: ke_operator_name
@@ -18,12 +18,44 @@ subroutine create_KE_operator(ke_operator, ke_operator_name, domain)
 
     select case(ke_operator_name)
 
-    case("KE_A_Ah")
-        ke_operator = ke_unstaggered_t()
+    case("KE_colocated")
+        ke_operator = ke_colocated_t()
+    case("KE_Cgrid")
+        call create_KE_Cgrid_operator(ke_operator, domain)
     case default
         call parcomm_global%abort("Unknown KE operator: "//ke_operator_name)
     end select
 
 end subroutine create_KE_operator
+
+subroutine create_KE_Cgrid_operator(ke_operator, domain)
+
+    use grid_field_factory_mod,       only : create_grid_field
+    use ke_Cgrid_mod,                 only : ke_Cgrid_t
+    use interpolator_v2h_factory_mod, only : create_v2h_interpolator
+
+    class(KE_operator_t), allocatable, intent(out) :: ke_operator
+    type(domain_t),                    intent(in)  :: domain
+
+    type(ke_Cgrid_t), allocatable :: ke_cgrid_op
+    integer(kind=4) :: halo_width
+
+    !WORKAROUND
+    halo_width = 4
+
+    allocate(ke_cgrid_op)
+
+    call create_grid_field(ke_cgrid_op%KE_u, halo_width, 0, domain%mesh_u)
+    call create_grid_field(ke_cgrid_op%KE_v, halo_width, 0, domain%mesh_v)
+
+    call create_grid_field(ke_cgrid_op%KE_uh, 0, 0, domain%mesh_u)
+    call create_grid_field(ke_cgrid_op%KE_vh, 0, 0, domain%mesh_v)
+
+    !WORKAROUND
+    call create_v2h_interpolator(ke_cgrid_op%interp_op, "W42_stagered_interp_i2c" , domain)
+
+    call move_alloc(ke_cgrid_op, ke_operator)
+
+end subroutine create_KE_Cgrid_operator
 
 end module KE_factory_mod
