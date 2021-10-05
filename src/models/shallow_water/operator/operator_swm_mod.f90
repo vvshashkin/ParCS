@@ -18,6 +18,8 @@ use parcomm_mod,   only : parcomm_global
 
 use vec_math_mod, only : mass, l2norm
 
+use sbp_norm_mod, only : calc_mass
+
 implicit none
 
 type, public, extends(operator_t) :: operator_swm_t
@@ -30,11 +32,14 @@ type, public, extends(operator_t) :: operator_swm_t
     class(massflux_operator_t),  allocatable :: massflux_op
     class(co2contra_operator_t), allocatable :: co2contra_op
 
+    real(kind=8), allocatable :: A_p(:), A_u(:), A_v(:)
+
     type(grid_field_t) :: h_surf !orography
     type(grid_field_t) :: div, grad_x, grad_y, curl
     type(grid_field_t) :: cor_u, cor_v
     type(grid_field_t) :: KE !kinetic energy
     type(grid_field_t) :: KE_diag_u, KE_diag_v !kinetic energy
+    type(grid_field_t) :: PE_diag, hu_diag, hv_diag !kinetic energy
     type(grid_field_t) :: ut, vt !contravariant components
     type(grid_field_t) :: hu, hv !mass fluxes in continuty eq.
 
@@ -64,17 +69,6 @@ subroutine apply(this, vout, vin, domain)
             call this%massflux_op%calc_massflux(this%hu, this%hv, &
                          vin%h, this%ut, this%vt, domain)
 
-            !!ENERGY DIAGNOSTICS
-            ! call this%KE_diag_u%assign_prod(1.0_8, this%hu, vin%u, domain%mesh_u)
-            ! call this%KE_diag_v%assign_prod(1.0_8, this%hv, vin%v, domain%mesh_v)
-            !
-            ! ke_u = mass(this%KE_diag_u, domain%mesh_u, domain%parcomm)
-            ! ke_v = mass(this%KE_diag_v, domain%mesh_v, domain%parcomm)
-            !
-            ! pe = l2norm(vin%h, domain%mesh_p, domain%parcomm)
-            !
-            ! print*, ke_u+ke_v, pe
-
             !momentum eq part
             call this%KE_op%calc_KE(this%KE, vin%u, vin%v, this%ut, this%vt, domain)
 
@@ -88,6 +82,8 @@ subroutine apply(this, vout, vin, domain)
             call this%coriolis_op%calc_coriolis_vec_inv(this%cor_u, this%cor_v, &
                                             this%hu, this%hv, vin%h, this%curl, domain)
 
+
+
             call vout%u%assign(-1.0_8, this%grad_x, 1.0_8, this%cor_u, domain%mesh_u)
             call vout%v%assign(-1.0_8, this%grad_y, 1.0_8, this%cor_v, domain%mesh_v)
 
@@ -95,6 +91,39 @@ subroutine apply(this, vout, vin, domain)
             call this%div_op%calc_div(this%div, this%hu, this%hv, domain)
 
             call vout%h%assign(-1.0_8, this%div, domain%mesh_p)
+
+
+            !ENERGY DIAGNOSTICS
+
+            !CORIOLIS OPERATOR TENDENCY
+            call this%KE_diag_u%assign_prod(1.0_8, this%hu, this%cor_u, domain%mesh_u)
+            call this%KE_diag_v%assign_prod(1.0_8, this%hv, this%cor_v, domain%mesh_v)
+            ke_u = calc_mass(this%KE_diag_u, this%A_u, this%A_p, domain%mesh_u, domain%parcomm)
+            ke_v = calc_mass(this%KE_diag_v, this%A_p, this%A_v, domain%mesh_v, domain%parcomm)
+            print*, 'coriolis tendency', ke_u+ke_v
+
+            !FULL ENERGY TENDENCY
+            !Need to check that everything correct! 
+            call this%massflux_op%calc_massflux(this%hu_diag, this%hv_diag, &
+                         vout%h, this%ut, this%vt, domain)
+
+            call this%PE_diag%assign_prod(1.0_8, vin%h, vout%h, domain%mesh_p)
+
+            call this%hu_diag%assign_prod(0.5_8, this%hu_diag, vin%u, domain%mesh_u)
+            call this%hu_diag%assign_prod(0.5_8, this%hv_diag, vin%v, domain%mesh_v)
+
+
+            call this%KE_diag_u%assign_prod(1.0_8, this%hu, vout%u, domain%mesh_u)
+            call this%KE_diag_v%assign_prod(1.0_8, this%hv, vout%v, domain%mesh_v)
+
+            ke_u = calc_mass(this%KE_diag_u, this%A_u, this%A_p, domain%mesh_u, domain%parcomm) + &
+                   calc_mass(this%hu_diag,   this%A_u, this%A_p, domain%mesh_u, domain%parcomm)
+            ke_v = calc_mass(this%KE_diag_v, this%A_p, this%A_v, domain%mesh_v, domain%parcomm) + &
+                   calc_mass(this%hv_diag,   this%A_p, this%A_v, domain%mesh_v, domain%parcomm)
+            pe   = calc_mass(this%PE_diag,   this%A_p, this%A_p, domain%mesh_p, domain%parcomm)
+
+            print*, 'Full energy tendency', ke_u+ke_v+this%grav*pe
+
         class default
             call parcomm_global%abort("swm operator failure: vin of wrong type")
         end select
