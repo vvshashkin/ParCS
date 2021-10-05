@@ -10,7 +10,7 @@ type, public, extends(coriolis_operator_t) :: coriolis_colocated_t
     type(grid_field_t) :: f !coriolis parameter
 contains
     procedure, public :: calc_coriolis
-    procedure, public :: calc_coriolis_curl
+    procedure, public :: calc_coriolis_vec_inv
 end type coriolis_colocated_t
 
 contains
@@ -57,31 +57,31 @@ subroutine calc_coriolis_on_tile(ut, vt, f, cor_u, cor_v, mesh_u, mesh_v)
 
 
 end subroutine calc_coriolis_on_tile
-subroutine calc_coriolis_curl(this, cor_u, cor_v, ut, vt, curl, domain)
+subroutine calc_coriolis_vec_inv(this, cor_u, cor_v, hu, hv, h, curl, domain)
     class(coriolis_colocated_t), intent(inout) :: this
     type(domain_t),              intent(in)    :: domain
-    type(grid_field_t),          intent(inout) :: ut, vt!contravariant components
-    type(grid_field_t),          intent(inout) :: curl
+    type(grid_field_t),          intent(inout) :: hu, hv! massflux contravariant components
+    type(grid_field_t),          intent(inout) :: h, curl
     type(grid_field_t),          intent(inout) :: cor_u, cor_v
 
     integer(kind=4) :: t
 
     do t = domain%partition%ts, domain%partition%te
-        call calc_coriolis_curl_on_tile(ut%tile(t), vt%tile(t), curl%tile(t), this%f%tile(t), &
+        call calc_coriolis_vec_inv_tile(hu%tile(t), hv%tile(t), h%tile(t), curl%tile(t), this%f%tile(t), &
                                         cor_u%tile(t), cor_v%tile(t), &
                                         domain%mesh_u%tile(t), domain%mesh_v%tile(t))
     end do
 
 
-end subroutine calc_coriolis_curl
+end subroutine calc_coriolis_vec_inv
 
-subroutine calc_coriolis_curl_on_tile(ut, vt, curl, f, cor_u, cor_v, mesh_u, mesh_v)
+subroutine calc_coriolis_vec_inv_tile(hu, hv, h, curl, f, cor_u, cor_v, mesh_u, mesh_v)
 
     !coriolis(\vec{u}) = f*\vec{u}^\perp
 
     use mesh_mod, only : tile_mesh_t
 
-    type(tile_field_t), intent(in)    :: ut, vt, curl, f
+    type(tile_field_t), intent(in)    :: hu, hv, curl, f, h
     type(tile_field_t), intent(inout) :: cor_u, cor_v
     type(tile_mesh_t),  intent(in)    :: mesh_u, mesh_v
 
@@ -92,12 +92,12 @@ subroutine calc_coriolis_curl_on_tile(ut, vt, curl, f, cor_u, cor_v, mesh_u, mes
     do k = mesh_u%ks, mesh_u%ke
         do j = mesh_u%js, mesh_u%je
             do i = mesh_u%is, mesh_u%ie
-                cor_u%p(i,j,k) =  (f%p(i,j,1)+curl%p(i,j,k))*vt%p(i,j,k)*mesh_u%G(i,j)
-                cor_v%p(i,j,k) = -(f%p(i,j,1)+curl%p(i,j,k))*ut%p(i,j,k)*mesh_u%G(i,j)
+                cor_u%p(i,j,k) =  (f%p(i,j,1)+curl%p(i,j,k))*hv%p(i,j,k)/h%p(i,j,k)*mesh_u%G(i,j)
+                cor_v%p(i,j,k) = -(f%p(i,j,1)+curl%p(i,j,k))*hu%p(i,j,k)/h%p(i,j,k)*mesh_u%G(i,j)
             end do
         end do
     end do
 
 
-end subroutine calc_coriolis_curl_on_tile
+end subroutine calc_coriolis_vec_inv_tile
 end module coriolis_colocated_mod

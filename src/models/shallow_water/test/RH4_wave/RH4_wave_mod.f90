@@ -93,8 +93,8 @@ subroutine run_RH4_wave()
 
     print*, 4*domain%partition%Nh, 2*domain%partition%Nh+1
 
-    call create_latlon_outputer(outputer, 2*domain%partition%Nh+1, 4*domain%partition%Nh, "Ah", domain)
-    call create_latlon_vec_outputer(outputer_vec,  2*domain%partition%Nh+1, 4*domain%partition%Nh, "Ah", &
+    call create_latlon_outputer(outputer, 2*domain%partition%Nh+1, 4*domain%partition%Nh, "A", domain)
+    call create_latlon_vec_outputer(outputer_vec,  2*domain%partition%Nh+1, 4*domain%partition%Nh, "C", &
                                    "covariant", domain)
 
     call get_exact_solution(state,    domain)

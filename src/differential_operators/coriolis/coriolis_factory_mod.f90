@@ -23,12 +23,62 @@ subroutine create_coriolis(coriolis_op, coriolis_op_name, domain)
 
     case("coriolis_colocated")
         call create_coriolis_colocated(coriolis_op, domain)
+    case("coriolis_Cgrid_sbp42")
+        call create_coriolis_Cgrid_sbp(coriolis_op, "W42_stagered_interp_i2c", &
+                                          "W42_stagered_interp_c2i", domain)
+    case("coriolis_Cgrid_sbp21")
+        call create_coriolis_Cgrid_sbp(coriolis_op, "W21_stagered_interp_i2c", &
+                                          "W21_stagered_interp_c2i", domain)
     case default
         call parcomm_global%abort("Unknown coriolis operator: "//coriolis_op_name)
     end select
 
 end subroutine create_coriolis
+subroutine create_coriolis_Cgrid_sbp(coriolis_op, sbp_i2c_interp_name, sbp_c2i_interp_name, domain)
 
+    use coriolis_Cgrid_mod,     only : coriolis_Cgrid_t
+    use grid_field_factory_mod, only : create_grid_field
+
+    use interpolator_h2v_factory_mod, only : create_h2v_interpolator
+    use interpolator_v2h_factory_mod, only : create_v2h_interpolator
+    use interpolator_w2h_factory_mod, only : create_w2h_interpolator
+
+    class(coriolis_operator_t), allocatable, intent(out) :: coriolis_op
+    character(len=*),                        intent(in)  :: sbp_i2c_interp_name, &
+                                                            sbp_c2i_interp_name
+    type(domain_t),                          intent(in)  :: domain
+
+    type(coriolis_Cgrid_t), allocatable :: cor_Cgrid
+
+    integer(kind=4) :: halo_width
+
+    !WORKAROUND
+    halo_width = 3
+
+    allocate(cor_Cgrid)
+
+    call create_grid_field(cor_Cgrid%f, 0, 0, domain%mesh_p)
+    call calc_coriolis_parameter(cor_Cgrid%f, domain%mesh_p)
+
+    call create_grid_field(cor_Cgrid%Ghu, halo_width+1, 0, domain%mesh_u)
+    call create_grid_field(cor_Cgrid%Ghv, halo_width+1, 0, domain%mesh_v)
+
+    call create_grid_field(cor_Cgrid%Ghu_p, 0, 0, domain%mesh_p)
+    call create_grid_field(cor_Cgrid%Ghv_p, 0, 0, domain%mesh_p)
+
+    call create_grid_field(cor_Cgrid%curl_p,  0, 0, domain%mesh_p)
+
+    call create_grid_field(cor_Cgrid%cor_u_p, halo_width+1, 0, domain%mesh_p)
+    call create_grid_field(cor_Cgrid%cor_v_p, halo_width+1, 0, domain%mesh_p)
+
+
+    call create_v2h_interpolator(cor_Cgrid%interp_v2h_op, sbp_i2c_interp_name, domain)
+    call create_h2v_interpolator(cor_Cgrid%interp_h2v_op, sbp_c2i_interp_name, domain)
+    call create_w2h_interpolator(cor_Cgrid%interp_w2h_op, sbp_i2c_interp_name, domain)
+
+    call move_alloc(cor_Cgrid, coriolis_op)
+
+end subroutine create_coriolis_Cgrid_sbp
 subroutine create_coriolis_colocated(coriolis_op, domain)
 
     use coriolis_colocated_mod, only : coriolis_colocated_t
