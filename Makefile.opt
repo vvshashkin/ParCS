@@ -27,6 +27,13 @@ $(DEXE)RH4_WAVE_MAIN: $(MKDIRS) $(DOBJ)rh4_wave_main.o \
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) RH4_WAVE_MAIN
+$(DEXE)BAROTROPIC_INST_MAIN: $(MKDIRS) $(DOBJ)barotropic_inst_main.o \
+	$(DOBJ)avost.o \
+	$(DOBJ)auxhs.o
+	@rm -f $(filter-out $(DOBJ)barotropic_inst_main.o,$(EXESOBJ))
+	@echo $(LITEXT)
+	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
+EXES := $(EXES) BAROTROPIC_INST_MAIN
 $(DEXE)TS2_MAIN: $(MKDIRS) $(DOBJ)ts2_main.o \
 	$(DOBJ)avost.o \
 	$(DOBJ)auxhs.o
@@ -436,7 +443,8 @@ $(DOBJ)test_fields_mod.o: src/test_fields/test_fields_mod.f90 \
 	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)const_mod.o \
 	$(DOBJ)sph_coords_mod.o \
-	$(DOBJ)latlon_functions_mod.o
+	$(DOBJ)latlon_functions_mod.o \
+	$(DOBJ)barotropic_instability_u_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -613,6 +621,14 @@ $(DOBJ)co2contra_cgrid_mod.o: src/differential_operators/co2contra/co2contra_Cgr
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)coriolis_colocated_mod.o: src/differential_operators/coriolis/coriolis_colocated_mod.f90 \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)abstract_coriolis_mod.o \
+	$(DOBJ)mesh_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)abstract_coriolis_mod.o: src/differential_operators/coriolis/abstract_coriolis_mod.f90 \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)domain_mod.o
@@ -624,18 +640,10 @@ $(DOBJ)coriolis_factory_mod.o: src/differential_operators/coriolis/coriolis_fact
 	$(DOBJ)abstract_coriolis_mod.o \
 	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)grid_field_mod.o \
-	$(DOBJ)coriolis_unstag_mod.o \
+	$(DOBJ)coriolis_colocated_mod.o \
 	$(DOBJ)grid_field_factory_mod.o \
 	$(DOBJ)mesh_mod.o \
 	$(DOBJ)sph_coords_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
-$(DOBJ)coriolis_unstag_mod.o: src/differential_operators/coriolis/coriolis_unstag_mod.f90 \
-	$(DOBJ)grid_field_mod.o \
-	$(DOBJ)domain_mod.o \
-	$(DOBJ)abstract_coriolis_mod.o \
-	$(DOBJ)mesh_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -715,6 +723,24 @@ $(DOBJ)abstract_div_mod.o: src/differential_operators/divergence/abstract_div_mo
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)interpolator_v2h_mod.o: src/differential_operators/interpolator_2d/interpolator_v2h_mod.f90 \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)exchange_abstract_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)sbp_operator_mod.o \
+	$(DOBJ)tile_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)interpolator_v2h_factory_mod.o: src/differential_operators/interpolator_2d/interpolator_v2h_factory_mod.f90 \
+	$(DOBJ)interpolator_v2h_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)sbp_factory_mod.o \
+	$(DOBJ)exchange_factory_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)grad_a2_mod.o: src/differential_operators/gradient/grad_a2_mod.f90 \
 	$(DOBJ)abstract_grad_mod.o \
 	$(DOBJ)grid_field_mod.o \
@@ -777,7 +803,24 @@ $(DOBJ)grad_factory_mod.o: src/differential_operators/gradient/grad_factory_mod.
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
-$(DOBJ)ke_unstaggered_mod.o: src/differential_operators/kinetic_energy/ke_unstaggered_mod.f90 \
+$(DOBJ)ke_factory_mod.o: src/differential_operators/kinetic_energy/KE_factory_mod.f90 \
+	$(DOBJ)abstract_ke_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)ke_colocated_mod.o \
+	$(DOBJ)grid_field_factory_mod.o \
+	$(DOBJ)ke_cgrid_mod.o \
+	$(DOBJ)interpolator_v2h_factory_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)abstract_ke_mod.o: src/differential_operators/kinetic_energy/abstract_KE_mod.f90 \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)domain_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)ke_colocated_mod.o: src/differential_operators/kinetic_energy/KE_colocated_mod.f90 \
 	$(DOBJ)abstract_ke_mod.o \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)domain_mod.o \
@@ -785,17 +828,12 @@ $(DOBJ)ke_unstaggered_mod.o: src/differential_operators/kinetic_energy/ke_unstag
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
-$(DOBJ)ke_factory_mod.o: src/differential_operators/kinetic_energy/KE_factory_mod.f90 \
+$(DOBJ)ke_cgrid_mod.o: src/differential_operators/kinetic_energy/KE_Cgrid_mod.f90 \
 	$(DOBJ)abstract_ke_mod.o \
-	$(DOBJ)domain_mod.o \
-	$(DOBJ)parcomm_mod.o \
-	$(DOBJ)ke_unstaggered_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
-$(DOBJ)abstract_ke_mod.o: src/differential_operators/kinetic_energy/abstract_KE_mod.f90 \
 	$(DOBJ)grid_field_mod.o \
-	$(DOBJ)domain_mod.o
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)interpolator_v2h_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -1086,6 +1124,47 @@ $(DOBJ)rh4_wave_main.o: src/models/shallow_water/test/RH4_wave/RH4_wave_main.f90
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)barotropic_instability_u_mod.o: src/models/shallow_water/test/barotropic_instability/barotropic_instability_u_mod.f90 \
+	$(DOBJ)const_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)barotropic_inst_main.o: src/models/shallow_water/test/barotropic_instability/barotropic_inst_main.f90 \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)barotropic_inst_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)barotropic_inst_mod.o: src/models/shallow_water/test/barotropic_instability/barotropic_inst_mod.f90 \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)domain_factory_mod.o \
+	$(DOBJ)stvec_mod.o \
+	$(DOBJ)stvec_swm_mod.o \
+	$(DOBJ)stvec_swm_factory_mod.o \
+	$(DOBJ)operator_mod.o \
+	$(DOBJ)operator_swm_factory_mod.o \
+	$(DOBJ)timescheme_mod.o \
+	$(DOBJ)timescheme_factory_mod.o \
+	$(DOBJ)outputer_abstract_mod.o \
+	$(DOBJ)outputer_factory_mod.o \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)config_swm_mod.o \
+	$(DOBJ)config_barotropic_inst_mod.o \
+	$(DOBJ)const_mod.o \
+	$(DOBJ)test_fields_mod.o \
+	$(DOBJ)vec_math_mod.o \
+	$(DOBJ)namelist_read_mod.o \
+	$(DOBJ)barotropic_instability_u_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)config_barotropic_inst_mod.o: src/models/shallow_water/test/barotropic_instability/config_barotropic_inst_mod.f90 \
+	$(DOBJ)config_mod.o \
+	$(DOBJ)const_mod.o \
+	$(DOBJ)parcomm_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)ts2_mod.o: src/models/shallow_water/test/ts2/ts2_mod.f90 \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)domain_factory_mod.o \
@@ -1266,6 +1345,8 @@ $(DOBJ)test_diffops_mod.o: src/test/test_diff_ops/test_diffops_mod.f90 \
 	$(DOBJ)co2contra_factory_mod.o \
 	$(DOBJ)curl_factory_mod.o \
 	$(DOBJ)abstract_curl_mod.o \
+	$(DOBJ)ke_factory_mod.o \
+	$(DOBJ)abstract_ke_mod.o \
 	$(DOBJ)halo_mod.o \
 	$(DOBJ)halo_factory_mod.o \
 	$(DOBJ)coriolis_factory_mod.o \

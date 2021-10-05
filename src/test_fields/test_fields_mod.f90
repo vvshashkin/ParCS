@@ -26,6 +26,8 @@ public :: solid_rotated_scalar_field_t
 
 public :: ts2_height_generator_t
 public :: rh4_wave_height_generator_t, rh4_wave_wind_generator_t
+public :: barotropic_instability_wind_generator_t
+public :: barotropic_instability_height_generator_t
 
 public :: KE_scalar_field_t
 
@@ -149,6 +151,23 @@ type, extends(vector_field_generator_t) :: rh4_wave_wind_generator_t
 contains
     procedure :: get_vector_field => generate_rh4_wave_wind_field
 end type rh4_wave_wind_generator_t
+
+type, extends(scalar_field_generator_t) :: barotropic_instability_height_generator_t
+    real(kind=8)    :: H0
+    real(kind=8)    :: H_north  !height at North pole
+    integer(kind=4) :: Nq  !number of pre-computed latitudes of zonal symmetric h
+    real(kind=8), allocatable :: H_zonal(:)
+    real(kind=8)    :: dphi !step between precomputed latitudes
+    real(kind=8)    :: h_pert !height of perturbation
+contains
+    procedure :: get_scalar_field => generate_barotropic_instability_height
+end type barotropic_instability_height_generator_t
+
+type, extends(vector_field_generator_t) :: barotropic_instability_wind_generator_t
+    real(kind=8) :: u0 = 1.0_8
+contains
+    procedure :: get_vector_field => generate_barotropic_instability_wind
+end type barotropic_instability_wind_generator_t
 
 !!!field generator instances
 type(xyz_scalar_field_generator_t)     :: xyz_scalar_field_generator
@@ -730,6 +749,71 @@ subroutine generate_rh4_wave_height_field(this, f, npts, nlev, x, y, z)
     end do
 
 end subroutine generate_rh4_wave_height_field
+
+subroutine generate_barotropic_instability_wind(this, vx, vy, vz, npts, nlev, x, y, z)
+
+    use const_mod, only : pi
+    use barotropic_instability_u_mod, only : u_fun=>barotropic_instability_u
+
+    class(barotropic_instability_wind_generator_t),         intent(in)  :: this
+    integer(kind=4),                          intent(in)  :: npts, nlev
+    real(kind=8),       dimension(npts),      intent(in)  :: x, y, z
+    real(kind=8),       dimension(npts,nlev), intent(out) :: vx, vy, vz
+
+    integer(kind=4) :: i, k
+    real(kind=8)    :: phi, u, ex, ey
+    real(kind=8), parameter :: phi0 = pi/7d0, phi1 = .5d0*pi-phi0
+
+    do k = 1, nlev
+        do i=1, npts
+            phi = asin(z(i) / sqrt(x(i)**2+y(i)**2+z(i)**2))
+            u = u_fun(this%u0, phi)
+            ex = -y(i) / max(sqrt(x(i)**2+y(i)**2),1e-14)
+            ey =  x(i) / max(sqrt(x(i)**2+y(i)**2),1e-14)
+
+            vx(i,k) = ex*u
+            vy(i,k) = ey*u
+            vz(i,k) = 0.0_8
+        end do
+    end do
+end subroutine generate_barotropic_instability_wind
+
+subroutine generate_barotropic_instability_height(this, f, npts, nlev, x, y, z)
+
+    use const_mod, only : pi
+    use sph_coords_mod, only : cart2sph
+
+    class(barotropic_instability_height_generator_t), intent(in)  :: this
+    integer(kind=4),                    intent(in)  :: npts, nlev
+    real(kind=8),                       intent(in)  :: x(npts), y(npts), z(npts)
+    real(kind=8),                       intent(out) :: f(npts,nlev)
+
+    integer(kind=4) :: i, k, indx
+    real(kind=8), parameter :: phi0 = pi/7d0, phi1 = .5d0*pi-phi0
+    real(kind=8),  parameter :: lat_diam = 1.0_8/15.0_8, lon_diam = 1.0_8/3.0_8
+    real(kind=8) :: phi, lam
+
+
+    do k = 1, nlev
+        do i=1, npts
+            call cart2sph(x(i), y(i), z(i), lam, phi)
+            if(phi<=phi0) then
+                f(i,k) = this%H0
+            else if(phi >phi1) then
+                f(i,k) = this%H_north
+            else
+                phi = (phi-phi0) / this%dphi
+                indx = floor(phi)
+                phi = phi - indx
+                f(i,k) = this%H_zonal(indx) + (this%H_zonal(indx+1)-this%H_zonal(indx))*phi
+            end if
+            if(lam>pi) lam = lam -2.0_8*pi
+            f(i,k) = f(i,k) + this%h_pert*cos(phi)* &
+                                 exp(-(lam/lon_diam)**2)*exp(-((phi-.25_8*pi)/lat_diam)**2)
+        end do
+    end do
+
+end subroutine generate_barotropic_instability_height
 subroutine generate_zero_scalar_field(this, f, npts, nlev, x, y, z)
 
     class(zero_scalar_field_generator_t),  intent(in) :: this
