@@ -96,9 +96,19 @@ subroutine run_barotropic_inst()
 
     call create_timescheme(timescheme, state, 'rk4')
 
-    call create_latlon_outputer(outputer, 2*domain%partition%Nh+1, 4*domain%partition%Nh, "Ah", domain)
-    call create_latlon_vec_outputer(outputer_vec,  2*domain%partition%Nh+1, 4*domain%partition%Nh, "Ah", &
+    if(config%config_domain%staggering_type == "Ah") then
+        call create_latlon_outputer(outputer, 2*domain%partition%Nh+1, 4*domain%partition%Nh, "Ah", domain)
+        call create_latlon_vec_outputer(outputer_vec,  2*domain%partition%Nh+1, 4*domain%partition%Nh, "Ah", &
                                    "covariant", domain)
+    else if(config%config_domain%staggering_type == "C") then
+        call create_latlon_outputer(outputer, 2*domain%partition%Nh+1, 4*domain%partition%Nh, "A", domain)
+        call create_latlon_vec_outputer(outputer_vec,  2*domain%partition%Nh+1, 4*domain%partition%Nh, "C", &
+                                       "covariant", domain)
+    else
+        call parcomm_global%abort("This staggering is not implemented in"//&
+                                  " barotropic instability swe test output:"//&
+                                  config%config_domain%staggering_type)
+    end if
 
     call get_exact_solution(state,    domain)
     call get_exact_solution(state_ex, domain)
@@ -111,6 +121,7 @@ subroutine run_barotropic_inst()
 
     do it = 1, int(config%simulation_time/dt)
 
+        !print *, "tstep", it
         call timescheme%step(state, operator, domain, dt)
 
         time = it*dt

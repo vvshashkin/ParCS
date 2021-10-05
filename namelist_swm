@@ -31,7 +31,7 @@
     co2contra_op_name = 'co2contra_c_sbp42',
     massflux_op_name  = 'massflux_c_sbp42'
     dt=900.0,
-    tau_write = 3600.0,
+    tau_write = 900.0,
     simulation_time_days  = 30.0,
     simulation_time_hours = 0.0,
     simulation_time_min   = 0.0,

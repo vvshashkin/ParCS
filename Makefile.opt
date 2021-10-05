@@ -640,10 +640,25 @@ $(DOBJ)coriolis_factory_mod.o: src/differential_operators/coriolis/coriolis_fact
 	$(DOBJ)abstract_coriolis_mod.o \
 	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)grid_field_mod.o \
-	$(DOBJ)coriolis_colocated_mod.o \
+	$(DOBJ)coriolis_cgrid_mod.o \
 	$(DOBJ)grid_field_factory_mod.o \
+	$(DOBJ)interpolator_h2v_factory_mod.o \
+	$(DOBJ)interpolator_v2h_factory_mod.o \
+	$(DOBJ)interpolator_w2h_factory_mod.o \
+	$(DOBJ)coriolis_colocated_mod.o \
 	$(DOBJ)mesh_mod.o \
 	$(DOBJ)sph_coords_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)coriolis_cgrid_mod.o: src/differential_operators/coriolis/coriolis_Cgrid_mod.f90 \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)abstract_coriolis_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)interpolator_v2h_mod.o \
+	$(DOBJ)itnerpolator_w2h_mod.o \
+	$(DOBJ)interpolator_h2v_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -723,6 +738,16 @@ $(DOBJ)abstract_div_mod.o: src/differential_operators/divergence/abstract_div_mo
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)interpolator_h2v_mod.o: src/differential_operators/interpolator_2d/interpolator_h2v_mod.f90 \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)exchange_abstract_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)sbp_operator_mod.o \
+	$(DOBJ)tile_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)interpolator_v2h_mod.o: src/differential_operators/interpolator_2d/interpolator_v2h_mod.f90 \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)domain_mod.o \
@@ -733,11 +758,40 @@ $(DOBJ)interpolator_v2h_mod.o: src/differential_operators/interpolator_2d/interp
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)interpolator_h2v_factory_mod.o: src/differential_operators/interpolator_2d/interpolator_h2v_factory_mod.f90 \
+	$(DOBJ)interpolator_h2v_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)sbp_factory_mod.o \
+	$(DOBJ)exchange_factory_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)interpolator_v2h_factory_mod.o: src/differential_operators/interpolator_2d/interpolator_v2h_factory_mod.f90 \
 	$(DOBJ)interpolator_v2h_mod.o \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)sbp_factory_mod.o \
 	$(DOBJ)exchange_factory_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)itnerpolator_w2h_mod.o: src/differential_operators/interpolator_2d/itnerpolator_w2h_mod.f90 \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)exchange_abstract_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)sbp_operator_mod.o \
+	$(DOBJ)interpolator_v2h_mod.o \
+	$(DOBJ)tile_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)interpolator_w2h_factory_mod.o: src/differential_operators/interpolator_2d/interpolator_w2h_factory_mod.f90 \
+	$(DOBJ)itnerpolator_w2h_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)sbp_factory_mod.o \
+	$(DOBJ)exchange_factory_mod.o \
+	$(DOBJ)grid_field_factory_mod.o \
+	$(DOBJ)interpolator_v2h_factory_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -1070,7 +1124,8 @@ $(DOBJ)operator_swm_mod.o: src/models/shallow_water/operator/operator_swm_mod.f9
 	$(DOBJ)abstract_massflux_mod.o \
 	$(DOBJ)abstract_co2contra_mod.o \
 	$(DOBJ)stvec_swm_mod.o \
-	$(DOBJ)parcomm_mod.o
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)vec_math_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
