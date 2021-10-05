@@ -27,6 +27,8 @@ public :: solid_rotated_scalar_field_t
 public :: ts2_height_generator_t
 public :: rh4_wave_height_generator_t, rh4_wave_wind_generator_t
 
+public :: KE_scalar_field_t
+
 !!!!!!!!!!!!!Abstract scalar and vector fields generators
 type, public, abstract :: scalar_field_generator_t
     real(kind=8) :: time = 0.0_8
@@ -115,6 +117,12 @@ type, extends(scalar_field_generator_t) :: solid_rotated_scalar_field_t
 contains
     procedure :: get_scalar_field => generate_solid_rotated_scalar_field
 end type solid_rotated_scalar_field_t
+
+type, extends(scalar_field_generator_t) :: KE_scalar_field_t
+    class(vector_field_generator_t), allocatable :: vector_field
+contains
+    procedure :: get_scalar_field => generate_KE_scalar_field
+end type KE_scalar_field_t
 
 type, extends(scalar_field_generator_t) :: ts2_height_generator_t
     real(kind=8) :: h_mean = 1.0_8
@@ -590,7 +598,28 @@ subroutine generate_solid_rotated_scalar_field(this, f, npts, nlev, x, y, z)
         call this%scalar_field%get_scalar_field(f, npts, nlev, xn, yn, zn)
 
 end subroutine generate_solid_rotated_scalar_field
+subroutine generate_KE_scalar_field(this, f, npts, nlev, x, y, z)
 
+    use sph_coords_mod, only : rotate_3D_y, cart2sph, sph2cart_vec, sph2cart
+
+    class(KE_scalar_field_t), intent(in)  :: this
+    integer(kind=4),          intent(in)  :: npts, nlev
+    real(kind=8),             intent(in)  :: x(npts), y(npts), z(npts)
+    real(kind=8),             intent(out) :: f(npts,nlev)
+
+    real(kind=8):: vx(npts,nlev), vy(npts,nlev), vz(npts,nlev)
+
+    integer(kind=4) :: i, k
+
+    call this%vector_field%get_vector_field(vx, vy,vz, npts, nlev, x, y, z)
+
+    do k = 1, nlev
+        do i = 1, npts
+            f(i,k) = 0.5_8*(vx(i,k)**2+vy(i,k)**2+vz(i,k)**2)
+        end do
+    end do
+
+end subroutine generate_KE_scalar_field
 subroutine generate_ts2_height_field(this, f, npts, nlev, x, y, z)
 
     use sph_coords_mod, only : rotate_3D_y, cart2sph, sph2cart_vec, sph2cart

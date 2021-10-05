@@ -21,7 +21,7 @@ end type err_container_t
 private
 public :: err_container_t, test_div, test_grad, test_conv, &
           test_laplace_spectre, test_curl, test_coriolis,  &
-          test_curl_grad, test_co2contra
+          test_curl_grad, test_co2contra, test_KE
 
 contains
 
@@ -282,7 +282,78 @@ function test_curl(N, curl_oper_name, staggering) result(errs)
     errs%values(4) = l2norm(curl, domain%mesh_w, domain%parcomm)
 
 end function test_curl
+function test_KE(N, KE_oper_name, staggering) result(errs)
 
+    use test_fields_mod,   only : set_vector_test_field, set_scalar_test_field, &
+                                  VSH_curl_free_10  => VSH_curl_free_10_generator, &
+                                  cross_polar       => cross_polar_flow_generator, &
+                                  KE_scalar_field_t
+
+    use KE_factory_mod,  only : create_KE_operator
+    use abstract_KE_mod, only : KE_operator_t
+
+    integer(kind=4),  intent(in) :: N
+    character(len=*), intent(in) :: KE_oper_name, staggering
+    type(err_container_t)        :: errs
+    !locals:
+    integer(kind=4), parameter  :: nz = 3
+    integer(kind=4), parameter  :: ex_halo_width = 8
+    type(grid_field_t)          :: u, v, ut, vt, KE, KE_true
+    type(domain_t)              :: domain
+    class(KE_operator_t), allocatable :: KE_op
+
+    type(KE_scalar_field_t) :: KE_generator
+
+    call create_domain(domain, "cube", staggering, N, nz)
+
+    call create_KE_operator(KE_op, KE_oper_name, domain)
+
+    call create_grid_field(u,       ex_halo_width, 0, domain%mesh_u)
+    call create_grid_field(v,       ex_halo_width, 0, domain%mesh_v)
+    call create_grid_field(ut,      ex_halo_width, 0, domain%mesh_u)
+    call create_grid_field(vt,      ex_halo_width, 0, domain%mesh_v)
+
+    call create_grid_field(KE,      ex_halo_width, 0, domain%mesh_p)
+    call create_grid_field(KE_true,             0, 0, domain%mesh_p)
+
+    allocate(errs%keys(4), errs%values(4))
+    errs%keys(1)%str = "VSH_curl_free_10 linf"
+    errs%keys(2)%str = "VSH_curl_free_10 l2"
+    errs%keys(3)%str = "Cross polar flow linf"
+    errs%keys(4)%str = "Cross polar flow l2"
+
+    KE_generator%vector_field = VSH_curl_free_10
+
+    call set_vector_test_field(u, v, VSH_curl_free_10, domain%mesh_u, domain%mesh_v, &
+                               0, "covariant")
+    call set_vector_test_field(ut, vt, VSH_curl_free_10, domain%mesh_u, domain%mesh_v, &
+                               0, "contravariant")
+    call KE_op%calc_KE(Ke, u, v, ut, vt, domain)
+
+    call set_scalar_test_field(KE_true, KE_generator, domain%mesh_p, 0)
+
+    call KE%assign(1.0_8, KE, -1.0_8, KE_true, domain%mesh_p)
+
+    errs%values(1) = KE%maxabs(domain%mesh_p, domain%parcomm)
+    errs%values(2) = l2norm(KE, domain%mesh_p, domain%parcomm)
+
+    KE_generator%vector_field = cross_polar
+
+    call set_vector_test_field(u, v, cross_polar, domain%mesh_u, domain%mesh_v, &
+                               0, "covariant")
+    call set_vector_test_field(ut, vt, cross_polar, domain%mesh_u, domain%mesh_v, &
+                               0, "contravariant")
+
+    call set_scalar_test_field(KE_true, KE_generator, domain%mesh_p, 0)
+
+    call KE_op%calc_KE(Ke, u, v, ut, vt, domain)
+
+    call KE%assign(1.0_8, KE, -1.0_8, KE_true, domain%mesh_p)
+
+    errs%values(3) = KE%maxabs(domain%mesh_p, domain%parcomm)
+    errs%values(4) = l2norm(KE, domain%mesh_p, domain%parcomm)
+
+end function test_KE
 function test_curl_grad(N, curl_oper_name, grad_oper_name, staggering) result(errs)
 
     use test_fields_mod,   only : set_scalar_test_field, &

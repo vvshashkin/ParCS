@@ -50,7 +50,7 @@ subroutine apply_sbp_gf_to_gf(this, f_out, work_tile, &
     character(len=*),      intent(in)  :: direction
     type(tile_field_t),    intent(in)  :: f_in
     !output:
-    type(tile_field_t),    intent(out) :: f_out
+    type(tile_field_t),    intent(inout) :: f_out
 
 
     integer(kind=4) :: nx_in_grid, k, f_is, f_ie, f_js, f_je
