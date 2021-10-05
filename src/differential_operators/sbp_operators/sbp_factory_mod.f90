@@ -6,6 +6,10 @@ use parcomm_mod,                  only : parcomm_global
 use sbp_operators_collection_mod, only : Q21, lastnonzeroQ21, Da2_in, Da2_inshift, &
                                          Q42, lastnonzeroQ42, Da4_in, Da4_inshift, &
                                          Q43, lastnonzeroQ43,                      &
+                                         W21_staggered_i2c, W21_staggered_i2c_last_nonzero, &
+                                         W21_staggered_i2c_in_shift,                        &
+                                         W21_staggered_c2i, W21_staggered_c2i_last_nonzero, &
+                                         W21_staggered_c2i_in_shift, W21_staggered_in,      &
                                          W42_staggered_i2c_noopt, W42_staggered_i2c_opt1, &
                                          W42_staggered_i2c_opt2, W42_staggered_i2c_last_nonzero, &
                                          W42_staggered_c2i_noopt, W42_staggered_c2i_opt1, &
@@ -58,6 +62,20 @@ function create_sbp_operator(sbp_operator_name) result(sbp_op)
         sbp_op%in_shift    = Da4_inshift
         sbp_op%dnx = 0
         right_side_sign = -1.0_8
+    else if(sbp_operator_name == "W21_stagered_interp_c2i") then
+        sbp_op%W_edge_l    = W21_staggered_c2i
+        sbp_op%edge_last_l = W21_staggered_c2i_last_nonzero
+        sbp_op%W_in        = W21_staggered_in
+        sbp_op%in_shift    = W21_staggered_c2i_in_shift
+        sbp_op%dnx = 1
+        right_side_sign = 1.0_8
+    else if(sbp_operator_name == "W21_stagered_interp_i2c") then
+        sbp_op%W_edge_l    = W21_staggered_i2c
+        sbp_op%edge_last_l = W21_staggered_i2c_last_nonzero
+        sbp_op%W_in        = W21_staggered_in
+        sbp_op%in_shift    = W21_staggered_i2c_in_shift
+        sbp_op%dnx = -1
+        right_side_sign = 1.0_8
     else if(sbp_operator_name == "W42_stagered_interp_c2i") then
         sbp_op%W_edge_l    = W42_staggered_c2i_opt1
         sbp_op%edge_last_l = W42_staggered_c2i_last_nonzero

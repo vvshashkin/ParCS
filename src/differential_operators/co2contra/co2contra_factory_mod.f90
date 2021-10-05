@@ -44,6 +44,8 @@ function create_co2contra_c_sbp_operator(domain, co2contra_operator_name) result
     select case(co2contra_operator_name)
     case("co2contra_c_sbp21")
         halo_width = 1
+        co2contra%sbp_interp_h2v = create_sbp_operator("W21_stagered_interp_c2i")
+        co2contra%sbp_interp_v2h = create_sbp_operator("W21_stagered_interp_i2c")
     case("co2contra_c_sbp42")
         halo_width = 3
         co2contra%sbp_interp_h2v = create_sbp_operator("W42_stagered_interp_c2i")

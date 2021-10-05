@@ -32,6 +32,16 @@ integer(kind=4), parameter :: lastnonzeroQ43(4) =[6,6,6,6]
 real(kind=8),    parameter :: Da4_in(5) = [1._8/12._8,-2._8/3.,0._8,2._8/3._8,-1._8/12._8]
 integer(kind=4), parameter :: Da4_inshift = -2
 
+!Staggered 21 interpolation
+!cell centers to interfaces
+real(kind=8), parameter :: W21_staggered_c2i(1,1) = reshape([1.0_8],[1,1])
+integer(kind=4), parameter :: W21_staggered_c2i_last_nonzero(1) = [1]
+real(kind=8), parameter :: W21_staggered_c2i_in_shift = -1
+!interfaces to cell centers
+real(kind=8), parameter :: W21_staggered_i2c(2,1) = reshape([0.5_8,0.5_8],[2,1])
+integer(kind=4), parameter :: W21_staggered_i2c_last_nonzero(1) = [2]
+real(kind=8), parameter :: W21_staggered_i2c_in_shift = 0
+real(kind=8), parameter :: W21_staggered_in(2) = [0.5_8, 0.5_8]
 
 !Stagered grid interpolation
 !Interpolation weights
