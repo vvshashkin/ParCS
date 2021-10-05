@@ -16,6 +16,8 @@ use abstract_co2contra_mod, only : co2contra_operator_t
 use stvec_swm_mod, only : stvec_swm_t
 use parcomm_mod,   only : parcomm_global
 
+use vec_math_mod, only : mass, l2norm
+
 implicit none
 
 type, public, extends(operator_t) :: operator_swm_t
@@ -32,6 +34,7 @@ type, public, extends(operator_t) :: operator_swm_t
     type(grid_field_t) :: div, grad_x, grad_y, curl
     type(grid_field_t) :: cor_u, cor_v
     type(grid_field_t) :: KE !kinetic energy
+    type(grid_field_t) :: KE_diag_u, KE_diag_v !kinetic energy
     type(grid_field_t) :: ut, vt !contravariant components
     type(grid_field_t) :: hu, hv !mass fluxes in continuty eq.
 
@@ -50,12 +53,27 @@ subroutine apply(this, vout, vin, domain)
     class(stvec_t),        intent(inout) :: vin
     type(domain_t),        intent(in)    :: domain
 
+    real(kind=8) :: ke_u, ke_v, pe
+
     select type (vout)
     class is (stvec_swm_t)
         select type (vin)
         class is (stvec_swm_t)
 
             call this%co2contra_op%transform(this%ut, this%vt, vin%u, vin%v, domain)
+            call this%massflux_op%calc_massflux(this%hu, this%hv, &
+                         vin%h, this%ut, this%vt, domain)
+
+            !!ENERGY DIAGNOSTICS
+            ! call this%KE_diag_u%assign_prod(1.0_8, this%hu, vin%u, domain%mesh_u)
+            ! call this%KE_diag_v%assign_prod(1.0_8, this%hv, vin%v, domain%mesh_v)
+            !
+            ! ke_u = mass(this%KE_diag_u, domain%mesh_u, domain%parcomm)
+            ! ke_v = mass(this%KE_diag_v, domain%mesh_v, domain%parcomm)
+            !
+            ! pe = l2norm(vin%h, domain%mesh_p, domain%parcomm)
+            !
+            ! print*, ke_u+ke_v, pe
 
             !momentum eq part
             call this%KE_op%calc_KE(this%KE, vin%u, vin%v, this%ut, this%vt, domain)
@@ -67,17 +85,13 @@ subroutine apply(this, vout, vin, domain)
 
             call this%curl_op%calc_curl(this%curl, vin%u, vin%v, domain)
 
-            call this%coriolis_op%calc_coriolis_curl(this%cor_u, this%cor_v, &
-                                            this%ut, this%vt, this%curl, domain)
+            call this%coriolis_op%calc_coriolis_vec_inv(this%cor_u, this%cor_v, &
+                                            this%hu, this%hv, vin%h, this%curl, domain)
 
             call vout%u%assign(-1.0_8, this%grad_x, 1.0_8, this%cor_u, domain%mesh_u)
-            call vout%v%assign(-1.0_8, this%grad_y, 1.0_8, this%cor_v, domain%mesh_u)
+            call vout%v%assign(-1.0_8, this%grad_y, 1.0_8, this%cor_v, domain%mesh_v)
 
             !continuty eq part
-
-            call this%massflux_op%calc_massflux(this%hu, this%hv, &
-                         vin%h, this%ut, this%vt, domain)
-
             call this%div_op%calc_div(this%div, this%hu, this%hv, domain)
 
             call vout%h%assign(-1.0_8, this%div, domain%mesh_p)

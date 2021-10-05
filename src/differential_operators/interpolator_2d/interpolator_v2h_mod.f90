@@ -25,6 +25,9 @@ subroutine interp_v2h(this, u_h, v_h, u, v, domain)
 
     integer(kind=4) :: t
 
+    !WORKAROUND
+    !THIS WORKS PROPERLY ONLY WHEN THERE ARE NO CROSS PANEL EXCANGES
+    !SINCE U, V ARE NOT NECESARILY VECTOR QUANTITIES
     call this%exchange%do_vec(u, v, domain%parcomm)
 
     do t = domain%partition%ts, domain%partition%te

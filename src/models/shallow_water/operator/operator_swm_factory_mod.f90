@@ -13,7 +13,7 @@ subroutine create_swm_operator(operator, grav, swm_config, domain)
     use operator_swm_mod,       only : operator_swm_t
     use div_factory_mod,        only : create_div_operator
     use grad_factory_mod,       only : create_grad_operator
-    use curl_factory_mod,       only : create_curl_operator_div_based
+    use curl_factory_mod,       only : create_curl_operator
     use coriolis_factory_mod,   only : create_coriolis
     use KE_factory_mod,         only : create_KE_operator
     use massflux_factory_mod,   only : create_massflux_operator
@@ -41,7 +41,7 @@ subroutine create_swm_operator(operator, grav, swm_config, domain)
 
     call create_coriolis(swm_op%coriolis_op, swm_config%coriolis_op_name, domain)
 
-    call create_curl_operator_div_based(swm_op%curl_op, swm_config%div_op_name, domain)
+    call create_curl_operator(swm_op%curl_op, swm_config%curl_op_name, domain)
 
     call create_KE_operator(swm_op%KE_op, swm_config%KE_op_name, domain)
 
@@ -53,7 +53,7 @@ subroutine create_swm_operator(operator, grav, swm_config, domain)
     call create_grid_field(swm_op%div, halo_width_xy, 0, domain%mesh_p)
 
 
-    call create_grid_field(swm_op%curl, halo_width_xy, 0, domain%mesh_p)
+    call create_grid_field(swm_op%curl, halo_width_xy, 0, domain%mesh_w)
 
     call create_grid_field(swm_op%hu, halo_width_xy, 0, domain%mesh_u)
     call create_grid_field(swm_op%hv, halo_width_xy, 0, domain%mesh_v)
@@ -75,6 +75,10 @@ subroutine create_swm_operator(operator, grav, swm_config, domain)
     do t = domain%partition%ts, domain%partition%te
         swm_op%h_surf%tile(t)%p = 0.0_8
     end do
+
+    call create_grid_field(swm_op%KE_diag_u,  0, 0, domain%mesh_u)
+    call create_grid_field(swm_op%KE_diag_v,  0, 0, domain%mesh_v)
+
 
     call move_alloc(swm_op, operator)
 
