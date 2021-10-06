@@ -7,6 +7,7 @@ implicit none
 !Ah 2-1 scheme written as SBP
 real(kind=8), parameter :: Q21(2,1) = reshape( [-1._8, 1._8],  [2,1])
 integer(kind=4), parameter :: lastnonzeroQ21(1) =[2]
+real(kind=8), parameter :: Q21_A(2) = [0.5_8, 1.0_8]
 !2-th order diff non-staggered inner stencil and shift
 real(kind=8),    parameter :: Da2_in(3) = [-0.5_8,0._8,0.5_8]
 integer(kind=4), parameter :: Da2_inshift = -1
@@ -19,6 +20,8 @@ real(kind=8), parameter :: Q42(6,4) = reshape( &
   0.030612244897959186_8,-0.0_8,               -0.6020408163265307_8,   0.0_8,                 0.653061224489796_8,  -0.0816326530612245_8], &
   [6,4])
 integer(kind=4), parameter :: lastnonzeroQ42(4) =[4,3,5,6]
+real(kind=8), parameter :: Q42_A(4) = [17._8/48._8, 59._8/48._8, 43._8/48._8, 49._8/48._8]
+
 
 real(kind=8), parameter :: Q43(6,4) = reshape( &
 [-1.8280236842718398_8,   2.978054584697369_8,  -1.4653148294044123_8,  0.3078538227474199_8,  0.008136925288119662_8, -0.0007068190566565205_8, &

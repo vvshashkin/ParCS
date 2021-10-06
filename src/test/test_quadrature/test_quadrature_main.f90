@@ -10,6 +10,8 @@ program test_quadrature_main
     call init_global_parallel_enviroment()
 
     call test_quadrature("default_quadrature", max_order_exact = 1, staggering="A", points_type="o")
+    call test_quadrature("SBP_Ah21_quadrature", max_order_exact = 1, staggering="Ah", points_type="xy")
+    call test_quadrature("SBP_Ah42_quadrature", max_order_exact = 3, staggering="Ah", points_type="xy")
 
     call deinit_global_parallel_enviroment()
 
