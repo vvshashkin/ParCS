@@ -33,7 +33,6 @@ subroutine test_quadrature(quadrature_name, max_order_exact, staggering, points_
 
 
     call create_domain(domain, "cube", staggering, N, nz)
-    call create_quadrature(quadrature, quadrature_name, domain)
 
     select case(points_type)
     case('o')
@@ -48,6 +47,7 @@ subroutine test_quadrature(quadrature_name, max_order_exact, staggering, points_
         call parcomm_global%abort("unknown points type:" // points_type)
     end select
 
+    call create_quadrature(quadrature, quadrature_name, mesh)
     call create_grid_field(test_fun, 0, 0, mesh)
 
     do order = 0, max_order_exact

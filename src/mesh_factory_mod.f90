@@ -73,14 +73,13 @@ subroutine create_mesh(mesh, partition, metric, halo_width, points_type)
 
     do t = ts, te
 
-        mesh%tile(t)%points_type = points_type
-
         ks = tile(t)%ks; ke = tile(t)%ke
         js = tile(t)%js; je = tile(t)%je;
         is = tile(t)%is; ie = tile(t)%ie;
         pind = partition%panel_map(t)
 
         call mesh%tile(t)%init(is, ie, js, je, ks, ke, halo_width)
+        mesh%tile(t)%points_type = points_type
 
         mesh%tile(t)%nx = nx
         mesh%tile(t)%ny = ny

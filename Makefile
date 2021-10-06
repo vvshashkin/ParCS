@@ -242,6 +242,13 @@ $(DOBJ)cmd_args_mod.o: src/cmd_args_mod.f90
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)vec_math_mod.o: src/vec_math_mod.f90 \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)parcomm_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)container_abstract_mod.o: src/container_abstract_mod.f90
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -354,6 +361,14 @@ $(DOBJ)abstract_quadrature_mod.o: src/vec_math/abstract_quadrature_mod.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)sbp_quadrature_mod.o: src/vec_math/sbp_quadrature_mod.f90 \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)abstract_quadrature_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)default_quadrature_mod.o: src/vec_math/default_quadrature_mod.f90 \
 	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)grid_field_mod.o \
@@ -362,10 +377,11 @@ $(DOBJ)default_quadrature_mod.o: src/vec_math/default_quadrature_mod.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
-$(DOBJ)vec_math_mod.o: src/vec_math/vec_math_mod.f90 \
+$(DOBJ)sbp_staggered_quadrature_mod.o: src/vec_math/sbp_staggered_quadrature_mod.f90 \
+	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)mesh_mod.o \
-	$(DOBJ)parcomm_mod.o
+	$(DOBJ)abstract_quadrature_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -373,7 +389,9 @@ $(DOBJ)quadrature_factory_mod.o: src/vec_math/quadrature_factory_mod.f90 \
 	$(DOBJ)abstract_quadrature_mod.o \
 	$(DOBJ)default_quadrature_mod.o \
 	$(DOBJ)parcomm_mod.o \
-	$(DOBJ)domain_mod.o
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)sbp_quadrature_mod.o \
+	$(DOBJ)sbp_operators_collection_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -1517,7 +1535,8 @@ $(DOBJ)test_quadrature_mod.o: src/test/test_quadrature/test_quadrature_mod.f90 \
 	$(DOBJ)domain_factory_mod.o \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)grid_field_factory_mod.o \
-	$(DOBJ)mesh_mod.o
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)const_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
