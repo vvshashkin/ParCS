@@ -21,6 +21,8 @@ subroutine create_swm_operator(operator, grav, swm_config, domain)
 
     use grid_field_factory_mod, only : create_grid_field
 
+    use sbp_operators_collection_mod, only : D42_A_interfaces, D42_A_centers
+
     type(domain_t),                 intent(in)  :: domain
     type(config_swm_t),             intent(in)  :: swm_config
     real(kind=8),                   intent(in)  :: grav
@@ -58,6 +60,9 @@ subroutine create_swm_operator(operator, grav, swm_config, domain)
     call create_grid_field(swm_op%hu, halo_width_xy, 0, domain%mesh_u)
     call create_grid_field(swm_op%hv, halo_width_xy, 0, domain%mesh_v)
 
+    call create_grid_field(swm_op%hu_diag, halo_width_xy, 0, domain%mesh_u)
+    call create_grid_field(swm_op%hv_diag, halo_width_xy, 0, domain%mesh_v)
+
     call create_grid_field(swm_op%cor_u, halo_width_xy, 0, domain%mesh_u)
     call create_grid_field(swm_op%cor_v, halo_width_xy, 0, domain%mesh_v)
 
@@ -78,7 +83,15 @@ subroutine create_swm_operator(operator, grav, swm_config, domain)
 
     call create_grid_field(swm_op%KE_diag_u,  0, 0, domain%mesh_u)
     call create_grid_field(swm_op%KE_diag_v,  0, 0, domain%mesh_v)
+    call create_grid_field(swm_op%PE_diag,    0, 0, domain%mesh_p)
 
+    if (swm_config%config_domain%staggering_type=="C") then
+        swm_op%A_p = D42_A_centers
+        swm_op%A_u = D42_A_interfaces
+        swm_op%A_v = D42_A_interfaces
+    else
+        call domain%parcomm%abort("No matrices!!!")
+    end if
 
     call move_alloc(swm_op, operator)
 
