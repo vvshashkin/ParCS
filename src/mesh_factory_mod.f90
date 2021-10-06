@@ -80,9 +80,8 @@ subroutine create_mesh(mesh, partition, metric, halo_width, points_type)
 
         call mesh%tile(t)%init(is, ie, js, je, ks, ke, halo_width)
 
-        !WORKAROUND
-        mesh%tile(t)%globnx = nh
-        mesh%tile(t)%globny = nh
+        mesh%tile(t)%nx = nx
+        mesh%tile(t)%ny = ny
 
         mesh%tile(t)%hx = (metric%alpha1 - metric%alpha0)/real(nh,8)
         mesh%tile(t)%hy = (metric%beta1  - metric%beta0 )/real(nh,8)

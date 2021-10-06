@@ -54,8 +54,8 @@ subroutine interp_v2h_tile(u_h, v_h, u, v, sbp_interp_v2h, &
                   js = mesh_o%js, je = mesh_o%je, &
                   ks = mesh_o%ks, ke = mesh_o%ke)
 
-        call sbp_interp_v2h%apply(u_h, work, mesh_o%globnx, 'x', u)
-        call sbp_interp_v2h%apply(v_h, work, mesh_o%globny, 'y', v)
+        call sbp_interp_v2h%apply(u_h, work, mesh_o%nx, 'x', u)
+        call sbp_interp_v2h%apply(v_h, work, mesh_o%ny, 'y', v)
 
 end subroutine interp_v2h_tile
 

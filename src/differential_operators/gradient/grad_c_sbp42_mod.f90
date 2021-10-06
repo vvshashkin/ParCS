@@ -78,11 +78,11 @@ subroutine calc_covariant_grad_on_tile(gx, gy, f, mesh_x, mesh_y, mesh_o, scale)
                 gx%p(1,j,k) = gx%p(1,j,k)+0.5_8*dh/sbp_quad(1)
             end if
 
-            do i=max(is,n_edge+1),min(ie,mesh_o%globnx+1-n_edge)
+            do i=max(is,n_edge+1),min(ie,mesh_o%nx+1-n_edge)
                 gx%p(i,j,k) = sum(f%p(i-2:i+1,j,k)*din(1:4)) *dx1
             end do
 
-            n = mesh_o%globnx+1
+            n = mesh_o%nx+1
             do i = max(is,n-n_edge+1),ie
                 i2 = n-i+1
                 i1 = d_last_nonzero(i2)
@@ -114,13 +114,13 @@ subroutine calc_covariant_grad_on_tile(gx, gy, f, mesh_x, mesh_y, mesh_o, scale)
             end do
         end if
 
-        do j=max(js,n_edge+1),min(je,mesh_o%globny+1-n_edge)
+        do j=max(js,n_edge+1),min(je,mesh_o%ny+1-n_edge)
             do i=is,ie
                 gy%p(i,j,k) = sum(f%p(i,j-2:j+1,k)*din(1:4)) *dx1
             end do
         end do
 
-        n = mesh_o%globny+1
+        n = mesh_o%ny+1
         do j = max(js,n-n_edge+1),je
             j2 = n-j+1
             j1 = d_last_nonzero(j2)

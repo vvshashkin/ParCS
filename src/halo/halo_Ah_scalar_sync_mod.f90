@@ -54,37 +54,37 @@ subroutine sync_Ah_scalar_tile(f, mesh)
             if(js == 1) then
                 f%p(1,1,k) = (f%p(1,1,k)+f%p(0,1,k)+f%p(1,0,k))/3.0_8
             end if
-            do j = max(2,js),min(mesh%globny,je)
+            do j = max(2,js),min(mesh%ny-1,je)
                 f%p(1,j,k) = 0.5_8*(f%p(0,j,k)+f%p(1,j,k))
             end do
-            if(je == mesh%globny+1) then
+            if(je == mesh%ny) then
                 f%p(1,je,k) = (f%p(1,je,k)+f%p(0,je,k)+f%p(1,je+1,k))/3.0_8
             end if
         end do
     end if
-    if(ie == mesh%globnx+1) then
+    if(ie == mesh%nx) then
         do k=ks,ke
             if(js == 1) then
                 f%p(ie,1,k) = (f%p(ie,1,k)+f%p(ie+1,1,k)+f%p(ie,0,k))/3.0_8
             end if
-            do j = max(2,js),min(mesh%globny,je)
+            do j = max(2,js),min(mesh%ny-1,je)
                 f%p(ie,j,k) = 0.5_8*(f%p(ie,j,k)+f%p(ie+1,j,k))
             end do
-            if(je == mesh%globny+1) then
+            if(je == mesh%ny) then
                 f%p(ie,je,k) = (f%p(ie,je,k)+f%p(ie+1,je,k)+f%p(ie,je+1,k))/3.0_8
             end if
         end do
     end if
     if(js == 1) then
         do k=ks,ke
-            do i = max(2,is),min(mesh%globnx,ie)
+            do i = max(2,is),min(mesh%nx-1,ie)
                 f%p(i,1,k) = 0.5_8*(f%p(i,1,k)+f%p(i,0,k))
             end do
         end do
     end if
-    if(je == mesh%globny+1) then
+    if(je == mesh%ny) then
         do k=ks,ke
-            do i = max(2,is),min(mesh%globnx,ie)
+            do i = max(2,is),min(mesh%nx-1,ie)
                 f%p(i,je,k) = 0.5_8*(f%p(i,je,k)+f%p(i,je+1,k))
             end do
         end do

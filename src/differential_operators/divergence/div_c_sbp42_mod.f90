@@ -94,18 +94,18 @@ subroutine calc_div_on_tile_sbp42(div, u, v, mesh_u, mesh_v, mesh_p, scale)
                           0.5_8*penalty(3)*du
             end if
 
-            do i=max(4,is),min(ie,mesh_p%globnx-3)
+            do i=max(4,is),min(ie,mesh_p%nx-3)
                 dx(i,j) = (din(1)*mesh_u%G(i-1,j)*u%p(i-1,j,k)+ &
                            din(2)*mesh_u%G(i  ,j)*u%p(i  ,j,k)+ &
                            din(3)*mesh_u%G(i+1,j)*u%p(i+1,j,k)+ &
                            din(4)*mesh_u%G(i+2,j)*u%p(i+2,j,k))
             end do
 
-            if(ie>=mesh_p%globnx-2) then
-                du = mesh_u%G(mesh_p%globnx+1,j)*(u%p(mesh_p%globnx+2,j,k)-u%p(mesh_p%globnx+1,j,k))
+            if(ie>=mesh_p%nx-2) then
+                du = mesh_u%G(mesh_p%nx+1,j)*(u%p(mesh_p%nx+2,j,k)-u%p(mesh_p%nx+1,j,k))
             end if
-            if(is<=mesh_p%globnx-2 .and. ie >= mesh_p%globnx-2) then
-                i = mesh_p%globnx-2
+            if(is<=mesh_p%nx-2 .and. ie >= mesh_p%nx-2) then
+                i = mesh_p%nx-2
                 dx(i,j) =-d3(1)*mesh_u%G(i+3,j)*u%p(i+3,j,k)-&
                           !zero coefficient:!d3(2)*mesh_u%G(i+2,j)*u%p(i+2,j,k)+&
                           d3(3)*mesh_u%G(i+1,j)*u%p(i+1,j,k)-&
@@ -113,16 +113,16 @@ subroutine calc_div_on_tile_sbp42(div, u, v, mesh_u, mesh_v, mesh_p, scale)
                           d3(5)*mesh_u%G(i-1,j)*u%p(i-1,j,k)+&
                           0.5_8*penalty(3)*du
             end if
-            if(is<=mesh_p%globnx-1 .and. ie >= mesh_p%globnx-1) then
-                i = mesh_p%globnx-1
+            if(is<=mesh_p%nx-1 .and. ie >= mesh_p%nx-1) then
+                i = mesh_p%nx-1
                 dx(i,j) =-d2(1)*mesh_u%G(i+2,j)*u%p(i+2,j,k)-&
                           d2(2)*mesh_u%G(i+1,j)*u%p(i+1,j,k)-&
                           d2(3)*mesh_u%G(i  ,j)*u%p(i  ,j,k)-&
                           d2(4)*mesh_u%G(i-1,j)*u%p(i-1,j,k)+&
                           0.5_8*penalty(2)*du
             end if
-            if(ie == mesh_p%globnx) then
-                i = mesh_p%globnx
+            if(ie == mesh_p%nx) then
+                i = mesh_p%nx
                 dx(i,j) =-d1(1)*mesh_u%G(i+1,j)*u%p(i+1,j,k)-&
                           d1(2)*mesh_u%G(i  ,j)*u%p(i  ,j,k)-&
                           d1(3)*mesh_u%G(i-1,j)*u%p(i-1,j,k)-&
@@ -165,7 +165,7 @@ subroutine calc_div_on_tile_sbp42(div, u, v, mesh_u, mesh_v, mesh_p, scale)
                           0.5_8*penalty(3)*dv(i)
             end do
         end if
-        do j=max(4,js),min(je,mesh_p%globny-3)
+        do j=max(4,js),min(je,mesh_p%ny-3)
             do i=is,ie
                 dy(i,j) = (din(1)*mesh_v%G(i,j-1)*v%p(i,j-1,k)+ &
                            din(2)*mesh_v%G(i,j  )*v%p(i,j  ,k)+ &
@@ -174,15 +174,15 @@ subroutine calc_div_on_tile_sbp42(div, u, v, mesh_u, mesh_v, mesh_p, scale)
             end do
         end do
 
-        if(je>=mesh_p%globny-2) then
+        if(je>=mesh_p%ny-2) then
             do i=is,ie
-                dv(i) = mesh_v%G(i,mesh_p%globny+1)*(v%p(i,mesh_p%globny+2,k)-v%p(i,mesh_p%globny+1,k))
+                dv(i) = mesh_v%G(i,mesh_p%ny+1)*(v%p(i,mesh_p%ny+2,k)-v%p(i,mesh_p%ny+1,k))
             end do
         end if
 
-        if(js<=mesh_p%globny-2 .and. je >= mesh_p%globny-2) then
+        if(js<=mesh_p%ny-2 .and. je >= mesh_p%ny-2) then
             do i=is,ie
-                j = mesh_p%globny-2
+                j = mesh_p%ny-2
                 dy(i,j) =-d3(1)*mesh_v%G(i,j+3)*v%p(i,j+3,k)-&
                           !zero coefficient:!d3(2)*mesh_v%G(i,j+2)*v%p(i,j+2,k)+&
                           d3(3)*mesh_v%G(i,j+1)*v%p(i,j+1,k)-&
@@ -191,9 +191,9 @@ subroutine calc_div_on_tile_sbp42(div, u, v, mesh_u, mesh_v, mesh_p, scale)
                           0.5_8*penalty(3)*dv(i)
             end do
         end if
-        if(js<=mesh_p%globny-1 .and. je >= mesh_p%globny-1) then
+        if(js<=mesh_p%ny-1 .and. je >= mesh_p%ny-1) then
             do i=is,ie
-                j = mesh_p%globny-1
+                j = mesh_p%ny-1
                 dy(i,j) =-d2(1)*mesh_v%G(i,j+2)*v%p(i,j+2,k)-&
                           d2(2)*mesh_v%G(i,j+1)*v%p(i,j+1,k)-&
                           d2(3)*mesh_v%G(i,j  )*v%p(i,j  ,k)-&
@@ -201,9 +201,9 @@ subroutine calc_div_on_tile_sbp42(div, u, v, mesh_u, mesh_v, mesh_p, scale)
                           0.5_8*penalty(2)*dv(i)
             end do
         end if
-        if(je == mesh_p%globny) then
+        if(je == mesh_p%ny) then
             do i=is,ie
-                j = mesh_p%globny
+                j = mesh_p%ny
                 dy(i,j) =-d1(1)*mesh_v%G(i,j+1)*v%p(i,j+1,k)-&
                           d1(2)*mesh_v%G(i,j  )*v%p(i,j  ,k)-&
                           d1(3)*mesh_v%G(i,j-1)*v%p(i,j-1,k)-&

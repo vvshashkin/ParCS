@@ -70,7 +70,7 @@ subroutine calc_curl_c_sbp_tile(curl, u, v, sbp_diff, mesh_x, mesh_y, mesh_xy, s
     do k=ks, ke
         dxdy_tile%ks = k; dxdy_tile%ke = k
 
-        call sbp_diff%apply(dvx, dxdy_tile, dxdy_tile, mesh_xy%globnx+1, 'x', v)
+        call sbp_diff%apply(dvx, dxdy_tile, dxdy_tile, mesh_xy%nx, 'x', v)
 
         !Edges penalty procedure
         if(is == 1) then
@@ -82,7 +82,7 @@ subroutine calc_curl_c_sbp_tile(curl, u, v, sbp_diff, mesh_x, mesh_y, mesh_xy, s
                 dvx(1,j,1) = dvx(1,j,1) + 0.5_8*dv / sbp_diff%Al_out(1)
             end do
         end if
-        if(ie == mesh_xy%globnx+1) then
+        if(ie == mesh_xy%nx) then
             do j=js, je
                 dv = 0.0_8
                 nw = size(sbp_diff%proj_operator_r)
@@ -94,7 +94,7 @@ subroutine calc_curl_c_sbp_tile(curl, u, v, sbp_diff, mesh_x, mesh_y, mesh_xy, s
             end do
         end if
 
-        call sbp_diff%apply(duy, dxdy_tile, dxdy_tile, mesh_xy%globny+1, 'y', u)
+        call sbp_diff%apply(duy, dxdy_tile, dxdy_tile, mesh_xy%ny, 'y', u)
 
         if(js == 1) then
             do i=is, ie
@@ -105,7 +105,7 @@ subroutine calc_curl_c_sbp_tile(curl, u, v, sbp_diff, mesh_x, mesh_y, mesh_xy, s
                 duy(i,1,1) = duy(i,1,1) + 0.5_8*du / sbp_diff%Al_out(1)
             end do
         end if
-        if(je == mesh_xy%globny+1) then
+        if(je == mesh_xy%ny) then
             do i=is, ie
                 du = 0.0_8
                 nw = size(sbp_diff%proj_operator_r)

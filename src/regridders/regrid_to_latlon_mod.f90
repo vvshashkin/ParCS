@@ -201,12 +201,12 @@ subroutine interpolate_C_vec_to_A_serial4(uout, vout, u, v, mesh_o)
     do t=mesh_o%ts,mesh_o%te
     do k=mesh_o%tile(t)%ks, mesh_o%tile(t)%ke
         do j=mesh_o%tile(t)%js, mesh_o%tile(t)%je
-            do i = 1,mesh_o%tile(t)%globnx
+            do i = 1,mesh_o%tile(t)%nx
                 uout%tile(t)%p(i,j,k) = 0.5_8*(u%tile(t)%p(i,j,k)+u%tile(t)%p(i+1,j,k))
             end do
         end do
 
-        do j=1, mesh_o%tile(t)%globny
+        do j=1, mesh_o%tile(t)%ny
             do i = mesh_o%tile(t)%is,mesh_o%tile(t)%ie
                 vout%tile(t)%p(i,j,k) = 0.5_8*(v%tile(t)%p(i,j,k)+v%tile(t)%p(i,j+1,k))
             end do
@@ -221,11 +221,11 @@ subroutine interpolate_C_vec_to_A_serial4(uout, vout, u, v, mesh_o)
         do j=mesh_o%tile(t)%js, mesh_o%tile(t)%je
             uout%tile(t)%p(1,j,k) = (5._8*u%tile(t)%p(1,j,k)+15._8*u%tile(t)%p(2,j,k)-&
                                      5._8*u%tile(t)%p(3,j,k)+u%tile(t)%p(4,j,k))/16._8
-            do i = 2,mesh_o%tile(t)%globnx-1
+            do i = 2,mesh_o%tile(t)%nx-1
                 uout%tile(t)%p(i,j,k) = (-u%tile(t)%p(i-1,j,k)+9._8*u%tile(t)%p(i,j,k)+&
                                       9._8*u%tile(t)%p(i+1,j,k)-u%tile(t)%p(i+2,j,k))/16._8
             end do
-            n = mesh_o%tile(t)%globnx
+            n = mesh_o%tile(t)%nx
             uout%tile(t)%p(n,j,k) = (5._8*u%tile(t)%p(n+1,j,k)+15._8*u%tile(t)%p(n,j,k)-&
                                      5._8*u%tile(t)%p(n-1,j,k)+u%tile(t)%p(n-2,j,k))/16._8
         end do
@@ -234,13 +234,13 @@ subroutine interpolate_C_vec_to_A_serial4(uout, vout, u, v, mesh_o)
             vout%tile(t)%p(i,1,k) = (5._8*v%tile(t)%p(i,1,k)+15._8*v%tile(t)%p(i,2,k)-&
                                      5._8*v%tile(t)%p(i,3,k)+v%tile(t)%p(i,4,k))/16._8
         end do
-        do j=2, mesh_o%tile(t)%globny-1
+        do j=2, mesh_o%tile(t)%ny-1
             do i = mesh_o%tile(t)%is,mesh_o%tile(t)%ie
                 vout%tile(t)%p(i,j,k) = (-v%tile(t)%p(i,j-1,k)+9._8*v%tile(t)%p(i,j,k)+&
                                          9._8*v%tile(t)%p(i,j+1,k)-v%tile(t)%p(i,j+2,k))/16._8
             end do
         end do
-        n = mesh_o%tile(t)%globny
+        n = mesh_o%tile(t)%ny
         do i= mesh_o%tile(t)%is, mesh_o%tile(t)%ie
             vout%tile(t)%p(i,n,k) = (5._8*v%tile(t)%p(i,n+1,k)+15._8*v%tile(t)%p(i,n,k)-&
                                      5._8*v%tile(t)%p(i,n-1,k)+v%tile(t)%p(i,n-2,k))/16._8

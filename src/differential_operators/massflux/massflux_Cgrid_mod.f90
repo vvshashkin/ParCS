@@ -172,10 +172,10 @@ subroutine calc_c_sbp21_massflux_tile(fx,fy,f,u,v,mesh_x,mesh_y, mesh_o)
 
         do j=js,je
             if(is == 1) fx%p(1,j,k) = u%p(1,j,k)*f%p(1,j,k)
-            do i=max(is,2),min(ie,mesh_o%globnx)
+            do i=max(is,2),min(ie,mesh_o%nx)
                 fx%p(i,j,k) = u%p(i,j,k)*0.5_8*(f%p(i,j,k)+f%p(i-1,j,k))
             end do
-            if(ie == mesh_o%globnx+1) fx%p(mesh_o%globnx+1,j,k) = u%p(mesh_o%globnx+1,j,k)*f%p(mesh_o%globnx,j,k)
+            if(ie == mesh_o%nx+1) fx%p(mesh_o%nx+1,j,k) = u%p(mesh_o%nx+1,j,k)*f%p(mesh_o%nx,j,k)
         end do
 
         is = mesh_y%is; ie = mesh_y%ie
@@ -187,13 +187,13 @@ subroutine calc_c_sbp21_massflux_tile(fx,fy,f,u,v,mesh_x,mesh_y, mesh_o)
             end do
         end if
 
-        do j=max(js,2),min(je,mesh_o%globny); do i=is,ie
+        do j=max(js,2),min(je,mesh_o%ny); do i=is,ie
             fy%p(i,j,k) = v%p(i,j,k)*0.5_8*(f%p(i,j,k)+f%p(i,j-1,k))
         end do; end do
 
-        if(je == mesh_o%globny+1) then
+        if(je == mesh_o%ny+1) then
             do i=is,ie
-                fy%p(i,mesh_o%globny+1,k) = v%p(i,mesh_o%globny+1,k)*f%p(i,mesh_o%globny,k)
+                fy%p(i,mesh_o%ny+1,k) = v%p(i,mesh_o%ny+1,k)*f%p(i,mesh_o%ny,k)
             end do
         end if
 
@@ -261,7 +261,7 @@ subroutine calc_c_sbp42_massflux_tile(fx,fy,f,u,v,sbp_interp_h2v,mesh_x,mesh_y, 
         end do
 
         fp_tile%ks = k; fp_tile%ke = k
-        call sbp_interp_h2v%apply(fx%p,fx_work_tile,fx_tile, mesh_o%globnx+1, 'x', fp, fp_tile)
+        call sbp_interp_h2v%apply(fx%p,fx_work_tile,fx_tile, mesh_o%nx+1, 'x', fp, fp_tile)
 
         is = mesh_x%is; ie = mesh_x%ie
         js = mesh_x%js; je = mesh_x%je
@@ -271,7 +271,7 @@ subroutine calc_c_sbp42_massflux_tile(fx,fy,f,u,v,sbp_interp_h2v,mesh_x,mesh_y, 
             end do
         end do
 
-        call sbp_interp_h2v%apply(fy%p,fy_work_tile,fy_tile, mesh_o%globny+1, 'y', fp, fp_tile)
+        call sbp_interp_h2v%apply(fy%p,fy_work_tile,fy_tile, mesh_o%ny+1, 'y', fp, fp_tile)
 
         is = mesh_y%is; ie = mesh_y%ie
         js = mesh_y%js; je = mesh_y%je
