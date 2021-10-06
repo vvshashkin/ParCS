@@ -18,6 +18,7 @@ subroutine create_swm_operator(operator, grav, swm_config, domain)
     use KE_factory_mod,         only : create_KE_operator
     use massflux_factory_mod,   only : create_massflux_operator
     use co2contra_factory_mod,  only : create_co2contra_operator
+    use quadrature_factory_mod, only : create_quadrature
 
     use grid_field_factory_mod, only : create_grid_field
 
@@ -50,6 +51,8 @@ subroutine create_swm_operator(operator, grav, swm_config, domain)
     swm_op%massflux_op = create_massflux_operator(domain, swm_config%massflux_op_name)
 
     swm_op%co2contra_op = create_co2contra_operator(domain, swm_config%co2contra_op_name)
+
+    call create_quadrature(swm_op%quadrature, "default_quadrature", domain)
 
     call create_grid_field(swm_op%KE,  halo_width_xy, 0, domain%mesh_p)
     call create_grid_field(swm_op%div, halo_width_xy, 0, domain%mesh_p)

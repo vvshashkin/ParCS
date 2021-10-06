@@ -5,13 +5,14 @@ use domain_mod,     only : domain_t
 use operator_mod,   only : operator_t
 use grid_field_mod, only : grid_field_t
 
-use abstract_div_mod,       only : div_operator_t
-use abstract_grad_mod,      only : grad_operator_t
-use abstract_coriolis_mod,  only : coriolis_operator_t
-use abstract_curl_mod,      only : curl_operator_t
-use abstract_KE_mod,        only : KE_operator_t
-use abstract_massflux_mod,  only : massflux_operator_t
-use abstract_co2contra_mod, only : co2contra_operator_t
+use abstract_div_mod,        only : div_operator_t
+use abstract_grad_mod,       only : grad_operator_t
+use abstract_coriolis_mod,   only : coriolis_operator_t
+use abstract_curl_mod,       only : curl_operator_t
+use abstract_KE_mod,         only : KE_operator_t
+use abstract_massflux_mod,   only : massflux_operator_t
+use abstract_co2contra_mod,  only : co2contra_operator_t
+use abstract_quadrature_mod, only : quadrature_t
 
 use stvec_swm_mod, only : stvec_swm_t
 use parcomm_mod,   only : parcomm_global
@@ -31,6 +32,7 @@ type, public, extends(operator_t) :: operator_swm_t
     class(KE_operator_t),        allocatable :: KE_op
     class(massflux_operator_t),  allocatable :: massflux_op
     class(co2contra_operator_t), allocatable :: co2contra_op
+    class(quadrature_t),         allocatable :: quadrature
 
     real(kind=8), allocatable :: A_p(:), A_u(:), A_v(:)
 
@@ -103,7 +105,7 @@ subroutine apply(this, vout, vin, domain)
             print*, 'coriolis tendency', ke_u+ke_v
 
             !FULL ENERGY TENDENCY
-            !Need to check that everything correct! 
+            !Need to check that everything correct!
             call this%massflux_op%calc_massflux(this%hu_diag, this%hv_diag, &
                          vout%h, this%ut, this%vt, domain)
 
