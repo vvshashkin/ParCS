@@ -32,7 +32,7 @@ type, public, extends(operator_t) :: operator_swm_t
     class(KE_operator_t),        allocatable :: KE_op
     class(massflux_operator_t),  allocatable :: massflux_op
     class(co2contra_operator_t), allocatable :: co2contra_op
-    class(quadrature_t),         allocatable :: quadrature
+    class(quadrature_t),         allocatable :: quadrature_h, quadrature_u, quadrature_v
 
     real(kind=8), allocatable :: A_p(:), A_u(:), A_v(:)
 
@@ -100,8 +100,9 @@ subroutine apply(this, vout, vin, domain)
             !CORIOLIS OPERATOR TENDENCY
             call this%KE_diag_u%assign_prod(1.0_8, this%hu, this%cor_u, domain%mesh_u)
             call this%KE_diag_v%assign_prod(1.0_8, this%hv, this%cor_v, domain%mesh_v)
-            ke_u = calc_mass(this%KE_diag_u, this%A_u, this%A_p, domain%mesh_u, domain%parcomm)
-            ke_v = calc_mass(this%KE_diag_v, this%A_p, this%A_v, domain%mesh_v, domain%parcomm)
+
+            ke_u = this%quadrature_u%mass(this%KE_diag_u, domain%mesh_u, domain%parcomm)
+            ke_v = this%quadrature_v%mass(this%KE_diag_v, domain%mesh_v, domain%parcomm)
             print*, 'coriolis tendency', ke_u+ke_v
 
             !FULL ENERGY TENDENCY
@@ -118,11 +119,11 @@ subroutine apply(this, vout, vin, domain)
             call this%KE_diag_u%assign_prod(1.0_8, this%hu, vout%u, domain%mesh_u)
             call this%KE_diag_v%assign_prod(1.0_8, this%hv, vout%v, domain%mesh_v)
 
-            ke_u = calc_mass(this%KE_diag_u, this%A_u, this%A_p, domain%mesh_u, domain%parcomm) + &
-                   calc_mass(this%hu_diag,   this%A_u, this%A_p, domain%mesh_u, domain%parcomm)
-            ke_v = calc_mass(this%KE_diag_v, this%A_p, this%A_v, domain%mesh_v, domain%parcomm) + &
-                   calc_mass(this%hv_diag,   this%A_p, this%A_v, domain%mesh_v, domain%parcomm)
-            pe   = calc_mass(this%PE_diag,   this%A_p, this%A_p, domain%mesh_p, domain%parcomm)
+            ke_u = this%quadrature_u%mass(this%KE_diag_u, domain%mesh_u, domain%parcomm) +&
+                   this%quadrature_u%mass(this%hu_diag, domain%mesh_u, domain%parcomm)
+            ke_v = this%quadrature_v%mass(this%KE_diag_v, domain%mesh_v, domain%parcomm) +&
+                   this%quadrature_v%mass(this%hv_diag, domain%mesh_v, domain%parcomm)
+            pe   = this%quadrature_h%mass(this%PE_diag, domain%mesh_p, domain%parcomm)
 
             print*, 'Full energy tendency', ke_u+ke_v+this%grav*pe
 

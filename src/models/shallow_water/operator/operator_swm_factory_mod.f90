@@ -52,7 +52,9 @@ subroutine create_swm_operator(operator, grav, swm_config, domain)
 
     swm_op%co2contra_op = create_co2contra_operator(domain, swm_config%co2contra_op_name)
 
-    call create_quadrature(swm_op%quadrature, "default_quadrature", domain)
+    call create_quadrature(swm_op%quadrature_h, swm_config%quadrature_name, domain%mesh_p)
+    call create_quadrature(swm_op%quadrature_u, swm_config%quadrature_name, domain%mesh_u)
+    call create_quadrature(swm_op%quadrature_v, swm_config%quadrature_name, domain%mesh_v)
 
     call create_grid_field(swm_op%KE,  halo_width_xy, 0, domain%mesh_p)
     call create_grid_field(swm_op%div, halo_width_xy, 0, domain%mesh_p)
