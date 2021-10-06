@@ -2,12 +2,12 @@
     N = 32,
     Nz = 1,
     topology_type    = 'cube',
-    staggering_type  = 'C',
+    staggering_type  = 'Ah',
     metric_type      = 'ecs'
 /
 &metric
 /
-&shallow_water_model_a
+&shallow_water_model
     div_op_name       = 'divergence_ah42_sbp',
     grad_op_name      = 'gradient_ah42_sbp_ecs',
     coriolis_op_name  = 'coriolis_colocated',
@@ -23,7 +23,7 @@
     simulation_time_min   = 0.0,
     simulation_time_sec   = 0.0,
 /
-&shallow_water_model
+&shallow_water_model_c
     div_op_name       = 'divergence_c_sbp42',
     grad_op_name      = 'gradient_c_sbp42',
     coriolis_op_name  = 'coriolis_Cgrid_sbp42',

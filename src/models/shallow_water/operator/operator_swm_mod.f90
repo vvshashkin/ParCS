@@ -34,7 +34,7 @@ type, public, extends(operator_t) :: operator_swm_t
     class(co2contra_operator_t), allocatable :: co2contra_op
     class(quadrature_t),         allocatable :: quadrature_h, quadrature_u, quadrature_v
 
-    real(kind=8), allocatable :: A_p(:), A_u(:), A_v(:)
+    !real(kind=8), allocatable :: A_p(:), A_u(:), A_v(:)
 
     type(grid_field_t) :: h_surf !orography
     type(grid_field_t) :: div, grad_x, grad_y, curl

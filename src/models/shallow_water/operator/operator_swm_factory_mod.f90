@@ -90,13 +90,13 @@ subroutine create_swm_operator(operator, grav, swm_config, domain)
     call create_grid_field(swm_op%KE_diag_v,  0, 0, domain%mesh_v)
     call create_grid_field(swm_op%PE_diag,    0, 0, domain%mesh_p)
 
-    if (swm_config%config_domain%staggering_type=="C") then
-        swm_op%A_p = D42_A_centers
-        swm_op%A_u = D42_A_interfaces
-        swm_op%A_v = D42_A_interfaces
-    else
-        call domain%parcomm%abort("No matrices!!!")
-    end if
+    !if (swm_config%config_domain%staggering_type=="C") then
+    !    swm_op%A_p = D42_A_centers
+    !    swm_op%A_u = D42_A_interfaces
+    !    swm_op%A_v = D42_A_interfaces
+    !else
+    !    call domain%parcomm%abort("No matrices!!!")
+    !end if
 
     call move_alloc(swm_op, operator)
 
