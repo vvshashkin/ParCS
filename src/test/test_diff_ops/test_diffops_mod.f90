@@ -21,7 +21,8 @@ end type err_container_t
 private
 public :: err_container_t, test_div, test_grad, test_conv, &
           test_laplace_spectre, test_curl, test_coriolis,  &
-          test_curl_grad, test_co2contra, test_KE, test_coriolis_vec_inv
+          test_curl_grad, test_co2contra, test_KE, test_coriolis_vec_inv, &
+          test_compatibility
 
 contains
 
@@ -631,6 +632,138 @@ subroutine test_laplace_spectre(div_operator_name, grad_operator_name, &
 
     call eigvals(lapM,npts)
 end subroutine test_laplace_spectre
+
+subroutine test_compatibility(div_operator_name, grad_operator_name,  &
+                              co2contra_operator_name, quadrature_name, staggering)
+
+    use test_fields_mod,  only : set_vector_test_field, set_scalar_test_field, &
+                                 random_vec=>random_vector_field_generator,    &
+                                 random_f => random_scalar_field_generator
+    use div_factory_mod,         only : create_div_operator
+    use grad_factory_mod,        only : create_grad_operator
+    use co2contra_factory_mod,   only : create_co2contra_operator
+    use quadrature_factory_mod,  only : create_quadrature
+
+    use abstract_div_mod,        only : div_operator_t
+    use abstract_grad_mod,       only : grad_operator_t
+    use abstract_co2contra_mod,  only : co2contra_operator_t
+    use abstract_quadrature_mod, only : quadrature_t
+    use halo_mod,                only : halo_t, halo_vec_t
+    use halo_factory_mod,        only : create_halo_procedure, create_vector_halo_procedure
+
+    character(len=*), intent(in) :: div_operator_name, grad_operator_name, &
+                                   co2contra_operator_name, quadrature_name, &
+                                   staggering
+    !locals:
+    integer(kind=4), parameter  :: N=32, nz = 3
+    integer(kind=4), parameter  :: ex_halo_width = 8
+    type(grid_field_t)          :: u, v, ut, vt, h, div, gx, gy
+    type(domain_t)              :: domain
+
+    class(div_operator_t),       allocatable :: div_op
+    class(grad_operator_t),      allocatable :: grad_op
+    class(co2contra_operator_t), allocatable :: co2contra
+    class(quadrature_t),         allocatable :: quadrature_p, quadrature_u, quadrature_v
+    class(halo_t),               allocatable :: Ah_sync
+    class(halo_vec_t),           allocatable :: Ah_sync_vec
+
+    real(kind=8) :: q1, q2
+
+    call create_domain(domain, "cube", staggering, N, nz)
+    call create_grid_field(u, ex_halo_width, 0, domain%mesh_u)
+    call create_grid_field(v, ex_halo_width, 0, domain%mesh_v)
+    call create_grid_field(ut, ex_halo_width, 0, domain%mesh_u)
+    call create_grid_field(vt, ex_halo_width, 0, domain%mesh_v)
+    call create_grid_field(gx, ex_halo_width, 0, domain%mesh_u)
+    call create_grid_field(gy, ex_halo_width, 0, domain%mesh_v)
+    call create_grid_field(div, ex_halo_width, 0, domain%mesh_p)
+    call create_grid_field(h, ex_halo_width, 0, domain%mesh_p)
+
+    div_op  = create_div_operator(domain,div_operator_name)
+    grad_op = create_grad_operator(domain,grad_operator_name)
+    co2contra = create_co2contra_operator(domain, co2contra_operator_name)
+    call create_quadrature(quadrature_p,quadrature_name,domain%mesh_p)
+    call create_quadrature(quadrature_u,quadrature_name,domain%mesh_u)
+    call create_quadrature(quadrature_v,quadrature_name,domain%mesh_v)
+
+    call set_vector_test_field(u,v,random_vec, domain%mesh_u, domain%mesh_v, &
+                               0, "covariant")
+    call set_vector_test_field(gx,gy,random_vec, domain%mesh_u, domain%mesh_v, &
+                               0, "covariant")
+
+    call co2contra%transform(ut,vt,u,v,domain)
+    call ut%assign_prod(1.0_8,ut,gx,domain%mesh_u)
+    call vt%assign_prod(1.0_8,vt,gy,domain%mesh_v)
+    q1 = quadrature_u%mass(ut,domain%mesh_u,domain%parcomm)+&
+         quadrature_v%mass(vt,domain%mesh_v,domain%parcomm)
+    call co2contra%transform(ut,vt,gx,gy,domain)
+    call ut%assign_prod(1.0_8,ut,u,domain%mesh_u)
+    call vt%assign_prod(1.0_8,vt,v,domain%mesh_v)
+    q2 = quadrature_u%mass(ut,domain%mesh_u,domain%parcomm)+&
+         quadrature_v%mass(vt,domain%mesh_v,domain%parcomm)
+
+    print *, "co2contra symmetry check", q1-q2
+
+    call set_vector_test_field(u,v,random_vec, domain%mesh_u, domain%mesh_v, &
+                               0, "covariant")
+    call set_vector_test_field(gx,gy,random_vec, domain%mesh_u, domain%mesh_v, &
+                               0, "covariant")
+    call set_scalar_test_field(h,random_f, domain%mesh_p,0)
+
+    if(staggering=="Ah") then
+        call create_halo_procedure(Ah_sync,domain,1,"Ah_scalar_sync")
+        call create_vector_halo_procedure(Ah_sync_vec,domain,1,"ecs_Ah_vec_sync_covariant")
+        call Ah_sync%get_halo_scalar(h,domain,1)
+        call Ah_sync_vec%get_halo_vector(u,v,domain,1)
+    end if
+    call co2contra%transform(ut,vt,u,v,domain)
+
+    call div_op%calc_div(div,ut,vt,domain)
+    call grad_op%calc_grad(gx,gy,h,domain)
+    call ut%assign_prod(1.0_8,ut,gx,domain%mesh_u)
+    call vt%assign_prod(1.0_8,vt,gy,domain%mesh_v)
+    call h%assign_prod(1.0_8,h,div,domain%mesh_p)
+
+
+    q1 = quadrature_p%mass(h,domain%mesh_p,domain%parcomm)+&
+         quadrature_u%mass(ut,domain%mesh_u,domain%parcomm)+&
+         quadrature_v%mass(vt,domain%mesh_v,domain%parcomm)
+    q2 = quadrature_p%mass(div,domain%mesh_p,domain%parcomm)
+
+    print *, "Divergence mass conservation", q2
+    print *, "Divergence-grad conjugacy", q1
+
+
+    ! call ut%assign(1.0_8,u,-1.0_8,gx,domain%mesh_u)
+    ! call vt%assign(1.0_8,v,-1.0_8,gy,domain%mesh_v)
+    ! print *, "norm diff", quadrature_u%mass(ut,domain%mesh_u,domain%parcomm)+&
+    !                       quadrature_u%mass(vt,domain%mesh_v,domain%parcomm)
+    !
+    ! div_op = create_div_operator(domain, div_oper_name)
+    !
+    ! call div_op%calc_div(div, u,v,domain)
+    ! call div%assign(domain%mesh_p%scale, div, domain%mesh_p)
+    !
+    ! allocate(errs%keys(4), errs%values(4))
+    ! errs%keys(1)%str = "solid rotation linf"
+    ! errs%keys(2)%str = "solid rotation l2"
+    ! errs%keys(3)%str = "cross polar linf"
+    ! errs%keys(4)%str = "cross polar l2"
+    !
+    ! errs%values(1) = div%maxabs(domain%mesh_p,domain%parcomm)
+    ! errs%values(2) = l2norm(div, domain%mesh_p,domain%parcomm)
+    !
+    ! call set_vector_test_field(u,v,cross_polar, domain%mesh_u, domain%mesh_v, &
+    !                            0, "contravariant")
+    ! call set_scalar_test_field(div_true,cross_polar_div, domain%mesh_p,0)
+    ! call div_op%calc_div(div, u,v,domain)
+    ! call div%assign(domain%mesh_p%scale, div, -1.0_8, div_true, domain%mesh_p)
+    !
+    ! errs%values(3) = div%maxabs(domain%mesh_p,domain%parcomm)
+    ! errs%values(4) = l2norm(div, domain%mesh_p,domain%parcomm)
+    ! !call stats(div,domain%mesh_p)
+
+end subroutine test_compatibility
 
 subroutine make_consistent_Ah_field(f,parcomm,mesh,exchange)
     use parcomm_mod,            only : parcomm_t
