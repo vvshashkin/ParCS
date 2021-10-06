@@ -4,7 +4,7 @@ use parcomm_mod,         only : init_global_parallel_enviroment, &
                                 deinit_global_parallel_enviroment, &
                                 parcomm_global
 use test_diffops_mod, only: err_container_t, test_div, test_grad, test_conv, test_curl, &
-                            test_coriolis, test_KE, test_coriolis_vec_inv
+                            test_coriolis, test_KE, test_coriolis_vec_inv, test_co2contra
 
 implicit none
 
@@ -178,6 +178,24 @@ end if
 errs = test_KE(N=32, KE_oper_name="KE_Cgrid_sbp21", staggering="C")
 if (parcomm_global%myid==0) then
     print *, "KE_Cgrid_sbp21"
+    print "(A,4E15.7)", "Err: ", errs%values
+end if
+
+errs = test_co2contra(N=32,co2contra_oper_name="co2contra_c_sbp21", staggering="C")
+if (parcomm_global%myid==0) then
+    print *, "co2contra_c_sbp21"
+    print "(A,4E15.7)", "Err: ", errs%values
+end if
+
+errs = test_co2contra(N=32,co2contra_oper_name="co2contra_c_sbp42", staggering="C")
+if (parcomm_global%myid==0) then
+    print *, "co2contra_c_sbp42"
+    print "(A,4E15.7)", "Err: ", errs%values
+end if
+
+errs = test_co2contra(N=32,co2contra_oper_name="co2contra_colocated", staggering="Ah")
+if (parcomm_global%myid==0) then
+    print *, "co2contra_colocated Ah grid"
     print "(A,4E15.7)", "Err: ", errs%values
 end if
 
