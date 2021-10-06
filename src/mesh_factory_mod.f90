@@ -35,16 +35,24 @@ subroutine create_mesh(mesh, partition, metric, halo_width, points_type)
     select case(points_type)
     case('c')
         tile => partition%tile
+        nx = partition%nh
+        ny = partition%nh
     case('x')
         shift_i = 0.0_8
         tile => partition%tile_x
+        nx = partition%nh+1
+        ny = partition%nh
     case('y')
         shift_j = 0.0_8
         tile => partition%tile_y
+        nx = partition%nh
+        ny = partition%nh+1
     case('xy')
         shift_i = 0.0_8
         shift_j = 0.0_8
         tile => partition%tile_xy
+        nx = partition%nh+1
+        ny = partition%nh+1
     case default
         print*, 'Error! Wrong points_type! Abort!'
         stop
@@ -73,8 +81,8 @@ subroutine create_mesh(mesh, partition, metric, halo_width, points_type)
         call mesh%tile(t)%init(is, ie, js, je, ks, ke, halo_width)
 
         !WORKAROUND
-        mesh%tile(t)%nx = nh
-        mesh%tile(t)%ny = nh
+        mesh%tile(t)%globnx = nh
+        mesh%tile(t)%globny = nh
 
         mesh%tile(t)%hx = (metric%alpha1 - metric%alpha0)/real(nh,8)
         mesh%tile(t)%hy = (metric%beta1  - metric%beta0 )/real(nh,8)

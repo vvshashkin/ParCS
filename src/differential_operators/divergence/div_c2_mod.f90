@@ -120,15 +120,15 @@ subroutine calc_div_on_tile_sbp21(div, u, v, mesh_u, mesh_v, mesh_p, scale)
             if(is<=2 .and. ie >= 2) &
                         dx(2,j) = (mesh_u%G(3,j)*u%p(3,j,k)-mesh_u%G(2,j)*u%p(2,j,k)- &
                                    0.25_8*mesh_u%G(1,j)*(u%p(1,j,k)-u%p(0,j,k)))
-            do i=max(3,is),min(ie,mesh_p%nx-2)
+            do i=max(3,is),min(ie,mesh_p%globnx-2)
                 dx(i,j) = (mesh_u%G(i+1,j)*u%p(i+1,j,k)-mesh_u%G(i,j)*u%p(i,j,k))
             end do
-            if(is <= mesh_p%nx-1 .and. ie >= mesh_p%nx-1) then
-                i = mesh_p%nx-1
+            if(is <= mesh_p%globnx-1 .and. ie >= mesh_p%globnx-1) then
+                i = mesh_p%globnx-1
                 dx(i,j) = (mesh_u%G(i+1,j)*u%p(i+1,j,k)-mesh_u%G(i,j)*u%p(i,j,k)+ &
                            0.25_8*mesh_u%G(i+2,j)*(u%p(i+2,j,k)-u%p(i+3,j,k)))
             end if
-            if(ie == mesh_p%nx) &
+            if(ie == mesh_p%globnx) &
                 dx(ie,j) = (mesh_u%G(ie+1,j)*(0.75_8*u%p(ie+2,j,k)+0.25_8*u%p(ie+1,j,k))- &
                             mesh_u%G(ie,j)*u%p(ie,j,k))
         end do
@@ -147,20 +147,20 @@ subroutine calc_div_on_tile_sbp21(div, u, v, mesh_u, mesh_v, mesh_p, scale)
                                    0.25_8*mesh_v%G(i,j-1)*(v%p(i,j-1,k)-v%p(i,j-2,k)))
             end do
         end if
-        do j=max(js,3),min(je,mesh_p%ny-2)
+        do j=max(js,3),min(je,mesh_p%globny-2)
             do i=is,ie
                 dy(i,j) = (mesh_v%G(i,j+1)*v%p(i,j+1,k)-mesh_v%G(i,j)*v%p(i,j,k))
             end do
         end do
-        if(js<=mesh_p%ny-1.and.je>=mesh_p%ny-1) then
-            j = mesh_p%ny-1
+        if(js<=mesh_p%globny-1.and.je>=mesh_p%globny-1) then
+            j = mesh_p%globny-1
             do i=is,ie
                 dy(i,j) = (mesh_v%G(i,j+1)*v%p(i,j+1,k)-mesh_v%G(i,j)*v%p(i,j,k)+ &
                             0.25_8*mesh_v%G(i,j+2)*(v%p(i,j+2,k)-v%p(i,j+3,k)))
             end do
         end if
-        if(je==mesh_p%ny) then
-            j = mesh_p%ny
+        if(je==mesh_p%globny) then
+            j = mesh_p%globny
             do i =is,ie
                 dy(i,j) = mesh_v%G(i,j+1)*(0.75_8*v%p(i,j+2,k)+0.25_8*v%p(i,j+1,k))- &
                           mesh_v%G(i,j)*v%p(i,j,k)

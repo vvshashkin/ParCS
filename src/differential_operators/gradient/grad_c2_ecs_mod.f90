@@ -162,8 +162,8 @@ end subroutine calc_grad_on_tile
 !     real(kind=8), allocatable :: fdx_at_o(:,:), fdy_at_o(:,:)
 !     real(kind=8)    :: fdx_at_y, fdy_at_x
 !
-!     nx = mesh_o%nx
-!     ny = mesh_o%ny
+!     nx = mesh_o%globnx
+!     ny = mesh_o%globny
 !
 !     ks = mesh_o%ks; ke = mesh_o%ke
 !
@@ -244,8 +244,8 @@ subroutine calc_grad_on_tile_sbp21(gx, gy, f, mesh_x, mesh_y, mesh_o, scale)
     integer(kind=4) :: nx, ny
     integer(kind=4) :: i, j, k
 
-    nx = mesh_o%nx
-    ny = mesh_o%ny
+    nx = mesh_o%globnx
+    ny = mesh_o%globny
 
     ks = mesh_o%ks; ke = mesh_o%ke
 

@@ -58,13 +58,13 @@ subroutine interp_w2v_tile(fu, fv, fw, sbp_interp_w2v, &
                   js = mesh_y%js, je = mesh_y%je, &
                   ks = mesh_y%ks, ke = mesh_y%ke)
 
-    call sbp_interp_w2v%apply(fv, work, mesh_y%nx, 'x', fw)
+    call sbp_interp_w2v%apply(fv, work, mesh_y%globnx, 'x', fw)
 
     work = tile_t(is = mesh_x%is, ie = mesh_x%ie, &
                   js = mesh_x%js, je = mesh_x%je, &
                   ks = mesh_x%ks, ke = mesh_x%ke)
 
-    call sbp_interp_w2v%apply(fu, work, mesh_x%ny, 'y', fw)
+    call sbp_interp_w2v%apply(fu, work, mesh_x%globny, 'y', fw)
 
 end subroutine interp_w2v_tile
 end module interpolator_w2h_mod

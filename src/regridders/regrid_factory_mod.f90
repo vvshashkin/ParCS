@@ -39,16 +39,16 @@ subroutine create_latlon_regrid(regrid_out, domain, Nlon, Nlat,interp_type, &
     end if
 
     if(regrid%scalar_grid_type == "Ah") then
-        call stencil_bounds%init(is=1,ie=domain%mesh_o%tile(1)%nx+1,&
-                                 js=1,je=domain%mesh_o%tile(1)%ny+1,&
+        call stencil_bounds%init(is=1,ie=domain%mesh_o%tile(1)%globnx+1,&
+                                 js=1,je=domain%mesh_o%tile(1)%globny+1,&
                                  ks=domain%mesh_o%tile(1)%ks,ke=domain%mesh_o%tile(1)%ke)
         call create_latlon_interp(regrid%interp_scalar,domain,domain%mesh_xy, &
                                   stencil_bounds, Nlat, Nlon, interp_type)
     else if(regrid%scalar_grid_type == "A") then
         call create_halo_procedure(regrid%scalar_halo,domain,A_halo_width,"ECS_O")
         call create_grid_field(regrid%work_field,A_ex_halo_width,0,domain%mesh_o)
-        call stencil_bounds%init(is=1-A_halo_width,ie=domain%mesh_o%tile(1)%nx+A_halo_width,&
-                                 js=1-A_halo_width,je=domain%mesh_o%tile(1)%ny+A_halo_width,&
+        call stencil_bounds%init(is=1-A_halo_width,ie=domain%mesh_o%tile(1)%globnx+A_halo_width,&
+                                 js=1-A_halo_width,je=domain%mesh_o%tile(1)%globny+A_halo_width,&
                                  ks=domain%mesh_o%tile(1)%ks,ke=domain%mesh_o%tile(1)%ke)
         call create_latlon_interp(regrid%interp_scalar,domain,domain%mesh_o, &
                                   stencil_bounds, Nlat, Nlon, interp_type)
@@ -107,8 +107,8 @@ subroutine create_latlon_vector_regrid(regrid_out, domain, Nlon, Nlat, interp_ty
              regrid%v2u(Nlon,Nlat),regrid%v2v(Nlon,Nlat))
 
     if(regrid%vector_grid_type == "Ah") then
-        call stencil_bounds%init(is=1,ie=domain%mesh_o%tile(1)%nx+1,&
-                                 js=1,je=domain%mesh_o%tile(1)%ny+1,&
+        call stencil_bounds%init(is=1,ie=domain%mesh_o%tile(1)%globnx+1,&
+                                 js=1,je=domain%mesh_o%tile(1)%globny+1,&
                                  ks=domain%mesh_o%tile(1)%ks,ke=domain%mesh_o%tile(1)%ke)
         call create_latlon_interp(regrid%interp_components,domain,domain%mesh_xy, &
                                   stencil_bounds, Nlat, Nlon, interp_type)
@@ -117,8 +117,8 @@ subroutine create_latlon_vector_regrid(regrid_out, domain, Nlon, Nlat, interp_ty
         call create_vector_halo_procedure(regrid%halo,domain,A_halo_width,"ecs_A_vec")
         call create_grid_field(regrid%work_u,A_ex_halo_width,0,domain%mesh_o)
         call create_grid_field(regrid%work_v,A_ex_halo_width,0,domain%mesh_o)
-        call stencil_bounds%init(is=1-A_halo_width,ie=domain%mesh_o%tile(1)%nx+A_halo_width,&
-                                 js=1-A_halo_width,je=domain%mesh_o%tile(1)%ny+A_halo_width,&
+        call stencil_bounds%init(is=1-A_halo_width,ie=domain%mesh_o%tile(1)%globnx+A_halo_width,&
+                                 js=1-A_halo_width,je=domain%mesh_o%tile(1)%globny+A_halo_width,&
                                  ks=domain%mesh_o%tile(1)%ks,ke=domain%mesh_o%tile(1)%ke)
         call create_latlon_interp(regrid%interp_components,domain,domain%mesh_o, &
                                   stencil_bounds, Nlat, Nlon, interp_type)
@@ -131,7 +131,7 @@ subroutine create_latlon_vector_regrid(regrid_out, domain, Nlon, Nlat, interp_ty
     hlon = 2._8*pi / real(Nlon,8)
     hlat = pi / (Nlat-1.0_8)
 
-    !Init transform from curvilinear grid components to 
+    !Init transform from curvilinear grid components to
     if(components_type == "contravariant" .or. &
        vector_grid_type == "A" .or. vector_grid_type == "C") then
        !Only contravariant halo-procedures are currently implemented for A and C grids
@@ -228,8 +228,8 @@ subroutine create_latlon_interp(interp,domain,mesh,stencil_bounds,Nlat,Nlon,inte
     beta0  = mesh%tile(mesh%ts)%beta_0
     shift_alpha = mesh%tile(mesh%ts)%shift_i
     shift_beta  = mesh%tile(mesh%ts)%shift_j
-    nx = mesh%tile(mesh%ts)%nx
-    ny = mesh%tile(mesh%ts)%ny
+    nx = mesh%tile(mesh%ts)%globnx
+    ny = mesh%tile(mesh%ts)%globny
 
     hlon = 2._8*pi / real(Nlon,8)
     hlat = pi / (Nlat-1.0_8)

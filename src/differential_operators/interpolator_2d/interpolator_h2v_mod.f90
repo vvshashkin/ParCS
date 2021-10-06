@@ -50,12 +50,12 @@ subroutine interp_h2v_tile(u, v, u_h, v_h, sbp_interp_h2v, &
     work = tile_t(is = mesh_x%is, ie = mesh_x%ie, &
                   js = mesh_x%js, je = mesh_x%je, &
                   ks = mesh_x%ks, ke = mesh_x%ke)
-    call sbp_interp_h2v%apply(u, work, mesh_o%nx+1, 'x', u_h)
+    call sbp_interp_h2v%apply(u, work, mesh_o%globnx+1, 'x', u_h)
 
     work = tile_t(is = mesh_y%is, ie = mesh_y%ie, &
                   js = mesh_y%js, je = mesh_y%je, &
                   ks = mesh_y%ks, ke = mesh_y%ke)
-    call sbp_interp_h2v%apply(v, work, mesh_o%ny+1, 'y', v_h)
+    call sbp_interp_h2v%apply(v, work, mesh_o%globny+1, 'y', v_h)
 
 end subroutine interp_h2v_tile
 

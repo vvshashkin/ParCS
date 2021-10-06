@@ -13,6 +13,7 @@ end type mesh_t
 type, public :: tile_mesh_t
 
     integer(kind=4) :: is, ie, js, je, ks, ke
+    integer(kind=4) :: globnx, globny                     !global horizontal grid dimension (cell-centered 'o' mesh)
     integer(kind=4) :: nx, ny                     !global horizontal grid dimension
 !    integer(kind=4) :: panel_ind
     integer(kind=4) :: halo_width

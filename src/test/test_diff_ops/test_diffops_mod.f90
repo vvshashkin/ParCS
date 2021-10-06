@@ -660,7 +660,7 @@ subroutine make_consistent_Ah_field(f,parcomm,mesh,exchange)
                     if(f%tile(t)%p(i,0,k) == 1.0_8) f%tile(t)%p(i,1,k) = 1.0_8
                 end do
             end if
-            if(je == mesh%tile(t)%ny+1) then
+            if(je == mesh%tile(t)%globny+1) then
                 j = je
                 do i=is, ie
                     if(f%tile(t)%p(i,j+1,k) == 1.0_8) f%tile(t)%p(i,j,k) = 1.0_8
@@ -671,7 +671,7 @@ subroutine make_consistent_Ah_field(f,parcomm,mesh,exchange)
                     if(f%tile(t)%p(0,j,k) == 1.0_8) f%tile(t)%p(1,j,k) = 1.0_8
                 end do
             end if
-            if(ie == mesh%tile(t)%nx+1) then
+            if(ie == mesh%tile(t)%globnx+1) then
                 i = ie
                 do j=js, je
                     if(f%tile(t)%p(i+1,j,k) == 1.0_8) f%tile(t)%p(i,j,k) = 1.0_8
@@ -766,16 +766,16 @@ real(kind=8) function mass(f,mesh) result(m)
             do j=mesh%tile(t)%js, mesh%tile(t)%je
                 if(j<=3) then
                     wy = q(j)
-                else if(j>=mesh%tile(t)%ny-2) then
-                    wy = q(mesh%tile(t)%ny-j+1)
+                else if(j>=mesh%tile(t)%globny-2) then
+                    wy = q(mesh%tile(t)%globny-j+1)
                 else
                     wy = 1.0_8
                 end if
                 do i=mesh%tile(t)%is,mesh%tile(t)%ie
                     if(i<=3) then
                         wx = q(i)
-                    else if(i>=mesh%tile(t)%nx-2) then
-                        wx = q(mesh%tile(t)%nx-i+1)
+                    else if(i>=mesh%tile(t)%globnx-2) then
+                        wx = q(mesh%tile(t)%globnx-i+1)
                     else
                         wx = 1.0_8
                     end if

@@ -945,6 +945,14 @@ $(DOBJ)sbp_factory_mod.o: src/differential_operators/sbp_operators/sbp_factory_m
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)sbp_norm_mod.o: src/differential_operators/sbp_operators/sbp_norm_mod.f90 \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)grid_field_factory_mod.o \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)mesh_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)auxhs.o: src/aux/auxhs.f
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -1125,7 +1133,8 @@ $(DOBJ)operator_swm_mod.o: src/models/shallow_water/operator/operator_swm_mod.f9
 	$(DOBJ)abstract_co2contra_mod.o \
 	$(DOBJ)stvec_swm_mod.o \
 	$(DOBJ)parcomm_mod.o \
-	$(DOBJ)vec_math_mod.o
+	$(DOBJ)vec_math_mod.o \
+	$(DOBJ)sbp_norm_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -1141,7 +1150,8 @@ $(DOBJ)operator_swm_factory_mod.o: src/models/shallow_water/operator/operator_sw
 	$(DOBJ)ke_factory_mod.o \
 	$(DOBJ)massflux_factory_mod.o \
 	$(DOBJ)co2contra_factory_mod.o \
-	$(DOBJ)grid_field_factory_mod.o
+	$(DOBJ)grid_field_factory_mod.o \
+	$(DOBJ)sbp_operators_collection_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
