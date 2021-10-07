@@ -4,7 +4,7 @@ use parcomm_mod,         only : init_global_parallel_enviroment, &
                                 deinit_global_parallel_enviroment, &
                                 parcomm_global
 use test_diffops_mod, only: err_container_t, test_div, test_grad, test_conv, test_curl, &
-                            test_coriolis, test_KE, test_coriolis_vec_inv
+                            test_coriolis, test_KE, test_coriolis_vec_inv, test_grad_perp
 
 implicit none
 
@@ -133,11 +133,18 @@ if (parcomm_global%myid==0) then
     print "(A,4E15.7)", "Err: ", errs%values
 end if
 
-errs = test_coriolis_vec_inv(N=32, coriolis_op_name="coriolis_Cgrid", staggering="C")
+errs = test_coriolis_vec_inv(N=32, coriolis_op_name="coriolis_Cgrid_sbp42", staggering="C")
 if (parcomm_global%myid==0) then
     print *, "coriolis_Cgrid_vec_inv"
     print "(A,4E15.7)", "Err: ", errs%values
 end if
+
+errs = test_grad_perp(N=32, grad_perp_oper_name="grad_perp_c_sbp42", staggering="C")
+if (parcomm_global%myid==0) then
+    print *, "grad_perp_c_sbp42"
+    print "(A,4E15.7)", "Err: ", errs%values
+end if
+
 !
 ! errs = test_KE(N=32, KE_oper_name="KE_colocated", staggering="A")
 ! if (parcomm_global%myid==0) then

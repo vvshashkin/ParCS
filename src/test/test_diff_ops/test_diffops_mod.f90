@@ -21,7 +21,8 @@ end type err_container_t
 private
 public :: err_container_t, test_div, test_grad, test_conv, &
           test_laplace_spectre, test_curl, test_coriolis,  &
-          test_curl_grad, test_co2contra, test_KE, test_coriolis_vec_inv
+          test_curl_grad, test_co2contra, test_KE, test_coriolis_vec_inv, &
+          test_grad_perp
 
 contains
 
@@ -224,7 +225,81 @@ type(err_container_t) function test_co2contra(N,co2contra_oper_name,staggering) 
                      l2norm(v_test, domain%mesh_v, domain%parcomm)
 
 end function test_co2contra
+function test_grad_perp(N, grad_perp_oper_name, staggering) result(errs)
 
+    use test_fields_mod,    only : set_vector_test_field, set_scalar_test_field, &
+                                   xyz_w => xyz_scalar_field_generator, &
+                                   xyz_grad => xyz_grad_generator
+
+    use grad_perp_factory_mod,  only : create_grad_perp_operator
+    use abstract_grad_perp_mod, only : grad_perp_operator_t
+
+    integer(kind=4),  intent(in) :: N
+    character(len=*), intent(in) :: grad_perp_oper_name, staggering
+    type(err_container_t)        :: errs
+    !locals:
+    integer(kind=4), parameter  :: nz = 3
+    integer(kind=4), parameter  :: ex_halo_width = 8
+    type(grid_field_t)          :: gu, gv, w
+    type(grid_field_t)          :: gu_true, gv_true
+    type(domain_t)              :: domain
+    class(grad_perp_operator_t), allocatable :: grad_perp_op
+
+    call create_domain(domain, "cube", staggering, N, nz)
+
+    call create_grad_perp_operator(grad_perp_op, grad_perp_oper_name, domain)
+
+    call create_grid_field(gu,      ex_halo_width, 0, domain%mesh_u)
+    call create_grid_field(gv,      ex_halo_width, 0, domain%mesh_v)
+    call create_grid_field(w,       ex_halo_width, 0, domain%mesh_w)
+    call create_grid_field(gu_true, ex_halo_width, 0, domain%mesh_u)
+    call create_grid_field(gv_true, ex_halo_width, 0, domain%mesh_v)
+
+    call set_scalar_test_field(w, xyz_w, domain%mesh_w, 0)
+    call set_vector_test_field(gu_true, gv_true, xyz_grad, domain%mesh_v, domain%mesh_u, 0, "contravariant")
+
+    call create_grad_perp_operator(grad_perp_op, grad_perp_oper_name, domain)
+    call grad_perp_op%calc_grad_perp(gu, gv, w, domain)
+
+    allocate(errs%keys(2), errs%values(2))
+    errs%keys(1)%str = "xyz linf"
+    errs%keys(2)%str = "xyz l2"
+
+    call gu%assign(1.0_8, gu, -1.0_8, gv_true, domain%mesh_u)
+    call gv%assign(1.0_8, gv,  1.0_8, gu_true, domain%mesh_v)
+
+    errs%values(1) = gu%maxabs(domain%mesh_u, domain%parcomm)  + &
+                     gv%maxabs(domain%mesh_v, domain%parcomm)
+    errs%values(2) = l2norm(gu, domain%mesh_u, domain%parcomm) + &
+                     l2norm(gv, domain%mesh_v, domain%parcomm)
+
+    ! allocate(errs%keys(4), errs%values(4))
+    ! errs%keys(1)%str = "VSH_curl_free_10 linf"
+    ! errs%keys(2)%str = "VSH_curl_free_10 l2"
+    ! errs%keys(3)%str = "Cross polar flow linf"
+    ! errs%keys(4)%str = "Cross polar flow l2"
+    !
+    ! call set_vector_test_field(u, v, VSH_curl_free_10, domain%mesh_u, domain%mesh_v, &
+    !                            0, "covariant")
+    ! call curl_op%calc_curl(curl, u, v, domain)
+    !
+    ! call curl%assign(domain%mesh_p%scale, curl, domain%mesh_w)
+    !
+    ! errs%values(1) = curl%maxabs(domain%mesh_w, domain%parcomm)
+    ! errs%values(2) = l2norm(curl, domain%mesh_w, domain%parcomm)
+    !
+    ! call set_vector_test_field(u, v, cross_polar, domain%mesh_u, domain%mesh_v, &
+    !                            0, "covariant")
+    ! call set_scalar_test_field(curl_true, cross_polar_zeta, domain%mesh_w, 0)
+    !
+    ! call curl_op%calc_curl(curl, u, v, domain)
+    !
+    ! call curl%assign(domain%mesh_xy%scale, curl, -1.0_8, curl_true, domain%mesh_w)
+    !
+    ! errs%values(3) = curl%maxabs(domain%mesh_w, domain%parcomm)
+    ! errs%values(4) = l2norm(curl, domain%mesh_w, domain%parcomm)
+
+end function test_grad_perp
 function test_curl(N, curl_oper_name, staggering) result(errs)
 
     use test_fields_mod,   only : set_vector_test_field, set_scalar_test_field, &
