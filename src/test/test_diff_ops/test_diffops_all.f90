@@ -4,7 +4,7 @@ use parcomm_mod,         only : init_global_parallel_enviroment, &
                                 deinit_global_parallel_enviroment, &
                                 parcomm_global
 use test_diffops_mod, only: test_div, test_grad, test_conv, test_curl, &
-                            test_coriolis, test_KE, test_coriolis_vec_inv, test_co2contra
+                            test_coriolis, test_KE, test_coriolis_vec_inv, test_co2contra, test_grad_perp
 
 use key_value_mod,    only : key_value_r8_t
 
@@ -200,6 +200,25 @@ if (parcomm_global%myid==0) then
     print *, "co2contra_colocated Ah grid"
     print "(A,4E15.7)", "Err: ", errs%values
 end if
+
+! errs = test_grad_perp(N=32, grad_perp_oper_name="grad_perp_c_sbp42", staggering="C")
+! if (parcomm_global%myid==0) then
+!     print *, "grad_perp_c_sbp42"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+
+!
+! errs = test_KE(N=32, KE_oper_name="KE_colocated", staggering="A")
+! if (parcomm_global%myid==0) then
+!     print *, "KE_colocated"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+!
+! errs = test_KE(N=32, KE_oper_name="KE_Cgrid", staggering="C")
+! if (parcomm_global%myid==0) then
+!     print *, "KE_Cgrid"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
 
 call deinit_global_parallel_enviroment()
 
