@@ -12,6 +12,7 @@ type, abstract, public :: operator_t
 contains
     procedure(apply_i),  public, deferred :: apply !vout=A*vin
     procedure,           public           :: solve !vout=inverse(I-dt*A)*rhs
+    procedure,           public           :: get_diagnostics
 end type operator_t
 
 abstract interface
@@ -35,5 +36,21 @@ subroutine solve(this, vout, rhs, dt, domain)
 
     call parcomm_global%abort("Solve function not implemented for specific operator class")
 end subroutine solve
+
+subroutine get_diagnostics(this, v, domain)
+    class(operator_t), intent(inout) :: this
+    class(stvec_t),    intent(inout) :: v
+    type(domain_t),    intent(in)    :: domain
+
+    call parcomm_global%abort("get_diagnostics function not implemented for specific operator class")
+end subroutine get_diagnostics
+
+subroutine get_diagnostics_tend(this, v, vtend, domain)
+    class(operator_t), intent(inout) :: this
+    class(stvec_t),    intent(inout) :: v, vtend
+    type(domain_t),    intent(in)    :: domain
+
+    call parcomm_global%abort("get_diagnostics_tend function not implemented for specific operator class")
+end subroutine get_diagnostics_tend
 
 end module operator_mod
