@@ -18,8 +18,9 @@
     quadrature_name   = 'SBP_Ah42_quadrature',
     dt=900.0,
     tau_write = 86400.0,
-    simulation_time_days  = 120.0,
-    simulation_time_hours = 0.0,
+    tau_diagnostics = 900.0
+    simulation_time_days  = 0.0,
+    simulation_time_hours = 144.0,
     simulation_time_min   = 0.0,
     simulation_time_sec   = 0.0,
 /
@@ -32,10 +33,11 @@
     co2contra_op_name = 'co2contra_c_sbp42',
     massflux_op_name  = 'massflux_c_sbp42',
     quadrature_name   = 'SBP_C42_quadrature',
-    dt=900.0,
+    dt=450.0,
     tau_write = 3600.0,
+    tau_diagnostics = 900.0
     simulation_time_days  = 0.0,
-    simulation_time_hours = 335.0,
+    simulation_time_hours = 340.0,
     simulation_time_min   = 0.0,
     simulation_time_sec   = 0.0,
 /

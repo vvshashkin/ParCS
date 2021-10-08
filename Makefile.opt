@@ -214,7 +214,8 @@ $(DOBJ)mesh_factory_mod.o: src/mesh_factory_mod.f90 \
 $(DOBJ)operator_mod.o: src/operator_mod.f90 \
 	$(DOBJ)stvec_mod.o \
 	$(DOBJ)domain_mod.o \
-	$(DOBJ)parcomm_mod.o
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)key_value_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -1173,7 +1174,8 @@ $(DOBJ)operator_swm_mod.o: src/models/shallow_water/operator/operator_swm_mod.f9
 	$(DOBJ)stvec_swm_mod.o \
 	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)vec_math_mod.o \
-	$(DOBJ)sbp_norm_mod.o
+	$(DOBJ)sbp_norm_mod.o \
+	$(DOBJ)key_value_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -1325,7 +1327,7 @@ $(DOBJ)config_ts2_mod.o: src/models/shallow_water/test/ts2/config_ts2_mod.f90 \
 
 $(DOBJ)ts2_main.o: src/models/shallow_water/test/ts2/ts2_main.f90 \
 	$(DOBJ)parcomm_mod.o \
-	$(DOBJ)ts2_mod_debug_rand.o
+	$(DOBJ)ts2_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -1455,7 +1457,8 @@ $(DOBJ)test_diffops_conv.o: src/test/test_diff_ops/test_diffops_conv.f90 \
 
 $(DOBJ)test_diffops.o: src/test/test_diff_ops/test_diffops.f90 \
 	$(DOBJ)parcomm_mod.o \
-	$(DOBJ)test_diffops_mod.o
+	$(DOBJ)test_diffops_mod.o \
+	$(DOBJ)key_value_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

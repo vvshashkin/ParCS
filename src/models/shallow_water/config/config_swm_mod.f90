@@ -19,6 +19,7 @@ type, public, extends(config_t) :: config_swm_t
     character(:), allocatable :: quadrature_name
     real(kind=8)              :: dt              = 180.0_8
     real(kind=8)              :: tau_write       = 180.0_8
+    real(kind=8)              :: tau_diagnostics = 180.0_8
     real(kind=8)              :: simulation_time = 86400.0_8
 
 contains
@@ -44,6 +45,7 @@ subroutine parse(this, config_string)
     character(len=255) :: quadrature_name
     real(kind=8)       :: dt = 180.0
     real(kind=8)       :: tau_write = 180.0
+    real(kind=8)       :: tau_diagnostics = 180.0
     real(kind=8)       :: simulation_time_days  = 0.0_8
     real(kind=8)       :: simulation_time_hours = 0.0_8
     real(kind=8)       :: simulation_time_min   = 0.0_8
@@ -52,7 +54,7 @@ subroutine parse(this, config_string)
     namelist /shallow_water_model/ div_op_name, grad_op_name, curl_op_name, &
                                    coriolis_op_name, KE_op_name, massflux_op_name, &
                                    co2contra_op_name, quadrature_name,      &
-                                   dt, tau_write, &
+                                   dt, tau_write, tau_diagnostics, &
                                    simulation_time_sec, simulation_time_min, &
                                    simulation_time_hours, simulation_time_days
 
@@ -70,6 +72,7 @@ subroutine parse(this, config_string)
     this%quadrature_name   = trim(quadrature_name)
     this%dt = dt
     this%tau_write = tau_write
+    this%tau_diagnostics = tau_diagnostics
     this%simulation_time = 86400._8*simulation_time_days+3600._8*simulation_time_hours+&
                                  60._8*simulation_time_min+simulation_time_sec
 

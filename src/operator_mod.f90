@@ -37,20 +37,34 @@ subroutine solve(this, vout, rhs, dt, domain)
     call parcomm_global%abort("Solve function not implemented for specific operator class")
 end subroutine solve
 
-subroutine get_diagnostics(this, v, domain)
-    class(operator_t), intent(inout) :: this
-    class(stvec_t),    intent(inout) :: v
-    type(domain_t),    intent(in)    :: domain
+function get_diagnostics(this, v, domain) result(diagnostics)
+
+    use key_value_mod, only : key_value_r8_t
+
+    class(operator_t),     intent(inout) :: this
+    class(stvec_t),        intent(inout) :: v
+    type(domain_t),        intent(in)    :: domain
+
+    type(key_value_r8_t)  :: diagnostics
+
+    diagnostics = key_value_r8_t()
 
     call parcomm_global%abort("get_diagnostics function not implemented for specific operator class")
-end subroutine get_diagnostics
+end function get_diagnostics
 
-subroutine get_diagnostics_tend(this, v, vtend, domain)
-    class(operator_t), intent(inout) :: this
-    class(stvec_t),    intent(inout) :: v, vtend
-    type(domain_t),    intent(in)    :: domain
+function get_diagnostics_tend(this, v, vtend, domain) result(diagnostics)
+
+    use key_value_mod, only : key_value_r8_t
+
+    class(operator_t),     intent(inout) :: this
+    class(stvec_t),        intent(inout) :: v, vtend
+    type(domain_t),        intent(in)    :: domain
+
+    type(key_value_r8_t)  :: diagnostics
+
+    diagnostics = key_value_r8_t()
 
     call parcomm_global%abort("get_diagnostics_tend function not implemented for specific operator class")
-end subroutine get_diagnostics_tend
+end function get_diagnostics_tend
 
 end module operator_mod
