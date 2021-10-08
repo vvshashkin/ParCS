@@ -3,13 +3,15 @@ program test_diffops
 use parcomm_mod,         only : init_global_parallel_enviroment, &
                                 deinit_global_parallel_enviroment, &
                                 parcomm_global
-use test_diffops_mod, only: err_container_t, test_div, test_grad, test_conv, test_curl, &
+use test_diffops_mod, only: test_div, test_grad, test_conv, test_curl, &
                             test_coriolis, test_KE, test_coriolis_vec_inv, test_co2contra
+
+use key_value_mod,    only : key_value_r8_t
 
 implicit none
 
 real(kind=8) :: err
-type(err_container_t)  :: errs
+type(key_value_r8_t)  :: errs
 
 call init_global_parallel_enviroment()
 

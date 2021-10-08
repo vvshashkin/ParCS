@@ -188,12 +188,6 @@ $(DOBJ)namelist_read_mod.o: src/namelist_read_mod.f90
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
-$(DOBJ)operator_abstract_mod.o: src/operator_abstract_mod.f90 \
-	$(DOBJ)stvec_abstract_mod.o \
-	$(DOBJ)container_abstract_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
 $(DOBJ)avost.o: src/avost.f90
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -331,6 +325,10 @@ $(DOBJ)exchange_gather_mod.o: src/parallel/exchange_gather_mod.f90 \
 	$(DOBJ)exchange_abstract_mod.o \
 	$(DOBJ)buffer_mod.o \
 	$(DOBJ)parcomm_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)key_value_mod.o: src/stuff/key_value_mod.f90
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -1192,8 +1190,7 @@ $(DOBJ)operator_swm_factory_mod.o: src/models/shallow_water/operator/operator_sw
 	$(DOBJ)massflux_factory_mod.o \
 	$(DOBJ)co2contra_factory_mod.o \
 	$(DOBJ)quadrature_factory_mod.o \
-	$(DOBJ)grid_field_factory_mod.o \
-	$(DOBJ)sbp_operators_collection_mod.o
+	$(DOBJ)grid_field_factory_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -1294,6 +1291,31 @@ $(DOBJ)ts2_mod.o: src/models/shallow_water/test/ts2/ts2_mod.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)ts2_mod_debug_rand.o: src/models/shallow_water/test/ts2/ts2_mod_debug_rand.f90 \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)domain_factory_mod.o \
+	$(DOBJ)stvec_mod.o \
+	$(DOBJ)stvec_swm_mod.o \
+	$(DOBJ)stvec_swm_factory_mod.o \
+	$(DOBJ)operator_mod.o \
+	$(DOBJ)operator_swm_factory_mod.o \
+	$(DOBJ)timescheme_mod.o \
+	$(DOBJ)timescheme_factory_mod.o \
+	$(DOBJ)outputer_abstract_mod.o \
+	$(DOBJ)outputer_factory_mod.o \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)config_swm_mod.o \
+	$(DOBJ)config_ts2_mod.o \
+	$(DOBJ)test_fields_mod.o \
+	$(DOBJ)const_mod.o \
+	$(DOBJ)vec_math_mod.o \
+	$(DOBJ)namelist_read_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)halo_mod.o \
+	$(DOBJ)halo_factory_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)config_ts2_mod.o: src/models/shallow_water/test/ts2/config_ts2_mod.f90 \
 	$(DOBJ)config_mod.o \
 	$(DOBJ)const_mod.o \
@@ -1303,7 +1325,7 @@ $(DOBJ)config_ts2_mod.o: src/models/shallow_water/test/ts2/config_ts2_mod.f90 \
 
 $(DOBJ)ts2_main.o: src/models/shallow_water/test/ts2/ts2_main.f90 \
 	$(DOBJ)parcomm_mod.o \
-	$(DOBJ)ts2_mod.o
+	$(DOBJ)ts2_mod_debug_rand.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -1420,7 +1442,8 @@ $(DOBJ)test_regrid.o: src/test/test_regrid/test_regrid.f90 \
 
 $(DOBJ)test_diffops_all.o: src/test/test_diff_ops/test_diffops_all.f90 \
 	$(DOBJ)parcomm_mod.o \
-	$(DOBJ)test_diffops_mod.o
+	$(DOBJ)test_diffops_mod.o \
+	$(DOBJ)key_value_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -1443,6 +1466,7 @@ $(DOBJ)test_diffops_mod.o: src/test/test_diff_ops/test_diffops_mod.f90 \
 	$(DOBJ)grid_field_factory_mod.o \
 	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)vec_math_mod.o \
+	$(DOBJ)key_value_mod.o \
 	$(DOBJ)test_fields_mod.o \
 	$(DOBJ)div_factory_mod.o \
 	$(DOBJ)abstract_div_mod.o \
@@ -1654,36 +1678,6 @@ $(DOBJ)test_metric_mod.o: src/test/test_metric/test_metric_mod.f90 \
 	$(DOBJ)mesh_factory_mod.o \
 	$(DOBJ)mesh_mod.o \
 	$(DOBJ)tile_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
-$(DOBJ)timescheme_abstract_mod.o: src/time_schemes_old/timescheme_abstract_mod.f90 \
-	$(DOBJ)container_abstract_mod.o \
-	$(DOBJ)operator_abstract_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
-$(DOBJ)ars343.o: src/time_schemes_old/ars343.f90 \
-	$(DOBJ)container_abstract_mod.o \
-	$(DOBJ)stvec_abstract_mod.o \
-	$(DOBJ)timescheme_abstract_mod.o \
-	$(DOBJ)operator_abstract_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
-$(DOBJ)exp_taylor_mod.o: src/time_schemes_old/exp_taylor_mod.f90 \
-	$(DOBJ)container_abstract_mod.o \
-	$(DOBJ)stvec_abstract_mod.o \
-	$(DOBJ)timescheme_abstract_mod.o \
-	$(DOBJ)operator_abstract_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
-$(DOBJ)exp_krylov_mod.o: src/time_schemes_old/exp_krylov_mod.f90 \
-	$(DOBJ)container_abstract_mod.o \
-	$(DOBJ)stvec_abstract_mod.o \
-	$(DOBJ)timescheme_abstract_mod.o \
-	$(DOBJ)operator_abstract_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

@@ -7,19 +7,12 @@ use grid_field_factory_mod, only : create_grid_field
 use parcomm_mod,            only : parcomm_global
 use vec_math_mod,           only : l2norm
 
+use key_value_mod,          only : key_value_r8_t
+
 implicit none
 
-type string_t
-    character(:), allocatable :: str
-end type string_t
-
-type err_container_t
-    type(string_t), allocatable :: keys(:)
-    real(kind=8),   allocatable :: values(:)
-end type err_container_t
-
 private
-public :: err_container_t, test_div, test_grad, test_conv, &
+public :: test_div, test_grad, test_conv, &
           test_laplace_spectre, test_curl, test_coriolis,  &
           test_curl_grad, test_co2contra, test_KE, test_coriolis_vec_inv, &
           test_compatibility
@@ -33,7 +26,7 @@ subroutine test_conv(operator_name,staggering,Ns)
     integer(kind=4),  intent(in) :: Ns(:)
 
     integer(kind=4) kn, ke
-    type(err_container_t) :: errs(size(Ns))
+    type(key_value_r8_t) :: errs(size(Ns))
     real(kind=8) err_buff(size(Ns))
     real(kind=8) conv_rate
     character(len=2) :: n_errs_str
@@ -74,7 +67,7 @@ subroutine test_conv(operator_name,staggering,Ns)
 
 end subroutine test_conv
 
-type(err_container_t) function test_div(N,div_oper_name,staggering) result(errs)
+type(key_value_r8_t) function test_div(N,div_oper_name,staggering) result(errs)
 
     use test_fields_mod,  only : set_vector_test_field, set_scalar_test_field, &
                                  solid_rot=>solid_rotation_field_generator, &
@@ -128,7 +121,7 @@ type(err_container_t) function test_div(N,div_oper_name,staggering) result(errs)
 
 end function test_div
 
-type(err_container_t) function test_grad(N,grad_oper_name,staggering) result(errs)
+type(key_value_r8_t) function test_grad(N,grad_oper_name,staggering) result(errs)
 
     use test_fields_mod,    only : set_vector_test_field, set_scalar_test_field, &
                                    xyz_f => xyz_scalar_field_generator, &
@@ -179,7 +172,7 @@ type(err_container_t) function test_grad(N,grad_oper_name,staggering) result(err
 
 end function test_grad
 
-type(err_container_t) function test_co2contra(N,co2contra_oper_name,staggering) result(errs)
+type(key_value_r8_t) function test_co2contra(N,co2contra_oper_name,staggering) result(errs)
 
     use test_fields_mod,    only : set_vector_test_field, set_scalar_test_field, &
                                    vec_field_gen => cross_polar_flow_generator
@@ -239,7 +232,7 @@ function test_curl(N, curl_oper_name, staggering) result(errs)
 
     integer(kind=4),  intent(in) :: N
     character(len=*), intent(in) :: curl_oper_name, staggering
-    type(err_container_t)        :: errs
+    type(key_value_r8_t)         :: errs
     !locals:
     integer(kind=4), parameter  :: nz = 3
     integer(kind=4), parameter  :: ex_halo_width = 8
@@ -295,7 +288,7 @@ function test_KE(N, KE_oper_name, staggering) result(errs)
 
     integer(kind=4),  intent(in) :: N
     character(len=*), intent(in) :: KE_oper_name, staggering
-    type(err_container_t)        :: errs
+    type(key_value_r8_t)         :: errs
     !locals:
     integer(kind=4), parameter  :: nz = 3
     integer(kind=4), parameter  :: ex_halo_width = 8
@@ -369,7 +362,7 @@ function test_curl_grad(N, curl_oper_name, grad_oper_name, staggering) result(er
 
     integer(kind=4),  intent(in) :: N
     character(len=*), intent(in) :: curl_oper_name, grad_oper_name, staggering
-    type(err_container_t)        :: errs
+    type(key_value_r8_t)         :: errs
     !locals:
     integer(kind=4), parameter  :: nz = 3
     integer(kind=4), parameter  :: ex_halo_width = 8
@@ -425,7 +418,7 @@ function test_coriolis(N, coriolis_op_name, staggering) result(errs)
 
     integer(kind=4),  intent(in) :: N
     character(len=*), intent(in) :: coriolis_op_name, staggering
-    type(err_container_t)        :: errs
+    type(key_value_r8_t)         :: errs
     !locals:
     integer(kind=4), parameter  :: nz = 3
     integer(kind=4), parameter  :: ex_halo_width = 8
@@ -485,7 +478,7 @@ function test_coriolis_vec_inv(N, coriolis_op_name, staggering) result(errs)
 
     integer(kind=4),  intent(in) :: N
     character(len=*), intent(in) :: coriolis_op_name, staggering
-    type(err_container_t)        :: errs
+    type(key_value_r8_t)         :: errs
     !locals:
     integer(kind=4), parameter  :: nz = 3
     integer(kind=4), parameter  :: ex_halo_width = 8
