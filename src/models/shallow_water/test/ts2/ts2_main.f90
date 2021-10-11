@@ -7,9 +7,7 @@ use ts2_mod, only : run_ts2
 
 call init_global_parallel_enviroment()
 
-
 call run_ts2()
-
 
 call deinit_global_parallel_enviroment()
 

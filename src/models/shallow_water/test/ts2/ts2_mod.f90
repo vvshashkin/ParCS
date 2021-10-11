@@ -120,10 +120,13 @@ subroutine run_ts2()
             select type(state)
             class is (stvec_swm_t)
                 call outputer%write(state%h, domain, 'h.dat', int(it/nstep_write))
+                call outputer_vec%write(state%u, state%v, domain, 'u.dat', 'v.dat', int(it/nstep_write))
             end select
             select type(state_err)
             class is (stvec_swm_t)
                 call outputer%write(state_err%h, domain, 'h_err.dat', int(it/nstep_write))
+                call outputer_vec%write(state_err%u, state_err%v, domain, 'u_err.dat', 'v_err.dat', int(it/nstep_write))
+
                 l2err = l2norm(state_err%h, domain%mesh_p, domain%parcomm)/l2_ex
                 if (parcomm_global%myid==0) print*, "Hours = ", real(time/3600 ,4), &
                                                     "L2err =", real(l2err,4)
