@@ -18,6 +18,7 @@ use config_swm_mod,           only : config_swm_t
 use const_mod,  only : Earth_grav, Earth_omega, Earth_radii, pi, Earth_sidereal_T
 
 use test_fields_mod, only : rh4_wave_height_generator_t, rh4_wave_wind_generator_t
+use key_value_mod, only : key_value_r8_t
 
 implicit none
 
@@ -53,10 +54,11 @@ subroutine run_RH4_wave()
     integer(kind=4) :: halo_width = 8
 
     character(:), allocatable :: namelist_string
+    type(key_value_r8_t) :: diagnostics
 
     real(kind=8)      :: dt
     real(kind=8)      :: tau_write
-    integer(kind=4)   :: nstep_write
+    integer(kind=4)   :: nstep_write, nstep_diagnostics
 
     real(kind=8)    :: time, l2err, l2_ex
     integer(kind=4) :: it
@@ -71,6 +73,7 @@ subroutine run_RH4_wave()
     dt = config%dt
     tau_write = config%tau_write
     nstep_write = nint(tau_write/dt)
+    nstep_diagnostics = nint(config%tau_diagnostics/dt)
 
     height_field = rh4_wave_height_generator_t(h_mean = h_mean, omega = omega, &
            a = a, grav = grav)
@@ -93,9 +96,20 @@ subroutine run_RH4_wave()
 
     print*, 4*domain%partition%Nh, 2*domain%partition%Nh+1
 
-    call create_latlon_outputer(outputer, 2*domain%partition%Nh+1, 4*domain%partition%Nh, "A", domain)
-    call create_latlon_vec_outputer(outputer_vec,  2*domain%partition%Nh+1, 4*domain%partition%Nh, "C", &
+    if(config%config_domain%staggering_type == "Ah") then
+        call create_latlon_outputer(outputer, 2*domain%partition%Nh+1, 4*domain%partition%Nh, "Ah", domain)
+        call create_latlon_vec_outputer(outputer_vec,  2*domain%partition%Nh+1, 4*domain%partition%Nh, "Ah", &
                                    "covariant", domain)
+    else if(config%config_domain%staggering_type == "C") then
+        call create_latlon_outputer(outputer, 2*domain%partition%Nh+1, 4*domain%partition%Nh, "A", domain)
+        call create_latlon_vec_outputer(outputer_vec,  2*domain%partition%Nh+1, 4*domain%partition%Nh, "C", &
+                                       "covariant", domain)
+    else
+        call parcomm_global%abort("This staggering is not implemented in"//&
+                                  " barotropic instability swe test output:"//&
+                                  config%config_domain%staggering_type)
+    end if
+
 
     call get_exact_solution(state,    domain)
     call get_exact_solution(state_ex, domain)
@@ -113,6 +127,11 @@ subroutine run_RH4_wave()
         time = it*dt
 
         ! call state_err%assign(1.0_8, state_ex, -1.0_8, state, domain)
+
+        if(mod(it, nstep_diagnostics) == 0) then
+            diagnostics = operator%get_diagnostics(state, domain)
+            call diagnostics%print()
+        end if
 
         if(mod(it,nstep_write) == 0) then
 

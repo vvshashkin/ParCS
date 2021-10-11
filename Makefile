@@ -83,6 +83,13 @@ $(DEXE)TEST_PANELED_OUTPUT: $(MKDIRS) $(DOBJ)test_paneled_output.o \
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_PANELED_OUTPUT
+$(DEXE)TEST_QUADRATURE_MAIN: $(MKDIRS) $(DOBJ)test_quadrature_main.o \
+	$(DOBJ)avost.o \
+	$(DOBJ)auxhs.o
+	@rm -f $(filter-out $(DOBJ)test_quadrature_main.o,$(EXESOBJ))
+	@echo $(LITEXT)
+	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
+EXES := $(EXES) TEST_QUADRATURE_MAIN
 $(DEXE)TEST_DOMAIN_MAIN: $(MKDIRS) $(DOBJ)test_domain_main.o \
 	$(DOBJ)avost.o \
 	$(DOBJ)auxhs.o
@@ -227,7 +234,8 @@ $(DOBJ)avost.o: src/avost.f90
 $(DOBJ)operator_mod.o: src/operator_mod.f90 \
 	$(DOBJ)stvec_mod.o \
 	$(DOBJ)domain_mod.o \
-	$(DOBJ)parcomm_mod.o
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)key_value_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -241,12 +249,6 @@ $(DOBJ)const_mod.o: src/const_mod.f90
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)cmd_args_mod.o: src/cmd_args_mod.f90
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
-$(DOBJ)operator_abstract_mod.o: src/operator_abstract_mod.f90 \
-	$(DOBJ)stvec_abstract_mod.o \
-	$(DOBJ)container_abstract_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -473,6 +475,39 @@ $(DOBJ)config_metric_mod.o: src/metric/config_metric_mod.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)sbp_quadrature_mod.o: src/quadrature/sbp_quadrature_mod.f90 \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)abstract_quadrature_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)quadrature_factory_mod.o: src/quadrature/quadrature_factory_mod.f90 \
+	$(DOBJ)abstract_quadrature_mod.o \
+	$(DOBJ)default_quadrature_mod.o \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)sbp_quadrature_mod.o \
+	$(DOBJ)sbp_operators_collection_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)abstract_quadrature_mod.o: src/quadrature/abstract_quadrature_mod.f90 \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)mesh_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)default_quadrature_mod.o: src/quadrature/default_quadrature_mod.f90 \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)abstract_quadrature_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)cubed_sphere_topology_mod.o: src/topology/cubed_sphere_topology_mod.f90 \
 	$(DOBJ)topology_mod.o \
 	$(DOBJ)tile_mod.o
@@ -601,9 +636,10 @@ $(DOBJ)operator_swm_mod.o: src/models/shallow_water/operator/operator_swm_mod.f9
 	$(DOBJ)abstract_massflux_mod.o \
 	$(DOBJ)abstract_co2contra_mod.o \
 	$(DOBJ)abstract_hordiff_mod.o \
+	$(DOBJ)abstract_quadrature_mod.o \
 	$(DOBJ)stvec_swm_mod.o \
 	$(DOBJ)parcomm_mod.o \
-	$(DOBJ)vec_math_mod.o
+	$(DOBJ)key_value_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -619,6 +655,7 @@ $(DOBJ)operator_swm_factory_mod.o: src/models/shallow_water/operator/operator_sw
 	$(DOBJ)ke_factory_mod.o \
 	$(DOBJ)massflux_factory_mod.o \
 	$(DOBJ)co2contra_factory_mod.o \
+	$(DOBJ)quadrature_factory_mod.o \
 	$(DOBJ)hordiff_factory_mod.o \
 	$(DOBJ)grid_field_factory_mod.o
 	@echo $(COTEXT)
@@ -659,6 +696,7 @@ $(DOBJ)barotropic_inst_mod.o: src/models/shallow_water/test/barotropic_instabili
 	$(DOBJ)config_barotropic_inst_mod.o \
 	$(DOBJ)const_mod.o \
 	$(DOBJ)test_fields_mod.o \
+	$(DOBJ)key_value_mod.o \
 	$(DOBJ)vec_math_mod.o \
 	$(DOBJ)namelist_read_mod.o \
 	$(DOBJ)barotropic_instability_u_mod.o
@@ -688,6 +726,7 @@ $(DOBJ)ts2_mod.o: src/models/shallow_water/test/ts2/ts2_mod.f90 \
 	$(DOBJ)config_swm_mod.o \
 	$(DOBJ)config_ts2_mod.o \
 	$(DOBJ)test_fields_mod.o \
+	$(DOBJ)key_value_mod.o \
 	$(DOBJ)const_mod.o \
 	$(DOBJ)vec_math_mod.o \
 	$(DOBJ)namelist_read_mod.o
@@ -722,6 +761,7 @@ $(DOBJ)rh4_wave_mod.o: src/models/shallow_water/test/RH4_wave/RH4_wave_mod.f90 \
 	$(DOBJ)config_swm_mod.o \
 	$(DOBJ)const_mod.o \
 	$(DOBJ)test_fields_mod.o \
+	$(DOBJ)key_value_mod.o \
 	$(DOBJ)vec_math_mod.o \
 	$(DOBJ)namelist_read_mod.o
 	@echo $(COTEXT)
@@ -1232,6 +1272,14 @@ $(DOBJ)sbp_operators_collection_mod.o: src/differential_operators/sbp_operators/
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)sbp_norm_mod.o: src/differential_operators/sbp_operators/sbp_norm_mod.f90 \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)grid_field_factory_mod.o \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)mesh_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)sbp_factory_mod.o: src/differential_operators/sbp_operators/sbp_factory_mod.f90 \
 	$(DOBJ)sbp_operator_mod.o \
 	$(DOBJ)parcomm_mod.o \
@@ -1280,36 +1328,6 @@ $(DOBJ)coriolis_factory_mod.o: src/differential_operators/coriolis/coriolis_fact
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
-$(DOBJ)ars343.o: src/time_schemes_old/ars343.f90 \
-	$(DOBJ)container_abstract_mod.o \
-	$(DOBJ)stvec_abstract_mod.o \
-	$(DOBJ)timescheme_abstract_mod.o \
-	$(DOBJ)operator_abstract_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
-$(DOBJ)timescheme_abstract_mod.o: src/time_schemes_old/timescheme_abstract_mod.f90 \
-	$(DOBJ)container_abstract_mod.o \
-	$(DOBJ)operator_abstract_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
-$(DOBJ)exp_krylov_mod.o: src/time_schemes_old/exp_krylov_mod.f90 \
-	$(DOBJ)container_abstract_mod.o \
-	$(DOBJ)stvec_abstract_mod.o \
-	$(DOBJ)timescheme_abstract_mod.o \
-	$(DOBJ)operator_abstract_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
-$(DOBJ)exp_taylor_mod.o: src/time_schemes_old/exp_taylor_mod.f90 \
-	$(DOBJ)container_abstract_mod.o \
-	$(DOBJ)stvec_abstract_mod.o \
-	$(DOBJ)timescheme_abstract_mod.o \
-	$(DOBJ)operator_abstract_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
 $(DOBJ)explicit_eul1_mod.o: src/time_schemes/explicit_Eul1_mod.f90 \
 	$(DOBJ)stvec_mod.o \
 	$(DOBJ)timescheme_mod.o \
@@ -1339,6 +1357,10 @@ $(DOBJ)timescheme_mod.o: src/time_schemes/timescheme_mod.f90 \
 	$(DOBJ)operator_mod.o \
 	$(DOBJ)stvec_mod.o \
 	$(DOBJ)domain_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)key_value_mod.o: src/stuff/key_value_mod.f90
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -1478,6 +1500,25 @@ $(DOBJ)test_paneled_output_mod.o: src/test/test_paneled_output/test_paneled_outp
 	$(DOBJ)grid_field_factory_mod.o \
 	$(DOBJ)mesh_mod.o \
 	$(DOBJ)tiles_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)test_quadrature_main.o: src/test/test_quadrature/test_quadrature_main.f90 \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)test_quadrature_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)test_quadrature_mod.o: src/test/test_quadrature/test_quadrature_mod.f90 \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)abstract_quadrature_mod.o \
+	$(DOBJ)quadrature_factory_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)domain_factory_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)grid_field_factory_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)const_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -1625,6 +1666,7 @@ $(DOBJ)test_diffops_mod.o: src/test/test_diff_ops/test_diffops_mod.f90 \
 	$(DOBJ)grid_field_factory_mod.o \
 	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)vec_math_mod.o \
+	$(DOBJ)key_value_mod.o \
 	$(DOBJ)test_fields_mod.o \
 	$(DOBJ)div_factory_mod.o \
 	$(DOBJ)abstract_div_mod.o \
@@ -1644,6 +1686,8 @@ $(DOBJ)test_diffops_mod.o: src/test/test_diff_ops/test_diffops_mod.f90 \
 	$(DOBJ)abstract_coriolis_mod.o \
 	$(DOBJ)exchange_abstract_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
+	$(DOBJ)quadrature_factory_mod.o \
+	$(DOBJ)abstract_quadrature_mod.o \
 	$(DOBJ)mesh_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -1663,13 +1707,15 @@ $(DOBJ)test_laplace_spectre.o: src/test/test_diff_ops/test_laplace_spectre.f90 \
 
 $(DOBJ)test_diffops_all.o: src/test/test_diff_ops/test_diffops_all.f90 \
 	$(DOBJ)parcomm_mod.o \
-	$(DOBJ)test_diffops_mod.o
+	$(DOBJ)test_diffops_mod.o \
+	$(DOBJ)key_value_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)test_diffops.o: src/test/test_diff_ops/test_diffops.f90 \
 	$(DOBJ)parcomm_mod.o \
-	$(DOBJ)test_diffops_mod.o
+	$(DOBJ)test_diffops_mod.o \
+	$(DOBJ)key_value_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

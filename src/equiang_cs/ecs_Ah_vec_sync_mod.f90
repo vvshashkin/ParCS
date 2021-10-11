@@ -80,44 +80,44 @@ subroutine syncronize_grad_on_edges(u,v,q,mesh)
             v%p(1,1,k) = (v%p(1,1,k)+v%p(0,1,k)+v%p(1,0,k)+q%ql(1)*u%p(0,1,k))/3.0_8
         end do
     end if
-    if(ie==mesh%nx+1 .and. js==1) then
+    if(ie==mesh%nx .and. js==1) then
         do k=ks,ke
             u%p(ie,1,k) = (u%p(ie,1,k)+u%p(ie+1,1,k)+u%p(ie,0,k)+q%qb(ie)*v%p(ie,0,k))/3.0_8
             v%p(ie,1,k) = (v%p(ie,1,k)+v%p(ie+1,1,k)+v%p(ie,0,k)+q%qr(1)*u%p(ie+1,1,k))/3.0_8
         end do
     end if
-    if(is==1 .and. je==mesh%ny+1) then
+    if(is==1 .and. je==mesh%ny) then
         do k=ks,ke
             u%p(1,je,k) = (u%p(1,je,k)+u%p(0,je,k)+u%p(1,je+1,k)+q%qt(1)*v%p(1,je+1,k))/3.0_8
             v%p(1,je,k) = (v%p(1,je,k)+v%p(0,je,k)+v%p(1,je+1,k)+q%ql(je)*u%p(0,je,k))/3.0_8
         end do
     end if
-    if(ie==mesh%nx+1 .and. je==mesh%ny+1) then
+    if(ie==mesh%nx .and. je==mesh%ny) then
         do k=ks,ke
             u%p(ie,je,k) = (u%p(ie,je,k)+u%p(ie+1,je,k)+u%p(ie,je+1,k)+q%qt(ie)*v%p(ie,je+1,k))/3.0_8
             v%p(ie,je,k) = (v%p(ie,je,k)+v%p(ie+1,je,k)+v%p(ie,je+1,k)+q%qr(je)*u%p(ie+1,je,k))/3.0_8
         end do
     end if
     if(is == 1) then
-        do k=ks,ke; do j=max(js,2),min(je,mesh%ny)
+        do k=ks,ke; do j=max(js,2),min(je,mesh%ny-1)
             u%p(1,j,k) = 0.5_8*(u%p(0,j,k)+u%p(1,j,k))
             v%p(1,j,k) = 0.5_8*(v%p(1,j,k)+v%p(0,j,k)+q%ql(j)*u%p(0,j,k))
         end do; end do
     end if
-    if(ie == mesh%nx+1) then
-        do k=ks,ke; do j=max(js,2),min(je,mesh%ny)
+    if(ie == mesh%nx) then
+        do k=ks,ke; do j=max(js,2),min(je,mesh%ny-1)
             u%p(ie,j,k) = 0.5_8*(u%p(ie,j,k)+u%p(ie+1,j,k))
             v%p(ie,j,k) = 0.5_8*(v%p(ie,j,k)+v%p(ie+1,j,k)+q%qr(j)*u%p(ie+1,j,k))
         end do; end do
     end if
     if(js==1) then
-        do k=ks,ke; do i=max(is,2),min(ie,mesh%nx)
+        do k=ks,ke; do i=max(is,2),min(ie,mesh%nx-1)
             v%p(i,1,k) = 0.5_8*(v%p(i,0,k)+v%p(i,1,k))
             u%p(i,1,k) = 0.5_8*(u%p(i,0,k)+u%p(i,1,k)+q%qb(i)*v%p(i,0,k))
         end do; end do
     end if
-    if(je == mesh%ny+1) then
-        do k=ks,ke; do i=max(is,2),min(ie,mesh%nx)
+    if(je == mesh%ny) then
+        do k=ks,ke; do i=max(is,2),min(ie,mesh%nx-1)
             v%p(i,je,k) = 0.5_8*(v%p(i,je,k)+v%p(i,je+1,k))
             u%p(i,je,k) = 0.5_8*(u%p(i,je,k)+u%p(i,je+1,k)+q%qt(i)*v%p(i,je+1,k))
         end do; end do

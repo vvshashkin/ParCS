@@ -76,8 +76,8 @@ subroutine calc_grad_on_tile(gx, gy, f, mesh, sbp_op, scale)
     do k = ks, ke
 
         dxdy_tile%ks = k; dxdy_tile%ke = k
-        call sbp_op%apply(Dx, dxdy_tile, dxdy_tile, mesh%nx+1, 'x', f)
-        call sbp_op%apply(Dy, dxdy_tile, dxdy_tile, mesh%ny+1, 'y', f)
+        call sbp_op%apply(Dx, dxdy_tile, dxdy_tile, mesh%nx, 'x', f)
+        call sbp_op%apply(Dy, dxdy_tile, dxdy_tile, mesh%ny, 'y', f)
 
         do j=js,je
             do i=is,ie

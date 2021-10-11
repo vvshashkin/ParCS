@@ -101,18 +101,18 @@ subroutine transform_co2contra_c_sbp21_tile(u_contra, v_contra, u_cov, v_cov, me
         js = mesh_u%js; je = mesh_u%je
 
         do j=js,je
-            do i=max(is-1,1),min(ie,mesh_o%nx)
+            do i=max(is-1,1),min(ie,mesh_v%nx)
                 v_at_o(i,j) = 0.5_8*(v_cov%p(i,j,k)+v_cov%p(i,j+1,k))*mesh_o%G(i,j)*mesh_o%Qi(2,i,j)
             end do
 
             if(is == 1) then
                 u_contra%p(1,j,k) = mesh_u%Qi(1,1,j)*u_cov%p(1,j,k)+v_at_o(1,j) / mesh_u%G(1,j)
             end if
-            do i = max(is,2), min(ie,mesh_o%nx)
+            do i = max(is,2), min(ie,mesh_v%nx)
                 v_at_u = 0.5_8*(v_at_o(i,j)+v_at_o(i-1,j))
                 u_contra%p(i,j,k) = mesh_u%Qi(1,i,j)*u_cov%p(i,j,k)+v_at_u / mesh_u%G(i,j)
             end do
-            if(ie == mesh_o%nx+1) then
+            if(ie == mesh_u%nx) then
                 u_contra%p(ie,j,k) = mesh_u%Qi(1,ie,j)*u_cov%p(ie,j,k)+v_at_o(ie-1,j) / mesh_u%G(ie,j)
             end if
         end do
@@ -120,7 +120,7 @@ subroutine transform_co2contra_c_sbp21_tile(u_contra, v_contra, u_cov, v_cov, me
         is = mesh_v%is; ie = mesh_v%ie
         js = mesh_v%js; je = mesh_v%je
 
-        do j=max(js-1,1),min(je,mesh_o%ny)
+        do j=max(js-1,1),min(je,mesh_u%ny)
             do i = is,ie
                 u_at_o(i,j) = 0.5_8*(u_cov%p(i+1,j,k)+u_cov%p(i,j,k))*mesh_o%G(i,j)*mesh_o%Qi(2,i,j)
             end do
@@ -131,13 +131,13 @@ subroutine transform_co2contra_c_sbp21_tile(u_contra, v_contra, u_cov, v_cov, me
                 v_contra%p(i,1,k) = mesh_v%Qi(3,i,1)*v_cov%p(i,1,k)+u_at_o(i,1) / mesh_v%G(i,1)
             end do
         end if
-        do j = max(js,2), min(je,mesh_o%ny)
+        do j = max(js,2), min(je,mesh_u%ny)
             do i = is, ie
                 u_at_v = 0.5_8*(u_at_o(i,j)+u_at_o(i,j-1))
                 v_contra%p(i,j,k) = mesh_v%Qi(3,i,j)*v_cov%p(i,j,k)+u_at_v / mesh_v%G(i,j)
             end do
         end do
-        if(je == mesh_o%ny+1) then
+        if(je == mesh_v%ny) then
             do i = is, ie
                 v_contra%p(i,je,k) = mesh_v%Qi(3,i,je)*v_cov%p(i,je,k)+u_at_o(i,je-1) / mesh_v%G(i,je)
             end do
@@ -224,7 +224,7 @@ subroutine transform_co2contra_c_sbp42_tile(gx, gy, dx, dy,                 &
         end do
         !interpolate to u-points
         gx_work%ks = k; gx_work%ke = k
-        call sbp_interp_h2v%apply(gx%p, gx_work, gx_bounds, mesh_o%nx+1, 'x', dy_at_p, dy_at_p_bounds)
+        call sbp_interp_h2v%apply(gx%p, gx_work, gx_bounds, mesh_x%nx, 'x', dy_at_p, dy_at_p_bounds)
 
         dx_at_p_bounds%ks = k; dx_at_p_bounds%ke = k
         dx_at_p_work%ks   = k; dx_at_p_work%ke   = k
@@ -239,7 +239,7 @@ subroutine transform_co2contra_c_sbp42_tile(gx, gy, dx, dy,                 &
 
         !interpolate dx to v-points
         gy_work%ks = k; gy_work%ke = k
-        call sbp_interp_h2v%apply(gy%p, gy_work, gy_bounds, mesh_o%ny+1, 'y', dx_at_p, dx_at_p_bounds)
+        call sbp_interp_h2v%apply(gy%p, gy_work, gy_bounds, mesh_y%ny, 'y', dx_at_p, dx_at_p_bounds)
 
         do j=jsx,jex
             do i=isx,iex

@@ -89,6 +89,9 @@ function create_similar_grid_field(this) result(grid_field)
 
     allocate(grid_field%tile(this%ts:this%te))
 
+    grid_field%ts = this%ts
+    grid_field%te = this%te
+
     do t = this%ts, this%te
 
         call grid_field%tile(t)%init(this%tile(t)%is, this%tile(t)%ie, &

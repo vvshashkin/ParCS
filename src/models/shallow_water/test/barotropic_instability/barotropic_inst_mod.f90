@@ -20,6 +20,7 @@ use const_mod,  only : Earth_grav, Earth_omega, Earth_radii, pi, Earth_sidereal_
 
 use test_fields_mod, only : barotropic_instability_height_generator_t, &
                             barotropic_instability_wind_generator_t
+use key_value_mod, only : key_value_r8_t
 
 implicit none
 
@@ -54,10 +55,11 @@ subroutine run_barotropic_inst()
     integer(kind=4) :: halo_width = 8
 
     character(:), allocatable :: namelist_string
+    type(key_value_r8_t) :: diagnostics
 
     real(kind=8)      :: dt
     real(kind=8)      :: tau_write
-    integer(kind=4)   :: nstep_write
+    integer(kind=4)   :: nstep_write, nstep_diagnostics
 
     real(kind=8)    :: time, l2err, l2_ex
     integer(kind=4) :: it
@@ -74,6 +76,7 @@ subroutine run_barotropic_inst()
     dt = config%dt
     tau_write = config%tau_write
     nstep_write = nint(tau_write/dt)
+    nstep_diagnostics = nint(config%tau_diagnostics/dt)
 
     height_field = create_barotropic_instability_height_field_generator(H0 = test_config%H0, &
                               omega = test_config%omega, grav = test_config%grav, &
@@ -126,7 +129,10 @@ subroutine run_barotropic_inst()
 
         time = it*dt
 
-        ! call state_err%assign(1.0_8, state_ex, -1.0_8, state, domain)
+        if(mod(it, nstep_diagnostics) == 0) then
+            diagnostics = operator%get_diagnostics(state, domain)
+            call diagnostics%print()
+        end if
 
         if(mod(it,nstep_write) == 0) then
 

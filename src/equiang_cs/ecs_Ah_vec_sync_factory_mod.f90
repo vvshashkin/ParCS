@@ -62,7 +62,7 @@ subroutine create_ecs_Ah_vec_sync(halo_out,domain,halo_width,components_type)
                 halo%tile(t)%qb(i) = sum(a(1:3)*b(1:3))
             end do
         end if
-        if(je == domain%mesh_xy%tile(t)%ny+1) then
+        if(je == domain%mesh_xy%tile(t)%ny) then
             allocate(halo%tile(t)%qt(is:ie))
             do i = is,ie
                 alpha = -0.25_8*pi+(i-1)*domain%mesh_xy%tile(t)%hx
@@ -82,7 +82,7 @@ subroutine create_ecs_Ah_vec_sync(halo_out,domain,halo_width,components_type)
                 halo%tile(t)%ql(j) = sum(a(1:3)*b(1:3))
             end do
         end if
-        if(ie == domain%mesh_xy%tile(t)%nx+1) then
+        if(ie == domain%mesh_xy%tile(t)%nx) then
             allocate(halo%tile(t)%qr(js:je))
             do j = js,je
                 beta = -0.25_8*pi+(j-1)*domain%mesh_xy%tile(t)%hx
@@ -111,7 +111,7 @@ subroutine create_ecs_Ah_vec_sync(halo_out,domain,halo_width,components_type)
                 halo%tile(t)%qb(i) = sum(a(1:3)*b(1:3))
             end do
         end if
-        if(je == domain%mesh_xy%tile(t)%ny+1) then
+        if(je == domain%mesh_xy%tile(t)%ny) then
             allocate(halo%tile(t)%qt(is:ie))
             do i = is,ie
                 alpha = -0.25_8*pi+(i-1)*domain%mesh_xy%tile(t)%hx
@@ -131,7 +131,7 @@ subroutine create_ecs_Ah_vec_sync(halo_out,domain,halo_width,components_type)
                 halo%tile(t)%ql(j) = sum(a(1:3)*b(1:3))
             end do
         end if
-        if(ie == domain%mesh_xy%tile(t)%nx+1) then
+        if(ie == domain%mesh_xy%tile(t)%nx) then
             allocate(halo%tile(t)%qr(js:je))
             do j = js,je
                 beta = -0.25_8*pi+(j-1)*domain%mesh_xy%tile(t)%hx

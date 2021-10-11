@@ -18,6 +18,7 @@ subroutine create_swm_operator(operator, grav, swm_config, domain)
     use KE_factory_mod,         only : create_KE_operator
     use massflux_factory_mod,   only : create_massflux_operator
     use co2contra_factory_mod,  only : create_co2contra_operator
+    use quadrature_factory_mod, only : create_quadrature
     use hordiff_factory_mod,    only : create_hordiff_operator
 
     use grid_field_factory_mod, only : create_grid_field
@@ -50,6 +51,11 @@ subroutine create_swm_operator(operator, grav, swm_config, domain)
 
     swm_op%co2contra_op = create_co2contra_operator(domain, swm_config%co2contra_op_name)
 
+    call create_quadrature(swm_op%quadrature_h, swm_config%quadrature_name, domain%mesh_p)
+    call create_quadrature(swm_op%quadrature_u, swm_config%quadrature_name, domain%mesh_u)
+    call create_quadrature(swm_op%quadrature_v, swm_config%quadrature_name, domain%mesh_v)
+    call create_quadrature(swm_op%quadrature_w, swm_config%quadrature_name, domain%mesh_w)
+
     call create_grid_field(swm_op%KE,  halo_width_xy, 0, domain%mesh_p)
     call create_grid_field(swm_op%div, halo_width_xy, 0, domain%mesh_p)
 
@@ -58,6 +64,9 @@ subroutine create_swm_operator(operator, grav, swm_config, domain)
 
     call create_grid_field(swm_op%hu, halo_width_xy, 0, domain%mesh_u)
     call create_grid_field(swm_op%hv, halo_width_xy, 0, domain%mesh_v)
+
+    call create_grid_field(swm_op%hu_diag, halo_width_xy, 0, domain%mesh_u)
+    call create_grid_field(swm_op%hv_diag, halo_width_xy, 0, domain%mesh_v)
 
     call create_grid_field(swm_op%cor_u, halo_width_xy, 0, domain%mesh_u)
     call create_grid_field(swm_op%cor_v, halo_width_xy, 0, domain%mesh_v)
@@ -79,6 +88,7 @@ subroutine create_swm_operator(operator, grav, swm_config, domain)
 
     call create_grid_field(swm_op%KE_diag_u,  0, 0, domain%mesh_u)
     call create_grid_field(swm_op%KE_diag_v,  0, 0, domain%mesh_v)
+    call create_grid_field(swm_op%PE_diag,    0, 0, domain%mesh_p)
 
     call create_hordiff_operator(swm_op%hordiff_uv, "hordiff_c_biharm_div", &
                                  swm_config%biharm_div_coeff, domain)

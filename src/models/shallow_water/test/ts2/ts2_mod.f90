@@ -19,13 +19,14 @@ use config_ts2_mod, only : config_ts2_t
 
 use test_fields_mod, only : solid_rotation_t, ts2_height_generator_t
 
+use key_value_mod, only : key_value_r8_t
+
 implicit none
 
 type(config_ts2_t) :: config_ts2
 
 type(ts2_height_generator_t) :: height_field
 type(solid_rotation_t)       :: velocity_field
-
 
 contains
 
@@ -48,13 +49,14 @@ subroutine run_ts2()
     integer(kind=4) :: halo_width = 8
 
     character(:), allocatable :: namelist_string
+    type(key_value_r8_t) :: diagnostics
 
     ! real(kind=8),    parameter :: rotation_period = 1.0_8, rotation_axis_angle = 0.0_8*pi/8
     ! integer(kind=4), parameter :: N_periods=2
 
     real(kind=8)     :: dt
     real(kind=8)     :: tau_write
-    integer(kind=4)  :: nstep_write
+    integer(kind=4)  :: nstep_write, nstep_diagnostics
 
     real(kind=8)    :: time, l2err, l2_ex
     integer(kind=4) :: it
@@ -75,6 +77,7 @@ subroutine run_ts2()
     dt = config%dt
     tau_write = config%tau_write
     nstep_write = nint(tau_write/dt)
+    nstep_diagnostics = nint(config%tau_diagnostics/dt)
 
     if (parcomm_global%myid==0) print*, "Advective CFL = ", &
             real(dt*config_ts2%u0/(2*pi/4/config%config_domain%N)/config_ts2%a,4)
@@ -95,9 +98,19 @@ subroutine run_ts2()
 
     print*, 4*domain%partition%Nh, 2*domain%partition%Nh+1
 
-    call create_latlon_outputer(outputer, 2*domain%partition%Nh+1, 4*domain%partition%Nh, "A", domain)
-    call create_latlon_vec_outputer(outputer_vec,  2*domain%partition%Nh+1, 4*domain%partition%Nh, "C", &
+    if(config%config_domain%staggering_type == "Ah") then
+        call create_latlon_outputer(outputer, 2*domain%partition%Nh+1, 4*domain%partition%Nh, "Ah", domain)
+        call create_latlon_vec_outputer(outputer_vec,  2*domain%partition%Nh+1, 4*domain%partition%Nh, "Ah", &
                                    "covariant", domain)
+    else if(config%config_domain%staggering_type == "C") then
+        call create_latlon_outputer(outputer, 2*domain%partition%Nh+1, 4*domain%partition%Nh, "A", domain)
+        call create_latlon_vec_outputer(outputer_vec,  2*domain%partition%Nh+1, 4*domain%partition%Nh, "C", &
+                                       "covariant", domain)
+    else
+        call parcomm_global%abort("This staggering is not implemented in"//&
+                                  " barotropic instability swe test output:"//&
+                                  config%config_domain%staggering_type)
+    end if
 
     call get_exact_solution(state,    domain)
     call get_exact_solution(state_ex, domain)
@@ -115,6 +128,11 @@ subroutine run_ts2()
 
         call state_err%assign(1.0_8, state_ex, -1.0_8, state, domain)
 
+        if(mod(it, nstep_diagnostics) == 0) then
+            diagnostics = operator%get_diagnostics(state, domain)
+            call diagnostics%print()
+        end if
+
         if(mod(it,nstep_write) == 0) then
 
             select type(state)
@@ -122,6 +140,7 @@ subroutine run_ts2()
                 call outputer%write(state%h, domain, 'h.dat', int(it/nstep_write))
                 call outputer_vec%write(state%u, state%v, domain, 'u.dat', 'v.dat', int(it/nstep_write))
             end select
+
             select type(state_err)
             class is (stvec_swm_t)
                 call outputer%write(state_err%h, domain, 'h_err.dat', int(it/nstep_write))
@@ -129,7 +148,7 @@ subroutine run_ts2()
 
                 l2err = l2norm(state_err%h, domain%mesh_p, domain%parcomm)/l2_ex
                 if (parcomm_global%myid==0) print*, "Hours = ", real(time/3600 ,4), &
-                                                    "L2err =", real(l2err,4)
+                                                    "L2err =", real(l2err,4), "irec=",int(it/nstep_write)
             end select
         end if
     end do

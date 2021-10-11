@@ -131,7 +131,7 @@ subroutine create_latlon_vector_regrid(regrid_out, domain, Nlon, Nlat, interp_ty
     hlon = 2._8*pi / real(Nlon,8)
     hlat = pi / (Nlat-1.0_8)
 
-    !Init transform from curvilinear grid components to 
+    !Init transform from curvilinear grid components to
     if(components_type == "contravariant" .or. &
        vector_grid_type == "A" .or. vector_grid_type == "C") then
        !Only contravariant halo-procedures are currently implemented for A and C grids

@@ -27,8 +27,6 @@ function mass(f, mesh, parcomm) result(out)
 
     call mpi_allreduce(out_loc, out, 1, mpi_double, mpi_sum, parcomm%comm_w, err)
 
-    out = sqrt(out)
-
 end function mass
 function calc_mass_tile(f, mesh) result(out)
 

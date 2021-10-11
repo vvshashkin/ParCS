@@ -10,7 +10,7 @@ use abstract_co2contra_mod, only : co2contra_operator_t
 
 implicit none
 
-type, public, extends(horidff_operator_t) :: hordiff_c_div_dump_t
+type, public, extends(horidff_operator_t) :: hordiff_c_div_t
 
     integer(kind=4) :: diff_order
     real(kind=8)    :: diff_coeff
@@ -23,7 +23,7 @@ type, public, extends(horidff_operator_t) :: hordiff_c_div_dump_t
 
 contains
     procedure, public :: calc_diff_vec => calc_diff_vec_div_part
-end type hordiff_c_div_dump_t
+end type hordiff_c_div_t
 
 ! type, public, extends(horidff_operator_t) :: hordiff_c_curl_dump_t
 !
@@ -44,7 +44,7 @@ contains
 
 subroutine calc_diff_vec_div_part(this, u_tend, v_tend, u, v, domain)
 
-    class(hordiff_c_div_dump_t), intent(inout) :: this
+    class(hordiff_c_div_t), intent(inout) :: this
     type(grid_field_t),          intent(inout) :: u_tend, v_tend
     type(grid_field_t),          intent(inout) :: u, v
     type(domain_t),              intent(in)    :: domain
@@ -78,7 +78,7 @@ end subroutine calc_diff_vec_div_part
 
 ! subroutine calc_diff_vec_curl_part(this, u_tend, v_tend, u, v, domain)
 !
-!     class(hordiff_c_div_dump_t), intent(inout) :: this
+!     class(hordiff_c_div_t), intent(inout) :: this
 !     type(grid_field_t),          intent(inout) :: u_tend, v_tend
 !     type(grid_field_t),          intent(inout) :: u, v
 !     type(domain_t),              intent(in)    :: domain

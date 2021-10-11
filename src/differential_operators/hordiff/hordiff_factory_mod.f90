@@ -27,7 +27,7 @@ end subroutine create_hordiff_operator
 
 subroutine create_Cgrid_hordiff_div_operator(hordiff_op, hordiff_coeff, domain)
 
-    use hordiff_Cgrid_mod,     only : hordiff_c_div_dump_t
+    use hordiff_Cgrid_mod,     only : hordiff_c_div_t
     use div_factory_mod,       only : create_div_operator
     use grad_factory_mod,      only : create_grad_operator
     use co2contra_factory_mod, only : create_co2contra_operator
@@ -36,7 +36,7 @@ subroutine create_Cgrid_hordiff_div_operator(hordiff_op, hordiff_coeff, domain)
     real(kind=8),                           intent(in)  :: hordiff_coeff
     type(domain_t),                         intent(in)  :: domain
 
-    type(hordiff_c_div_dump_t), allocatable :: hordiff_div
+    type(hordiff_c_div_t), allocatable :: hordiff_div
 
     integer(kind=4) :: halo_width
     real(kind=8)    :: hx
