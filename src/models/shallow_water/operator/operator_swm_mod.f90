@@ -12,7 +12,7 @@ use abstract_curl_mod,       only : curl_operator_t
 use abstract_KE_mod,         only : KE_operator_t
 use abstract_massflux_mod,   only : massflux_operator_t
 use abstract_co2contra_mod,  only : co2contra_operator_t
-use abstract_hordiff_mod,    only : horidff_operator_t
+use abstract_hordiff_mod,    only : hordiff_operator_t
 use abstract_quadrature_mod, only : quadrature_t
 
 use stvec_swm_mod, only : stvec_swm_t
@@ -31,7 +31,7 @@ type, public, extends(operator_t) :: operator_swm_t
     class(KE_operator_t),        allocatable :: KE_op
     class(massflux_operator_t),  allocatable :: massflux_op
     class(co2contra_operator_t), allocatable :: co2contra_op
-    class(horidff_operator_t),   allocatable :: hordiff_uv
+    class(hordiff_operator_t),   allocatable :: hordiff_uv
     class(quadrature_t),         allocatable :: quadrature_h, quadrature_u, &
                                                 quadrature_v, quadrature_w
 

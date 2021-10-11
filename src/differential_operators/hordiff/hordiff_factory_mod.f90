@@ -2,7 +2,7 @@ module hordiff_factory_mod
 
 use domain_mod,             only : domain_t
 use grid_field_factory_mod, only : create_grid_field
-use abstract_hordiff_mod,   only : horidff_operator_t
+use abstract_hordiff_mod,   only : hordiff_operator_t
 use hordiff_colocated_mod,  only : hordiff_colocated_t
 
 implicit none
@@ -11,7 +11,7 @@ contains
 
 subroutine create_hordiff_operator(hordiff_op, hordiff_op_name, hordiff_coeff, domain)
 
-    class(horidff_operator_t), allocatable, intent(out) :: hordiff_op
+    class(hordiff_operator_t), allocatable, intent(out) :: hordiff_op
     character(len=*),                       intent(in)  :: hordiff_op_name
     real(kind=8),                           intent(in)  :: hordiff_coeff
     type(domain_t),                         intent(in)  :: domain
@@ -35,7 +35,7 @@ subroutine create_Cgrid_hordiff_div_operator(hordiff_op, hordiff_coeff, domain)
     use grad_factory_mod,      only : create_grad_operator
     use co2contra_factory_mod, only : create_co2contra_operator
 
-    class(horidff_operator_t), allocatable, intent(out) :: hordiff_op
+    class(hordiff_operator_t), allocatable, intent(out) :: hordiff_op
     real(kind=8),                           intent(in)  :: hordiff_coeff
     type(domain_t),                         intent(in)  :: domain
 
