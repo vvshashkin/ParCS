@@ -70,16 +70,15 @@ subroutine calc_grad_perp_c_sbp_tile(gu, gv, w, sbp_diff, mesh_x, mesh_y, mesh_x
 
         call sbp_diff%apply(gv, work_v, mesh_y%nx, 'x', w)
 
-
         do j = mesh_x%js, mesh_x%je
             do i = mesh_x%is, mesh_x%ie
-                gu%p(i,j,k) = gu%p(i,j,k)*mesh_x%G(i,j)
+                gu%p(i,j,k) = -gu%p(i,j,k) / (scale*mesh_x%hy*mesh_x%G(i,j))
             end do
         end do
 
         do j = mesh_y%js, mesh_y%je
             do i = mesh_y%is, mesh_y%ie
-                gv%p(i,j,k) = - gv%p(i,j,k)*mesh_y%G(i,j)
+                gv%p(i,j,k) = gv%p(i,j,k) / (scale*mesh_y%hx*mesh_y%G(i,j))
             end do
         end do
 

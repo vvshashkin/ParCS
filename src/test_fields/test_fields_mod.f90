@@ -5,7 +5,7 @@ use mesh_mod,       only : mesh_t
 implicit none
 
 private
-public :: set_scalar_test_field, set_vector_test_field
+public :: set_scalar_test_field, set_vector_test_field, set_perp_vector_test_field
 public :: xyz_scalar_field_generator_t, xyz_scalar_field_generator
 public :: solid_rotation_field_generator_t, solid_rotation_field_generator
 public :: xyz_grad_generator_t, xyz_grad_generator
@@ -313,6 +313,92 @@ subroutine set_vector_test_field_1tile_1comp(u,generator,mesh,bvec,halo_width,fi
     deallocate(vx,vy,vz)
     deallocate(px,py,pz)
 end subroutine set_vector_test_field_1tile_1comp
+
+subroutine set_perp_vector_test_field(u, v, generator, mesh_u, mesh_v, halo_width, components_type, fill_value)
+
+    use parcomm_mod, only : parcomm_global
+
+    type(grid_field_t),              intent(inout) :: u, v
+    class(vector_field_generator_t), intent(in)    :: generator
+    type(mesh_t),                    intent(in)    :: mesh_u, mesh_v
+    integer(kind=4),                 intent(in)    :: halo_width
+    character(len=*),                intent(in)    :: components_type
+    real(kind=8),          optional, intent(in)    :: fill_value
+
+    !locals
+    integer(kind=4) :: t
+
+     do t = mesh_u%ts, mesh_u%te
+        if(components_type=="contravariant") then
+            call set_perp_vector_test_field_1tile_1comp(u%tile(t),generator,mesh_u%tile(t),mesh_u%tile(t)%b1, &
+                                                   halo_width,fill_value)
+            call set_perp_vector_test_field_1tile_1comp(v%tile(t),generator,mesh_v%tile(t),mesh_v%tile(t)%b2, &
+                                                   halo_width,fill_value)
+        else if (components_type=="covariant") then
+            call set_perp_vector_test_field_1tile_1comp(u%tile(t),generator,mesh_u%tile(t),mesh_u%tile(t)%a1, &
+                                                   halo_width,fill_value)
+            call set_perp_vector_test_field_1tile_1comp(v%tile(t),generator,mesh_v%tile(t),mesh_v%tile(t)%a2, &
+                                                   halo_width,fill_value)
+        else
+            call parcomm_global%abort("test_functions_mod, set_vector_test_field: unknown components type "// &
+                                      components_type//" use covariant or contravariant")
+        end if
+
+     end do
+
+end subroutine set_perp_vector_test_field
+
+subroutine set_perp_vector_test_field_1tile_1comp(u,generator,mesh,bvec,halo_width,fill_value)
+    use grid_field_mod, only : tile_field_t
+    use mesh_mod,       only : tile_mesh_t
+
+    type(tile_field_t),              intent(inout) :: u
+    class(vector_field_generator_t), intent(in)    :: generator
+    type(tile_mesh_t),               intent(in)    :: mesh
+    real(kind=8),                    intent(in)    :: bvec(1:3,mesh%is-mesh%halo_width:mesh%ie+mesh%halo_width, &
+                                                               mesh%js-mesh%halo_width:mesh%je+mesh%halo_width)
+    integer(kind=4),                 intent(in)    :: halo_width
+    real(kind=8),          optional, intent(in)    :: fill_value
+
+    !locals
+    integer(kind=4) :: isv, iev, jsv, jev, i, j, k, k1, klev, npoints
+    real(kind=8), dimension(:,:,:), allocatable ::  vx, vy, vz
+    real(kind=8), dimension(:,:), allocatable   :: px, py, pz
+    real(kind=8) :: nx, ny, nz
+
+    if(present(fill_value)) u%p(:,:,:) = fill_value
+
+    isv = mesh%is-halo_width
+    iev = mesh%ie+halo_width
+    jsv = mesh%js-halo_width
+    jev = mesh%je+halo_width
+    klev = mesh%ke-mesh%ks+1
+
+    allocate(vx(isv:iev,jsv:jev,1:klev),vy(isv:iev,jsv:jev,1:klev),vz(isv:iev,jsv:jev,1:klev))
+    allocate(px(isv:iev,jsv:jev),py(isv:iev,jsv:jev),pz(isv:iev,jsv:jev))
+    px(isv:iev,jsv:jev) = mesh%rx(isv:iev,jsv:jev)
+    py(isv:iev,jsv:jev) = mesh%ry(isv:iev,jsv:jev)
+    pz(isv:iev,jsv:jev) = mesh%rz(isv:iev,jsv:jev)
+    npoints = (iev-isv+1)*(jev-jsv+1)
+    call generator%get_vector_field(vx,vy,vz,npoints,klev,px,py,pz)
+
+    do k=mesh%ks, mesh%ke
+        k1 = k-mesh%ks+1
+        do j = jsv, jev
+            do i = isv, iev
+            nx = px(i, j) / sqrt(px(i,j)**2+py(i,j)**2+pz(i,j)**2)
+            ny = py(i, j) / sqrt(px(i,j)**2+py(i,j)**2+pz(i,j)**2)
+            nz = pz(i, j) / sqrt(px(i,j)**2+py(i,j)**2+pz(i,j)**2)
+            !u%p(i,j,k) = sum([vx(i,j,k1),vy(i,j,k1),vz(i,j,k1)]*bvec(1:3,i,j))
+            u%p(i,j,k) = sum([ny*vz(i,j,k)-nz*vy(i,j,k), &
+                             -nx*vz(i,j,k)+nz*vx(i,j,k), &
+                              nx*vy(i,j,k)-ny*vx(i,j,k)]*bvec(1:3,i,j))
+            end do
+        end do
+    end do
+    deallocate(vx,vy,vz)
+    deallocate(px,py,pz)
+end subroutine set_perp_vector_test_field_1tile_1comp
 
 subroutine generate_xyz_scalar_field(this,f,npts,nlev,x,y,z)
     class(xyz_scalar_field_generator_t),  intent(in) :: this

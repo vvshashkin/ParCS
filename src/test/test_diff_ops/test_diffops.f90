@@ -4,7 +4,7 @@ program test_diffops
 
 use parcomm_mod,         only : init_global_parallel_enviroment, &
                                 deinit_global_parallel_enviroment, parcomm_global
-use test_diffops_mod, only: test_div, test_grad, test_conv, test_curl, &
+use test_diffops_mod, only: test_div, test_grad, test_conv, test_curl, test_grad_perp, &
                             test_coriolis, test_curl_grad, test_co2contra, test_compatibility
 use key_value_mod,    only : key_value_r8_t
 
@@ -217,30 +217,41 @@ call init_global_parallel_enviroment()
 !     print "(A,4E15.7)", "Err: ", errs%values
 ! end if
 
-print *, "Compatibility of Ah21:"
-call test_compatibility(div_operator_name  ="divergence_ah2",  &
-                        grad_operator_name = "gradient_ah21_sbp_ecs",  &
-                        co2contra_operator_name = "co2contra_colocated", &
-                        quadrature_name = "SBP_Ah21_quadrature", staggering="Ah")
+! print *, "Compatibility of Ah21:"
+! call test_compatibility(div_operator_name  ="divergence_ah2",  &
+!                         grad_operator_name = "gradient_ah21_sbp_ecs",  &
+!                         co2contra_operator_name = "co2contra_colocated", &
+!                         quadrature_name = "SBP_Ah21_quadrature", staggering="Ah")
+!
+! print *, "Compatibility of Ah42:"
+! call test_compatibility(div_operator_name  ="divergence_ah42_sbp",  &
+!                         grad_operator_name = "gradient_ah42_sbp_ecs",  &
+!                         co2contra_operator_name = "co2contra_colocated", &
+!                         quadrature_name = "SBP_Ah42_quadrature", staggering="Ah")
+!
+! print *, "Compatibility of C21"
+! call test_compatibility(div_operator_name  ="divergence_c_sbp21",  &
+!                         grad_operator_name = "gradient_c_sbp21",  &
+!                         co2contra_operator_name = "co2contra_c_sbp21", &
+!                         quadrature_name = "SBP_C21_quadrature", staggering="C")
+!
+! print *, "Compatibility of C42"
+! call test_compatibility(div_operator_name  ="divergence_c_sbp42",  &
+!                         grad_operator_name = "gradient_c_sbp42",  &
+!                         co2contra_operator_name = "co2contra_c_sbp42", &
+!                         quadrature_name = "SBP_C42_quadrature", staggering="C")
 
-print *, "Compatibility of Ah42:"
-call test_compatibility(div_operator_name  ="divergence_ah42_sbp",  &
-                        grad_operator_name = "gradient_ah42_sbp_ecs",  &
-                        co2contra_operator_name = "co2contra_colocated", &
-                        quadrature_name = "SBP_Ah42_quadrature", staggering="Ah")
+errs = test_grad_perp(N=32, grad_perp_oper_name="grad_perp_c_sbp21", staggering="C")
+if (parcomm_global%myid==0) then
+    print *, "grad_perp_c_sbp21"
+    print "(A,4E15.7)", "Err: ", errs%values
+end if
 
-print *, "Compatibility of C21"
-call test_compatibility(div_operator_name  ="divergence_c_sbp21",  &
-                        grad_operator_name = "gradient_c_sbp21",  &
-                        co2contra_operator_name = "co2contra_c_sbp21", &
-                        quadrature_name = "SBP_C21_quadrature", staggering="C")
-
-print *, "Compatibility of C42"
-call test_compatibility(div_operator_name  ="divergence_c_sbp42",  &
-                        grad_operator_name = "gradient_c_sbp42",  &
-                        co2contra_operator_name = "co2contra_c_sbp42", &
-                        quadrature_name = "SBP_C42_quadrature", staggering="C")
-
+errs = test_grad_perp(N=32, grad_perp_oper_name="grad_perp_c_sbp42", staggering="C")
+if (parcomm_global%myid==0) then
+    print *, "grad_perp_c_sbp42"
+    print "(A,4E15.7)", "Err: ", errs%values
+end if
 
 call deinit_global_parallel_enviroment()
 

@@ -266,7 +266,7 @@ type(key_value_r8_t) function test_contra2co(N,contra2co_oper_name,staggering) r
 end function test_contra2co
 function test_grad_perp(N, grad_perp_oper_name, staggering) result(errs)
 
-    use test_fields_mod,    only : set_vector_test_field, set_scalar_test_field, &
+    use test_fields_mod,    only : set_perp_vector_test_field, set_scalar_test_field, &
                                    xyz_w => xyz_scalar_field_generator, &
                                    xyz_grad => xyz_grad_generator
 
@@ -295,7 +295,8 @@ function test_grad_perp(N, grad_perp_oper_name, staggering) result(errs)
     call create_grid_field(gv_true, ex_halo_width, 0, domain%mesh_v)
 
     call set_scalar_test_field(w, xyz_w, domain%mesh_w, 0)
-    call set_vector_test_field(gu_true, gv_true, xyz_grad, domain%mesh_v, domain%mesh_u, 0, "contravariant")
+    call set_perp_vector_test_field(gu_true, gv_true, xyz_grad, domain%mesh_u, domain%mesh_v, 0, "contravariant")
+    !call set_vector_test_field(gv_true, gu_true, xyz_grad, domain%mesh_v, domain%mesh_u, 0, "covariant")
 
     call create_grad_perp_operator(grad_perp_op, grad_perp_oper_name, domain)
     call grad_perp_op%calc_grad_perp(gu, gv, w, domain)
@@ -304,8 +305,11 @@ function test_grad_perp(N, grad_perp_oper_name, staggering) result(errs)
     errs%keys(1)%str = "xyz linf"
     errs%keys(2)%str = "xyz l2"
 
-    call gu%assign(1.0_8, gu, -1.0_8, gv_true, domain%mesh_u)
-    call gv%assign(1.0_8, gv,  1.0_8, gu_true, domain%mesh_v)
+    call gu%assign(1.0_8, gu, -1.0_8, gu_true, domain%mesh_u)
+    call gv%assign(1.0_8, gv, -1.0_8, gv_true, domain%mesh_v)
+    !call gu%assign(1.0_8, gu, -1.0_8, gu_true, domain%mesh_u)
+    !call gv%assign(1.0_8, gv, -1.0_8, gv_true, domain%mesh_v)
+
 
     errs%values(1) = gu%maxabs(domain%mesh_u, domain%parcomm)  + &
                      gv%maxabs(domain%mesh_v, domain%parcomm)

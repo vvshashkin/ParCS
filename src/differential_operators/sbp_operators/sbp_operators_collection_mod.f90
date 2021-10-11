@@ -103,8 +103,11 @@ real(kind=8), parameter :: W42_staggered_c2i_in_shift = -2
 !SBP staggered differences
 real(kind=8), parameter :: D21_staggered_c2i(2,1) = reshape( [-1.0_8, 1.0_8], [2,1])
 integer(kind=4), parameter :: D21_staggered_c2i_last_nonzero(1) = [2]
+real(kind=8), parameter :: D21_staggered_i2c(2,1) = reshape( [-1.0_8, 1.0_8], [2,1])
+integer(kind=4), parameter :: D21_staggered_i2c_last_nonzero(1) = [2]
 real(kind=8), parameter :: D21_staggered_in(2) = [-1.0_8, 1.0_8]
 real(kind=8), parameter :: D21_staggered_c2i_in_shift = -1
+real(kind=8), parameter :: D21_staggered_i2c_in_shift =  0
 !Projection operator for left side os stencil
 real(kind=8), parameter :: D21_boundary_proj(2) = [1.5_8,-0.5_8]
 !Mass matrices for cell-center and cell-interface variables (left sude of stencil)
@@ -117,11 +120,23 @@ real(kind=8), parameter :: D42_staggered_c2i(5,4) = reshape( &
                              1._8/24._8, -9._8/8._8,  9._8/8._8,  -1._8/24._8,  0.0_8,       &
                             -1._8/71._8,  6._8/71._8,-83._8/71._8, 81._8/71._8,-3._8/71._8], &
                             [5,4])
+
 integer(kind=4), parameter :: D42_staggered_c2i_last_nonzero(4) = [3,2,4,5]
+
+real(kind=8), parameter :: D42_staggered_i2c(5,3) = reshape( &
+                           [-79.0_8/78.0_8, 27.0_8/26.0_8, -1.0/26.0_8, 1.0/78.0_8, 0.0_8,       &
+                             2.0_8/21.0_8, -9.0_8/7.0_8, 9.0_8/7.0_8, -2.0_8/21.0_8, 0.0_8,      &
+                             1.0_8/75.0_8, 0.0_8, -27.0_8/25.0_8, 83.0_8/75.0_8, -1.0_8/25.0_8], &
+                                              [5,3])
+
+integer(kind=4), parameter :: D42_staggered_i2c_last_nonzero(3) = [4,4,5]
+
 real(kind=8), parameter :: D42_staggered_in(4) = [1.0_8/24.0_8, -9.0_8/8.0_8, 9.0_8/8.0_8, -1.0/24.0_8]
 real(kind=8), parameter :: D42_staggered_c2i_in_shift = -2
+real(kind=8), parameter :: D42_staggered_i2c_in_shift = -1
 !Projection operator for left side os stencil
 real(kind=8), parameter :: D42_boundary_proj(3) = [15.0_8/8.0_8, -5.0_8/4.0_8, 3.0_8/8.0_8]
+
 !Mass matrices for cell-center and cell-interface variables (left sude of stencil)
 real(kind=8), parameter :: D42_A_interfaces(5) = [7._8/18._8, 9._8/8._8, 1._8, 71._8/72._8, 1._8]
 real(kind=8), parameter :: D42_A_centers(4) = [13._8/12._8, 7._8/8._8, 25._8/24._8, 1._8]
