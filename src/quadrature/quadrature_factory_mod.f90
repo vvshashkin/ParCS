@@ -23,7 +23,8 @@ subroutine create_quadrature(quadrature, quadrature_name, mesh)
         te = mesh%te
         allocate(default_tile_quadrature_t :: quadrature%tile(ts:te))
     else if(quadrature_name == "SBP_Ah21_quadrature" .or. &
-            quadrature_name == "SBP_Ah42_quadrature") then
+            quadrature_name == "SBP_Ah42_quadrature" .or. &
+            quadrature_name == "SBP_Ah63_quadrature") then
         call create_ah_sbp_quadrature(quadrature, quadrature_name, mesh)
     else if(quadrature_name == "SBP_C21_quadrature" .or. &
             quadrature_name == "SBP_C42_quadrature") then
@@ -38,7 +39,7 @@ end subroutine create_quadrature
 subroutine create_ah_sbp_quadrature(quadrature, quadrature_name, mesh)
 
     use sbp_quadrature_mod, only : sbp_tile_quadrature_t
-    use sbp_operators_collection_mod, only : Q21_A, Q42_A
+    use sbp_operators_collection_mod, only : Q21_A, Q42_A, Q63_A
 
     class(quadrature_t), allocatable, intent(inout) :: quadrature
     character(len=*),                 intent(in)    :: quadrature_name
@@ -58,6 +59,9 @@ subroutine create_ah_sbp_quadrature(quadrature, quadrature_name, mesh)
     else if(quadrature_name == "SBP_Ah42_quadrature") then
         nedge = size(Q42_A)
         A_edge(1:nedge) =  Q42_A(1:nedge)
+    else if(quadrature_name == "SBP_Ah63_quadrature") then
+        nedge = size(Q63_A)
+        A_edge(1:nedge) =  Q63_A(1:nedge)
     else
         call parcomm_global%abort("unknown quadrature:"// quadrature_name //&
                                   " in create_Ah_sbp_quadrature, quadrature_factory_mod")

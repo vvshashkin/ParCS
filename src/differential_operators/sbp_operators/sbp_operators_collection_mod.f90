@@ -22,6 +22,48 @@ real(kind=8), parameter :: Q42(6,4) = reshape( &
 integer(kind=4), parameter :: lastnonzeroQ42(4) =[4,3,5,6]
 real(kind=8), parameter :: Q42_A(4) = [17._8/48._8, 59._8/48._8, 43._8/48._8, 49._8/48._8]
 
+!boundary block of SBP diff matrix (inv(H)*Q)
+real(kind=8), parameter :: Q63_A(6) = [0.13649d5 / 0.43200d5, 0.12013d5 / 0.8640d4, &
+                                        0.2711d4 / 0.4320d4,  0.5359d4  / 0.4320d4, &
+                                        0.7877d4 / 0.8640d4,  0.43801d5 / 0.43200d5 ]
+
+real(kind=8), parameter :: q56 =5591070156686698065364559.d0/7931626489314500743872000.d0
+
+real(kind=8), parameter :: q11 = -1.d0/2.d0
+real(kind=8), parameter :: q12 = -0.953d3 / 0.16200d5 + q56
+real(kind=8), parameter :: q13 = 0.715489d6 / 0.259200d6 - (4.d0 * q56)
+real(kind=8), parameter :: q14 = -0.62639d5 / 0.14400d5 + (6.d0 * q56)
+real(kind=8), parameter :: q15 = 0.147127d6 / 0.51840d5 - (4.d0 * q56)
+real(kind=8), parameter :: q16 = -0.89387d5 / 0.129600d6 + q56;
+real(kind=8), parameter :: q23 = -0.57139d5 / 0.8640d4 + (10.d0 * q56)
+real(kind=8), parameter :: q24 = 0.745733d6 / 0.51840d5 - (20.d0 * q56)
+real(kind=8), parameter :: q25 = -0.18343d5 / 0.1728d4 + (15.d0 * q56)
+real(kind=8), parameter :: q26 = 0.240569d6 / 0.86400d5 - (4.d0 * q56)
+real(kind=8), parameter :: q34 = -0.176839d6 / 0.12960d5 + (20.d0 * q56)
+real(kind=8), parameter :: q35 = 0.242111d6 / 0.17280d5 - (20.d0 * q56)
+real(kind=8), parameter :: q36 = -0.182261d6 / 0.43200d5 + (6.d0 * q56)
+real(kind=8), parameter :: q45 = -0.165041d6 / 0.25920d5 + (10.d0 * q56)
+real(kind=8), parameter :: q46 = 0.710473d6 / 0.259200d6 - (4.d0 * q56)
+real(kind=8), parameter :: q47 = 1.d0/6.d1
+real(kind=8), parameter :: q57 = -3.D0/2.d1
+real(kind=8), parameter :: q58 = 1.d0/6.d1
+real(kind=8), parameter :: q67 = 3.d0/4.d0
+real(kind=8), parameter :: q68 = -3.d0/2.d1
+real(kind=8), parameter :: q69 = 1.d0/6.d1;
+
+real(kind=8), parameter :: Q63(9,6) = reshape( &
+[ q11/Q63_A(1),  q12/Q63_A(1), q13/Q63_A(1), q14/Q63_A(1), q15/Q63_A(1), q16/Q63_A(1),        0.0_8,        0.0_8,        0.0_8, &
+ -q12/Q63_A(2),         0.0_8, q23/Q63_A(2), q24/Q63_A(2), q25/Q63_A(2), q26/Q63_A(2),        0.0_8,        0.0_8,        0.0_8, &
+ -q13/Q63_A(3), -q23/Q63_A(3),        0.0_8, q34/Q63_A(3), q35/Q63_A(3), q36/Q63_A(3),        0.0_8,        0.0_8,        0.0_8, &
+ -q14/Q63_A(4), -q24/Q63_A(4), -q34/Q63_A(4),       0.0_8, q45/Q63_A(4), q46/Q63_A(4), q47/Q63_A(4),        0.0_8,        0.0_8, &
+ -q15/Q63_A(5), -q25/Q63_A(5), -q35/Q63_A(5), -q45/Q63_A(5),      0.0_8, q56/Q63_A(5), q57/Q63_A(5), q58/Q63_A(5),        0.0_8, &
+ -q16/Q63_A(6), -q26/Q63_A(6), -q36/Q63_A(6), -q46/Q63_A(6), -q56/Q63_A(6),     0.0_8, q67/Q63_A(6), q68/Q63_A(6), q69/Q63_A(6)  ], &
+  [9,6])
+integer(kind=4), parameter :: lastnonzeroQ63(6) =[6,6,6,7,8,9]
+!6-th order diff non-staggered inner stencil and shift
+real(kind=8),    parameter :: Da6_in(7) = [-1.d0/6.d1, 3.d0/2.d1, -3.d0/4.d0, 0.d0, 3.d0/4.d0, -3.d0/2.d1, 1.d0/6.d1];
+integer(kind=4), parameter :: Da6_inshift = -3
+
 
 real(kind=8), parameter :: Q43(6,4) = reshape( &
 [-1.8280236842718398_8,   2.978054584697369_8,  -1.4653148294044123_8,  0.3078538227474199_8,  0.008136925288119662_8, -0.0007068190566565205_8, &

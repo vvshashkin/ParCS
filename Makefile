@@ -628,10 +628,18 @@ $(DOBJ)abstract_hordiff_mod.o: src/differential_operators/hordiff/abstract_hordi
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)hordiff_colocated_mod.o: src/differential_operators/hordiff/hordiff_colocated_mod.f90 \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)abstract_hordiff_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)hordiff_factory_mod.o: src/differential_operators/hordiff/hordiff_factory_mod.f90 \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)grid_field_factory_mod.o \
 	$(DOBJ)abstract_hordiff_mod.o \
+	$(DOBJ)hordiff_colocated_mod.o \
 	$(DOBJ)hordiff_cgrid_mod.o \
 	$(DOBJ)div_factory_mod.o \
 	$(DOBJ)grad_factory_mod.o \

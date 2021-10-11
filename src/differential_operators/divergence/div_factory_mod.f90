@@ -15,25 +15,23 @@ function create_div_operator(domain, div_operator_name) result(div)
 
     class(div_operator_t), allocatable :: div
 
-    if(div_operator_name == 'divergence_c2') then
+    select case(div_operator_name)
+    case("divergence_c2")
         div = create_div_c2_operator(domain)
-    elseif(div_operator_name == 'divergence_c_sbp21') then
+    case("divergence_c_sbp21")
         div = create_div_c_sbp21_operator(domain)
-    elseif(div_operator_name == 'divergence_c_sbp42') then
+    case("divergence_c_sbp42")
         div = create_div_c_sbp42_operator(domain)
-    elseif(div_operator_name == 'divergence_a2_ecs'  .or. &
-           div_operator_name == 'divergence_a2_cons' .or. &
-           div_operator_name == 'divergence_a2_fv') then
+    case("divergence_a2_ecs","divergence_a2_cons", "divergence_a2_fv")
         div = create_div_a2_operator(domain,div_operator_name)
-    elseif(div_operator_name == 'divergence_ah2') then
+    case("divergence_ah2")
         div = create_div_ah2_operator(domain)
-    elseif(div_operator_name == 'divergence_ah42_sbp' .or. &
-           div_operator_name == 'divergence_ah43_sbp') then
+    case("divergence_ah42_sbp", "divergence_ah63_sbp", "divergence_ah43_sbp")
         div = create_div_ah_sbp_operator(domain,div_operator_name)
-    else
+    case default
         call parcomm_global%abort("unknown divergence operator: "//div_operator_name)
-    end if
-end
+    end select
+end function create_div_operator
 
 function create_div_c2_operator(domain) result(div)
 
@@ -138,6 +136,9 @@ function create_div_ah_sbp_operator(domain, div_operator_name) result(div)
     case ("divergence_ah42_sbp")
         halo_width_interior = 3
         div%sbp_op = create_sbp_operator("d42")
+    case ("divergence_ah63_sbp")
+        halo_width_interior = 5
+        div%sbp_op = create_sbp_operator("d63")
     case ("divergence_ah43_sbp")
         halo_width_interior = 5
         div%sbp_op = create_sbp_operator("d43")

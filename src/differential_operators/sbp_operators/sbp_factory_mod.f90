@@ -6,6 +6,7 @@ use parcomm_mod,                  only : parcomm_global
 use sbp_operators_collection_mod, only : Q21, lastnonzeroQ21, Da2_in, Da2_inshift, &
                                          Q42, lastnonzeroQ42, Da4_in, Da4_inshift, &
                                          Q43, lastnonzeroQ43,                      &
+                                         Q63, lastnonzeroQ63, Da6_in, Da6_inshift, &
                                          W21_staggered_i2c, W21_staggered_i2c_last_nonzero, &
                                          W21_staggered_i2c_in_shift,                        &
                                          W21_staggered_c2i, W21_staggered_c2i_last_nonzero, &
@@ -65,6 +66,13 @@ function create_sbp_operator(sbp_operator_name) result(sbp_op)
         sbp_op%edge_last_l = lastnonzeroQ43
         sbp_op%W_in        = Da4_in
         sbp_op%in_shift    = Da4_inshift
+        sbp_op%dnx = 0
+        right_side_sign = -1.0_8
+    else if(sbp_operator_name == "d63") then
+        sbp_op%W_edge_l    = Q63
+        sbp_op%edge_last_l = lastnonzeroQ63
+        sbp_op%W_in        = Da6_in
+        sbp_op%in_shift    = Da6_inshift
         sbp_op%dnx = 0
         right_side_sign = -1.0_8
     else if(sbp_operator_name == "W21_stagered_interp_c2i") then
