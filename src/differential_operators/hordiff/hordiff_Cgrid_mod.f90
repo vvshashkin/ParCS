@@ -45,9 +45,9 @@ contains
 subroutine calc_diff_vec_div_part(this, u_tend, v_tend, u, v, domain)
 
     class(hordiff_c_div_t), intent(inout) :: this
-    type(grid_field_t),          intent(inout) :: u_tend, v_tend
-    type(grid_field_t),          intent(inout) :: u, v
-    type(domain_t),              intent(in)    :: domain
+    type(grid_field_t),     intent(inout) :: u_tend, v_tend
+    type(grid_field_t),     intent(inout) :: u, v
+    type(domain_t),         intent(in)    :: domain
 
     integer(kind=4) :: p
 

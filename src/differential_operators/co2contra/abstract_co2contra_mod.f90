@@ -10,6 +10,7 @@ type, abstract, public :: co2contra_operator_t
 contains
 
 procedure(transform_procedure), deferred :: transform
+procedure, public  :: transform2co
 
 end type co2contra_operator_t
 
@@ -23,5 +24,15 @@ abstract interface
         type(grid_field_t),          intent(inout) :: u_contra, v_contra
     end subroutine transform_procedure
 end interface
+
+contains
+
+subroutine transform2co(this, u_cov, v_cov, u_contra, v_contra, domain)
+    class(co2contra_operator_t), intent(inout) :: this
+    type(domain_t),              intent(in)    :: domain
+    type(grid_field_t),          intent(inout) :: u_contra, v_contra
+    !output:
+    type(grid_field_t),          intent(inout) :: u_cov, v_cov
+end subroutine transform2co
 
 end module abstract_co2contra_mod

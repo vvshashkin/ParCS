@@ -4,7 +4,7 @@ use parcomm_mod,         only : init_global_parallel_enviroment, &
                                 deinit_global_parallel_enviroment, &
                                 parcomm_global
 use test_diffops_mod, only: test_div, test_grad, test_conv, test_curl, &
-                            test_coriolis, test_KE, test_coriolis_vec_inv, test_co2contra, test_grad_perp
+                            test_coriolis, test_KE, test_coriolis_vec_inv, test_co2contra, test_grad_perp, test_contra2co
 
 use key_value_mod,    only : key_value_r8_t
 
@@ -189,9 +189,33 @@ if (parcomm_global%myid==0) then
     print "(A,4E15.7)", "Err: ", errs%values
 end if
 
+errs = test_co2contra(N=32,co2contra_oper_name="co2contra_c_sbp21_new", staggering="C")
+if (parcomm_global%myid==0) then
+    print *, "co2contra_c_sbp21_new"
+    print "(A,4E15.7)", "Err: ", errs%values
+end if
+
+errs = test_contra2co(N=32,contra2co_oper_name="co2contra_c_sbp21_new", staggering="C")
+if (parcomm_global%myid==0) then
+    print *, "contra2co_c_sbp21_new"
+    print "(A,4E15.7)", "Err: ", errs%values
+end if
+
 errs = test_co2contra(N=32,co2contra_oper_name="co2contra_c_sbp42", staggering="C")
 if (parcomm_global%myid==0) then
     print *, "co2contra_c_sbp42"
+    print "(A,4E15.7)", "Err: ", errs%values
+end if
+
+errs = test_co2contra(N=32,co2contra_oper_name="co2contra_c_sbp42_new", staggering="C")
+if (parcomm_global%myid==0) then
+    print *, "co2contra_c_sbp42_new"
+    print "(A,4E15.7)", "Err: ", errs%values
+end if
+
+errs = test_contra2co(N=32,contra2co_oper_name="co2contra_c_sbp42_new", staggering="C")
+if (parcomm_global%myid==0) then
+    print *, "contra2co_c_sbp42_new"
     print "(A,4E15.7)", "Err: ", errs%values
 end if
 

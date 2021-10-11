@@ -1232,6 +1232,8 @@ $(DOBJ)co2contra_cgrid_mod.o: src/differential_operators/co2contra/co2contra_Cgr
 	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)halo_mod.o \
 	$(DOBJ)sbp_operator_mod.o \
+	$(DOBJ)interpolator_h2v_mod.o \
+	$(DOBJ)interpolator_v2h_mod.o \
 	$(DOBJ)tile_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -1249,7 +1251,10 @@ $(DOBJ)co2contra_factory_mod.o: src/differential_operators/co2contra/co2contra_f
 	$(DOBJ)co2contra_cgrid_mod.o \
 	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
-	$(DOBJ)sbp_factory_mod.o
+	$(DOBJ)sbp_factory_mod.o \
+	$(DOBJ)interpolator_h2v_factory_mod.o \
+	$(DOBJ)interpolator_v2h_factory_mod.o \
+	$(DOBJ)grid_field_factory_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
