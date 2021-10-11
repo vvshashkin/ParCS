@@ -2,29 +2,30 @@
     N = 32,
     Nz = 1,
     topology_type    = 'cube',
-    staggering_type  = 'C',
+    staggering_type  = 'Ah',
     metric_type      = 'ecs'
 /
 &metric
 /
-&shallow_water_model_a
-    div_op_name       = 'divergence_ah42_sbp',
-    grad_op_name      = 'gradient_ah42_sbp_ecs',
+&shallow_water_model
+    div_op_name       = 'divergence_ah63_sbp',
+    grad_op_name      = 'gradient_ah63_sbp_ecs',
     coriolis_op_name  = 'coriolis_colocated',
-    curl_op_name      = 'curl_divergence_ah42_sbp',
+    curl_op_name      = 'curl_divergence_ah63_sbp',
     KE_op_name        = 'KE_colocated',
     co2contra_op_name = 'co2contra_colocated',
     massflux_op_name  = 'massflux_colocated',
-    quadrature_name   = 'SBP_Ah42_quadrature',
+    quadrature_name   = 'SBP_Ah63_quadrature',
+    hordiff_op_name   = 'hordiff_colocated',
     dt=900.0,
-    tau_write = 86400.0,
-    tau_diagnostics = 900.0
+    tau_write = 3600.0,
+    tau_diagnostics = 36000.0
     simulation_time_days  = 0.0,
     simulation_time_hours = 144.0,
     simulation_time_min   = 0.0,
     simulation_time_sec   = 0.0,
 /
-&shallow_water_model
+&shallow_water_model_c
     div_op_name       = 'divergence_c_sbp42',
     grad_op_name      = 'gradient_c_sbp42',
     coriolis_op_name  = 'coriolis_Cgrid_sbp42',
@@ -36,7 +37,7 @@
     biharm_div_coeff  = 0.015,
     dt=450.0,
     tau_write = 3600.0,
-    tau_diagnostics = 900.0
+    tau_diagnostics = 3600.0
     simulation_time_days  = 0.0,
     simulation_time_hours = 340.0,
     simulation_time_min   = 0.0,

@@ -3,6 +3,7 @@ module hordiff_factory_mod
 use domain_mod,             only : domain_t
 use grid_field_factory_mod, only : create_grid_field
 use abstract_hordiff_mod,   only : horidff_operator_t
+use hordiff_colocated_mod,  only : hordiff_colocated_t
 
 implicit none
 
@@ -18,6 +19,8 @@ subroutine create_hordiff_operator(hordiff_op, hordiff_op_name, hordiff_coeff, d
     select case(hordiff_op_name)
     case("hordiff_c_biharm_div")
         call create_Cgrid_hordiff_div_operator(hordiff_op, hordiff_coeff, domain)
+    case("hordiff_colocated")
+        hordiff_op = hordiff_colocated_t()
     case default
         call domain%parcomm%abort("Unknown hordiff_op_name")
     end select

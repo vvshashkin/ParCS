@@ -27,6 +27,7 @@ function create_grad_operator(domain, grad_operator_name) result(grad)
         grad = create_grad_a2_operator(domain,grad_operator_name)
     else if(grad_operator_name == 'gradient_ah21_sbp_ecs' .or. &
             grad_operator_name == 'gradient_ah42_sbp_ecs' .or. &
+            grad_operator_name == 'gradient_ah63_sbp_ecs' .or. &
             grad_operator_name == 'gradient_ah43_sbp_ecs') then
         grad = create_grad_ah_sbp_operator(domain, grad_operator_name)
     else
@@ -140,6 +141,9 @@ function create_grad_ah_sbp_operator(domain, grad_operator_name) result(grad)
     case ("gradient_ah42_sbp_ecs")
         halo_width_interior = 3
         grad%sbp_op = create_sbp_operator("d42")
+    case ("gradient_ah63_sbp_ecs")
+        halo_width_interior = 5
+        grad%sbp_op = create_sbp_operator("d63")
     case ("gradient_ah43_sbp_ecs")
         halo_width_interior = 5
         grad%sbp_op = create_sbp_operator("d43")
