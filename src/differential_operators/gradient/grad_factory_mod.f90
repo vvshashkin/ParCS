@@ -30,6 +30,8 @@ function create_grad_operator(domain, grad_operator_name) result(grad)
             grad_operator_name == 'gradient_ah63_sbp_ecs' .or. &
             grad_operator_name == 'gradient_ah43_sbp_ecs') then
         grad = create_grad_ah_sbp_operator(domain, grad_operator_name)
+    else if (grad_operator_name == 'gradient_ah_c21_sbp_ecs') then
+        grad = create_grad_ah_c_sbp_operator(domain, grad_operator_name)
     else
         call parcomm_global%abort("unknown gradient operator: "//grad_operator_name)
     end if
@@ -52,11 +54,11 @@ end function create_grad_c2_ecs_operator
 
 function create_grad_c_sbp21_operator(domain) result(grad)
 
-    use grad_c2_ecs_mod,       only : grad_c_sbp21_t
-    use exchange_factory_mod,  only : create_symm_halo_exchange_A
+    use grad_c2_ecs_mod,      only : grad_c_sbp21_t
+    use exchange_factory_mod, only : create_symm_halo_exchange_A
 
-    type(domain_t),   intent(in)      :: domain
-    type(grad_c_sbp21_t)       :: grad
+    type(domain_t),   intent(in) :: domain
+    type(grad_c_sbp21_t)         :: grad
 
     integer(kind=4), parameter :: halo_width=2
 
@@ -159,5 +161,32 @@ function create_grad_ah_sbp_operator(domain, grad_operator_name) result(grad)
     call create_vector_halo_procedure(grad%sync_edges,domain,0,"ecs_Ah_vec_sync_covariant")
 
 end function create_grad_ah_sbp_operator
+
+function create_grad_ah_c_sbp_operator(domain, grad_operator_name) result(grad)
+
+    use grad_ah_c_sbp_mod,    only : grad_ah_c_sbp_t
+    use exchange_factory_mod, only : create_symm_halo_exchange_Ah
+    use sbp_factory_mod,      only : create_sbp_operator
+
+    type(domain_t),   intent(in)  :: domain
+    character(len=*), intent(in)  :: grad_operator_name
+    type(grad_ah_c_sbp_t)         :: grad
+
+    integer(kind=4)               :: halo_width_interior
+
+    select case(grad_operator_name)
+    case ("gradient_ah_c21_sbp_ecs")
+        halo_width_interior = 1
+        grad%sbp_op = create_sbp_operator("D21_staggered_i2c")
+    case default
+        call parcomm_global%abort("grad_factory_mod, create_grad_ah_c_sbp_operator"// &
+                                  " - unknown SBP operator: "//grad_operator_name)
+    end select
+
+    grad%exch_scalar_interior =  &
+              create_symm_halo_exchange_Ah(domain%partition, domain%parcomm, &
+                                         domain%topology,  halo_width_interior, 'full')
+
+end function create_grad_ah_c_sbp_operator
 
 end module grad_factory_mod

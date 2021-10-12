@@ -22,7 +22,9 @@ use sbp_operators_collection_mod, only : Q21, lastnonzeroQ21, Da2_in, Da2_inshif
                                          D42_boundary_proj, D42_A_centers, D42_A_interfaces, &
                                          D21_staggered_c2i, D21_staggered_c2i_last_nonzero, &
                                          D21_staggered_in, D21_staggered_c2i_in_shift, &
-                                         D21_boundary_proj, D21_A_centers, D21_A_interfaces
+                                         D21_boundary_proj, D21_A_centers, D21_A_interfaces, &
+                                         D21_staggered_i2c, D21_staggered_i2c_in_shift, &
+                                         D21_staggered_i2c_last_nonzero
 
 implicit none
 
@@ -108,6 +110,15 @@ function create_sbp_operator(sbp_operator_name) result(sbp_op)
         sbp_op%proj_operator_l = D21_boundary_proj
         sbp_op%Al_in = D21_A_centers
         sbp_op%Al_out = D21_A_interfaces
+    else if(sbp_operator_name == "D21_staggered_i2c") then
+        sbp_op%W_edge_l    = D21_staggered_i2c
+        sbp_op%edge_last_l = D21_staggered_i2c_last_nonzero
+        sbp_op%W_in        = D21_staggered_in
+        sbp_op%in_shift    = D21_staggered_i2c_in_shift
+        sbp_op%dnx = -1
+        right_side_sign =-1.0_8
+        sbp_op%Al_in = D21_A_interfaces
+        sbp_op%Al_out = D21_A_centers
     else if(sbp_operator_name == "D42_staggered_c2i") then
         sbp_op%W_edge_l    = D42_staggered_c2i
         sbp_op%edge_last_l = D42_staggered_c2i_last_nonzero

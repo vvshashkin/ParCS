@@ -3,7 +3,7 @@ module interpolator_h2v_factory_mod
 use interpolator_h2v_mod, only : interpolator_h2v_t
 use domain_mod,           only : domain_t
 use sbp_factory_mod,      only : create_sbp_operator
-use exchange_factory_mod, only : create_symm_halo_exchange_A
+use exchange_factory_mod, only : create_symm_halo_exchange_A, create_symm_halo_exchange_Ah
 
 implicit none
 
@@ -25,6 +25,9 @@ subroutine create_h2v_interpolator(interpolator_h2v, sbp_h2v_interp_name, domain
     interpolator_h2v%exchange = &
           create_symm_halo_exchange_A(domain%partition, domain%parcomm, &
                                       domain%topology, halo_width, 'full')
+    interpolator_h2v%exchange_Ah = &
+          create_symm_halo_exchange_Ah(domain%partition, domain%parcomm, &
+                                        domain%topology, halo_width, 'full')
 
 end subroutine create_h2v_interpolator
 

@@ -32,6 +32,7 @@ type, public, extends(operator_t) :: operator_swm_t
     class(massflux_operator_t),  allocatable :: massflux_op
     class(co2contra_operator_t), allocatable :: co2contra_op
     class(horidff_operator_t),   allocatable :: hordiff_uv
+    class(horidff_operator_t),   allocatable :: hordiff
     class(quadrature_t),         allocatable :: quadrature_h, quadrature_u, &
                                                 quadrature_v, quadrature_w
 
@@ -98,7 +99,9 @@ subroutine apply(this, vout, vin, domain)
             call vout%u%assign(-1.0_8, this%grad_x, 1.0_8, this%cor_u, domain%mesh_u)
             call vout%v%assign(-1.0_8, this%grad_y, 1.0_8, this%cor_v, domain%mesh_v)
 
-            call this%hordiff_uv%calc_diff_vec(this%grad_x, this%grad_y, vin%u, vin%v, domain)
+            ! call this%hordiff_uv%calc_diff_vec(this%grad_x, this%grad_y, vin%u, vin%v, domain)
+            call this%hordiff%calc_diff(this%grad_x, vin%u, domain%mesh_u, domain)
+            call this%hordiff%calc_diff(this%grad_y, vin%v, domain%mesh_v, domain)
 
             call vout%u%update(1.0_8, this%grad_x, domain%mesh_u)
             call vout%v%update(1.0_8, this%grad_y, domain%mesh_v)

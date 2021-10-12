@@ -16,10 +16,10 @@ character(:), allocatable    :: grad_op_name
 character(:), allocatable    :: co2contra_name
 character(:), allocatable    :: staggering
 
-div_op_name    = "divergence_a2_cons"
-grad_op_name   = "gradient_a2_cons"
-co2contra_name = "co2contra_colocated"
-staggering     = "A"
+div_op_name    = "divergence_ah_c_sbp21"
+grad_op_name   = "gradient_ah_c21_sbp_ecs"
+co2contra_name = "co2contra_ah_c_sbp21"
+staggering     = "Ah_C"
 
 call get_cmd_args(cmd_args,nargs)
 

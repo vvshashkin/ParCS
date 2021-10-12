@@ -153,6 +153,10 @@ real(kind=8), parameter :: D21_boundary_proj(2) = [1.5_8,-0.5_8]
 real(kind=8), parameter :: D21_A_interfaces(2) = [0.5_8, 1._8]
 real(kind=8), parameter :: D21_A_centers(2) = [1._8, 1._8]
 
+real(kind=8),    parameter :: D21_staggered_i2c(2,1) = reshape( [-1.0_8, 1.0_8], [2,1])
+integer(kind=4), parameter :: D21_staggered_i2c_last_nonzero(1) = [2]
+real(kind=8),    parameter :: D21_staggered_i2c_in_shift = 0
+
 real(kind=8), parameter :: D42_staggered_c2i(5,4) = reshape( &
                            [-2.0_8,       3.0_8,     -1.0_8,       0.0_8,       0.0_8,       &
                             -1.0_8,       1.0_8,      0.0_8,       0.0_8,       0.0_8,       &
