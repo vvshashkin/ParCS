@@ -94,7 +94,6 @@ subroutine apply(this, vout, vin, domain)
                                             this%hu, this%hv, vin%h, this%curl, domain)
 
 
-
             call vout%u%assign(-1.0_8, this%grad_x, 1.0_8, this%cor_u, domain%mesh_u)
             call vout%v%assign(-1.0_8, this%grad_y, 1.0_8, this%cor_v, domain%mesh_v)
 

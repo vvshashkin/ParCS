@@ -19,6 +19,8 @@ subroutine create_hordiff_operator(hordiff_op, hordiff_op_name, hordiff_coeff, d
     select case(hordiff_op_name)
     case("hordiff_c_biharm_div")
         call create_Cgrid_hordiff_div_operator(hordiff_op, hordiff_coeff, domain)
+    case("hordiff_c_biharm_curl")
+        call create_Cgrid_hordiff_curl_operator(hordiff_op, hordiff_coeff, domain)
     case("hordiff_colocated")
         hordiff_op = hordiff_colocated_t()
     case default
@@ -65,5 +67,43 @@ subroutine create_Cgrid_hordiff_div_operator(hordiff_op, hordiff_coeff, domain)
     call move_alloc(hordiff_div, hordiff_op)
 
 end subroutine create_Cgrid_hordiff_div_operator
+
+subroutine create_Cgrid_hordiff_curl_operator(hordiff_op, hordiff_coeff, domain)
+
+    use hordiff_Cgrid_mod,     only : hordiff_c_curl_t
+    use curl_factory_mod,      only : create_curl_operator
+    use grad_perp_factory_mod, only : create_grad_perp_operator
+    use co2contra_factory_mod, only : create_co2contra_operator
+
+    class(hordiff_operator_t), allocatable, intent(out) :: hordiff_op
+    real(kind=8),                           intent(in)  :: hordiff_coeff
+    type(domain_t),                         intent(in)  :: domain
+
+    type(hordiff_c_curl_t), allocatable :: hordiff_curl
+
+    integer(kind=4) :: halo_width
+    real(kind=8)    :: hx
+
+    allocate(hordiff_curl)
+
+    !WORKAROUND
+    halo_width = 4
+
+    call create_grid_field(hordiff_curl%curl, halo_width, 0, domain%mesh_w)
+    call create_grid_field(hordiff_curl%ut,   halo_width, 0, domain%mesh_u)
+    call create_grid_field(hordiff_curl%vt,   halo_width, 0, domain%mesh_v)
+
+    call create_curl_operator(hordiff_curl%curl_op, "curl_c_sbp21", domain)
+    call create_grad_perp_operator(hordiff_curl%grad_perp_op, "grad_perp_c_sbp21", domain)
+    hordiff_curl%co2contra_op = create_co2contra_operator(domain, "co2contra_c_sbp21_new")
+
+    hx = domain%mesh_p%tile(domain%mesh_p%ts)%hx
+
+    hordiff_curl%diff_coeff = hordiff_coeff*domain%mesh_p%scale*hx
+    hordiff_curl%diff_order = 2
+
+    call move_alloc(hordiff_curl, hordiff_op)
+
+end subroutine create_Cgrid_hordiff_curl_operator
 
 end module hordiff_factory_mod

@@ -643,7 +643,9 @@ $(DOBJ)hordiff_factory_mod.o: src/differential_operators/hordiff/hordiff_factory
 	$(DOBJ)hordiff_cgrid_mod.o \
 	$(DOBJ)div_factory_mod.o \
 	$(DOBJ)grad_factory_mod.o \
-	$(DOBJ)co2contra_factory_mod.o
+	$(DOBJ)co2contra_factory_mod.o \
+	$(DOBJ)curl_factory_mod.o \
+	$(DOBJ)grad_perp_factory_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -652,7 +654,9 @@ $(DOBJ)hordiff_cgrid_mod.o: src/differential_operators/hordiff/hordiff_Cgrid_mod
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)abstract_hordiff_mod.o \
 	$(DOBJ)abstract_div_mod.o \
+	$(DOBJ)abstract_curl_mod.o \
 	$(DOBJ)abstract_grad_mod.o \
+	$(DOBJ)abstract_grad_perp_mod.o \
 	$(DOBJ)abstract_co2contra_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -789,6 +793,7 @@ $(DOBJ)div_factory_mod.o: src/differential_operators/divergence/div_factory_mod.
 	$(DOBJ)exchange_factory_mod.o \
 	$(DOBJ)div_c_sbp42_mod.o \
 	$(DOBJ)sbp_factory_mod.o \
+	$(DOBJ)grid_field_factory_mod.o \
 	$(DOBJ)div_a2_mod.o \
 	$(DOBJ)div_ah2_mod.o \
 	$(DOBJ)div_ah_sbp_mod.o
@@ -825,7 +830,8 @@ $(DOBJ)div_c_sbp42_mod.o: src/differential_operators/divergence/div_c_sbp42_mod.
 	$(DOBJ)mesh_mod.o \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)exchange_halo_mod.o \
-	$(DOBJ)sbp_operator_mod.o
+	$(DOBJ)sbp_operator_mod.o \
+	$(DOBJ)tile_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
