@@ -1,5 +1,5 @@
 &domain
-    N = 32,
+    N = 128,
     Nz = 1,
     topology_type    = 'cube',
     staggering_type  = 'C',
@@ -34,9 +34,9 @@
     co2contra_op_name = 'co2contra_c_sbp42',
     massflux_op_name  = 'massflux_c_sbp42',
     quadrature_name   = 'SBP_C42_quadrature',
-    biharm_div_coeff  = 0.060,
+    biharm_div_coeff  =  0.11,
     hordiff_op_name   = 'hordiff_c_biharm_curl',
-    dt=900.0,
+    dt=100.0,
     tau_write = 21600.0,
     tau_diagnostics = 3600.0
     simulation_time_days  = 10.0,
