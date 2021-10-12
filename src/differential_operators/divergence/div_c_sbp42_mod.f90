@@ -5,13 +5,15 @@ use domain_mod,         only : domain_t
 use mesh_mod,           only : mesh_t, tile_mesh_t
 use grid_field_mod,     only : grid_field_t, tile_field_t
 use exchange_halo_mod,  only : exchange_t
-use halo_mod,           only : halo_vec_t
+use sbp_operator_mod,   only : sbp_operator_t
 
 implicit none
 
 type, public, extends(div_operator_t) :: div_c_sbp42_t
-    class(exchange_t), allocatable :: exch_halo
-    class(halo_vec_t), allocatable :: halo_procedure
+    type(grid_field_t)                 :: Gu, Gv
+    type(grid_field_t)                 :: Dx, Dy
+    class(exchange_t),     allocatable :: exch_halo
+    class(sbp_operator_t), allocatable :: sbp_diff
 contains
     procedure, public :: calc_div => calc_div_c_sbp42
 end type div_c_sbp42_t
@@ -37,15 +39,94 @@ subroutine calc_div_c_sbp42(this, div, u, v, domain)
     integer(kind=4) :: i, j, k, t
     real(kind=8) hx
 
-    call this%exch_halo%do_vec(u,v,domain%parcomm)
+    !Old optimized variant
+    ! call this%exch_halo%do_vec(u,v,domain%parcomm)
+    ! do t = domain%partition%ts, domain%partition%te
+    !     call calc_div_on_tile_sbp42(div%tile(t), u%tile(t), v%tile(t),            &
+    !                                 domain%mesh_x%tile(t), domain%mesh_y%tile(t), &
+    !                                domain%mesh_o%tile(t),domain%mesh_o%scale)
+    ! end do
 
-    do t = domain%partition%ts, domain%partition%te
-        call calc_div_on_tile_sbp42(div%tile(t), u%tile(t), v%tile(t),            &
-                                    domain%mesh_x%tile(t), domain%mesh_y%tile(t), &
-                                    domain%mesh_o%tile(t),domain%mesh_o%scale)
+    do t=domain%partition%ts, domain%partition%te
+        call calculate_GuGv(this%Gu%tile(t), this%Gv%tile(t), u%tile(t), v%tile(t), &
+                                      domain%mesh_u%tile(t), domain%mesh_v%tile(t))
     end do
 
+    call this%exch_halo%do_vec(this%Gu,this%Gv,domain%parcomm)
+
+    do t = domain%partition%ts, domain%partition%te
+        call calc_div_on_tile_sbp42_new(div%tile(t), this%Dx%tile(t), this%Dy%tile(t), &
+                                        this%Gu%tile(t), this%Gv%tile(t),              &
+                                        domain%mesh_o%tile(t),this%sbp_diff,           &
+                                        domain%mesh_o%scale)
+    end do
 end subroutine calc_div_c_sbp42
+
+subroutine calc_div_on_tile_sbp42_new(div, Dx, Dy, Gu, Gv, mesh_o, sbp_diff, scale)
+
+    use tile_mod, only : tile_t
+
+    type(tile_field_t),    intent(inout) :: div
+    type(tile_field_t),    intent(inout) :: Dx, Dy
+    type(tile_field_t),    intent(in)    :: Gu, Gv
+    type(tile_mesh_t),     intent(in)    :: mesh_o
+    class(sbp_operator_t), intent(in)    :: sbp_diff
+    real(kind=8),          intent(in)    :: scale
+
+    integer(kind=4) :: is, ie, js, je, ks, ke, i, j, k
+    type(tile_t)    :: work
+
+    is = mesh_o%is; ie = mesh_o%ie
+    js = mesh_o%js; je = mesh_o%je
+    ks = mesh_o%ks; ke = mesh_o%ke
+    work = tile_t(is=is, ie=ie, js=js, je=je,ks=ks,ke=ke)
+
+    call sbp_diff%apply(Dx, work, mesh_o%nx, 'x', Gu)
+    call sbp_diff%add_penalty(Dx, work, mesh_o%nx, 'x', 'at_center', Gu)
+    call sbp_diff%apply(Dy, work, mesh_o%ny, 'y', Gv)
+    call sbp_diff%add_penalty(Dy, work, mesh_o%ny, 'y', 'at_center', Gv)
+
+    do k=ks, ke
+        do j = js,je
+            do i = is, ie
+                div%p(i,j,k) =  (Dx%p(i,j,k)+Dy%p(i,j,k))/(mesh_o%G(i,j)*mesh_o%hx*scale)
+            end do
+        end do
+    end do
+
+end subroutine calc_div_on_tile_sbp42_new
+
+subroutine calculate_GuGv(Gu, Gv, u, v, mesh_u, mesh_v)
+    type(tile_field_t),  intent(inout) :: Gu, Gv
+    type(tile_field_t),  intent(in)    :: u, v
+    type(tile_mesh_t),   intent(in)    :: mesh_u, mesh_v
+
+    integer(kind=4) :: ks, ke, js, je, is, ie, i, j, k, t
+
+    is = mesh_u%is; ie = mesh_u%ie
+    js = mesh_u%js; je = mesh_u%je
+    ks = mesh_u%ks; ke = mesh_u%ke
+
+    do k=ks,ke
+        do j=js, je
+            do i=is, ie
+                Gu%p(i,j,k) = u%p(i,j,k)*mesh_u%G(i,j)
+            end do
+        end do
+    end do
+
+    is = mesh_v%is; ie = mesh_v%ie
+    js = mesh_v%js; je = mesh_v%je
+    ks = mesh_v%ks; ke = mesh_v%ke
+
+    do k=ks,ke
+        do j=js, je
+            do i=is, ie
+                Gv%p(i,j,k) = v%p(i,j,k)*mesh_v%G(i,j)
+            end do
+        end do
+    end do
+end subroutine calculate_GuGv
 
 subroutine calc_div_on_tile_sbp42(div, u, v, mesh_u, mesh_v, mesh_p, scale)
 

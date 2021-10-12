@@ -24,11 +24,6 @@ type sbp_operator_t
     real(kind=8), allocatable    :: proj_operator_l(:), proj_operator_r(:)
 
     contains
-    !specialization on different types of input/output arguments
-    !do we really need it?
-    !procedure, public :: apply_gf_to_gf_mesh    => apply_sbp_gf_to_gf_mesh
-    !procedure, public :: apply_gf_to_gf_tile    => apply_sbp_gf_to_gf_tile
-
     !Grid field in -> array out
     procedure, public :: apply_gf_to_array      => apply_sbp_gf_to_array
     !grid field in (+tile) -> grid field out
@@ -37,6 +32,7 @@ type sbp_operator_t
     procedure, public :: apply_array_to_array   => apply_sbp_array_to_array
     generic :: apply => apply_gf_to_array, apply_array_to_array, apply_gf_to_gf
 
+    procedure, public :: add_penalty
 end type sbp_operator_t
 
 contains
@@ -223,5 +219,92 @@ subroutine sbp_apply(df,is1,ie1,js1,je1,is,ie,js,je,                          &
     call parcomm_global%abort("unknown direction in sbp_apply: "//direction)
     end select
 end subroutine sbp_apply
+
+subroutine add_penalty(this, f_out, work_tile, nx_out_grid, direction, &
+                                                             penalty_type,f_in)
+    class(sbp_operator_t), intent(in) :: this
+    !work_tile = indices where operator action will be calculated
+    type(tile_t),          intent(in)  :: work_tile
+    integer(kind=4),       intent(in)  :: nx_out_grid
+    character(len=*),      intent(in)  :: direction, penalty_type
+    type(tile_field_t),    intent(in)  :: f_in
+    !output:
+    type(tile_field_t),    intent(inout) :: f_out
+
+    if(penalty_type == "at_center") then
+        call add_penalty_center(this, f_out, work_tile, nx_out_grid, direction, f_in)
+!not implemented yet:
+!    else if(penalty_type == "at_interfaces") then
+!        call add_penalty_interfaces(this, f_out, work_tile, nx_out_grid, direction, f_in)
+    else
+        call parcomm_global%abort("sbp operator mod, add penalty, unknown penalty type:"//&
+                                  penalty_type)
+    end if
+
+end subroutine add_penalty
+
+subroutine add_penalty_center(this, f_out, work_tile, nx_out_grid, direction,f_in)
+    class(sbp_operator_t), intent(in) :: this
+    !work_tile = indices where operator action will be calculated
+    type(tile_t),          intent(in)  :: work_tile
+    integer(kind=4),       intent(in)  :: nx_out_grid
+    character(len=*),      intent(in)  :: direction
+    type(tile_field_t),    intent(in)  :: f_in
+    !output:
+    type(tile_field_t),    intent(inout) :: f_out
+
+    integer(kind=4) :: nx_in_grid, is, ie, js, je, ks, ke
+    integer(kind=4) :: i, j, k, ne_left, ne_right, n_Ar
+    real(kind=8)    :: penalty_l(size(this%proj_operator_l))
+    real(kind=8)    :: penalty_r(size(this%proj_operator_r))
+    real(kind=8)    :: df
+
+    nx_in_grid = nx_out_grid-this%dnx
+    ne_left  = size(this%proj_operator_l)
+    ne_right = size(this%proj_operator_r)
+
+    is = work_tile%is; ie = work_tile%ie
+    js = work_tile%js; je = work_tile%je
+    ks = work_tile%ks; ke = work_tile%ke
+
+    penalty_l(1:ne_left) = this%proj_operator_l(1:ne_left) / this%Al_out(1:ne_left)
+    n_Ar = size(this%Ar_out)
+    penalty_r(1:ne_right) = this%proj_operator_r(1:ne_right) / this%Ar_out(n_Ar-ne_right+1:n_Ar)
+
+    if(direction == "x") then
+        do k=ks, ke
+            do j = js, je
+                if(is <= ne_left) df = f_in%p(1,j,k)-f_in%p(0,j,k)
+                do i=max(1,is),min(ie,ne_left)
+                    f_out%p(i,j,k) = f_out%p(i,j,k)+0.5_8*penalty_l(i)*df
+                end do
+                if(ie >= nx_out_grid-ne_right+1) &
+                    df = f_in%p(nx_in_grid+1,j,k)-f_in%p(nx_in_grid,j,k)
+                do i=max(nx_out_grid-ne_right+1,is),min(ie,nx_out_grid)
+                    f_out%p(i,j,k) = f_out%p(i,j,k)+0.5_8*penalty_r(i-nx_out_grid+ne_right)*df
+                end do
+            end do
+        end do
+    else if(direction == "y") then
+        do k=ks, ke
+            do j=max(1,js), min(ie, ne_left)
+                do i=is, ie
+                    df = f_in%p(i,1,k)-f_in%p(i,0,k)
+                    f_out%p(i,j,k) = f_out%p(i,j,k)+0.5_8*penalty_l(j)*df
+                end do
+            end do
+            do j=max(nx_out_grid-ne_right+1,js), min(ie, nx_out_grid)
+                do i=is, ie
+                    df = f_in%p(i,nx_in_grid+1,k)-f_in%p(i,nx_in_grid,k)
+                    f_out%p(i,j,k) = f_out%p(i,j,k)+0.5_8*penalty_r(j-nx_out_grid+ne_right)*df
+                end do
+            end do
+        end do
+    else
+        call parcomm_global%abort("sbp operator mod, add penalty_centers, unknown direction:"//&
+                                  direction)
+    end if
+
+end subroutine add_penalty_center
 
 end module sbp_operator_mod

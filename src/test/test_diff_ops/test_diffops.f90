@@ -39,19 +39,19 @@ call init_global_parallel_enviroment()
 !     print *, "divergence_c2"
 !     print "(A,5E15.7)", "Err: ", errs%values
 ! end if
-!
-! errs = test_div(N=32,div_oper_name="divergence_c_sbp21",staggering="C")
-! if(parcomm_global%myid == 0) then
-!     print *, "divergence_c_sbp21"
-!     print "(A,5E15.7)", "Err: ", errs%values
-! end if
-!
-! errs = test_div(N=32,div_oper_name="divergence_c_sbp42",staggering="C")
-! if(parcomm_global%myid == 0) then
-!     print *, "divergence_c_sbp42"
-!     print "(A,5E15.7)", "Err: ", errs%values
-! end if
-!
+
+errs = test_div(N=32,div_oper_name="divergence_c_sbp21",staggering="C")
+if(parcomm_global%myid == 0) then
+    print *, "divergence_c_sbp21"
+    print "(A,5E15.7)", "Err: ", errs%values
+end if
+
+errs = test_div(N=32,div_oper_name="divergence_c_sbp42",staggering="C")
+if(parcomm_global%myid == 0) then
+    print *, "divergence_c_sbp42"
+    print "(A,5E15.7)", "Err: ", errs%values
+end if
+
 ! errs = test_div(N=32,div_oper_name="divergence_ah2",staggering="Ah")
 ! if(parcomm_global%myid == 0) then
 !     print *, "divergence_ah2"
@@ -241,17 +241,17 @@ call init_global_parallel_enviroment()
 !                         co2contra_operator_name = "co2contra_c_sbp42", &
 !                         quadrature_name = "SBP_C42_quadrature", staggering="C")
 
-errs = test_grad_perp(N=32, grad_perp_oper_name="grad_perp_c_sbp21", staggering="C")
-if (parcomm_global%myid==0) then
-    print *, "grad_perp_c_sbp21"
-    print "(A,4E15.7)", "Err: ", errs%values
-end if
-
-errs = test_grad_perp(N=32, grad_perp_oper_name="grad_perp_c_sbp42", staggering="C")
-if (parcomm_global%myid==0) then
-    print *, "grad_perp_c_sbp42"
-    print "(A,4E15.7)", "Err: ", errs%values
-end if
+! errs = test_grad_perp(N=32, grad_perp_oper_name="grad_perp_c_sbp21", staggering="C")
+! if (parcomm_global%myid==0) then
+!     print *, "grad_perp_c_sbp21"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+!
+! errs = test_grad_perp(N=32, grad_perp_oper_name="grad_perp_c_sbp42", staggering="C")
+! if (parcomm_global%myid==0) then
+!     print *, "grad_perp_c_sbp42"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
 
 call deinit_global_parallel_enviroment()
 

@@ -788,10 +788,10 @@ $(DOBJ)div_factory_mod.o: src/differential_operators/divergence/div_factory_mod.
 	$(DOBJ)halo_factory_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
 	$(DOBJ)div_c_sbp42_mod.o \
+	$(DOBJ)sbp_factory_mod.o \
 	$(DOBJ)div_a2_mod.o \
 	$(DOBJ)div_ah2_mod.o \
-	$(DOBJ)div_ah_sbp_mod.o \
-	$(DOBJ)sbp_factory_mod.o
+	$(DOBJ)div_ah_sbp_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -825,7 +825,7 @@ $(DOBJ)div_c_sbp42_mod.o: src/differential_operators/divergence/div_c_sbp42_mod.
 	$(DOBJ)mesh_mod.o \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)exchange_halo_mod.o \
-	$(DOBJ)halo_mod.o
+	$(DOBJ)sbp_operator_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

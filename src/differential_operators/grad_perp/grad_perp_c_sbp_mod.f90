@@ -64,11 +64,13 @@ subroutine calc_grad_perp_c_sbp_tile(gu, gv, w, sbp_diff, mesh_x, mesh_y, mesh_x
         work_u%ke = k
 
         call sbp_diff%apply(gu, work_u, mesh_x%ny, 'y', w)
+        call sbp_diff%add_penalty(gu,work_u,mesh_x%ny,'y','at_center',w)
 
         work_v%ks = k
         work_v%ke = k
 
         call sbp_diff%apply(gv, work_v, mesh_y%nx, 'x', w)
+        call sbp_diff%add_penalty(gv,work_v,mesh_y%nx,'x','at_center',w)
 
         do j = mesh_x%js, mesh_x%je
             do i = mesh_x%is, mesh_x%ie

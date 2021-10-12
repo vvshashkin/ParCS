@@ -66,14 +66,22 @@ function create_div_c_sbp42_operator(domain) result(div)
 
     use div_c_sbp42_mod,        only : div_c_sbp42_t
     use exchange_factory_mod,   only : create_symmetric_halo_vec_exchange_C
+    use sbp_factory_mod,        only : create_sbp_operator
+    use grid_field_factory_mod, only : create_grid_field
 
     type(domain_t),   intent(in)  :: domain
     type(div_c_sbp42_t)           :: div
 
     integer(kind=4), parameter :: halo_width=3
 
+    call create_grid_field(div%Gu,halo_width+1,0,domain%mesh_u)
+    call create_grid_field(div%Gv,halo_width+1,0,domain%mesh_v)
+    call create_grid_field(div%Dx,0,0,domain%mesh_p)
+    call create_grid_field(div%Dy,0,0,domain%mesh_p)
+
     div%exch_halo = create_symmetric_halo_vec_exchange_C(domain%partition, domain%parcomm, &
                                                          domain%topology, halo_width, 'full')
+    div%sbp_diff = create_sbp_operator("D42_staggered_i2c")
 end function create_div_c_sbp42_operator
 
 function create_div_a2_operator(domain, div_operator_name) result(div)
