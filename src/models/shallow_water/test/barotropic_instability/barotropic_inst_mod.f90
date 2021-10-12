@@ -1,26 +1,31 @@
 module barotropic_inst_mod
 
-use domain_mod,               only : domain_t
-use domain_factory_mod,       only : create_domain
-use stvec_mod,                only : stvec_t
-use stvec_swm_mod,            only : stvec_swm_t
-use stvec_swm_factory_mod,    only : create_stvec_swm
-use operator_mod,             only : operator_t
-use operator_swm_factory_mod, only : create_swm_operator
-use timescheme_mod,           only : timescheme_t
-use timescheme_factory_mod,   only : create_timescheme
-use outputer_abstract_mod,    only : outputer_t, outputer_vector_t
-use outputer_factory_mod,     only : create_master_paneled_outputer,&
+use domain_mod,                 only : domain_t
+use domain_factory_mod,         only : create_domain
+use stvec_mod,                  only : stvec_t
+use stvec_swm_mod,              only : stvec_swm_t
+use stvec_swm_factory_mod,      only : create_stvec_swm
+use operator_mod,               only : operator_t
+use operator_swm_factory_mod,   only : create_swm_operator
+use timescheme_mod,             only : timescheme_t
+use timescheme_factory_mod,     only : create_timescheme
+use outputer_abstract_mod,      only : outputer_t, outputer_vector_t
+use outputer_factory_mod,       only : create_master_paneled_outputer,&
                                      create_latlon_outputer, create_latlon_vec_outputer
-use parcomm_mod,              only : parcomm_global
-use config_swm_mod,           only : config_swm_t
+use parcomm_mod,                only : parcomm_global
+use config_swm_mod,             only : config_swm_t
 use config_barotropic_inst_mod, only : config_barotropic_inst_t
+
+use operator_swm_mod,           only : operator_swm_t
 
 use const_mod,  only : Earth_grav, Earth_omega, Earth_radii, pi, Earth_sidereal_T
 
 use test_fields_mod, only : barotropic_instability_height_generator_t, &
                             barotropic_instability_wind_generator_t
 use key_value_mod, only : key_value_r8_t
+
+use grid_field_mod,         only : grid_field_t
+use grid_field_factory_mod, only : create_grid_field
 
 implicit none
 
@@ -45,10 +50,12 @@ subroutine run_barotropic_inst()
     class(stvec_t),           allocatable :: state, state_err, state_ex
     class(operator_t),        allocatable :: operator
     class(timescheme_t),      allocatable :: timescheme
-    class(outputer_t),        allocatable :: outputer
+    class(outputer_t),        allocatable :: outputer, outputer_curl
     class(outputer_vector_t), allocatable :: outputer_vec
 
     type(config_barotropic_inst_t) :: test_config
+
+    type(grid_field_t) :: curl
 
     !test_config = config_barotropic_inst_t(Nq = 10)
 
@@ -100,11 +107,13 @@ subroutine run_barotropic_inst()
     call create_timescheme(timescheme, state, 'rk4')
 
     if(config%config_domain%staggering_type == "Ah") then
-        call create_latlon_outputer(outputer, 2*domain%partition%Nh+1, 4*domain%partition%Nh, "Ah", domain)
+        call create_latlon_outputer(outputer,          2*domain%partition%Nh+1, 4*domain%partition%Nh, "Ah", domain)
+        call create_latlon_outputer(outputer_curl,     2*domain%partition%Nh+1, 4*domain%partition%Nh, "Ah", domain)
         call create_latlon_vec_outputer(outputer_vec,  2*domain%partition%Nh+1, 4*domain%partition%Nh, "Ah", &
                                    "covariant", domain)
     else if(config%config_domain%staggering_type == "C") then
-        call create_latlon_outputer(outputer, 2*domain%partition%Nh+1, 4*domain%partition%Nh, "A", domain)
+        call create_latlon_outputer(outputer,      2*domain%partition%Nh+1, 4*domain%partition%Nh, "A", domain)
+        call create_latlon_outputer(outputer_curl, 2*domain%partition%Nh+1, 4*domain%partition%Nh, "Ah", domain)
         call create_latlon_vec_outputer(outputer_vec,  2*domain%partition%Nh+1, 4*domain%partition%Nh, "C", &
                                        "covariant", domain)
     else
@@ -122,6 +131,9 @@ subroutine run_barotropic_inst()
         call outputer_vec%write(state%u,state%v,domain,"u.dat","v.dat",1)
     end select
 
+    call create_grid_field(curl, halo_width, 0, domain%mesh_w)
+
+
     do it = 1, int(config%simulation_time/dt)
 
         !print *, "tstep", it
@@ -138,6 +150,12 @@ subroutine run_barotropic_inst()
 
             select type(state)
             class is (stvec_swm_t)
+
+                select type(operator)
+                class is (operator_swm_t)
+                    call operator%curl_op%calc_curl(curl, state%u, state%v, domain)
+                end select
+                call outputer_curl%write(curl, domain, 'curl.dat', int(it/nstep_write)+1)
                 call outputer%write(state%h, domain, 'h.dat', int(it/nstep_write)+1)
                 call outputer_vec%write(state%u,state%v,domain,"u.dat","v.dat",int(it/nstep_write)+1)
                 l2err = l2norm(state%h, domain%mesh_p, domain%parcomm)
