@@ -663,7 +663,8 @@ $(DOBJ)hordiff_cgrid_mod.o: src/differential_operators/hordiff/hordiff_Cgrid_mod
 
 $(DOBJ)abstract_co2contra_mod.o: src/differential_operators/co2contra/abstract_co2contra_mod.f90 \
 	$(DOBJ)grid_field_mod.o \
-	$(DOBJ)domain_mod.o
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -1242,6 +1243,24 @@ $(DOBJ)operator_swm_mod.o: src/models/shallow_water/operator/operator_swm_mod.f9
 	$(DOBJ)abstract_coriolis_mod.o \
 	$(DOBJ)abstract_curl_mod.o \
 	$(DOBJ)abstract_ke_mod.o \
+	$(DOBJ)abstract_massflux_mod.o \
+	$(DOBJ)abstract_co2contra_mod.o \
+	$(DOBJ)abstract_hordiff_mod.o \
+	$(DOBJ)abstract_quadrature_mod.o \
+	$(DOBJ)stvec_swm_mod.o \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)key_value_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)operator_adv_swm_mod.o: src/models/shallow_water/operator/operator_adv_swm_mod.f90 \
+	$(DOBJ)stvec_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)operator_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)abstract_div_mod.o \
+	$(DOBJ)abstract_grad_mod.o \
+	$(DOBJ)abstract_coriolis_mod.o \
 	$(DOBJ)abstract_massflux_mod.o \
 	$(DOBJ)abstract_co2contra_mod.o \
 	$(DOBJ)abstract_hordiff_mod.o \

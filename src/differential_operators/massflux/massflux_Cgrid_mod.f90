@@ -21,6 +21,17 @@ type, extends(massflux_operator_t), public :: massflux_chalo_t
 
 end type massflux_chalo_t
 
+type, extends(massflux_operator_t), public :: massflux_c_up4_t
+
+    class(halo_t),     allocatable :: halo
+    class(halo_vec_t), allocatable :: halo_flux
+
+    contains
+
+    procedure :: calc_massflux => calc_up4_massflux
+
+end type massflux_c_up4_t
+
 type, extends(massflux_operator_t), public :: massflux_c_sbp21_t
 
     contains
@@ -60,7 +71,7 @@ subroutine calc_c2_massflux(this, fx, fy, f, u, v, domain)
                                        domain%mesh_x%tile(t), domain%mesh_y%tile(t))
         end do
     case(4)
-        call this%halo%get_halo_scalar(f,domain,1)
+        call this%halo%get_halo_scalar(f,domain,2)
         do t = domain%mesh_p%ts, domain%mesh_p%te
             call calc_c4_massflux_tile(fx%tile(t), fy%tile(t), &
                                        f%tile(t), u%tile(t), v%tile(t), &
@@ -72,6 +83,25 @@ subroutine calc_c2_massflux(this, fx, fy, f, u, v, domain)
     call this%halo_flux%get_halo_vector(fx,fy,domain,1)
 
 end subroutine calc_c2_massflux
+
+subroutine calc_up4_massflux(this, fx, fy, f, u, v, domain)
+    class(massflux_c_up4_t), intent(inout) :: this
+    type(domain_t),          intent(in)    :: domain
+    type(grid_field_t),      intent(inout) :: f, u, v
+    !output:
+    type(grid_field_t),      intent(inout) :: fx, fy
+
+    integer(kind=4) :: t
+
+    call this%halo%get_halo_scalar(f,domain,3)
+    do t = domain%mesh_p%ts, domain%mesh_p%te
+        call calc_up4_massflux_tile(fx%tile(t), fy%tile(t), &
+                                    f%tile(t), u%tile(t), v%tile(t), &
+                                    domain%mesh_x%tile(t), domain%mesh_y%tile(t))
+    end do
+    !call this%halo_flux%get_halo_vector(fx,fy,domain,1)
+
+end subroutine calc_up4_massflux
 
 subroutine calc_c2_massflux_tile(fx,fy,f,u,v,mesh_x,mesh_y)
     use grid_field_mod, only : tile_field_t
@@ -132,6 +162,49 @@ subroutine calc_c4_massflux_tile(fx,fy,f,u,v,mesh_x,mesh_y)
 
     end do
 end subroutine calc_c4_massflux_tile
+
+subroutine calc_up4_massflux_tile(fx,fy,f,u,v,mesh_x,mesh_y)
+    use grid_field_mod, only : tile_field_t
+    use mesh_mod,       only : tile_mesh_t
+
+    type(tile_field_t), intent(inout) :: fx, fy
+    type(tile_field_t), intent(in)    :: f, u, v
+    type(tile_mesh_t),  intent(in)    :: mesh_x, mesh_y
+
+    integer(kind=4) :: i, j, k, is, ie, js, je, ks, ke
+    real(kind=8)    :: zl, zr
+
+    ks = mesh_x%ks; ke = mesh_x%ke
+
+    do k=ks,ke
+        is = mesh_x%is; ie = mesh_x%ie
+        js = mesh_x%js; je = mesh_x%je
+
+        do j=js,je; do i=is,ie
+            zl = .5_8+sign(.5_8,u%p(i,j,k))
+            zr = 1._8-zl
+            fx%p(i,j,k) = u%p(i,j,k)*( &
+                          zl*(5._8*f%p(i,j,k)+15._8*f%p(i-1,j,k)-&
+                                              5._8*f%p(i-2,j,k)+f%p(i-3,j,k))+&
+                          zr*(5._8*f%p(i-1,j,k)+15._8*f%p(i,j,k)-&
+                                              5._8*f%p(i+1,j,k)+f%p(i+2,j,k)))/16._8
+        end do; end do
+
+        is = mesh_y%is; ie = mesh_y%ie
+        js = mesh_y%js; je = mesh_y%je
+
+        do j=js,je; do i=is,ie
+            zl = .5_8+sign(.5_8,v%p(i,j,k))
+            zr = 1._8-zl
+            fy%p(i,j,k) = v%p(i,j,k)*( &
+                            zl*(5._8*f%p(i,j,k)+15._8*f%p(i,j-1,k)-&
+                                              5._8*f%p(i,j-2,k)+f%p(i,j-3,k))+&
+                            zr*(5._8*f%p(i,j-1,k)+15._8*f%p(i,j,k)-&
+                                             5._8*f%p(i,j+1,k)+f%p(i,j+2,k)))/16._8
+        end do; end do
+
+    end do
+end subroutine calc_up4_massflux_tile
 
 subroutine calc_c_sbp21_massflux(this, fx, fy, f, u, v, domain)
 
