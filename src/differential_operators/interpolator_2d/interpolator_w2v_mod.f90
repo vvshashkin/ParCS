@@ -60,13 +60,13 @@ subroutine interp_w2v_tile(u, v, u_w, v_w, sbp_interp_w2v, &
     work = tile_t(is = mesh_u%is, ie = mesh_u%ie, &
                   js = mesh_u%js, je = mesh_u%je, &
                   ks = mesh_u%ks, ke = mesh_u%ke)
-    print*, mesh_u%ny
+    !print*, mesh_u%ny
     call sbp_interp_w2v%apply(u, work, mesh_u%ny, 'y', u_w)
 
     work = tile_t(is = mesh_v%is, ie = mesh_v%ie, &
                   js = mesh_v%js, je = mesh_v%je, &
                   ks = mesh_v%ks, ke = mesh_v%ke)
-    print*, mesh_v%nx
+    !print*, mesh_v%nx
     call sbp_interp_w2v%apply(v, work, mesh_v%nx, 'x', v_w)
 
 end subroutine interp_w2v_tile
