@@ -144,7 +144,7 @@ subroutine create_scalar_Ah_hordiff_operator(hordiff_op, hordiff_coeff, domain)
     use grad_factory_mod,      only : create_grad_operator
     use co2contra_factory_mod, only : create_co2contra_operator
 
-    class(horidff_operator_t), allocatable, intent(out) :: hordiff_op
+    class(hordiff_operator_t), allocatable, intent(out) :: hordiff_op
     real(kind=8),                           intent(in)  :: hordiff_coeff
     type(domain_t),                         intent(in)  :: domain
 

@@ -31,8 +31,8 @@ type, public, extends(operator_t) :: operator_swm_t
     class(KE_operator_t),        allocatable :: KE_op
     class(massflux_operator_t),  allocatable :: massflux_op
     class(co2contra_operator_t), allocatable :: co2contra_op
-    class(horidff_operator_t),   allocatable :: hordiff_uv
-    class(horidff_operator_t),   allocatable :: hordiff
+    class(hordiff_operator_t),   allocatable :: hordiff_uv
+    class(hordiff_operator_t),   allocatable :: hordiff
     class(quadrature_t),         allocatable :: quadrature_h, quadrature_u, &
                                                 quadrature_v, quadrature_w
 

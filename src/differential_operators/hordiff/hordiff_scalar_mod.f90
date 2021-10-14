@@ -4,14 +4,14 @@ use grid_field_mod, only : grid_field_t
 use domain_mod,     only : domain_t
 use mesh_mod,       only : mesh_t
 
-use abstract_hordiff_mod,   only : horidff_operator_t
+use abstract_hordiff_mod,   only : hordiff_operator_t
 use abstract_div_mod,       only : div_operator_t
 use abstract_grad_mod,      only : grad_operator_t
 use abstract_co2contra_mod, only : co2contra_operator_t
 
 implicit none
 
-type, public, extends(horidff_operator_t) :: hordiff_scalar_t
+type, public, extends(hordiff_operator_t) :: hordiff_scalar_t
     integer(kind=4) :: diff_order
     real(kind=8)    :: diff_coeff
 
