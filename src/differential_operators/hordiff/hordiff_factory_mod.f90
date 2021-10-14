@@ -3,7 +3,6 @@ module hordiff_factory_mod
 use domain_mod,             only : domain_t
 use grid_field_factory_mod, only : create_grid_field
 use abstract_hordiff_mod,   only : hordiff_operator_t
-use hordiff_colocated_mod,  only : hordiff_colocated_t
 
 implicit none
 
@@ -23,10 +22,10 @@ subroutine create_hordiff_operator(hordiff_op, hordiff_op_name, hordiff_coeff, d
         call create_Cgrid_hordiff_curl_operator(hordiff_op, hordiff_coeff, domain)
     case("hordiff_c_biharm_curl_div")
         call create_Cgrid_hordiff_curl_div_operator(hordiff_op, hordiff_coeff, domain)
-    case("hordiff_colocated")
-        hordiff_op = hordiff_colocated_t()
-    case("hordiff_scalar_Ah")
-        call create_scalar_Ah_hordiff_operator(hordiff_op, hordiff_coeff, domain)
+!    case("hordiff_colocated")
+!        hordiff_op = hordiff_colocated_t()
+case("hordiff_scalar_Ah")
+        call create_scalar_hordiff_operator(hordiff_op, hordiff_coeff, domain)
     case default
         call domain%parcomm%abort("Unknown hordiff_op_name")
     end select
@@ -137,7 +136,7 @@ subroutine create_Cgrid_hordiff_curl_operator(hordiff_op, hordiff_coeff, domain)
 
 end subroutine create_Cgrid_hordiff_curl_operator
 
-subroutine create_scalar_Ah_hordiff_operator(hordiff_op, hordiff_coeff, domain)
+subroutine create_scalar_hordiff_operator(hordiff_op, hordiff_coeff, domain)
 
     use hordiff_scalar_mod,    only : hordiff_scalar_t
     use div_factory_mod,       only : create_div_operator
@@ -164,9 +163,9 @@ subroutine create_scalar_Ah_hordiff_operator(hordiff_op, hordiff_coeff, domain)
     call create_grid_field(hordiff_scalar%gxt, halo_width, 0, domain%mesh_y)
     call create_grid_field(hordiff_scalar%gyt, halo_width, 0, domain%mesh_x)
 
-    hordiff_scalar%div_op = create_div_operator(domain, "divergence_ah_c_sbp21")
-    hordiff_scalar%grad_op = create_grad_operator(domain, "gradient_ah_c21_sbp_ecs")
-    hordiff_scalar%co2contra_op = create_co2contra_operator(domain, "co2contra_ah_c_sbp21")
+    hordiff_scalar%div_op = create_div_operator(domain, "divergence_ch_sbp21")
+    hordiff_scalar%grad_op = create_grad_operator(domain, "gradient_ch_sbp21")
+    hordiff_scalar%co2contra_op = create_co2contra_operator(domain, "co2contra_ch_sbp21")
 
     hx = domain%mesh_xy%tile(domain%mesh_xy%ts)%hx
 
@@ -175,6 +174,6 @@ subroutine create_scalar_Ah_hordiff_operator(hordiff_op, hordiff_coeff, domain)
 
     call move_alloc(hordiff_scalar, hordiff_op)
 
-end subroutine create_scalar_Ah_hordiff_operator
+end subroutine create_scalar_hordiff_operator
 
 end module hordiff_factory_mod
