@@ -246,6 +246,23 @@ function create_symm_halo_exchange_Ah(partition, parcomm, topology, halo_width, 
 
 end function create_symm_halo_exchange_Ah
 
+function create_symmetric_halo_vec_exchange_Ch(partition, parcomm, topology, halo_width, halo_type) result(exchange)
+
+    use exchange_halo_Ch_mod, only : exchange_2D_halo_Ch_t
+
+    type(partition_t), target, intent(in) :: partition
+    class(topology_t),         intent(in) :: topology
+    integer(kind=4),           intent(in) :: halo_width
+    character(*),              intent(in) :: halo_type
+    type(parcomm_t),           intent(in) :: parcomm
+
+    type(exchange_2D_halo_Ch_t) :: exchange
+
+    exchange%exch_u = create_symm_halo_vec_exchange_U_points(partition, parcomm, topology, halo_width, halo_type)
+    exchange%exch_v = create_symm_halo_vec_exchange_V_points(partition, parcomm, topology, halo_width, halo_type)
+
+end function create_symmetric_halo_vec_exchange_Ch
+
 function create_symmetric_halo_vec_exchange_C(partition, parcomm, topology, halo_width, halo_type) result(exchange)
 
     use exchange_halo_C_mod, only : exchange_2D_halo_C_t
@@ -337,7 +354,7 @@ function create_symm_halo_vec_exchange_U_points(partition, parcomm, topology, ha
 
             call topology%transform_tile_coords(remote_panel, remote_tile,     &
                                                 local_panel,  temp_tile,       &
-                                                partition%nx_u, partition%ny_u)
+                                        partition%tiles_x%ni, partition%tiles_x%nj)
 
             !recv exchange. +1 to x halo_width to account for edge points
             if (remote_panel /= local_panel) halo_width_x = halo_width+1
@@ -369,7 +386,7 @@ function create_symm_halo_vec_exchange_U_points(partition, parcomm, topology, ha
                 remote_tile => partition%tile_x(remote_ind)
                 call topology%transform_tile_coords(remote_panel, remote_tile, &
                                                     local_panel, temp_tile,     &
-                                                    partition%nx_v, partition%ny_v)
+                                                    partition%tiles_y%Ni, partition%tiles_y%Nj)
                 !send exchange. +1 to y halo_width to account for edge points
                 if (remote_panel /= local_panel) halo_width_y = halo_width+1
                 call find_tiles_halo_intersection(temp_tile, halo_width_x, halo_width_y, &
@@ -487,7 +504,7 @@ function create_symm_halo_vec_exchange_V_points(partition, parcomm, topology, ha
 
             call topology%transform_tile_coords(remote_panel, remote_tile,     &
                                                 local_panel, temp_tile,        &
-                                                partition%nx_v, partition%ny_v)
+                                                partition%tiles_y%Ni, partition%tiles_y%Nj)
 
             !recv exchange. +1 to y halo_width to account for edge points
             if (remote_panel /= local_panel) halo_width_y = halo_width+1
@@ -519,7 +536,7 @@ function create_symm_halo_vec_exchange_V_points(partition, parcomm, topology, ha
                 remote_tile => partition%tile_y(remote_ind)
                 call topology%transform_tile_coords(remote_panel, remote_tile,   &
                                                     local_panel, temp_tile,     &
-                                                    partition%nx_u, partition%ny_u)
+                                                    partition%tiles_x%Ni, partition%tiles_x%Nj)
                 !send exchange. +1 to x halo_width to account for edge points
                 if (remote_panel /= local_panel) halo_width_x = halo_width+1
                 call find_tiles_halo_intersection(temp_tile, halo_width_x, halo_width_y, &
