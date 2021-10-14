@@ -2,6 +2,7 @@ module abstract_hordiff_mod
 
 use grid_field_mod, only : grid_field_t
 use domain_mod,     only : domain_t
+use mesh_mod,       only : mesh_t
 
 implicit none
 
@@ -14,10 +15,11 @@ end type hordiff_operator_t
 
 contains
 
-subroutine calc_diff(this, f_tend, f, domain)
+subroutine calc_diff(this, f_tend, f, mesh, domain)
 
     class(hordiff_operator_t), intent(inout) :: this
     type(grid_field_t),        intent(inout) :: f_tend, f
+    type(mesh_t),              intent(in)    :: mesh
     type(domain_t),            intent(in)    :: domain
 
 

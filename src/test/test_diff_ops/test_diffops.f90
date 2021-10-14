@@ -11,7 +11,7 @@ use key_value_mod,    only : key_value_r8_t
 implicit none
 
 real(kind=8) :: err
-type(key_value_r8_t)  :: errs
+type(err_container_t)  :: errs
 integer(kind=4), parameter :: Ns(3) = [32,64,128]
 
 call init_global_parallel_enviroment()
@@ -167,17 +167,17 @@ end if
 !     print "(A,4E15.7)", "Err: ", errs%values
 ! end if
 
-! errs = test_co2contra(N=32,co2contra_oper_name="co2contra_c_sbp21",staggering="C")
-! if(parcomm_global%myid == 0) then
-!     print *, "co2contra c sbp21, C-grid"
-!     print "(A,4E15.7)", "Err: ", errs%values
-! end if
-!
-! errs = test_co2contra(N=32,co2contra_oper_name="co2contra_c_sbp42",staggering="C")
-! if(parcomm_global%myid == 0) then
-!     print *, "co2contra c sbp42, C-grid"
-!     print "(A,4E15.7)", "Err: ", errs%values
-! end if
+errs = test_co2contra(N=32,co2contra_oper_name="co2contra_c_sbp21",staggering="C")
+if(parcomm_global%myid == 0) then
+    print *, "co2contra c sbp21, C-grid"
+    print "(A,4E15.7)", "Err: ", errs%values
+end if
+
+errs = test_co2contra(N=32,co2contra_oper_name="co2contra_c_sbp42",staggering="C")
+if(parcomm_global%myid == 0) then
+    print *, "co2contra c sbp42, C-grid"
+    print "(A,4E15.7)", "Err: ", errs%values
+end if
 
 ! call test_conv(operator_name="gradient_c_sbp21",staggering="C",Ns=Ns)
 ! call test_conv(operator_name="divergence_c_sbp21",staggering="C",Ns=Ns)

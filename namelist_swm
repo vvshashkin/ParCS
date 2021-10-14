@@ -16,9 +16,10 @@
     co2contra_op_name = 'co2contra_colocated',
     massflux_op_name  = 'massflux_colocated',
     quadrature_name   = 'SBP_Ah63_quadrature',
-    hordiff_op_name   = 'hordiff_colocated',
+    hordiff_op_name   = 'hordiff_scalar_Ah',
+    biharm_div_coeff  = 0.025,
     dt=900.0,
-    tau_write = 3600.0,
+    tau_write = 900.0,
     tau_diagnostics = 36000.0
     simulation_time_days  = 0.0,
     simulation_time_hours = 144.0,

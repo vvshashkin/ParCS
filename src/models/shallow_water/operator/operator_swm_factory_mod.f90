@@ -90,14 +90,8 @@ subroutine create_swm_operator(operator, grav, swm_config, domain)
     call create_grid_field(swm_op%KE_diag_v,  0, 0, domain%mesh_v)
     call create_grid_field(swm_op%PE_diag,    0, 0, domain%mesh_p)
 
-    call create_hordiff_operator(swm_op%hordiff_op, swm_config%hordiff_op_name, &
+    call create_hordiff_operator(swm_op%hordiff_uv, swm_config%hordiff_op_name, &
                                  swm_config%biharm_diff_coeff, domain)
-
-    ! call create_hordiff_operator(swm_op%hordiff_curl, "hordiff_c_biharm_curl", &
-    !                              swm_config%biharm_diff_coeff, domain)
-    !
-    ! call create_hordiff_operator(swm_op%hordiff_div, "hordiff_c_biharm_div", &
-    !                              swm_config%biharm_diff_coeff, domain)
 
     call move_alloc(swm_op, operator)
 
