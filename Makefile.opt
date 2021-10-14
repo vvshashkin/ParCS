@@ -297,6 +297,7 @@ $(DOBJ)exchange_factory_mod.o: src/parallel/exchange_factory_mod.f90 \
 	$(DOBJ)topology_mod.o \
 	$(DOBJ)tile_mod.o \
 	$(DOBJ)exchange_halo_mod.o \
+	$(DOBJ)exchange_halo_ch_mod.o \
 	$(DOBJ)exchange_halo_c_mod.o \
 	$(DOBJ)exchange_abstract_mod.o \
 	$(DOBJ)exchange_gather_mod.o
@@ -325,6 +326,16 @@ $(DOBJ)exchange_gather_mod.o: src/parallel/exchange_gather_mod.f90 \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)exchange_abstract_mod.o \
 	$(DOBJ)buffer_mod.o \
+	$(DOBJ)parcomm_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)exchange_halo_ch_mod.o: src/parallel/exchange_halo_Ch_mod.f90 \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)exchange_abstract_mod.o \
+	$(DOBJ)exchange_halo_mod.o \
+	$(DOBJ)buffer_mod.o \
+	$(DOBJ)tile_mod.o \
 	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -1569,7 +1580,9 @@ $(DOBJ)test_mod.o: src/test/test_exch/test_mod.f90 \
 	$(DOBJ)exchange_halo_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
 	$(DOBJ)test_fields_mod.o \
-	$(DOBJ)exchange_halo_c_mod.o
+	$(DOBJ)exchange_halo_c_mod.o \
+	$(DOBJ)exchange_halo_ch_mod.o \
+	$(DOBJ)mesh_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

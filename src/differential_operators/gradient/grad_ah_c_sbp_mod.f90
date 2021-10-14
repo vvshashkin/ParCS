@@ -64,6 +64,7 @@ subroutine calc_grad_on_tile(gx, gy, f, sbp_op, scale, mesh_x, mesh_y, mesh_xy)
 
         dx_tile%ks = k; dx_tile%ke = k
         call sbp_op%apply(gx, dx_tile, mesh_y%nx, 'x', f)
+        call sbp_op%add_penalty(gx,dx_tile,mesh_y%nx,'x','at_center',f)
 
         do j = dx_tile%js, dx_tile%je
             do i = dx_tile%is, dx_tile%ie
@@ -73,6 +74,7 @@ subroutine calc_grad_on_tile(gx, gy, f, sbp_op, scale, mesh_x, mesh_y, mesh_xy)
 
         dy_tile%ks = k; dy_tile%ke = k
         call sbp_op%apply(gy, dy_tile, mesh_x%ny, 'y', f)
+        call sbp_op%add_penalty(gy,dy_tile,mesh_x%ny,'y','at_center',f)
 
         do j = dy_tile%js, dy_tile%je
             do i = dy_tile%is, dy_tile%ie

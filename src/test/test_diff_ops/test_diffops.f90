@@ -11,7 +11,7 @@ use key_value_mod,    only : key_value_r8_t
 implicit none
 
 real(kind=8) :: err
-type(err_container_t)  :: errs
+type(key_value_r8_t)  :: errs
 integer(kind=4), parameter :: Ns(3) = [32,64,128]
 
 call init_global_parallel_enviroment()
@@ -45,12 +45,17 @@ if(parcomm_global%myid == 0) then
     print *, "divergence_c_sbp21"
     print "(A,5E15.7)", "Err: ", errs%values
 end if
-
-errs = test_div(N=32,div_oper_name="divergence_c_sbp42",staggering="C")
+errs = test_div(N=64,div_oper_name="divergence_ah_c_sbp21",staggering="Ah_C")
 if(parcomm_global%myid == 0) then
-    print *, "divergence_c_sbp42"
+    print *, "divergence_ah_c_sbp21"
     print "(A,5E15.7)", "Err: ", errs%values
 end if
+!
+! errs = test_div(N=32,div_oper_name="divergence_c_sbp42",staggering="C")
+! if(parcomm_global%myid == 0) then
+!     print *, "divergence_c_sbp42"
+!     print "(A,5E15.7)", "Err: ", errs%values
+! end if
 
 ! errs = test_div(N=32,div_oper_name="divergence_ah2",staggering="Ah")
 ! if(parcomm_global%myid == 0) then
@@ -123,6 +128,18 @@ end if
 !     print *, "gradient_c_sbp42"
 !     print "(A,4E15.7)", "Err: ", errs%values
 ! end if
+!
+! errs = test_grad(N=32,grad_oper_name="gradient_ah_c21_sbp_ecs",staggering="Ah_C")
+! if(parcomm_global%myid == 0) then
+!     print *, "gradient_ah_c21_sbp_ecs"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+
+! errs = test_grad(N=32,grad_oper_name="gradient_ah_c42_sbp_ecs",staggering="Ah_C")
+! if(parcomm_global%myid == 0) then
+!     print *, "gradient_ah_c21_sbp_ecs"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
 
 ! errs = test_curl(N=32,curl_oper_name="curl_divergence_ah2",staggering="Ah")
 ! if(parcomm_global%myid == 0) then
@@ -167,17 +184,17 @@ end if
 !     print "(A,4E15.7)", "Err: ", errs%values
 ! end if
 
-errs = test_co2contra(N=32,co2contra_oper_name="co2contra_c_sbp21",staggering="C")
-if(parcomm_global%myid == 0) then
-    print *, "co2contra c sbp21, C-grid"
-    print "(A,4E15.7)", "Err: ", errs%values
-end if
-
-errs = test_co2contra(N=32,co2contra_oper_name="co2contra_c_sbp42",staggering="C")
-if(parcomm_global%myid == 0) then
-    print *, "co2contra c sbp42, C-grid"
-    print "(A,4E15.7)", "Err: ", errs%values
-end if
+! errs = test_co2contra(N=32,co2contra_oper_name="co2contra_c_sbp21",staggering="C")
+! if(parcomm_global%myid == 0) then
+!     print *, "co2contra c sbp21, C-grid"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+!
+! errs = test_co2contra(N=32,co2contra_oper_name="co2contra_c_sbp42",staggering="C")
+! if(parcomm_global%myid == 0) then
+!     print *, "co2contra c sbp42, C-grid"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
 
 ! call test_conv(operator_name="gradient_c_sbp21",staggering="C",Ns=Ns)
 ! call test_conv(operator_name="divergence_c_sbp21",staggering="C",Ns=Ns)

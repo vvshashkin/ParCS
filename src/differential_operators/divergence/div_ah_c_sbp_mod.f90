@@ -14,7 +14,7 @@ implicit none
 
 type, public, extends(div_operator_t) :: div_ah_c_sbp_t
     type(grid_field_t)                 :: Gu, Gv
-    class(exchange_t), allocatable     :: exch_uv_interior
+    class(exchange_t), allocatable     :: exch_uv
     class(halo_t), allocatable         :: sync_edges
     class(sbp_operator_t), allocatable :: sbp_op
 contains
@@ -38,8 +38,7 @@ subroutine calc_div_ah_sbp(this, div, u, v, domain)
         call multiply_uv_by_G_tile(this%Gv%tile(t), v%tile(t), domain%mesh_x%tile(t))
     end do
 
-    !WORKAROUND
-    call this%exch_uv_interior%do_vec(this%Gv,this%Gu,domain%parcomm)
+    call this%exch_uv%do_vec(this%Gu,this%Gv,domain%parcomm)
 
     do t = domain%partition%ts, domain%partition%te
         call calc_div_on_tile(div%tile(t), this%Gu%tile(t), this%Gv%tile(t),   &
@@ -95,7 +94,10 @@ subroutine calc_div_on_tile(div, Gu, Gv, sbp_op, scale, mesh_xy)
         div_tile%ks = k; div_tile%ke = k
 
         call sbp_op%apply(Dx, div_tile, div_tile, mesh_xy%nx, 'x', Gu)
+        call sbp_op%add_penalty(Dx,div_tile,div_tile,mesh_xy%nx,'x','at_interface',Gu)
+
         call sbp_op%apply(Dy, div_tile, div_tile, mesh_xy%ny, 'y', Gv)
+        call sbp_op%add_penalty(Dy,div_tile,div_tile,mesh_xy%ny,'y','at_interface',Gv)
 
         do j = mesh_xy%js, mesh_xy%je
             do i = mesh_xy%is, mesh_xy%ie
