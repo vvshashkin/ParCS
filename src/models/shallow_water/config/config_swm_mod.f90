@@ -18,7 +18,7 @@ type, public, extends(config_t) :: config_swm_t
     character(:), allocatable :: co2contra_op_name
     character(:), allocatable :: quadrature_name
     character(:), allocatable :: hordiff_op_name
-    real(kind=8)              :: biharm_div_coeff = 0.0_8
+    real(kind=8)              :: biharm_diff_coeff = 0.0_8
     real(kind=8)              :: dt              = 180.0_8
     real(kind=8)              :: tau_write       = 180.0_8
     real(kind=8)              :: tau_diagnostics = 180.0_8
@@ -46,7 +46,7 @@ subroutine parse(this, config_string)
     character(len=255) :: co2contra_op_name
     character(len=255) :: quadrature_name
     character(len=255) :: hordiff_op_name
-    real(kind=8)       :: biharm_div_coeff = 0.0_8
+    real(kind=8)       :: biharm_diff_coeff = 0.0_8
     real(kind=8)       :: dt = 180.0
     real(kind=8)       :: tau_write = 180.0
     real(kind=8)       :: tau_diagnostics = 180.0
@@ -58,7 +58,7 @@ subroutine parse(this, config_string)
     namelist /shallow_water_model/ div_op_name, grad_op_name, curl_op_name, &
                                    coriolis_op_name, KE_op_name, massflux_op_name, &
                                    co2contra_op_name, quadrature_name, hordiff_op_name, &
-                                   biharm_div_coeff, &
+                                   biharm_diff_coeff, &
                                    dt, tau_write, tau_diagnostics, &
                                    simulation_time_sec, simulation_time_min, &
                                    simulation_time_hours, simulation_time_days
@@ -76,7 +76,7 @@ subroutine parse(this, config_string)
     this%co2contra_op_name = trim(co2contra_op_name)
     this%quadrature_name   = trim(quadrature_name)
     this%hordiff_op_name   = trim(hordiff_op_name)
-    this%biharm_div_coeff = biharm_div_coeff
+    this%biharm_diff_coeff = biharm_diff_coeff
     this%dt = dt
     this%tau_write = tau_write
     this%tau_diagnostics = tau_diagnostics

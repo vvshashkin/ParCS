@@ -21,6 +21,8 @@ subroutine create_hordiff_operator(hordiff_op, hordiff_op_name, hordiff_coeff, d
         call create_Cgrid_hordiff_div_operator(hordiff_op, hordiff_coeff, domain)
     case("hordiff_c_biharm_curl")
         call create_Cgrid_hordiff_curl_operator(hordiff_op, hordiff_coeff, domain)
+    case("hordiff_c_biharm_curl_div")
+        call create_Cgrid_hordiff_curl_div_operator(hordiff_op, hordiff_coeff, domain)
     case("hordiff_colocated")
         hordiff_op = hordiff_colocated_t()
     case default
@@ -29,6 +31,33 @@ subroutine create_hordiff_operator(hordiff_op, hordiff_op_name, hordiff_coeff, d
 
 end subroutine create_hordiff_operator
 
+subroutine create_Cgrid_hordiff_curl_div_operator(hordiff_op, hordiff_coeff, domain)
+
+    use hordiff_Cgrid_mod,     only : hordiff_c_curl_div_t
+
+    class(hordiff_operator_t), allocatable, intent(out) :: hordiff_op
+    real(kind=8),                           intent(in)  :: hordiff_coeff
+    type(domain_t),                         intent(in)  :: domain
+
+    type(hordiff_c_curl_div_t), allocatable :: hordiff_curl_div
+
+    integer(kind=4) :: halo_width
+    real(kind=8)    :: hx
+
+    allocate(hordiff_curl_div)
+
+    !WORKAROUND
+    halo_width = 4
+
+    call create_grid_field(hordiff_curl_div%u_tend,  halo_width, 0, domain%mesh_u)
+    call create_grid_field(hordiff_curl_div%v_tend,  halo_width, 0, domain%mesh_v)
+
+    call create_Cgrid_hordiff_curl_operator(hordiff_curl_div%curl_diff_op, hordiff_coeff, domain)
+    call create_Cgrid_hordiff_div_operator(hordiff_curl_div%div_diff_op, hordiff_coeff, domain)
+
+    call move_alloc(hordiff_curl_div, hordiff_op)
+
+end subroutine create_Cgrid_hordiff_curl_div_operator
 
 subroutine create_Cgrid_hordiff_div_operator(hordiff_op, hordiff_coeff, domain)
 
