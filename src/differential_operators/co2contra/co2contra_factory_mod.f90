@@ -4,7 +4,7 @@ use domain_mod,              only : domain_t
 use abstract_co2contra_mod,  only : co2contra_operator_t
 use co2contra_colocated_mod, only : co2contra_colocated_t
 use co2contra_Cgrid_mod,     only : co2contra_c_sbp_t, co2contra_c_sbp_new_t!, co2contra_c_halo_t
-use co2contra_ah_c_mod,      only : co2contra_ah_c_sbp_t
+use co2contra_ch_mod,        only : co2contra_ch_sbp_t
 use parcomm_mod,             only : parcomm_global
 use exchange_factory_mod,    only : create_symmetric_halo_vec_exchange_C
 use sbp_factory_mod,         only : create_sbp_operator
@@ -26,8 +26,10 @@ function create_co2contra_operator(domain, co2contra_operator_name) result(co2co
         co2contra = create_co2contra_c_sbp_operator(domain, co2contra_operator_name)
     case("co2contra_c_sbp21_new", "co2contra_c_sbp42_new")
         co2contra = create_co2contra_c_sbp_new_operator(domain, co2contra_operator_name)
-    case("co2contra_ah_c_sbp21")
-        co2contra = create_co2contra_ah_c_sbp_operator(domain, co2contra_operator_name)
+    case("co2contra_ch_sbp21")
+        co2contra = create_co2contra_ch_sbp_operator(domain, co2contra_operator_name)
+    case("co2contra_ch_sbp42")
+        co2contra = create_co2contra_ch_sbp_operator(domain, co2contra_operator_name)
     case default
         call parcomm_global%abort("unknown co2contra operator: "//co2contra_operator_name)
     end select
@@ -96,7 +98,7 @@ function create_co2contra_c_sbp_new_operator(domain, co2contra_operator_name) re
 
 end function create_co2contra_c_sbp_new_operator
 
-function create_co2contra_ah_c_sbp_operator(domain, co2contra_operator_name) result(co2contra)
+function create_co2contra_ch_sbp_operator(domain, co2contra_operator_name) result(co2contra)
 
     use interpolator_w2v_factory_mod, only : create_w2v_interpolator
     use interpolator_v2w_factory_mod, only : create_v2w_interpolator
@@ -104,7 +106,7 @@ function create_co2contra_ah_c_sbp_operator(domain, co2contra_operator_name) res
 
     type(domain_t),             intent(in) :: domain
     character(len=*),           intent(in) :: co2contra_operator_name
-    type(co2contra_ah_c_sbp_t)             :: co2contra
+    type(co2contra_ch_sbp_t)               :: co2contra
 
     integer(kind=4) :: halo_width
 
@@ -114,9 +116,12 @@ function create_co2contra_ah_c_sbp_operator(domain, co2contra_operator_name) res
     co2contra%operator_name = co2contra_operator_name
 
     select case(co2contra_operator_name)
-    case("co2contra_ah_c_sbp21")
+    case("co2contra_ch_sbp21")
         call create_w2v_interpolator(co2contra%interp_w2v_op, "W21_stagered_interp_c2i", domain)
         call create_v2w_interpolator(co2contra%interp_v2w_op, "W21_stagered_interp_i2c", domain)
+    case("co2contra_ch_sbp42")
+        call create_w2v_interpolator(co2contra%interp_w2v_op, "W42_stagered_interp_c2i", domain)
+        call create_v2w_interpolator(co2contra%interp_v2w_op, "W42_stagered_interp_i2c", domain)
     case default
         call parcomm_global%abort("unknown co2contra_c_sbp operator "// co2contra_operator_name)
     end select
@@ -124,7 +129,7 @@ function create_co2contra_ah_c_sbp_operator(domain, co2contra_operator_name) res
     call create_grid_field(co2contra%uw, halo_width, 0, domain%mesh_o)
     call create_grid_field(co2contra%vw, halo_width, 0, domain%mesh_o)
 
-end function create_co2contra_ah_c_sbp_operator
+end function create_co2contra_ch_sbp_operator
 
 ! function create_co2contra_c_halo_operator(domain) result(co2contra)
 !

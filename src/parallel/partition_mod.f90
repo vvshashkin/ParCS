@@ -109,7 +109,15 @@ subroutine init(this, Nh, Nz, num_tiles, myid, Np, staggering_type, strategy)
         this%tile_u = this%tile_x
         this%tile_v = this%tile_y
         this%tile_p = this%tile_o
+    else if (staggering_type == 'Ch') then
+        this%nx_u = this%nh
+        this%ny_u = this%nh+1
+        this%nx_v = this%nh+1
+        this%ny_v = this%nh
 
+        this%tile_u = this%tile_y
+        this%tile_v = this%tile_x
+        this%tile_p = this%tile_xy
     else
         call parcomm_global%abort('Unknown staggering_type in partition initialization!')
     end if
@@ -168,6 +176,12 @@ subroutine init(this, Nh, Nz, num_tiles, myid, Np, staggering_type, strategy)
         this%tiles_u = this%tiles_x
         this%tiles_v = this%tiles_y
         this%tiles_p = this%tiles_o
+
+    else if (staggering_type == 'Ch') then
+
+        this%tiles_u = this%tiles_y
+        this%tiles_v = this%tiles_x
+        this%tiles_p = this%tiles_xy
 
     else
         call parcomm_global%abort('Unknown staggering_type in partition initialization!')

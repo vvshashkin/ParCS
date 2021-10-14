@@ -87,25 +87,14 @@ type(key_value_r8_t) function test_div(N,div_oper_name,staggering) result(errs)
     type(domain_t), target      :: domain
     class(div_operator_t), allocatable :: div_op
 
-    type(mesh_t), pointer :: mesh_u, mesh_v
+    call create_domain(domain, "cube", staggering, N, nz)
 
-    !WORKAROUND
-    if (staggering == "Ah_C") then
-        call create_domain(domain, "cube", "Ah", N, nz)
-        mesh_u => domain%mesh_y
-        mesh_v => domain%mesh_x
-    else
-        call create_domain(domain, "cube", staggering, N, nz)
-        mesh_u => domain%mesh_u
-        mesh_v => domain%mesh_v
-    end if
-
-    call create_grid_field(u, ex_halo_width, 0, mesh_u)
-    call create_grid_field(v, ex_halo_width, 0, mesh_v)
+    call create_grid_field(u, ex_halo_width, 0, domain%mesh_u)
+    call create_grid_field(v, ex_halo_width, 0, domain%mesh_v)
     call create_grid_field(div, ex_halo_width, 0, domain%mesh_p)
     call create_grid_field(div_true, 0, 0, domain%mesh_p)
 
-    call set_vector_test_field(u,v,solid_rot, mesh_u, mesh_v, &
+    call set_vector_test_field(u,v,solid_rot, domain%mesh_u, domain%mesh_v, &
                                0, "contravariant")
 
     div_op = create_div_operator(domain, div_oper_name)
@@ -122,7 +111,7 @@ type(key_value_r8_t) function test_div(N,div_oper_name,staggering) result(errs)
     errs%values(1) = div%maxabs(domain%mesh_p,domain%parcomm)
     errs%values(2) = l2norm(div, domain%mesh_p,domain%parcomm)
 
-    call set_vector_test_field(u,v,cross_polar, mesh_u, mesh_v, &
+    call set_vector_test_field(u,v,cross_polar, domain%mesh_u, domain%mesh_v, &
                                0, "contravariant")
     call set_scalar_test_field(div_true,cross_polar_div, domain%mesh_p,0)
     call div_op%calc_div(div, u, v, domain)
@@ -150,33 +139,21 @@ type(key_value_r8_t) function test_grad(N,grad_oper_name,staggering) result(errs
     integer(kind=4), parameter  :: ex_halo_width = 8
     type(grid_field_t)          :: gx, gy, gx1, gy1, f
     type(grid_field_t)          :: gx_true, gy_true
-    type(domain_t), target      :: domain
+    type(domain_t)              :: domain
     class(grad_operator_t), allocatable :: grad_op
 
-    type(mesh_t), pointer :: mesh_u, mesh_v
+    call create_domain(domain, "cube", staggering, N, nz)
 
-
-    !WORKAROUND
-    if (staggering == "Ah_C") then
-        call create_domain(domain, "cube", "Ah", N, nz)
-        mesh_u => domain%mesh_y
-        mesh_v => domain%mesh_x
-    else
-        call create_domain(domain, "cube", staggering, N, nz)
-        mesh_u => domain%mesh_u
-        mesh_v => domain%mesh_v
-    end if
-
-    call create_grid_field(gx, 8, 0, mesh_u)
-    call create_grid_field(gy, 8, 0, mesh_v)
-    call create_grid_field(gx1,1, 0, mesh_u)
-    call create_grid_field(gy1,1, 0, mesh_v)
-    call create_grid_field(gx_true, 1, 0, mesh_u)
-    call create_grid_field(gy_true, 1, 0, mesh_v)
+    call create_grid_field(gx, 8, 0, domain%mesh_u)
+    call create_grid_field(gy, 8, 0, domain%mesh_v)
+    call create_grid_field(gx1,1, 0, domain%mesh_u)
+    call create_grid_field(gy1,1, 0, domain%mesh_v)
+    call create_grid_field(gx_true, 1, 0, domain%mesh_u)
+    call create_grid_field(gy_true, 1, 0, domain%mesh_v)
     call create_grid_field(f, ex_halo_width, 0, domain%mesh_p)
 
     call set_scalar_test_field(f,xyz_f, domain%mesh_p,0)
-    call set_vector_test_field(gx_true, gy_true, xyz_grad, mesh_u, mesh_v, 0, "covariant")
+    call set_vector_test_field(gx_true, gy_true, xyz_grad, domain%mesh_u, domain%mesh_v, 0, "covariant")
 
     grad_op = create_grad_operator(domain, grad_oper_name)
     call grad_op%calc_grad(gx,gy,f,domain)
@@ -185,12 +162,12 @@ type(key_value_r8_t) function test_grad(N,grad_oper_name,staggering) result(errs
     errs%keys(1)%str = "xyz linf"
     errs%keys(2)%str = "xyz l2"
 
-    call gx%assign(domain%mesh_u%scale, gx, -1.0_8, gx_true, mesh_u)
-    call gy%assign(domain%mesh_v%scale, gy, -1.0_8, gy_true, mesh_v)
-    errs%values(1) = gx%maxabs(mesh_u, domain%parcomm)  + &
-                     gy%maxabs(mesh_v, domain%parcomm)
-    errs%values(2) = l2norm(gx, mesh_u, domain%parcomm) + &
-                     l2norm(gy, mesh_v, domain%parcomm)
+    call gx%assign(domain%mesh_u%scale, gx, -1.0_8, gx_true, domain%mesh_u)
+    call gy%assign(domain%mesh_v%scale, gy, -1.0_8, gy_true, domain%mesh_v)
+    errs%values(1) = gx%maxabs(domain%mesh_u, domain%parcomm)  + &
+                     gy%maxabs(domain%mesh_v, domain%parcomm)
+    errs%values(2) = l2norm(gx, domain%mesh_u, domain%parcomm) + &
+                     l2norm(gy, domain%mesh_v, domain%parcomm)
 
     !call stats(gx,domain%mesh_u)
     !call stats(gy,domain%mesh_v)
@@ -214,32 +191,21 @@ type(key_value_r8_t) function test_co2contra(N,co2contra_oper_name,staggering) r
     integer(kind=4), parameter  :: nz = 3
     integer(kind=4), parameter  :: ex_halo_width = 8
     type(grid_field_t)          :: u_cov, v_cov, u_test, v_test, u_true, v_true
-    type(domain_t), target      :: domain
+    type(domain_t)              :: domain
     class(co2contra_operator_t), allocatable :: co2contra_op
 
-    type(mesh_t), pointer :: mesh_u, mesh_v
+    call create_domain(domain, "cube", staggering, N, nz)
 
-    !WORKAROUND
-    if (staggering == "Ah_C") then
-        call create_domain(domain, "cube", "Ah", N, nz)
-        mesh_u => domain%mesh_y
-        mesh_v => domain%mesh_x
-    else
-        call create_domain(domain, "cube", staggering, N, nz)
-        mesh_u => domain%mesh_u
-        mesh_v => domain%mesh_v
-    end if
-
-    call create_grid_field(u_cov, ex_halo_width, 0, mesh_u)
-    call create_grid_field(v_cov, ex_halo_width, 0, mesh_v)
-    call create_grid_field(u_test, ex_halo_width, 0, mesh_u)
-    call create_grid_field(v_test, ex_halo_width, 0, mesh_v)
-    call create_grid_field(u_true, ex_halo_width, 0, mesh_u)
-    call create_grid_field(v_true, ex_halo_width, 0, mesh_v)
+    call create_grid_field(u_cov, ex_halo_width, 0, domain%mesh_u)
+    call create_grid_field(v_cov, ex_halo_width, 0, domain%mesh_v)
+    call create_grid_field(u_test, ex_halo_width, 0, domain%mesh_u)
+    call create_grid_field(v_test, ex_halo_width, 0, domain%mesh_v)
+    call create_grid_field(u_true, ex_halo_width, 0, domain%mesh_u)
+    call create_grid_field(v_true, ex_halo_width, 0, domain%mesh_v)
 
 
-    call set_vector_test_field(u_cov, v_cov, vec_field_gen, mesh_u, mesh_v, 0, "covariant")
-    call set_vector_test_field(u_true, v_true, vec_field_gen, mesh_u, mesh_v, 0, "contravariant")
+    call set_vector_test_field(u_cov, v_cov, vec_field_gen, domain%mesh_u, domain%mesh_v, 0, "covariant")
+    call set_vector_test_field(u_true, v_true, vec_field_gen, domain%mesh_u, domain%mesh_v, 0, "contravariant")
 
     co2contra_op = create_co2contra_operator(domain, co2contra_oper_name)
     call co2contra_op%transform(u_test,v_test,u_cov,v_cov,domain)
@@ -250,12 +216,12 @@ type(key_value_r8_t) function test_co2contra(N,co2contra_oper_name,staggering) r
 
 
 
-    call u_test%update(-1.0_8, u_true, mesh_u)
-    call v_test%update(-1.0_8, v_true, mesh_v)
-    errs%values(1) = u_test%maxabs(mesh_u, domain%parcomm)  + &
-                     v_test%maxabs(mesh_v, domain%parcomm)
-    errs%values(2) = l2norm(u_test, mesh_u, domain%parcomm) + &
-                     l2norm(v_test, mesh_v, domain%parcomm)
+    call u_test%update(-1.0_8, u_true, domain%mesh_u)
+    call v_test%update(-1.0_8, v_true, domain%mesh_v)
+    errs%values(1) = u_test%maxabs(domain%mesh_u, domain%parcomm)  + &
+                     v_test%maxabs(domain%mesh_v, domain%parcomm)
+    errs%values(2) = l2norm(u_test, domain%mesh_u, domain%parcomm) + &
+                     l2norm(v_test, domain%mesh_v, domain%parcomm)
 
 end function test_co2contra
 type(key_value_r8_t) function test_contra2co(N,contra2co_oper_name,staggering) result(errs)
@@ -716,7 +682,7 @@ subroutine test_laplace_spectre(div_operator_name, grad_operator_name, &
     integer(kind=4), parameter  :: nz = 1, nh = 12
     integer(kind=4), parameter  :: ex_halo_width = 8
     type(grid_field_t)          :: f, gx, gy, gxt, gyt, lap
-    type(domain_t), target      :: domain
+    type(domain_t)              :: domain
     class(div_operator_t),  allocatable :: div_op
     class(grad_operator_t), allocatable :: grad_op
     class(co2contra_operator_t), allocatable :: co2contra_op
@@ -724,30 +690,19 @@ subroutine test_laplace_spectre(div_operator_name, grad_operator_name, &
     integer(kind=4) :: npts, ts, te, is, ie, js, je
     integer(kind=4) :: is1, ie1, js1, je1
     integer(kind=4) :: i, j, t, i1, j1, t1, ind, ind1, nx
-    type(mesh_t), pointer :: mesh_u, mesh_v
 
     if(parcomm_global%np>1) then
         call parcomm_global%print("ommiting laplace spectre test, works only in mpi n=1 mode")
         return
     end if
 
-
-    !WORKAROUND
-    if (staggering == "Ah_C") then
-        call create_domain(domain, "cube", "Ah", nh, nz)
-        mesh_u => domain%mesh_y
-        mesh_v => domain%mesh_x
-    else
-        call create_domain(domain, "cube", staggering, nh, nz)
-        mesh_u => domain%mesh_u
-        mesh_v => domain%mesh_v
-    end if
+    call create_domain(domain, "cube", staggering, nh, nz)
 
     call create_grid_field(f,  ex_halo_width, 0, domain%mesh_p)
-    call create_grid_field(gx, ex_halo_width, 0, mesh_u)
-    call create_grid_field(gy, ex_halo_width, 0, mesh_v)
-    call create_grid_field(gxt, ex_halo_width, 0, mesh_u)
-    call create_grid_field(gyt, ex_halo_width, 0, mesh_v)
+    call create_grid_field(gx, ex_halo_width, 0, domain%mesh_u)
+    call create_grid_field(gy, ex_halo_width, 0, domain%mesh_v)
+    call create_grid_field(gxt, ex_halo_width, 0, domain%mesh_u)
+    call create_grid_field(gyt, ex_halo_width, 0, domain%mesh_v)
     call create_grid_field(lap, 1, 0, domain%mesh_p)
 
     grad_op = create_grad_operator(domain, grad_operator_name)

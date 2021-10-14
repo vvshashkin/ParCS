@@ -1,4 +1,4 @@
-module grad_ah_c_sbp_mod
+module grad_ch_sbp_mod
 
 use domain_mod,             only : domain_t
 use abstract_grad_mod,      only : grad_operator_t
@@ -9,17 +9,17 @@ use sbp_operator_mod,       only : sbp_operator_t
 
 implicit none
 
-type, public, extends(grad_operator_t) ::  grad_ah_c_sbp_t
+type, public, extends(grad_operator_t) ::  grad_ch_sbp_t
     class(exchange_t),     allocatable :: exch_scalar_interior
     class(sbp_operator_t), allocatable :: sbp_op
 contains
-    procedure, public :: calc_grad => calc_grad_ah_sbp
-end type grad_ah_c_sbp_t
+    procedure, public :: calc_grad => calc_grad_ch_sbp
+end type grad_ch_sbp_t
 
 contains
 
-subroutine calc_grad_ah_sbp(this, gx, gy, f, domain)
-    class(grad_ah_c_sbp_t), intent(inout) :: this
+subroutine calc_grad_ch_sbp(this, gx, gy, f, domain)
+    class(grad_ch_sbp_t),   intent(inout) :: this
     type(domain_t),         intent(in)    :: domain
     type(grid_field_t),     intent(inout) :: f
     !output:
@@ -35,7 +35,7 @@ subroutine calc_grad_ah_sbp(this, gx, gy, f, domain)
         domain%mesh_x%tile(t), domain%mesh_y%tile(t), domain%mesh_xy%tile(t))
     end do
 
-end subroutine calc_grad_ah_sbp
+end subroutine calc_grad_ch_sbp
 
 subroutine calc_grad_on_tile(gx, gy, f, sbp_op, scale, mesh_x, mesh_y, mesh_xy)
 
@@ -85,4 +85,4 @@ subroutine calc_grad_on_tile(gx, gy, f, sbp_op, scale, mesh_x, mesh_y, mesh_xy)
 
 end subroutine calc_grad_on_tile
 
-end module grad_ah_c_sbp_mod
+end module grad_ch_sbp_mod

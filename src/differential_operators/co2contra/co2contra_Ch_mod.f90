@@ -1,4 +1,4 @@
-module co2contra_ah_c_mod
+module co2contra_ch_mod
 
 use abstract_co2contra_mod, only : co2contra_operator_t
 use grid_field_mod,         only : grid_field_t, tile_field_t
@@ -13,20 +13,20 @@ use interpolator_v2w_mod,   only : interpolator_v2w_t
 
 implicit none
 
-type, extends(co2contra_operator_t), public :: co2contra_ah_c_sbp_t
+type, extends(co2contra_operator_t), public :: co2contra_ch_sbp_t
     character(len=:), allocatable :: operator_name
     type(interpolator_w2v_t) :: interp_w2v_op
     type(interpolator_v2w_t) :: interp_v2w_op
     type(grid_field_t) :: uw, vw
     contains
-        procedure :: transform    => transform_co2contra_ah_c_sbp
+        procedure :: transform    => transform_co2contra_ch_sbp
 !        procedure :: transform2co => transform_contra2co_ah_c_sbp
-end type co2contra_ah_c_sbp_t
+end type co2contra_ch_sbp_t
 
 contains
 
-subroutine transform_co2contra_ah_c_sbp(this, u_contra, v_contra, u_cov, v_cov, domain)
-    class(co2contra_ah_c_sbp_t), intent(inout)  :: this
+subroutine transform_co2contra_ch_sbp(this, u_contra, v_contra, u_cov, v_cov, domain)
+    class(co2contra_ch_sbp_t),    intent(inout)  :: this
     type(domain_t),               intent(in)    :: domain
     type(grid_field_t),           intent(inout) :: u_cov, v_cov
     !output:
@@ -52,7 +52,7 @@ subroutine transform_co2contra_ah_c_sbp(this, u_contra, v_contra, u_cov, v_cov, 
                 domain%mesh_y%tile(t), domain%mesh_x%tile(t))
     end do
 
-end subroutine transform_co2contra_ah_c_sbp
+end subroutine transform_co2contra_ch_sbp
 subroutine start_co2contra_transform_at_w_tile(uw, vw, mesh_w)
 
     type(tile_field_t),     intent(inout) :: uw, vw
@@ -166,4 +166,4 @@ end subroutine finalize_co2contra_transform_at_uv_tile
 !
 ! end subroutine finalize_contra2co_transform_at_uv_tile
 
-end module co2contra_ah_c_mod
+end module co2contra_ch_mod

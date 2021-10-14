@@ -1,4 +1,4 @@
-module div_ah_c_sbp_mod
+module div_ch_sbp_mod
 
 use domain_mod,             only : domain_t
 use abstract_div_mod,       only : div_operator_t
@@ -12,19 +12,19 @@ use mesh_mod,               only : tile_mesh_t
 
 implicit none
 
-type, public, extends(div_operator_t) :: div_ah_c_sbp_t
+type, public, extends(div_operator_t) :: div_ch_sbp_t
     type(grid_field_t)                 :: Gu, Gv
     class(exchange_t), allocatable     :: exch_uv
     class(halo_t), allocatable         :: sync_edges
     class(sbp_operator_t), allocatable :: sbp_op
 contains
-    procedure, public :: calc_div => calc_div_ah_sbp
-end type div_ah_c_sbp_t
+    procedure, public :: calc_div => calc_div_ch_sbp
+end type div_ch_sbp_t
 
 contains
 
-subroutine calc_div_ah_sbp(this, div, u, v, domain)
-    class(div_ah_c_sbp_t),  intent(inout) :: this
+subroutine calc_div_ch_sbp(this, div, u, v, domain)
+    class(div_ch_sbp_t),    intent(inout) :: this
     type(domain_t),         intent(in)    :: domain
     type(grid_field_t),     intent(inout) :: u, v
     !output
@@ -48,7 +48,7 @@ subroutine calc_div_ah_sbp(this, div, u, v, domain)
 
     call this%sync_edges%get_halo_scalar(div,domain,1)
 
-end subroutine calc_div_ah_sbp
+end subroutine calc_div_ch_sbp
 
 subroutine multiply_uv_by_G_tile(Guv, uv, mesh_uv)
 
@@ -108,4 +108,4 @@ subroutine calc_div_on_tile(div, Gu, Gv, sbp_op, scale, mesh_xy)
 
 end subroutine calc_div_on_tile
 
-end module div_ah_c_sbp_mod
+end module div_ch_sbp_mod

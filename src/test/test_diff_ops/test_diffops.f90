@@ -45,11 +45,19 @@ call init_global_parallel_enviroment()
 !     print *, "divergence_c_sbp21"
 !     print "(A,5E15.7)", "Err: ", errs%values
 ! end if
-errs = test_div(N=32,div_oper_name="divergence_ah_c_sbp21",staggering="Ah_C")
+errs = test_div(N=32,div_oper_name="divergence_ch_sbp21",staggering="Ch")
 if(parcomm_global%myid == 0) then
-    print *, "divergence_ah_c_sbp21"
+    print *, "divergence_ch_sbp21"
     print "(A,5E15.7)", "Err: ", errs%values
 end if
+
+errs = test_div(N=32,div_oper_name="divergence_ch_sbp42",staggering="Ch")
+if(parcomm_global%myid == 0) then
+    print *, "divergence_ch_sbp21"
+    print "(A,5E15.7)", "Err: ", errs%values
+end if
+
+
 !
 ! errs = test_div(N=32,div_oper_name="divergence_c_sbp42",staggering="C")
 ! if(parcomm_global%myid == 0) then
@@ -129,9 +137,15 @@ end if
 !     print "(A,4E15.7)", "Err: ", errs%values
 ! end if
 !
-errs = test_grad(N=32,grad_oper_name="gradient_ah_c21_sbp_ecs",staggering="Ah_C")
+errs = test_grad(N=32,grad_oper_name="gradient_ch_sbp21",staggering="Ch")
 if(parcomm_global%myid == 0) then
-    print *, "gradient_ah_c21_sbp_ecs"
+    print *, "gradient_ch_sbp21_ecs"
+    print "(A,4E15.7)", "Err: ", errs%values
+end if
+
+errs = test_grad(N=32,grad_oper_name="gradient_ch_sbp42",staggering="Ch")
+if(parcomm_global%myid == 0) then
+    print *, "gradient_ch_sbp42_ecs"
     print "(A,4E15.7)", "Err: ", errs%values
 end if
 
@@ -184,11 +198,11 @@ end if
 !     print "(A,4E15.7)", "Err: ", errs%values
 ! end if
 
-errs = test_co2contra(N=32,co2contra_oper_name="co2contra_c_sbp21",staggering="C")
-if(parcomm_global%myid == 0) then
-    print *, "co2contra c sbp21, C-grid"
-    print "(A,4E15.7)", "Err: ", errs%values
-end if
+! errs = test_co2contra(N=32,co2contra_oper_name="co2contra_c_sbp21",staggering="C")
+! if(parcomm_global%myid == 0) then
+!     print *, "co2contra c sbp21, C-grid"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
 !
 ! errs = test_co2contra(N=32,co2contra_oper_name="co2contra_c_sbp42",staggering="C")
 ! if(parcomm_global%myid == 0) then
@@ -196,9 +210,15 @@ end if
 !     print "(A,4E15.7)", "Err: ", errs%values
 ! end if
 
-errs = test_co2contra(N=32,co2contra_oper_name="co2contra_ah_c_sbp21", staggering="Ah_C")
+errs = test_co2contra(N=32,co2contra_oper_name="co2contra_ch_sbp21", staggering="Ch")
 if (parcomm_global%myid==0) then
-    print *, "co2contra_ah_c_sbp21"
+    print *, "co2contra_ch_sbp21"
+    print "(A,4E15.7)", "Err: ", errs%values
+end if
+
+errs = test_co2contra(N=32,co2contra_oper_name="co2contra_ch_sbp42", staggering="Ch")
+if (parcomm_global%myid==0) then
+    print *, "co2contra_ch_sbp42"
     print "(A,4E15.7)", "Err: ", errs%values
 end if
 
