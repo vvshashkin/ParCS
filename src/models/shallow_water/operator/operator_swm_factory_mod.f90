@@ -51,6 +51,11 @@ subroutine create_swm_operator(operator, grav, swm_config, domain)
 
     swm_op%co2contra_op = create_co2contra_operator(domain, swm_config%co2contra_op_name)
 
+    call create_hordiff_operator(swm_op%hordiff_uv, swm_config%hordiff_uv_name, &
+                                 swm_config%uv_diff_coeff, domain)
+    call create_hordiff_operator(swm_op%hordiff, swm_config%hordiff_h_name, &
+                                 swm_config%h_diff_coeff, domain)
+
     call create_quadrature(swm_op%quadrature_h, swm_config%quadrature_name, domain%mesh_p)
     call create_quadrature(swm_op%quadrature_u, swm_config%quadrature_name, domain%mesh_u)
     call create_quadrature(swm_op%quadrature_v, swm_config%quadrature_name, domain%mesh_v)
@@ -89,9 +94,6 @@ subroutine create_swm_operator(operator, grav, swm_config, domain)
     call create_grid_field(swm_op%KE_diag_u,  0, 0, domain%mesh_u)
     call create_grid_field(swm_op%KE_diag_v,  0, 0, domain%mesh_v)
     call create_grid_field(swm_op%PE_diag,    0, 0, domain%mesh_p)
-
-    call create_hordiff_operator(swm_op%hordiff_uv, swm_config%hordiff_op_name, &
-                                 swm_config%biharm_diff_coeff, domain)
 
     call move_alloc(swm_op, operator)
 

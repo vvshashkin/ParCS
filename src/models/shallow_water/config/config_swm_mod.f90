@@ -17,8 +17,10 @@ type, public, extends(config_t) :: config_swm_t
     character(:), allocatable :: massflux_op_name
     character(:), allocatable :: co2contra_op_name
     character(:), allocatable :: quadrature_name
-    character(:), allocatable :: hordiff_op_name
-    real(kind=8)              :: biharm_diff_coeff = 0.0_8
+    character(:), allocatable :: hordiff_uv_name
+    character(:), allocatable :: hordiff_h_name
+    real(kind=8)              :: uv_diff_coeff = 0.0_8
+    real(kind=8)              :: h_diff_coeff = 0.0_8
     real(kind=8)              :: dt              = 180.0_8
     real(kind=8)              :: tau_write       = 180.0_8
     real(kind=8)              :: tau_diagnostics = 180.0_8
@@ -45,8 +47,10 @@ subroutine parse(this, config_string)
     character(len=255) :: massflux_op_name
     character(len=255) :: co2contra_op_name
     character(len=255) :: quadrature_name
-    character(len=255) :: hordiff_op_name
-    real(kind=8)       :: biharm_diff_coeff = 0.0_8
+    character(len=255) :: hordiff_uv_name
+    real(kind=8)       :: uv_diff_coeff = 0.0_8
+    character(len=255) :: hordiff_h_name
+    real(kind=8)       :: h_diff_coeff = 0.0_8
     real(kind=8)       :: dt = 180.0
     real(kind=8)       :: tau_write = 180.0
     real(kind=8)       :: tau_diagnostics = 180.0
@@ -57,8 +61,8 @@ subroutine parse(this, config_string)
 
     namelist /shallow_water_model/ div_op_name, grad_op_name, curl_op_name, &
                                    coriolis_op_name, KE_op_name, massflux_op_name, &
-                                   co2contra_op_name, quadrature_name, hordiff_op_name, &
-                                   biharm_diff_coeff, &
+                                   co2contra_op_name, quadrature_name, hordiff_uv_name, &
+                                   uv_diff_coeff, hordiff_h_name, h_diff_coeff, &
                                    dt, tau_write, tau_diagnostics, &
                                    simulation_time_sec, simulation_time_min, &
                                    simulation_time_hours, simulation_time_days
@@ -75,8 +79,10 @@ subroutine parse(this, config_string)
     this%massflux_op_name  = trim(massflux_op_name)
     this%co2contra_op_name = trim(co2contra_op_name)
     this%quadrature_name   = trim(quadrature_name)
-    this%hordiff_op_name   = trim(hordiff_op_name)
-    this%biharm_diff_coeff = biharm_diff_coeff
+    this%hordiff_uv_name   = trim(hordiff_uv_name)
+    this%hordiff_h_name    = trim(hordiff_h_name)
+    this%uv_diff_coeff     = uv_diff_coeff
+    this%h_diff_coeff      = h_diff_coeff
     this%dt = dt
     this%tau_write = tau_write
     this%tau_diagnostics = tau_diagnostics

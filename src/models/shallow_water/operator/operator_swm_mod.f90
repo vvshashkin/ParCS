@@ -98,7 +98,14 @@ subroutine apply(this, vout, vin, domain)
             call vout%u%assign(-1.0_8, this%grad_x, 1.0_8, this%cor_u, domain%mesh_u)
             call vout%v%assign(-1.0_8, this%grad_y, 1.0_8, this%cor_v, domain%mesh_v)
 
+            !continuty eq part
+            call this%div_op%calc_div(this%div, this%hu, this%hv, domain)
+
+            call vout%h%assign(-1.0_8, this%div, domain%mesh_p)
+
+            !Diffusion
             call this%hordiff_uv%calc_diff_vec(this%grad_x, this%grad_y, vin%u, vin%v, domain)
+            call this%hordiff%calc_diff(this%div, vin%h, domain%mesh_p, domain)
 
 !            Gordeys
 !            call this%hordiff%calc_diff(this%grad_x, vin%u, domain%mesh_u, domain)
@@ -106,12 +113,8 @@ subroutine apply(this, vout, vin, domain)
 
             call vout%u%update(1.0_8, this%grad_x, domain%mesh_u)
             call vout%v%update(1.0_8, this%grad_y, domain%mesh_v)
+            call vout%h%update(1.0_8, this%div, domain%mesh_p)
 
-
-            !continuty eq part
-            call this%div_op%calc_div(this%div, this%hu, this%hv, domain)
-
-            call vout%h%assign(-1.0_8, this%div, domain%mesh_p)
 
         class default
             call parcomm_global%abort("swm operator failure: vin of wrong type")

@@ -647,7 +647,7 @@ $(DOBJ)rename_hordiff_colocated_mod.o: src/differential_operators/hordiff/RENAME
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
-$(DOBJ)hordiff_colocated_mod.o: src/differential_operators/hordiff/hordiff_colocated_mod.f90 \
+$(DOBJ)hordiff_scalar_mod.o: src/differential_operators/hordiff/hordiff_scalar_mod.f90 \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)mesh_mod.o \
@@ -668,7 +668,7 @@ $(DOBJ)hordiff_factory_mod.o: src/differential_operators/hordiff/hordiff_factory
 	$(DOBJ)co2contra_factory_mod.o \
 	$(DOBJ)curl_factory_mod.o \
 	$(DOBJ)grad_perp_factory_mod.o \
-	$(DOBJ)hordiff_colocated_mod.o
+	$(DOBJ)hordiff_scalar_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

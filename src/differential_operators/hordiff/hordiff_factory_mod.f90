@@ -24,8 +24,10 @@ subroutine create_hordiff_operator(hordiff_op, hordiff_op_name, hordiff_coeff, d
         call create_Cgrid_hordiff_curl_div_operator(hordiff_op, hordiff_coeff, domain)
 !    case("hordiff_colocated")
 !        hordiff_op = hordiff_colocated_t()
-case("hordiff_scalar_Ah")
-        call create_scalar_hordiff_operator(hordiff_op, hordiff_coeff, domain)
+    case("hordiff_scalar_Ah")
+        call create_scalar_hordiff_operator(hordiff_op, hordiff_coeff, "Ah", domain)
+    case("hordiff_scalar_C")
+        call create_scalar_hordiff_operator(hordiff_op, hordiff_coeff, "C", domain)
     case default
         call domain%parcomm%abort("Unknown hordiff_op_name")
     end select
@@ -136,7 +138,7 @@ subroutine create_Cgrid_hordiff_curl_operator(hordiff_op, hordiff_coeff, domain)
 
 end subroutine create_Cgrid_hordiff_curl_operator
 
-subroutine create_scalar_hordiff_operator(hordiff_op, hordiff_coeff, domain)
+subroutine create_scalar_hordiff_operator(hordiff_op, hordiff_coeff, staggering, domain)
 
     use hordiff_scalar_mod,    only : hordiff_scalar_t
     use div_factory_mod,       only : create_div_operator
@@ -145,6 +147,7 @@ subroutine create_scalar_hordiff_operator(hordiff_op, hordiff_coeff, domain)
 
     class(hordiff_operator_t), allocatable, intent(out) :: hordiff_op
     real(kind=8),                           intent(in)  :: hordiff_coeff
+    character(len=*),                       intent(in)  :: staggering
     type(domain_t),                         intent(in)  :: domain
 
     type(hordiff_scalar_t), allocatable :: hordiff_scalar
@@ -157,17 +160,33 @@ subroutine create_scalar_hordiff_operator(hordiff_op, hordiff_coeff, domain)
     !WORKAROUND
     halo_width = 4
 
-    call create_grid_field(hordiff_scalar%div, halo_width, 0, domain%mesh_xy)
-    call create_grid_field(hordiff_scalar%gx,  halo_width, 0, domain%mesh_y)
-    call create_grid_field(hordiff_scalar%gy,  halo_width, 0, domain%mesh_x)
-    call create_grid_field(hordiff_scalar%gxt, halo_width, 0, domain%mesh_y)
-    call create_grid_field(hordiff_scalar%gyt, halo_width, 0, domain%mesh_x)
+    select case(staggering)
+    case ("Ah")
+        call create_grid_field(hordiff_scalar%div, halo_width, 0, domain%mesh_xy)
+        call create_grid_field(hordiff_scalar%gx,  halo_width, 0, domain%mesh_y)
+        call create_grid_field(hordiff_scalar%gy,  halo_width, 0, domain%mesh_x)
+        call create_grid_field(hordiff_scalar%gxt, halo_width, 0, domain%mesh_y)
+        call create_grid_field(hordiff_scalar%gyt, halo_width, 0, domain%mesh_x)
 
-    hordiff_scalar%div_op = create_div_operator(domain, "divergence_ch_sbp21")
-    hordiff_scalar%grad_op = create_grad_operator(domain, "gradient_ch_sbp21")
-    hordiff_scalar%co2contra_op = create_co2contra_operator(domain, "co2contra_ch_sbp21")
+        hordiff_scalar%div_op = create_div_operator(domain, "divergence_ch_sbp21")
+        hordiff_scalar%grad_op = create_grad_operator(domain, "gradient_ch_sbp21")
+        hordiff_scalar%co2contra_op = create_co2contra_operator(domain, "co2contra_ch_sbp21")
+    case ("C", "A")
+        call create_grid_field(hordiff_scalar%div, halo_width, 0, domain%mesh_o)
+        call create_grid_field(hordiff_scalar%gx,  halo_width, 0, domain%mesh_x)
+        call create_grid_field(hordiff_scalar%gy,  halo_width, 0, domain%mesh_y)
+        call create_grid_field(hordiff_scalar%gxt, halo_width, 0, domain%mesh_x)
+        call create_grid_field(hordiff_scalar%gyt, halo_width, 0, domain%mesh_y)
 
-    hx = domain%mesh_xy%tile(domain%mesh_xy%ts)%hx
+        hordiff_scalar%div_op = create_div_operator(domain, "divergence_c_sbp42")
+        hordiff_scalar%grad_op = create_grad_operator(domain, "gradient_c_sbp21")
+        hordiff_scalar%co2contra_op = create_co2contra_operator(domain, "co2contra_c_sbp42")
+    case default
+        call domain%parcomm%abort("This staggering: "//staggering//&
+                                  "is not currently implemented in create_hordiff_scalar")
+    end select
+
+    hx = domain%mesh_xy%tile(domain%mesh_o%ts)%hx
 
     hordiff_scalar%diff_coeff = hordiff_coeff*domain%mesh_xy%scale*hx
     hordiff_scalar%diff_order = 2
