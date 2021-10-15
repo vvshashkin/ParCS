@@ -46,7 +46,7 @@ subroutine calc_div_ch_sbp(this, div, u, v, domain)
                              domain%mesh_xy%tile(t))
     end do
 
-    call this%sync_edges%get_halo_scalar(div,domain,1)
+    !call this%sync_edges%get_halo_scalar(div,domain,1)
 
 end subroutine calc_div_ch_sbp
 

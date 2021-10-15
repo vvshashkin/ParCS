@@ -107,10 +107,6 @@ subroutine apply(this, vout, vin, domain)
             call this%hordiff_uv%calc_diff_vec(this%grad_x, this%grad_y, vin%u, vin%v, domain)
             call this%hordiff%calc_diff(this%div, vin%h, domain%mesh_p, domain)
 
-!            Gordeys
-!            call this%hordiff%calc_diff(this%grad_x, vin%u, domain%mesh_u, domain)
-!            call this%hordiff%calc_diff(this%grad_y, vin%v, domain%mesh_v, domain)
-
             call vout%u%update(1.0_8, this%grad_x, domain%mesh_u)
             call vout%v%update(1.0_8, this%grad_y, domain%mesh_v)
             call vout%h%update(1.0_8, this%div, domain%mesh_p)

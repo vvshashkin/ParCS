@@ -25,9 +25,11 @@ subroutine create_hordiff_operator(hordiff_op, hordiff_op_name, hordiff_coeff, d
 !    case("hordiff_colocated")
 !        hordiff_op = hordiff_colocated_t()
     case("hordiff_scalar_Ah")
-        call create_scalar_hordiff_operator(hordiff_op, hordiff_coeff, "Ah", domain)
+        call create_scalar_hordiff_operator(hordiff_op, hordiff_coeff, domain, "Ah", isscalar=.true.)
     case("hordiff_scalar_C")
-        call create_scalar_hordiff_operator(hordiff_op, hordiff_coeff, "C", domain)
+        call create_scalar_hordiff_operator(hordiff_op, hordiff_coeff, domain, "C", isscalar=.true.)
+    case("hordiff_vec_Ah")
+        call create_colocated_hordiff_operator(hordiff_op, hordiff_coeff, domain, "Ah")
     case default
         call domain%parcomm%abort("Unknown hordiff_op_name")
     end select
@@ -138,17 +140,20 @@ subroutine create_Cgrid_hordiff_curl_operator(hordiff_op, hordiff_coeff, domain)
 
 end subroutine create_Cgrid_hordiff_curl_operator
 
-subroutine create_scalar_hordiff_operator(hordiff_op, hordiff_coeff, staggering, domain)
+subroutine create_scalar_hordiff_operator(hordiff_op, hordiff_coeff, domain, &
+                                          staggering, isscalar)
 
     use hordiff_scalar_mod,    only : hordiff_scalar_t
     use div_factory_mod,       only : create_div_operator
     use grad_factory_mod,      only : create_grad_operator
     use co2contra_factory_mod, only : create_co2contra_operator
+    use halo_factory_mod,      only : create_halo_procedure
 
     class(hordiff_operator_t), allocatable, intent(out) :: hordiff_op
     real(kind=8),                           intent(in)  :: hordiff_coeff
-    character(len=*),                       intent(in)  :: staggering
     type(domain_t),                         intent(in)  :: domain
+    character(len=*),                       intent(in)  :: staggering
+    logical,                                intent(in)  :: isscalar
 
     type(hordiff_scalar_t), allocatable :: hordiff_scalar
 
@@ -171,6 +176,9 @@ subroutine create_scalar_hordiff_operator(hordiff_op, hordiff_coeff, staggering,
         hordiff_scalar%div_op = create_div_operator(domain, "divergence_ch_sbp21")
         hordiff_scalar%grad_op = create_grad_operator(domain, "gradient_ch_sbp21")
         hordiff_scalar%co2contra_op = create_co2contra_operator(domain, "co2contra_ch_sbp21")
+        if(isscalar) then
+            call create_halo_procedure(hordiff_scalar%edge_sync, domain, 1, "Ah_scalar_sync")
+        end if
     case ("C", "A")
         call create_grid_field(hordiff_scalar%div, halo_width, 0, domain%mesh_o)
         call create_grid_field(hordiff_scalar%gx,  halo_width, 0, domain%mesh_x)
@@ -194,5 +202,33 @@ subroutine create_scalar_hordiff_operator(hordiff_op, hordiff_coeff, staggering,
     call move_alloc(hordiff_scalar, hordiff_op)
 
 end subroutine create_scalar_hordiff_operator
+
+subroutine create_colocated_hordiff_operator(hordiff_op, hordiff_coeff, domain, staggering)
+
+    use hordiff_colocated_mod,    only : hordiff_colocated_t
+    use halo_factory_mod,         only : create_vector_halo_procedure
+
+    class(hordiff_operator_t), allocatable, intent(out) :: hordiff_op
+    real(kind=8),                           intent(in)  :: hordiff_coeff
+    character(len=*),                       intent(in)  :: staggering
+    type(domain_t),                         intent(in)  :: domain
+
+    type(hordiff_colocated_t), allocatable :: hordiff_uv
+
+    allocate(hordiff_uv)
+
+    select case(staggering)
+    case ("Ah")
+        call create_scalar_hordiff_operator(hordiff_uv%hordiff_1comp, hordiff_coeff, domain, &
+                                           "Ah", isscalar=.false.) !WORKAROUND
+        call create_vector_halo_procedure(hordiff_uv%edge_sync, domain, 1, "ecs_Ah_vec_sync_covariant")
+    case default
+        call domain%parcomm%abort("This staggering: "//staggering//&
+                                  "is not currently implemented in create_colocated)hordiff_operator")
+    end select
+
+    call move_alloc(hordiff_uv, hordiff_op)
+
+end subroutine create_colocated_hordiff_operator
 
 end module hordiff_factory_mod

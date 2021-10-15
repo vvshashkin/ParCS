@@ -3,6 +3,7 @@ module hordiff_scalar_mod
 use grid_field_mod, only : grid_field_t
 use domain_mod,     only : domain_t
 use mesh_mod,       only : mesh_t
+use halo_mod,       only : halo_t
 
 use abstract_hordiff_mod,   only : hordiff_operator_t
 use abstract_div_mod,       only : div_operator_t
@@ -18,6 +19,8 @@ type, public, extends(hordiff_operator_t) :: hordiff_scalar_t
     class(div_operator_t),       allocatable :: div_op
     class(grad_operator_t),      allocatable :: grad_op
     class(co2contra_operator_t), allocatable :: co2contra_op
+
+    class(halo_t), allocatable :: edge_sync
 
     type(grid_field_t) :: div, gxt, gyt, gx, gy
 contains
@@ -53,6 +56,10 @@ subroutine calc_diff(this, f_tend, f, mesh, domain)
     end do
 
     coeff = (-1.0_8)**(this%diff_order+1)*this%diff_coeff**(2*this%diff_order)
+
+    if(allocated(this%edge_sync)) then
+        call this%edge_sync%get_halo_scalar(this%div, domain, 1)
+    end if
 
     call f_tend%assign(coeff, this%div, mesh)
 
