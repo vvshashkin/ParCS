@@ -58,12 +58,12 @@ if(parcomm_global%myid == 0) then
 end if
 
 
-!
-! errs = test_div(N=32,div_oper_name="divergence_c_sbp42",staggering="C")
-! if(parcomm_global%myid == 0) then
-!     print *, "divergence_c_sbp42"
-!     print "(A,5E15.7)", "Err: ", errs%values
-! end if
+
+errs = test_div(N=32,div_oper_name="divergence_c_sbp42",staggering="C")
+if(parcomm_global%myid == 0) then
+    print *, "divergence_c_sbp42"
+    print "(A,5E15.7)", "Err: ", errs%values
+end if
 
 ! errs = test_div(N=32,div_oper_name="divergence_ah2",staggering="Ah")
 ! if(parcomm_global%myid == 0) then

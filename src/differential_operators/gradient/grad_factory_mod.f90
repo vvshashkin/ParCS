@@ -180,7 +180,7 @@ function create_grad_ch_sbp_operator(domain, grad_operator_name) result(grad)
         halo_width_interior = 1
         grad%sbp_op = create_sbp_operator("D21_staggered_i2c")
     case ("gradient_ch_sbp42")
-        halo_width_interior = 1
+        halo_width_interior = 3
         grad%sbp_op = create_sbp_operator("D42_staggered_i2c")
     case default
         call parcomm_global%abort("grad_factory_mod, create_grad_ch_sbp_operator"// &

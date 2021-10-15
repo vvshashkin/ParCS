@@ -6,6 +6,10 @@ Err:   0.4870246E+00  0.5140857E+00  0.6245387E+00  0.5850706E+00
 Err:   0.2424860E+00  0.2059406E+00  0.5721728E+00  0.3640763E+00
  divergence_c2
 Err:   0.9560508E-03  0.1467746E-02  0.2998986E-02  0.4134164E-02
+ divergence_ch_sbp21
+Err:   0.1505377E+00  0.1042675E+00  0.4783507E+00  0.2455832E+00
+ divergence_ch_sbp42
+Err:   0.1622280E-01  0.1067899E-01  0.5515300E-01  0.2580486E-01
  divergence_c_sbp21
 Err:   0.9560508E-03  0.1467746E-02  0.2998986E-02  0.4134164E-02
  divergence_c_sbp42
@@ -20,6 +24,10 @@ Err:   0.2207585E-03  0.2835612E-03  0.1706081E-02  0.1892527E-02
 Err:   0.9105131E-03  0.2348801E-02
  gradient_a2_cons
 Err:   0.3836629E+00  0.2471891E+00
+ gradient_ch_sbp21
+Err:   0.2284792E-03  0.5986908E-03
+ gradient_ch_sbp42
+Err:   0.2905307E-03  0.3569389E-03
  gradient_ah21_sbp_ecs
 Err:   0.2515958E-01  0.1220895E-01
  gradient_ah42_sbp_ecs
@@ -54,7 +62,19 @@ Err:   0.2324300E-03  0.2761938E-03  0.7944276E-03  0.5660557E-03
 Err:   0.6001005E-03  0.1661294E-02  0.1230646E-02  0.2303043E-02
  co2contra_c_sbp21
 Err:   0.6735793E-01  0.2572446E-01
+ co2contra_c_sbp21_new
+Err:   0.6735793E-01  0.2572446E-01
+ contra2co_c_sbp21_new
+Err:   0.5299493E-01  0.2580388E-01
  co2contra_c_sbp42
 Err:   0.1313788E-01  0.7356931E-02
+ co2contra_c_sbp42_new
+Err:   0.1313788E-01  0.7356931E-02
+ co2contra_ch_sbp21
+Err:   0.6187488E-01  0.3405089E-01
+ co2contra_ch_sbp42
+Err:   0.5641616E-02  0.3696864E-02
+ contra2co_c_sbp42_new
+Err:   0.1036216E-01  0.6450221E-02
  co2contra_colocated Ah grid
 Err:   0.1554312E-14  0.1383557E-14

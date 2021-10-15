@@ -329,7 +329,7 @@ subroutine add_penalty_center(this, f_out, work_tile, out_tile, nx_out_grid, dir
                     f_out(i,j,k) = f_out(i,j,k)+0.5_8*penalty_l(j)*df
                 end do
             end do
-            do j=max(nx_out_grid-ne_right+1,js), min(ie, nx_out_grid)
+            do j=max(nx_out_grid-ne_right+1,js), min(je, nx_out_grid)
                 do i=is, ie
                     df = f_in%p(i,nx_in_grid+1,k)-f_in%p(i,nx_in_grid,k)
                     ! f_out%p(i,j,k) = f_out%p(i,j,k)+0.5_8*penalty_r(j-nx_out_grid+ne_right)*df
