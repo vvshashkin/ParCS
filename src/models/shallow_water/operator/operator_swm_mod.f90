@@ -12,7 +12,6 @@ use abstract_curl_mod,       only : curl_operator_t
 use abstract_KE_mod,         only : KE_operator_t
 use abstract_massflux_mod,   only : massflux_operator_t
 use abstract_co2contra_mod,  only : co2contra_operator_t
-use abstract_hordiff_mod,    only : hordiff_operator_t
 use abstract_quadrature_mod, only : quadrature_t
 
 use stvec_swm_mod, only : stvec_swm_t
@@ -31,8 +30,6 @@ type, public, extends(operator_t) :: operator_swm_t
     class(KE_operator_t),        allocatable :: KE_op
     class(massflux_operator_t),  allocatable :: massflux_op
     class(co2contra_operator_t), allocatable :: co2contra_op
-    class(hordiff_operator_t),   allocatable :: hordiff_uv
-    class(hordiff_operator_t),   allocatable :: hordiff
     class(quadrature_t),         allocatable :: quadrature_h, quadrature_u, &
                                                 quadrature_v, quadrature_w
 
@@ -102,15 +99,6 @@ subroutine apply(this, vout, vin, domain)
             call this%div_op%calc_div(this%div, this%hu, this%hv, domain)
 
             call vout%h%assign(-1.0_8, this%div, domain%mesh_p)
-
-            !Diffusion
-            call this%hordiff_uv%calc_diff_vec(this%grad_x, this%grad_y, vin%u, vin%v, domain)
-            call this%hordiff%calc_diff(this%div, vin%h, domain%mesh_p, domain)
-
-            call vout%u%update(1.0_8, this%grad_x, domain%mesh_u)
-            call vout%v%update(1.0_8, this%grad_y, domain%mesh_v)
-            call vout%h%update(1.0_8, this%div, domain%mesh_p)
-
 
         class default
             call parcomm_global%abort("swm operator failure: vin of wrong type")

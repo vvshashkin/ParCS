@@ -15,6 +15,9 @@ use outputer_factory_mod,     only : create_master_paneled_outputer,&
 use parcomm_mod,              only : parcomm_global
 use config_swm_mod,           only : config_swm_t
 
+use operator_swm_diff_mod,         only : operator_swm_diff_t
+use operator_swm_diff_factory_mod, only : create_swm_diff_operator
+
 use config_ts2_mod, only : config_ts2_t
 
 use test_fields_mod, only : solid_rotation_t, ts2_height_generator_t
@@ -46,13 +49,13 @@ subroutine run_ts2()
     class(outputer_t),        allocatable :: outputer
     class(outputer_vector_t), allocatable :: outputer_vec
 
+    type(operator_swm_diff_t),   allocatable :: operator_diff
+    class(timescheme_t),         allocatable :: timescheme_diff
+
     integer(kind=4) :: halo_width = 8
 
     character(:), allocatable :: namelist_string
     type(key_value_r8_t) :: diagnostics
-
-    ! real(kind=8),    parameter :: rotation_period = 1.0_8, rotation_axis_angle = 0.0_8*pi/8
-    ! integer(kind=4), parameter :: N_periods=2
 
     real(kind=8)     :: dt
     real(kind=8)     :: tau_write
@@ -93,8 +96,10 @@ subroutine run_ts2()
     call create_stvec_swm(state_err, domain, 0         , 0)
 
     call create_swm_operator(operator, config_ts2%grav, config, domain)
-
     call create_timescheme(timescheme, state, 'rk4')
+
+    call create_swm_diff_operator(operator_diff, config, domain)
+    call create_timescheme(timescheme_diff, state, config%diff_time_scheme)
 
     print*, 4*domain%partition%Nh, 2*domain%partition%Nh+1
 
@@ -123,6 +128,7 @@ subroutine run_ts2()
     do it = 1, int(config%simulation_time/dt)
 
         call timescheme%step(state, operator, domain, dt)
+        call timescheme_diff%step(state, operator_diff, domain, dt)
 
         time = it*dt
 

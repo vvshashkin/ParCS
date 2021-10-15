@@ -640,8 +640,9 @@ $(DOBJ)abstract_hordiff_mod.o: src/differential_operators/hordiff/abstract_hordi
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
-$(DOBJ)rename_hordiff_colocated_mod.o: src/differential_operators/hordiff/RENAME_hordiff_colocated_mod.f90 \
+$(DOBJ)hordiff_colocated_mod.o: src/differential_operators/hordiff/hordiff_colocated_mod.f90 \
 	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)halo_mod.o \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)abstract_hordiff_mod.o
 	@echo $(COTEXT)
@@ -651,6 +652,7 @@ $(DOBJ)hordiff_scalar_mod.o: src/differential_operators/hordiff/hordiff_scalar_m
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)mesh_mod.o \
+	$(DOBJ)halo_mod.o \
 	$(DOBJ)abstract_hordiff_mod.o \
 	$(DOBJ)abstract_div_mod.o \
 	$(DOBJ)abstract_grad_mod.o \
@@ -668,7 +670,9 @@ $(DOBJ)hordiff_factory_mod.o: src/differential_operators/hordiff/hordiff_factory
 	$(DOBJ)co2contra_factory_mod.o \
 	$(DOBJ)curl_factory_mod.o \
 	$(DOBJ)grad_perp_factory_mod.o \
-	$(DOBJ)hordiff_scalar_mod.o
+	$(DOBJ)hordiff_scalar_mod.o \
+	$(DOBJ)halo_factory_mod.o \
+	$(DOBJ)hordiff_colocated_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -1348,7 +1352,6 @@ $(DOBJ)operator_swm_mod.o: src/models/shallow_water/operator/operator_swm_mod.f9
 	$(DOBJ)abstract_ke_mod.o \
 	$(DOBJ)abstract_massflux_mod.o \
 	$(DOBJ)abstract_co2contra_mod.o \
-	$(DOBJ)abstract_hordiff_mod.o \
 	$(DOBJ)abstract_quadrature_mod.o \
 	$(DOBJ)stvec_swm_mod.o \
 	$(DOBJ)parcomm_mod.o \
@@ -1389,6 +1392,25 @@ $(DOBJ)operator_swm_factory_mod.o: src/models/shallow_water/operator/operator_sw
 	$(DOBJ)quadrature_factory_mod.o \
 	$(DOBJ)hordiff_factory_mod.o \
 	$(DOBJ)grid_field_factory_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)operator_swm_diff_factory_mod.o: src/models/shallow_water/operator/operator_swm_diff_factory_mod.f90 \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)operator_mod.o \
+	$(DOBJ)config_swm_mod.o \
+	$(DOBJ)operator_swm_diff_mod.o \
+	$(DOBJ)hordiff_factory_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)operator_swm_diff_mod.o: src/models/shallow_water/operator/operator_swm_diff_mod.f90 \
+	$(DOBJ)stvec_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)operator_mod.o \
+	$(DOBJ)abstract_hordiff_mod.o \
+	$(DOBJ)stvec_swm_mod.o \
+	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -1454,6 +1476,8 @@ $(DOBJ)barotropic_inst_mod.o: src/models/shallow_water/test/barotropic_instabili
 	$(DOBJ)config_swm_mod.o \
 	$(DOBJ)config_barotropic_inst_mod.o \
 	$(DOBJ)operator_swm_mod.o \
+	$(DOBJ)operator_swm_diff_mod.o \
+	$(DOBJ)operator_swm_diff_factory_mod.o \
 	$(DOBJ)const_mod.o \
 	$(DOBJ)test_fields_mod.o \
 	$(DOBJ)key_value_mod.o \
@@ -1486,6 +1510,8 @@ $(DOBJ)ts2_mod.o: src/models/shallow_water/test/ts2/ts2_mod.f90 \
 	$(DOBJ)outputer_factory_mod.o \
 	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)config_swm_mod.o \
+	$(DOBJ)operator_swm_diff_mod.o \
+	$(DOBJ)operator_swm_diff_factory_mod.o \
 	$(DOBJ)config_ts2_mod.o \
 	$(DOBJ)test_fields_mod.o \
 	$(DOBJ)key_value_mod.o \

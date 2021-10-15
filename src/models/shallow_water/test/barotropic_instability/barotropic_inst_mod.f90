@@ -18,6 +18,9 @@ use config_barotropic_inst_mod, only : config_barotropic_inst_t
 
 use operator_swm_mod,           only : operator_swm_t
 
+use operator_swm_diff_mod,         only : operator_swm_diff_t
+use operator_swm_diff_factory_mod, only : create_swm_diff_operator
+
 use const_mod,  only : Earth_grav, Earth_omega, Earth_radii, pi, Earth_sidereal_T
 
 use test_fields_mod, only : barotropic_instability_height_generator_t, &
@@ -57,7 +60,8 @@ subroutine run_barotropic_inst()
 
     type(grid_field_t) :: curl
 
-    !test_config = config_barotropic_inst_t(Nq = 10)
+    type(operator_swm_diff_t),   allocatable :: operator_diff
+    class(timescheme_t),         allocatable :: timescheme_diff
 
     integer(kind=4) :: halo_width = 8
 
@@ -103,8 +107,10 @@ subroutine run_barotropic_inst()
     call create_stvec_swm(state_err, domain, 0         , 0)
 
     call create_swm_operator(operator, test_config%grav, config, domain)
-
     call create_timescheme(timescheme, state, 'rk4')
+
+    call create_swm_diff_operator(operator_diff, config, domain)
+    call create_timescheme(timescheme_diff, state, config%diff_time_scheme)
 
     if(config%config_domain%staggering_type == "Ah") then
         call create_latlon_outputer(outputer,          2*domain%partition%Nh+1, 4*domain%partition%Nh, "Ah", domain)
@@ -138,6 +144,7 @@ subroutine run_barotropic_inst()
 
         !print *, "tstep", it
         call timescheme%step(state, operator, domain, dt)
+        call timescheme_diff%step(state, operator_diff, domain, dt)
 
         time = it*dt
 

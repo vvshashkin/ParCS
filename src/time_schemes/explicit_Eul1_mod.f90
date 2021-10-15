@@ -25,9 +25,6 @@ subroutine step_explicit_Eul1(this, v0, operator, domain, dt)
     type(domain_t),         intent(in)    :: domain
     real(kind=8),           intent(in)    :: dt
 
-    print*, domain%mesh_p%ts, domain%mesh_p%te
-
-
     call operator%apply(this%tendency, v0, domain)
     call v0%update(dt, this%tendency, domain)
 end subroutine step_explicit_Eul1

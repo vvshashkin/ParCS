@@ -15,6 +15,9 @@ use outputer_factory_mod,     only : create_master_paneled_outputer,&
 use parcomm_mod,              only : parcomm_global
 use config_swm_mod,           only : config_swm_t
 
+use operator_swm_diff_mod,         only : operator_swm_diff_t
+use operator_swm_diff_factory_mod, only : create_swm_diff_operator
+
 use const_mod,  only : Earth_grav, Earth_omega, Earth_radii, pi, Earth_sidereal_T
 
 use test_fields_mod, only : rh4_wave_height_generator_t, rh4_wave_wind_generator_t
@@ -50,6 +53,9 @@ subroutine run_RH4_wave()
     class(timescheme_t),      allocatable :: timescheme
     class(outputer_t),        allocatable :: outputer
     class(outputer_vector_t), allocatable :: outputer_vec
+
+    type(operator_swm_diff_t),   allocatable :: operator_diff
+    class(timescheme_t),         allocatable :: timescheme_diff
 
     integer(kind=4) :: halo_width = 8
 
@@ -91,8 +97,10 @@ subroutine run_RH4_wave()
     call create_stvec_swm(state_err, domain, 0         , 0)
 
     call create_swm_operator(operator, grav, config, domain)
-
     call create_timescheme(timescheme, state, 'rk4')
+
+    call create_swm_diff_operator(operator_diff, config, domain)
+    call create_timescheme(timescheme_diff, state, config%diff_time_scheme)
 
     print*, 4*domain%partition%Nh, 2*domain%partition%Nh+1
 
@@ -123,6 +131,7 @@ subroutine run_RH4_wave()
     do it = 1, int(config%simulation_time/dt)
 
         call timescheme%step(state, operator, domain, dt)
+        call timescheme_diff%step(state, operator_diff, domain, dt)
 
         time = it*dt
 
