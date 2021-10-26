@@ -1381,6 +1381,7 @@ $(DOBJ)operator_swm_factory_mod.o: src/models/shallow_water/operator/operator_sw
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)operator_mod.o \
 	$(DOBJ)config_swm_mod.o \
+	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)operator_swm_mod.o \
 	$(DOBJ)div_factory_mod.o \
 	$(DOBJ)grad_factory_mod.o \
@@ -1391,7 +1392,8 @@ $(DOBJ)operator_swm_factory_mod.o: src/models/shallow_water/operator/operator_sw
 	$(DOBJ)co2contra_factory_mod.o \
 	$(DOBJ)quadrature_factory_mod.o \
 	$(DOBJ)hordiff_factory_mod.o \
-	$(DOBJ)grid_field_factory_mod.o
+	$(DOBJ)grid_field_factory_mod.o \
+	$(DOBJ)operator_adv_swm_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -1435,6 +1437,8 @@ $(DOBJ)rh4_wave_mod.o: src/models/shallow_water/test/RH4_wave/RH4_wave_mod.f90 \
 	$(DOBJ)outputer_factory_mod.o \
 	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)config_swm_mod.o \
+	$(DOBJ)operator_swm_diff_mod.o \
+	$(DOBJ)operator_swm_diff_factory_mod.o \
 	$(DOBJ)const_mod.o \
 	$(DOBJ)test_fields_mod.o \
 	$(DOBJ)key_value_mod.o \

@@ -9,6 +9,7 @@ type, public, extends(config_t) :: config_swm_t
 
     type(config_domain_t) :: config_domain
 
+    character(:), allocatable :: swm_op_type
     character(:), allocatable :: div_op_name
     character(:), allocatable :: grad_op_name
     character(:), allocatable :: curl_op_name
@@ -40,6 +41,7 @@ subroutine parse(this, config_string)
     class(config_swm_t),  intent(inout) :: this
     character(len=*),     intent(in)    :: config_string
 
+    character(len=255) :: swm_op_type
     character(len=255) :: div_op_name
     character(len=255) :: grad_op_name
     character(len=255) :: curl_op_name
@@ -61,7 +63,7 @@ subroutine parse(this, config_string)
     real(kind=8)       :: simulation_time_min   = 0.0_8
     real(kind=8)       :: simulation_time_sec   = 3600.0_8
 
-    namelist /shallow_water_model/ div_op_name, grad_op_name, curl_op_name, &
+    namelist /shallow_water_model/ swm_op_type, div_op_name, grad_op_name, curl_op_name, &
                                    coriolis_op_name, KE_op_name, massflux_op_name, &
                                    co2contra_op_name, quadrature_name, hordiff_uv_name, &
                                    diff_time_scheme, &
@@ -74,6 +76,7 @@ subroutine parse(this, config_string)
 
     call this%config_domain%parse(config_string)
 
+    this%swm_op_type       = trim(swm_op_type)
     this%div_op_name       = trim(div_op_name)
     this%grad_op_name      = trim(grad_op_name)
     this%curl_op_name      = trim(curl_op_name)
