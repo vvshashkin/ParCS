@@ -910,6 +910,36 @@ $(DOBJ)abstract_div_mod.o: src/differential_operators/divergence/abstract_div_mo
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)vector_advection_ah_mod.o: src/differential_operators/vec_advection/vector_advection_Ah_mod.f90 \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)sbp_operator_mod.o \
+	$(DOBJ)halo_mod.o \
+	$(DOBJ)exchange_abstract_mod.o \
+	$(DOBJ)abstract_vector_advection_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)tile_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)vector_advection_factory_mod.o: src/differential_operators/vec_advection/vector_advection_factory_mod.f90 \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)abstract_vector_advection_mod.o \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)vector_advection_ah_mod.o \
+	$(DOBJ)sbp_factory_mod.o \
+	$(DOBJ)exchange_factory_mod.o \
+	$(DOBJ)halo_factory_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)abstract_vector_advection_mod.o: src/differential_operators/vec_advection/abstract_vector_advection_mod.f90 \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)domain_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)interpolator_v2w_mod.o: src/differential_operators/interpolator_2d/interpolator_v2w_mod.f90 \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)domain_mod.o \
@@ -1369,8 +1399,8 @@ $(DOBJ)operator_adv_swm_mod.o: src/models/shallow_water/operator/operator_adv_sw
 	$(DOBJ)abstract_coriolis_mod.o \
 	$(DOBJ)abstract_massflux_mod.o \
 	$(DOBJ)abstract_co2contra_mod.o \
-	$(DOBJ)abstract_hordiff_mod.o \
 	$(DOBJ)abstract_quadrature_mod.o \
+	$(DOBJ)abstract_vector_advection_mod.o \
 	$(DOBJ)stvec_swm_mod.o \
 	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)key_value_mod.o
@@ -1393,7 +1423,8 @@ $(DOBJ)operator_swm_factory_mod.o: src/models/shallow_water/operator/operator_sw
 	$(DOBJ)quadrature_factory_mod.o \
 	$(DOBJ)hordiff_factory_mod.o \
 	$(DOBJ)grid_field_factory_mod.o \
-	$(DOBJ)operator_adv_swm_mod.o
+	$(DOBJ)operator_adv_swm_mod.o \
+	$(DOBJ)vector_advection_factory_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

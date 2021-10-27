@@ -124,6 +124,8 @@ subroutine create_advective_swm_operator(operator, grav, swm_config, domain)
 
     use grid_field_factory_mod, only : create_grid_field
 
+    use vector_advection_factory_mod, only : create_vector_advection_operator
+
     type(domain_t),                 intent(in)  :: domain
     type(config_swm_t),             intent(in)  :: swm_config
     real(kind=8),                   intent(in)  :: grav
@@ -148,6 +150,8 @@ subroutine create_advective_swm_operator(operator, grav, swm_config, domain)
 
     swm_op%co2contra_op = create_co2contra_operator(domain, swm_config%co2contra_op_name)
 
+    call create_vector_advection_operator(swm_op%adv_uv, "vector_advection_Ah42_covariant", domain)
+
     call create_quadrature(swm_op%quadrature_h, swm_config%quadrature_name, domain%mesh_p)
     call create_quadrature(swm_op%quadrature_u, swm_config%quadrature_name, domain%mesh_u)
     call create_quadrature(swm_op%quadrature_v, swm_config%quadrature_name, domain%mesh_v)
@@ -164,14 +168,14 @@ subroutine create_advective_swm_operator(operator, grav, swm_config, domain)
     ! call create_grid_field(swm_op%hu_diag, halo_width_xy, 0, domain%mesh_u)
     ! call create_grid_field(swm_op%hv_diag, halo_width_xy, 0, domain%mesh_v)
     !
-    ! call create_grid_field(swm_op%cor_u, halo_width_xy, 0, domain%mesh_u)
-    ! call create_grid_field(swm_op%cor_v, halo_width_xy, 0, domain%mesh_v)
+    call create_grid_field(swm_op%cor_u, halo_width_xy, 0, domain%mesh_u)
+    call create_grid_field(swm_op%cor_v, halo_width_xy, 0, domain%mesh_v)
     !
     call create_grid_field(swm_op%ut, halo_width_xy, 0, domain%mesh_u)
     call create_grid_field(swm_op%vt, halo_width_xy, 0, domain%mesh_v)
     !
-    ! call create_grid_field(swm_op%grad_x, halo_width_xy, 0, domain%mesh_u)
-    ! call create_grid_field(swm_op%grad_y, halo_width_xy, 0, domain%mesh_v)
+    call create_grid_field(swm_op%grad_x, halo_width_xy, 0, domain%mesh_u)
+    call create_grid_field(swm_op%grad_y, halo_width_xy, 0, domain%mesh_v)
 
     call create_grid_field(swm_op%h_surf,    halo_width_xy, 0, domain%mesh_p)
 

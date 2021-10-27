@@ -10,8 +10,9 @@ use abstract_grad_mod,       only : grad_operator_t
 use abstract_coriolis_mod,   only : coriolis_operator_t
 use abstract_massflux_mod,   only : massflux_operator_t
 use abstract_co2contra_mod,  only : co2contra_operator_t
-use abstract_hordiff_mod,    only : hordiff_operator_t
 use abstract_quadrature_mod, only : quadrature_t
+
+use abstract_vector_advection_mod, only : vector_advection_operator_t
 
 use stvec_swm_mod, only : stvec_swm_t
 use parcomm_mod,   only : parcomm_global
@@ -27,8 +28,7 @@ type, public, extends(operator_t) :: operator_adv_swm_t
     class(coriolis_operator_t),  allocatable :: coriolis_op
     class(massflux_operator_t),  allocatable :: massflux_op
     class(co2contra_operator_t), allocatable :: co2contra_op
-    class(hordiff_operator_t),   allocatable :: hordiff_div
-    class(hordiff_operator_t),   allocatable :: hordiff_curl
+    class(vector_advection_operator_t), allocatable :: adv_uv
     class(quadrature_t),         allocatable :: quadrature_h, quadrature_u, &
                                                 quadrature_v
 
@@ -78,9 +78,14 @@ subroutine apply(this, vout, vin, domain)
                                                 vin%h, this%ut, this%vt, domain)
             call this%div_op%calc_div(this%div, this%hu, this%hv, domain)
 
-            call vout%u%assign(0.0_8,domain%mesh_u)
-            call vout%v%assign(0.0_8,domain%mesh_v)
-            !call vout%h%assign(0.0_8,domain%mesh_p)
+            call this%grad_op%calc_grad(this%grad_x, this%grad_y, vin%h, domain)
+            call this%coriolis_op%calc_coriolis(this%cor_u, this%cor_v, &
+                                                this%ut, this%vt, domain)
+
+            call this%adv_uv%calc_vec_advection(vout%u, vout%v, vin%u, vin%v, this%ut, this%vt, domain)
+
+            call vout%u%update(-this%grav, this%grad_x, 1.0_8, this%cor_u, domain%mesh_u)
+            call vout%v%update(-this%grav, this%grad_y, 1.0_8, this%cor_v, domain%mesh_v)
             call vout%h%assign(-1.0_8, this%div, domain%mesh_p)
         class default
             call parcomm_global%abort("swm operator failure: vin of wrong type")
