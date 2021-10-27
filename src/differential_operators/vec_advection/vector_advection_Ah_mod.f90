@@ -51,8 +51,47 @@ subroutine calc_vec_advection_tile(u_tend, v_tend, u, v, ut, vt, mesh, scale, sb
 
     type(tile_field_t),     intent(inout) :: u_tend, v_tend
 
+    real(kind=8)    :: Dx(mesh%is:mesh%ie,mesh%js:mesh%je,1)
+    real(kind=8)    :: Dy(mesh%is:mesh%ie,mesh%js:mesh%je,1)
+    type(tile_t)    :: dxdy_tile
+    integer(kind=4) :: i, j, k
+    integer(kind=4) :: is, ie, js, je, ks, ke
+    real(kind=8)    :: hx
+
     u_tend%p = 0.0_8
     v_tend%p = 0.0_8
+
+    is = mesh%is; ie = mesh%ie
+    js = mesh%js; je = mesh%je
+    ks = mesh%ks; ke = mesh%ke
+
+    dxdy_tile = tile_t(is = is, ie=ie, js=js, je=je,ks = 1, ke=1)
+
+    hx = mesh%hx
+
+    do k = ks, ke
+
+        dxdy_tile%ks = k; dxdy_tile%ke = k
+
+        call sbp_op%apply(Dx, dxdy_tile, dxdy_tile, mesh%nx, 'x', u)
+        call sbp_op%apply(Dy, dxdy_tile, dxdy_tile, mesh%ny, 'y', u)
+
+        do j = js, je
+            do i = is, ie
+                u_tend%p(i,j,k) = (ut%p(i,j,k)*Dx(i,j,1)+vt%p(i,j,k)*Dy(i,j,1)) / (hx*scale)
+            end do
+        end do
+
+        call sbp_op%apply(Dx, dxdy_tile, dxdy_tile, mesh%nx, 'x', v)
+        call sbp_op%apply(Dy, dxdy_tile, dxdy_tile, mesh%ny, 'y', v)
+
+        do j = js, je
+            do i = is, ie
+                v_tend%p(i,j,k) = (ut%p(i,j,k)*Dx(i,j,1)+vt%p(i,j,k)*Dy(i,j,1)) / (hx*scale)
+            end do
+        end do
+
+    end do
 
 end subroutine calc_vec_advection_tile
 
