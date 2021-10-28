@@ -26,6 +26,7 @@ contains
     procedure(symtensor2),     deferred :: Q !metric tensor (a1*a1 a1*a2; a1*a2 a2*a2)
     procedure(symtensor2),     deferred :: QI !inversed metric tensor
     procedure(tensor0),        deferred :: G !sqrt of metric tensor det
+    procedure(christoffel_interface), deferred :: T
 
 end type metric_t
 
@@ -60,6 +61,14 @@ abstract interface
         integer(kind=4), intent(in) :: panel_ind
         real(kind=8),    intent(in) :: alpha, beta
         real(kind=8)                :: G
+    end
+
+    function christoffel_interface(this,panel_ind,alpha,beta) result(T)
+        import metric_t
+        class(metric_t), intent(in) :: this
+        integer(kind=4), intent(in) :: panel_ind
+        real(kind=8),    intent(in) :: alpha, beta
+        real(kind=8)                :: T(2,2,2)
     end
 end interface
 

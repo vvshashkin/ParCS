@@ -23,6 +23,7 @@ type, public :: tile_mesh_t
     real(kind=8), allocatable    :: Q(:,:,:)                  !metric tensor at mesh-points
     real(kind=8), allocatable    :: QI(:,:,:)                 !inverse metric tensor at mesh-points
     real(kind=8), allocatable    :: G(:,:)                    !sqrt of metric tensor det at mesh-points
+    real(kind=8), allocatable    :: T(:,:,:,:,:)                !Christofel symbols (i j,k,ix,iy)
     real(kind=8)                 :: hx, hy                    !horizontal grid step
     real(kind=8)                 :: shift_i, shift_j          !determines shift of the first grid point from the boundary
     real(kind=8)                 :: alpha_0, beta_0           !determines coord start
@@ -57,6 +58,7 @@ subroutine init_tile_mesh(this, is, ie, js, je, ks, ke, halo_width)
     allocate(this%Q (3,isv:iev,jsv:jev)) !3 elements of 2x2 matrix are stored due to symmetricity
     allocate(this%QI(3,isv:iev,jsv:jev))! -'-'-
     allocate(this%G (isv:iev,jsv:jev))
+    allocate(this%T (2,2,2,isv:iev,jsv:jev))
 
     this%is = is
     this%ie = ie

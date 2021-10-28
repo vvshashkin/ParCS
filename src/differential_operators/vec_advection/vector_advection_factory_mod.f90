@@ -21,8 +21,12 @@ subroutine create_vector_advection_operator(vec_advection_op, vec_advection_op_n
 
     select case(vec_advection_op_name)
 
+    case("vector_advection_Ah21_covariant")
+        call create_vector_advection_Ah_covariant(vec_advection_op, "d21", 1, domain)
     case("vector_advection_Ah42_covariant")
         call create_vector_advection_Ah_covariant(vec_advection_op, "d42", 3, domain)
+    case("vector_advection_Ah63_covariant")
+        call create_vector_advection_Ah_covariant(vec_advection_op, "d63", 5, domain)
     case default
         call parcomm_global%abort("Unknown vector advection operator: "//vec_advection_op_name)
     end select

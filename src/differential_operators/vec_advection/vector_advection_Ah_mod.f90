@@ -28,15 +28,14 @@ subroutine calc_vec_advection(this, u_tend, v_tend, u, v, ut, vt, domain)
 
     integer(kind=4) :: t
 
-    !call u_tend%assign(0.0_8,domain%mesh_u)
-    !call v_tend%assign(0.0_8,domain%mesh_v)
-
     do t = domain%mesh_xy%ts, domain%mesh_xy%te
         call calc_vec_advection_tile(u_tend%tile(t), v_tend%tile(t),               &
                                      u%tile(t), v%tile(t), ut%tile(t), vt%tile(t), &
                                      domain%mesh_xy%tile(t), domain%mesh_xy%scale, &
                                      this%sbp_op)
     end do
+
+    call this%sync_edges%get_halo_vector(u_tend,v_tend,domain,0)
 end subroutine calc_vec_advection
 
 subroutine calc_vec_advection_tile(u_tend, v_tend, u, v, ut, vt, mesh, scale, sbp_op)
@@ -78,7 +77,11 @@ subroutine calc_vec_advection_tile(u_tend, v_tend, u, v, ut, vt, mesh, scale, sb
 
         do j = js, je
             do i = is, ie
-                u_tend%p(i,j,k) = (ut%p(i,j,k)*Dx(i,j,1)+vt%p(i,j,k)*Dy(i,j,1)) / (hx*scale)
+                u_tend%p(i,j,k) =-(ut%p(i,j,k)*Dx(i,j,1)+vt%p(i,j,k)*Dy(i,j,1)) / (hx*scale)+&
+                                  (u%p(i,j,k)*ut%p(i,j,k)*mesh%T(1,1,1,i,j)+ &
+                                   v%p(i,j,k)*ut%p(i,j,k)*mesh%T(1,1,2,i,j)+ &
+                                   u%p(i,j,k)*vt%p(i,j,k)*mesh%T(1,2,1,i,j)+ &
+                                   v%p(i,j,k)*vt%p(i,j,k)*mesh%T(1,2,2,i,j)) / scale
             end do
         end do
 
@@ -87,7 +90,11 @@ subroutine calc_vec_advection_tile(u_tend, v_tend, u, v, ut, vt, mesh, scale, sb
 
         do j = js, je
             do i = is, ie
-                v_tend%p(i,j,k) = (ut%p(i,j,k)*Dx(i,j,1)+vt%p(i,j,k)*Dy(i,j,1)) / (hx*scale)
+                v_tend%p(i,j,k) =-(ut%p(i,j,k)*Dx(i,j,1)+vt%p(i,j,k)*Dy(i,j,1)) / (hx*scale)+&
+                                  (u%p(i,j,k)*ut%p(i,j,k)*mesh%T(2,1,1,i,j)+ &
+                                   v%p(i,j,k)*ut%p(i,j,k)*mesh%T(2,1,2,i,j)+ &
+                                   u%p(i,j,k)*vt%p(i,j,k)*mesh%T(2,2,1,i,j)+ &
+                                   v%p(i,j,k)*vt%p(i,j,k)*mesh%T(2,2,2,i,j)) / scale
             end do
         end do
 

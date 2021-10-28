@@ -114,6 +114,8 @@ subroutine create_mesh(mesh, partition, metric, halo_width, points_type)
                 mesh%tile(t)%Qi(1:3,i,j) = metric%QI(pind, alpha, beta)
 
                 mesh%tile(t)%G(i,j)= metric%G(pind, alpha, beta)
+
+                mesh%tile(t)%T(1:2,1:2,1:2,i,j) = metric%T(pind,alpha,beta)
             end do
         end do
     end do

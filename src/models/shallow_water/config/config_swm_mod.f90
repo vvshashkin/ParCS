@@ -17,6 +17,7 @@ type, public, extends(config_t) :: config_swm_t
     character(:), allocatable :: KE_op_name
     character(:), allocatable :: massflux_op_name
     character(:), allocatable :: co2contra_op_name
+    character(:), allocatable :: vector_adv_op_name
     character(:), allocatable :: quadrature_name
     character(:), allocatable :: diff_time_scheme
     character(:), allocatable :: hordiff_uv_name
@@ -49,6 +50,7 @@ subroutine parse(this, config_string)
     character(len=255) :: KE_op_name
     character(len=255) :: massflux_op_name
     character(len=255) :: co2contra_op_name
+    character(len=255) :: vector_adv_op_name
     character(len=255) :: quadrature_name
     character(len=255) :: diff_time_scheme
     character(len=255) :: hordiff_uv_name
@@ -65,7 +67,8 @@ subroutine parse(this, config_string)
 
     namelist /shallow_water_model/ swm_op_type, div_op_name, grad_op_name, curl_op_name, &
                                    coriolis_op_name, KE_op_name, massflux_op_name, &
-                                   co2contra_op_name, quadrature_name, hordiff_uv_name, &
+                                   co2contra_op_name, vector_adv_op_name, &
+                                   quadrature_name, hordiff_uv_name, &
                                    diff_time_scheme, &
                                    uv_diff_coeff, hordiff_h_name, h_diff_coeff, &
                                    dt, tau_write, tau_diagnostics, &
@@ -76,20 +79,21 @@ subroutine parse(this, config_string)
 
     call this%config_domain%parse(config_string)
 
-    this%swm_op_type       = trim(swm_op_type)
-    this%div_op_name       = trim(div_op_name)
-    this%grad_op_name      = trim(grad_op_name)
-    this%curl_op_name      = trim(curl_op_name)
-    this%coriolis_op_name  = trim(coriolis_op_name)
-    this%KE_op_name        = trim(KE_op_name)
-    this%massflux_op_name  = trim(massflux_op_name)
-    this%co2contra_op_name = trim(co2contra_op_name)
-    this%quadrature_name   = trim(quadrature_name)
-    this%diff_time_scheme  = trim(diff_time_scheme)
-    this%hordiff_uv_name   = trim(hordiff_uv_name)
-    this%hordiff_h_name    = trim(hordiff_h_name)
-    this%uv_diff_coeff     = uv_diff_coeff
-    this%h_diff_coeff      = h_diff_coeff
+    this%swm_op_type        = trim(swm_op_type)
+    this%div_op_name        = trim(div_op_name)
+    this%grad_op_name       = trim(grad_op_name)
+    this%curl_op_name       = trim(curl_op_name)
+    this%coriolis_op_name   = trim(coriolis_op_name)
+    this%KE_op_name         = trim(KE_op_name)
+    this%massflux_op_name   = trim(massflux_op_name)
+    this%co2contra_op_name  = trim(co2contra_op_name)
+    this%vector_adv_op_name = trim(vector_adv_op_name)
+    this%quadrature_name    = trim(quadrature_name)
+    this%diff_time_scheme   = trim(diff_time_scheme)
+    this%hordiff_uv_name    = trim(hordiff_uv_name)
+    this%hordiff_h_name     = trim(hordiff_h_name)
+    this%uv_diff_coeff      = uv_diff_coeff
+    this%h_diff_coeff       = h_diff_coeff
     this%dt = dt
     this%tau_write = tau_write
     this%tau_diagnostics = tau_diagnostics

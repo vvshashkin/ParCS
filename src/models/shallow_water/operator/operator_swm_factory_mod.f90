@@ -150,30 +150,19 @@ subroutine create_advective_swm_operator(operator, grav, swm_config, domain)
 
     swm_op%co2contra_op = create_co2contra_operator(domain, swm_config%co2contra_op_name)
 
-    call create_vector_advection_operator(swm_op%adv_uv, "vector_advection_Ah42_covariant", domain)
+    call create_vector_advection_operator(swm_op%adv_uv, swm_config%vector_adv_op_name, domain)
 
     call create_quadrature(swm_op%quadrature_h, swm_config%quadrature_name, domain%mesh_p)
     call create_quadrature(swm_op%quadrature_u, swm_config%quadrature_name, domain%mesh_u)
     call create_quadrature(swm_op%quadrature_v, swm_config%quadrature_name, domain%mesh_v)
 
-    ! call create_grid_field(swm_op%KE,  halo_width_xy, 0, domain%mesh_p)
     call create_grid_field(swm_op%div, halo_width_xy, 0, domain%mesh_p)
-    !
-    !
-    ! call create_grid_field(swm_op%curl, halo_width_xy, 0, domain%mesh_w)
-    !
     call create_grid_field(swm_op%hu, halo_width_xy, 0, domain%mesh_u)
     call create_grid_field(swm_op%hv, halo_width_xy, 0, domain%mesh_v)
-    !
-    ! call create_grid_field(swm_op%hu_diag, halo_width_xy, 0, domain%mesh_u)
-    ! call create_grid_field(swm_op%hv_diag, halo_width_xy, 0, domain%mesh_v)
-    !
     call create_grid_field(swm_op%cor_u, halo_width_xy, 0, domain%mesh_u)
     call create_grid_field(swm_op%cor_v, halo_width_xy, 0, domain%mesh_v)
-    !
     call create_grid_field(swm_op%ut, halo_width_xy, 0, domain%mesh_u)
     call create_grid_field(swm_op%vt, halo_width_xy, 0, domain%mesh_v)
-    !
     call create_grid_field(swm_op%grad_x, halo_width_xy, 0, domain%mesh_u)
     call create_grid_field(swm_op%grad_y, halo_width_xy, 0, domain%mesh_v)
 
