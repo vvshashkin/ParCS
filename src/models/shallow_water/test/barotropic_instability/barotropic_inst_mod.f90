@@ -116,20 +116,20 @@ subroutine run_barotropic_inst()
         call create_latlon_outputer(outputer,          2*domain%partition%Nh+1, 4*domain%partition%Nh, "Ah", domain)
         call create_latlon_outputer(outputer_curl,     2*domain%partition%Nh+1, 4*domain%partition%Nh, "Ah", domain)
         call create_latlon_vec_outputer(outputer_vec,  2*domain%partition%Nh+1, 4*domain%partition%Nh, "Ah", &
-                                   "covariant", domain)
+                                   config%v_components_type, domain)
     else if(config%config_domain%staggering_type == "C") then
         call create_latlon_outputer(outputer,      2*domain%partition%Nh+1, 4*domain%partition%Nh, "A", domain)
         call create_latlon_outputer(outputer_curl, 2*domain%partition%Nh+1, 4*domain%partition%Nh, "Ah", domain)
         call create_latlon_vec_outputer(outputer_vec,  2*domain%partition%Nh+1, 4*domain%partition%Nh, "C", &
-                                       "covariant", domain)
+                                       config%v_components_type, domain)
     else
         call parcomm_global%abort("This staggering is not implemented in"//&
                                   " barotropic instability swe test output:"//&
                                   config%config_domain%staggering_type)
     end if
 
-    call get_exact_solution(state,    domain)
-    call get_exact_solution(state_ex, domain)
+    call get_exact_solution(state,    domain, config%v_components_type)
+    call get_exact_solution(state_ex, domain, config%v_components_type)
 
     select type(state)
     class is (stvec_swm_t)
@@ -174,20 +174,21 @@ subroutine run_barotropic_inst()
 
 end subroutine run_barotropic_inst
 
-subroutine get_exact_solution(state, domain)
+subroutine get_exact_solution(state, domain, v_components_type)
 
     use test_fields_mod, only : set_vector_test_field, &
                                 set_scalar_test_field
 
     class(stvec_t), intent(inout) :: state
     type(domain_t), intent(in)    :: domain
+    character(*),   intent(in)    :: v_components_type
 
     select type(state)
     class is (stvec_swm_t)
 
         call set_scalar_test_field(state%h, height_field, domain%mesh_p, 0)
         call set_vector_test_field(state%u, state%v, velocity_field, &
-              domain%mesh_u, domain%mesh_v, 0, "covariant")
+              domain%mesh_u, domain%mesh_v, 0, v_components_type)
 
     end select
 
