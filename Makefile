@@ -759,7 +759,8 @@ $(DOBJ)coriolis_colocated_mod.o: src/differential_operators/coriolis/coriolis_co
 
 $(DOBJ)abstract_coriolis_mod.o: src/differential_operators/coriolis/abstract_coriolis_mod.f90 \
 	$(DOBJ)grid_field_mod.o \
-	$(DOBJ)domain_mod.o
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

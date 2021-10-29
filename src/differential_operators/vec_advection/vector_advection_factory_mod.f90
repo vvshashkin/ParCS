@@ -51,8 +51,10 @@ subroutine create_vector_advection_Ah_covariant(vec_advection_op,sbp_operator_na
     allocate(vec_advection_Ah_op)
 
     vec_advection_Ah_op%sbp_op = create_sbp_operator(sbp_operator_name)
-    call create_vector_halo_procedure(vec_advection_Ah_op%sync_edges,domain,0, &
+    call create_vector_halo_procedure(vec_advection_Ah_op%sync_edges_cov,domain,0, &
                                                     "ecs_Ah_vec_sync_covariant")
+    call create_vector_halo_procedure(vec_advection_Ah_op%sync_edges_contra,domain,0, &
+                                                    "ecs_Ah_vec_sync_contra")
     vec_advection_Ah_op%exch_uv_interior =  &
                     create_symm_halo_exchange_Ah(domain%partition, domain%parcomm, &
                                                  domain%topology,  halo_width, 'full')

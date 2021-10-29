@@ -8,6 +8,7 @@ implicit none
 type, abstract, public :: vector_advection_operator_t
 contains
     procedure(calc_vec_advection_i),         deferred :: calc_vec_advection
+    procedure(calc_vec_advection_contra_i),  deferred :: calc_vec_advection_contra
 end type vector_advection_operator_t
 
 abstract interface
@@ -20,6 +21,14 @@ abstract interface
         type(grid_field_t),                 intent(inout) :: ut, vt!contravariant components
         type(grid_field_t),                 intent(inout) :: u_tend, v_tend!advective tendencies
     end subroutine calc_vec_advection_i
+    subroutine calc_vec_advection_contra_i(this, u_tend, v_tend, ut, vt, domain)
+        import vector_advection_operator_t, grid_field_t, domain_t
+
+        class(vector_advection_operator_t), intent(inout) :: this
+        type(domain_t),                     intent(in)    :: domain
+        type(grid_field_t),                 intent(inout) :: ut, vt!contravariant components
+        type(grid_field_t),                 intent(inout) :: u_tend, v_tend!advective tendencies
+    end subroutine calc_vec_advection_contra_i
 end interface
 
 contains

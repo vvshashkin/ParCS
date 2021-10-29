@@ -74,6 +74,9 @@ subroutine apply(this, vout, vin, domain)
         select type (vin)
         class is (stvec_swm_t)
 
+        select case(this%v_components_type)
+        case('covariant')
+
             call this%co2contra_op%transform(this%ut, this%vt, vin%u, vin%v, domain)
             call this%massflux_op%calc_massflux(this%hu, this%hv, &
                                                 vin%h, this%ut, this%vt, domain)
@@ -88,6 +91,28 @@ subroutine apply(this, vout, vin, domain)
             call vout%u%update(-this%grav, this%grad_x, 1.0_8, this%cor_u, domain%mesh_u)
             call vout%v%update(-this%grav, this%grad_y, 1.0_8, this%cor_v, domain%mesh_v)
             call vout%h%assign(-1.0_8, this%div, domain%mesh_p)
+        case('contravariant')
+
+            call this%grad_op%calc_grad(this%grad_x, this%grad_y, vin%h, domain)
+            call this%co2contra_op%transform(this%ut, this%vt, this%grad_x, this%grad_y, domain)
+
+            call this%coriolis_op%calc_coriolis_contra(this%cor_u, this%cor_v, &
+                                                       vin%u, vin%v, domain)
+
+            call this%adv_uv%calc_vec_advection_contra(vout%u, vout%v, vin%u, vin%v, domain)
+
+            call vout%u%update(-this%grav, this%ut, 1.0_8, this%cor_u, domain%mesh_u)
+            call vout%v%update(-this%grav, this%vt, 1.0_8, this%cor_v, domain%mesh_v)
+
+            call this%massflux_op%calc_massflux(this%hu, this%hv, &
+                                                vin%h, vin%u, vin%v, domain)
+            call this%div_op%calc_div(this%div, this%hu, this%hv, domain)
+            call vout%h%assign(-1.0_8, this%div, domain%mesh_p)
+        case default
+            call parcomm_global%abort("swm operator failure: unsupported v_components_type:"//&
+                                       this%v_components_type)
+        end select
+
         class default
             call parcomm_global%abort("swm operator failure: vin of wrong type")
         end select
