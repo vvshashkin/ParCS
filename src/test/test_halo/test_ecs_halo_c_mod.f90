@@ -10,15 +10,18 @@ public   :: test_ecs_cvec_halo
 
 contains
 
-subroutine test_ecs_cvec_halo()
+subroutine test_ecs_cvec_halo(halo_procedure, components_type)
 
     use domain_factory_mod,         only : create_domain
     use grid_field_factory_mod,     only : create_grid_field
     use halo_mod,                   only : halo_t, halo_vec_t
     use halo_factory_mod,           only : create_halo_procedure, create_vector_halo_procedure
-    use test_fields_mod,            only : set_vector_test_field, solid_rot => solid_rotation_field_generator
+    use test_fields_mod,            only : set_vector_test_field, solid_rot => solid_rotation_field_generator, &
+                                           cross_polar => cross_polar_flow_generator
 
-    integer(kind=4), parameter         :: nh=64, nz=3, halo_width=3, ex_halo_width=8
+    character(len=*), intent(in) :: halo_procedure, components_type
+
+    integer(kind=4), parameter         :: nh=32, nz=3, halo_width=3, ex_halo_width=8
 
     type(domain_t)             :: domain
     type(grid_field_t)         :: u_test, v_test
@@ -33,11 +36,11 @@ subroutine test_ecs_cvec_halo()
 
     logical is_test_passed
     real(kind=8), parameter :: tolerance = 3.0e-7_8
-    integer(kind=4) :: t, j
+    integer(kind=4) :: t, j, i
 
     call create_domain(domain, "cube", 'C', nh, nz)
 
-    call create_vector_halo_procedure(halo_vec,domain,halo_width,"ecs_C_vec")
+    call create_vector_halo_procedure(halo_vec,domain,halo_width,halo_procedure)
     !call create_vector_halo_procedure(halo_vec,domain,halo_width,"C_vec_default")
 
     call create_grid_field(u_test, ex_halo_width, 0, domain%mesh_u)
@@ -46,9 +49,9 @@ subroutine test_ecs_cvec_halo()
     call create_grid_field(v_true, ex_halo_width, 0, domain%mesh_v)
 
     call set_vector_test_field(u_test,v_test,solid_rot, domain%mesh_u, domain%mesh_v, &
-                               0, "contravariant", 0.0_8)
+                               0, components_type, 0.0_8)
     call set_vector_test_field(u_true,v_true,solid_rot, domain%mesh_u, domain%mesh_v, &
-                               halo_width, "contravariant", 0.0_8)
+                               halo_width, components_type, 0.0_8)
 
     call domain%parcomm%print('equiangular cubed-sphere C-grid halo-zone interpolation test')
 
@@ -107,10 +110,23 @@ subroutine test_ecs_cvec_halo()
     !        print '(i2,7f15.7)', j, u_true%tile(t)%p(0:6,j,2)
     !    end do
     !end do
-!    do j=1, nh+1
-!        print '(i3,3F15.7)', j, v_test%tile(1)%p(0,j,1),v_true%tile(1)%p(0,j,1),&
-!                                v_test%tile(1)%p(0,j,1)-v_true%tile(1)%p(0,j,1)
-!    end do
+    ! do i=1, nh
+    !     print '(i3,3F15.7)', i, u_test%tile(2)%p(nh+2,i,1)-u_true%tile(2)%p(nh+2,i,1),&
+    !                             u_test%tile(2)%p(nh+3,i,1)-u_true%tile(2)%p(nh+3,i,1)
+    ! end do
+    !print *, "Err1", maxval(abs(v_test%tile(1)%p(1:nh,-2,1)-v_true%tile(1)%p(1:nh,-2,1)))
+    !print *, "Err1", maxval(abs(v_test%tile(1)%p(1:nh,-1,1)-v_true%tile(1)%p(1:nh,-1,1)))
+    !print *, "Err1", maxval(abs(v_test%tile(1)%p(1:nh,0,1)-v_true%tile(1)%p(1:nh,0,1)))
+    !print *, "Err2", maxval(abs(v_test%tile(1)%p(1:nh,nh+2,1)-v_true%tile(1)%p(1:nh,nh+2,1)))
+    !print *, "Err3", maxval(abs(v_test%tile(1)%p(1:nh,nh+3,1)-v_true%tile(1)%p(1:nh,nh+3,1)))
+    !print *, "Err4", maxval(abs(v_test%tile(1)%p(1:nh,nh+4,1)-v_true%tile(1)%p(1:nh,nh+4,1)))
+    ! print *, "V1", v_test%tile(1)%p(nh+2,17,1), v_true%tile(1)%p(nh+2,17,1)
+    ! print *, "Err1", maxval(abs(u_test%tile(2)%p(1:nh+1,-2,1)-u_true%tile(2)%p(1:nh+1,-2,1)))
+    ! print *, "Err1", maxval(abs(u_test%tile(2)%p(1:nh+1,-1,1)-u_true%tile(2)%p(1:nh+1,-1,1)))
+    ! print *, "Err1", maxval(abs(u_test%tile(2)%p(1:nh+1,0,1)-u_true%tile(2)%p(1:nh+1,0,1)))
+    ! print *, "Err2", maxval(abs(u_test%tile(2)%p(1:nh+1,nh+1,1)-u_true%tile(2)%p(1:nh+1,nh+1,1)))
+    ! print *, "Err3", maxval(abs(u_test%tile(2)%p(1:nh+1,nh+2,1)-u_true%tile(2)%p(1:nh+1,nh+2,1)))
+    ! print *, "Err4", maxval(abs(u_test%tile(2)%p(1:nh+1,nh+3,1)-u_true%tile(2)%p(1:nh+1,nh+3,1)))
     !do j=domain%mesh_u%tile(3)%is,domain%mesh_u%tile(3)%ie
     !    !print '(i3,3E15.7)', j, v_test%tile(1)%p(nh+2,j,1),v_true%tile(1)%p(nh+2,j,1),&
     !    !                        v_test%tile(1)%p(nh+2,j,1)-v_true%tile(1)%p(nh+2,j,1)

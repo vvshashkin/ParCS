@@ -8,9 +8,10 @@ program test_halo_main
 
     call init_global_parallel_enviroment()
 
-    call test_halo()
-    call test_ecs_halo
-    call test_ecs_cvec_halo
+    !call test_halo()
+    !call test_ecs_halo
+    !call test_ecs_cvec_halo("ecs_C_vec", "contravariant")
+    call test_ecs_cvec_halo("ecs_C_vec_covariant", "covariant")
 
     call deinit_global_parallel_enviroment()
 

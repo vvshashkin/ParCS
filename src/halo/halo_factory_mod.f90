@@ -30,7 +30,8 @@ subroutine create_vector_halo_procedure(halo,domain,halo_width,halo_type)
     use halo_mod,   only : halo_vec_t
     use domain_mod, only : domain_t
     use ecs_halo_vec_a_factory_mod,       only : create_ecs_A_vec_halo_procedure
-    use ecs_halo_vec_c_factory_mod,       only : create_ecs_C_vec_halo_procedure
+    use ecs_halo_vec_c_factory_mod,       only : create_ecs_C_vec_halo_procedure, &
+                                                 create_ecs_C_vec_covariant_halo_procedure
     use ecs_halo_Ah_vec_sync_factory_mod, only : create_ecs_Ah_vec_sync
 
     class(halo_vec_t), allocatable, intent(out) :: halo
@@ -46,6 +47,8 @@ subroutine create_vector_halo_procedure(halo,domain,halo_width,halo_type)
         call create_ecs_A_vec_halo_procedure(halo,domain,halo_width)
     elseif(halo_type=="ecs_C_vec") then
         call create_ecs_C_vec_halo_procedure(halo,domain,halo_width)
+    elseif(halo_type=="ecs_C_vec_covariant") then
+        call create_ecs_C_vec_covariant_halo_procedure(halo,domain,halo_width)
     elseif(halo_type=="ecs_Ah_vec_sync_contra") then
         call create_ecs_Ah_vec_sync(halo,domain,halo_width,"contravariant")
     elseif(halo_type=="ecs_Ah_vec_sync_covariant") then
