@@ -23,6 +23,7 @@ implicit none
 
 type, public, extends(operator_t) :: operator_adv_swm_t
 
+    character(:),                allocatable :: v_components_type
     class(div_operator_t),       allocatable :: div_op
     class(grad_operator_t),      allocatable :: grad_op
     class(coriolis_operator_t),  allocatable :: coriolis_op

@@ -140,6 +140,8 @@ subroutine create_advective_swm_operator(operator, grav, swm_config, domain)
 
     allocate(swm_op)
 
+    swm_op%v_components_type = swm_config%v_components_type
+
     swm_op%div_op = create_div_operator(domain, swm_config%div_op_name)
 
     swm_op%grad_op =  create_grad_operator(domain, swm_config%grad_op_name)
@@ -174,10 +176,6 @@ subroutine create_advective_swm_operator(operator, grav, swm_config, domain)
     do t = domain%partition%ts, domain%partition%te
         swm_op%h_surf%tile(t)%p = 0.0_8
     end do
-
-    ! call create_grid_field(swm_op%KE_diag_u,  0, 0, domain%mesh_u)
-    ! call create_grid_field(swm_op%KE_diag_v,  0, 0, domain%mesh_v)
-    ! call create_grid_field(swm_op%PE_diag,    0, 0, domain%mesh_p)
 
     call move_alloc(swm_op, operator)
 

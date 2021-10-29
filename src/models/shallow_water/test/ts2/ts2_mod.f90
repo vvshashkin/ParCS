@@ -106,24 +106,31 @@ subroutine run_ts2()
     if(config%config_domain%staggering_type == "Ah") then
         call create_latlon_outputer(outputer, 2*domain%partition%Nh+1, 4*domain%partition%Nh, "Ah", domain)
         call create_latlon_vec_outputer(outputer_vec,  2*domain%partition%Nh+1, 4*domain%partition%Nh, "Ah", &
-                                   "covariant", domain)
+                                   config%v_components_type, domain)
     else if(config%config_domain%staggering_type == "C") then
         call create_latlon_outputer(outputer, 2*domain%partition%Nh+1, 4*domain%partition%Nh, "A", domain)
         call create_latlon_vec_outputer(outputer_vec,  2*domain%partition%Nh+1, 4*domain%partition%Nh, "C", &
-                                       "covariant", domain)
+                                       config%v_components_type, domain)
     else
         call parcomm_global%abort("This staggering is not implemented in"//&
                                   " barotropic instability swe test output:"//&
                                   config%config_domain%staggering_type)
     end if
 
-    call get_exact_solution(state,    domain)
-    call get_exact_solution(state_ex, domain)
+    call get_exact_solution(state,    domain, config%v_components_type)
+    call get_exact_solution(state_ex, domain, config%v_components_type)
 
     select type(state_ex)
     class is (stvec_swm_t)
         l2_ex = l2norm(state_ex%h,  domain%mesh_p, domain%parcomm)
     end select
+
+    select type(state)
+    class is (stvec_swm_t)
+        call outputer%write(state%h, domain, 'h.dat', 1)
+        call outputer_vec%write(state%u, state%v, domain, 'u.dat', 'v.dat', 1)
+    end select
+
 
     do it = 1, int(config%simulation_time/dt)
 
@@ -143,8 +150,8 @@ subroutine run_ts2()
 
             select type(state)
             class is (stvec_swm_t)
-                call outputer%write(state%h, domain, 'h.dat', int(it/nstep_write))
-                call outputer_vec%write(state%u, state%v, domain, 'u.dat', 'v.dat', int(it/nstep_write))
+                call outputer%write(state%h, domain, 'h.dat', int(it/nstep_write)+1)
+                call outputer_vec%write(state%u, state%v, domain, 'u.dat', 'v.dat', int(it/nstep_write)+1)
             end select
 
             select type(state_err)
@@ -154,27 +161,28 @@ subroutine run_ts2()
 
                 l2err = l2norm(state_err%h, domain%mesh_p, domain%parcomm)/l2_ex
                 if (parcomm_global%myid==0) print*, "Hours = ", real(time/3600 ,4), &
-                                                    "L2err =", real(l2err,4), "irec=",int(it/nstep_write)
+                                                    "L2err =", real(l2err,4), "irec=",int(it/nstep_write)+1
             end select
         end if
     end do
 
 end subroutine run_ts2
 
-subroutine get_exact_solution(state, domain)
+subroutine get_exact_solution(state, domain, v_components_type)
 
     use test_fields_mod, only : set_vector_test_field, &
                                 set_scalar_test_field
 
     class(stvec_t), intent(inout) :: state
     type(domain_t), intent(in)    :: domain
+    character(*),   intent(in)    :: v_components_type
 
     select type(state)
     class is (stvec_swm_t)
 
         call set_scalar_test_field(state%h, height_field, domain%mesh_p, 0)
         call set_vector_test_field(state%u, state%v, velocity_field, &
-              domain%mesh_u, domain%mesh_v, 0, "covariant")
+              domain%mesh_u, domain%mesh_v, 0, v_components_type)
 
     end select
 
