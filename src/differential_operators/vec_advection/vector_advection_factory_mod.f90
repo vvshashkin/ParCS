@@ -28,7 +28,8 @@ subroutine create_vector_advection_operator(vec_advection_op, vec_advection_op_n
     case("vector_advection_Ah63_covariant")
         call create_vector_advection_Ah_covariant(vec_advection_op, "d63", 5, domain)
     case("vector_advection_C")
-        call create_vector_advection_C(vec_advection_op, domain)
+        call create_vector_advection_C(vec_advection_op, "W42_stagered_interp_i2c", &
+                                          "W42_stagered_interp_c2i",3,domain)
     case default
         call parcomm_global%abort("Unknown vector advection operator: "//vec_advection_op_name)
     end select
@@ -65,21 +66,36 @@ subroutine create_vector_advection_Ah_covariant(vec_advection_op,sbp_operator_na
 
 end subroutine create_vector_advection_Ah_covariant
 
-subroutine create_vector_advection_C(vec_advection_op, domain)
+subroutine create_vector_advection_C(vec_advection_op, sbp_i2c_interp_name, &
+                                     sbp_c2i_interp_name, halo_width, domain)
 
-    use vector_advection_C_mod,    only : vector_advection_C_t
-    ! use sbp_factory_mod,           only : create_sbp_operator
-    ! use exchange_factory_mod,      only : create_symm_halo_exchange_Ah
-    ! use halo_factory_mod,          only : create_vector_halo_procedure
+    use vector_advection_C_mod,       only : vector_advection_C_t
+    use grid_field_factory_mod,       only : create_grid_field
+    use interpolator_h2v_factory_mod, only : create_h2v_interpolator
+    use interpolator_v2h_factory_mod, only : create_v2h_interpolator
+    use halo_factory_mod,             only : create_vector_halo_procedure
+
+    character(len=*),  intent(in)  :: sbp_i2c_interp_name, sbp_c2i_interp_name
+    integer(kind=4),   intent(in)  :: halo_width
+    type(domain_t),    intent(in)  :: domain
 
     class(vector_advection_operator_t), allocatable, intent(out) :: vec_advection_op
-    ! character(len=*),                                intent(in)  :: sbp_operator_name
-    ! integer(kind=4),                                 intent(in)  :: halo_width
-    type(domain_t),                                  intent(in)  :: domain
 
     type(vector_advection_C_t), allocatable :: vec_advection_C_op
 
     allocate(vec_advection_C_op)
+
+    call create_grid_field(vec_advection_C_op%u_at_v, 0, 0, domain%mesh_v)
+    call create_grid_field(vec_advection_C_op%v_at_u, 0, 0, domain%mesh_u)
+    call create_grid_field(vec_advection_C_op%uh,halo_width+1, 0, domain%mesh_p)
+    call create_grid_field(vec_advection_C_op%vh,halo_width+1, 0, domain%mesh_p)
+
+    call create_v2h_interpolator(vec_advection_C_op%interp_v2h_op, sbp_i2c_interp_name, domain)
+    call create_h2v_interpolator(vec_advection_C_op%interp_h2v_op, sbp_c2i_interp_name, domain)
+
+    call create_vector_halo_procedure(vec_advection_C_op%halo_uv, domain,halo_width,"ecs_C_vec")
+    call create_vector_halo_procedure(vec_advection_C_op%tendency_edge_sync, domain, &
+                                                                              1,"C_vec_default")
 
     call move_alloc(vec_advection_C_op, vec_advection_op)
 

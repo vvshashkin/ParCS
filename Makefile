@@ -770,11 +770,7 @@ $(DOBJ)coriolis_cgrid_noncons_mod.o: src/differential_operators/coriolis/corioli
 	$(DOBJ)abstract_coriolis_mod.o \
 	$(DOBJ)mesh_mod.o \
 	$(DOBJ)interpolator_v2h_mod.o \
-	$(DOBJ)itnerpolator_w2h_mod.o \
 	$(DOBJ)interpolator_h2v_mod.o \
-	$(DOBJ)sbp_operator_mod.o \
-	$(DOBJ)halo_mod.o \
-	$(DOBJ)exchange_abstract_mod.o \
 	$(DOBJ)abstract_co2contra_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -950,16 +946,19 @@ $(DOBJ)vector_advection_factory_mod.o: src/differential_operators/vec_advection/
 	$(DOBJ)sbp_factory_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
 	$(DOBJ)halo_factory_mod.o \
-	$(DOBJ)vector_advection_c_mod.o
+	$(DOBJ)vector_advection_c_mod.o \
+	$(DOBJ)grid_field_factory_mod.o \
+	$(DOBJ)interpolator_h2v_factory_mod.o \
+	$(DOBJ)interpolator_v2h_factory_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)vector_advection_c_mod.o: src/differential_operators/vec_advection/vector_advection_C_mod.f90 \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)domain_mod.o \
-	$(DOBJ)sbp_operator_mod.o \
 	$(DOBJ)halo_mod.o \
-	$(DOBJ)exchange_abstract_mod.o \
+	$(DOBJ)interpolator_v2h_mod.o \
+	$(DOBJ)interpolator_h2v_mod.o \
 	$(DOBJ)abstract_vector_advection_mod.o \
 	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
