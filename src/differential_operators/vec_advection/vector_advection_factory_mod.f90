@@ -27,6 +27,8 @@ subroutine create_vector_advection_operator(vec_advection_op, vec_advection_op_n
         call create_vector_advection_Ah_covariant(vec_advection_op, "d42", 3, domain)
     case("vector_advection_Ah63_covariant")
         call create_vector_advection_Ah_covariant(vec_advection_op, "d63", 5, domain)
+    case("vector_advection_C")
+        call create_vector_advection_C(vec_advection_op, domain)
     case default
         call parcomm_global%abort("Unknown vector advection operator: "//vec_advection_op_name)
     end select
@@ -62,5 +64,25 @@ subroutine create_vector_advection_Ah_covariant(vec_advection_op,sbp_operator_na
     call move_alloc(vec_advection_Ah_op, vec_advection_op)
 
 end subroutine create_vector_advection_Ah_covariant
+
+subroutine create_vector_advection_C(vec_advection_op, domain)
+
+    use vector_advection_C_mod,    only : vector_advection_C_t
+    ! use sbp_factory_mod,           only : create_sbp_operator
+    ! use exchange_factory_mod,      only : create_symm_halo_exchange_Ah
+    ! use halo_factory_mod,          only : create_vector_halo_procedure
+
+    class(vector_advection_operator_t), allocatable, intent(out) :: vec_advection_op
+    ! character(len=*),                                intent(in)  :: sbp_operator_name
+    ! integer(kind=4),                                 intent(in)  :: halo_width
+    type(domain_t),                                  intent(in)  :: domain
+
+    type(vector_advection_C_t), allocatable :: vec_advection_C_op
+
+    allocate(vec_advection_C_op)
+
+    call move_alloc(vec_advection_C_op, vec_advection_op)
+
+end subroutine create_vector_advection_C
 
 end module vector_advection_factory_mod
