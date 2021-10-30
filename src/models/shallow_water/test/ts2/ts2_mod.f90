@@ -61,7 +61,7 @@ subroutine run_ts2()
     real(kind=8)     :: tau_write
     integer(kind=4)  :: nstep_write, nstep_diagnostics
 
-    real(kind=8)    :: time, l2err, l2_ex
+    real(kind=8)    :: time, l2err, l2_ex, l2u, l2v
     integer(kind=4) :: it
 
     call read_namelist_as_str(namelist_string, "namelist_swm", parcomm_global%myid)
@@ -113,7 +113,7 @@ subroutine run_ts2()
                                        config%v_components_type, domain)
     else
         call parcomm_global%abort("This staggering is not implemented in"//&
-                                  " barotropic instability swe test output:"//&
+                                  " swe test 2 output:"//&
                                   config%config_domain%staggering_type)
     end if
 
@@ -160,8 +160,11 @@ subroutine run_ts2()
                 call outputer_vec%write(state_err%u, state_err%v, domain, 'u_err.dat', 'v_err.dat', int(it/nstep_write))
 
                 l2err = l2norm(state_err%h, domain%mesh_p, domain%parcomm)/l2_ex
+                l2u = l2norm(state_err%u, domain%mesh_u, domain%parcomm)
+                l2v = l2norm(state_err%v, domain%mesh_v, domain%parcomm)
                 if (parcomm_global%myid==0) print*, "Hours = ", real(time/3600 ,4), &
-                                                    "L2err =", real(l2err,4), "irec=",int(it/nstep_write)+1
+                                                    "L2err =", real(l2err,4),  real(l2u,4), real(l2v,4),&
+                                                    "irec=",int(it/nstep_write)+1
             end select
         end if
     end do

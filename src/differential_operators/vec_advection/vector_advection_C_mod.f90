@@ -93,10 +93,34 @@ subroutine calc_advection_1comp_contra_tile(uvt_tend, uvt, ut, vt, scale, mesh, 
             do i = is, ie
                 zl = .5_8+sign(.5_8,ut%p(i,j,k))
                 zr = 1._8-zl
-                dx = (zl*(uvt%p(i,j,k)-uvt%p(i-1,j,k))+zr*(uvt%p(i+1,j,k)-uvt%p(i,j,k)))
+                dx = (zl*( 3._8*uvt%p(i+1,j,k)+10._8*uvt%p(i,j,k)- &
+                          18._8*uvt%p(i-1,j,k)+6._8*uvt%p(i-2,j,k)-uvt%p(i-3,j,k))-&
+                      zr*( 3._8*uvt%p(i-1,j,k)+10._8*uvt%p(i,j,k)- &
+                          18._8*uvt%p(i+1,j,k)+6._8*uvt%p(i+2,j,k)-uvt%p(i+3,j,k))) / 12.0_8
+                ! dx = (zl*( 2._8*uvt%p(i+1,j,k)+3._8*uvt%p(i,j,k)- &
+                !           6._8*uvt%p(i-1,j,k)+1._8*uvt%p(i-2,j,k))+&
+                !       zr*( 2._8*uvt%p(i-1,j,k)+3._8*uvt%p(i,j,k)- &
+                !           6._8*uvt%p(i+1,j,k)+1._8*uvt%p(i+2,j,k))) / 6.0_8
+                ! dx = (zl*(uvt%p(i,j,k)-uvt%p(i-1,j,k))+zr*(uvt%p(i+1,j,k)-uvt%p(i,j,k)))
+                ! dx = 0.5_8*(uvt%p(i+1,j,k)-uvt%p(i-1,j,k))
+                ! dx = (-uvt%p(i+2,j,k)+8._8*uvt%p(i+1,j,k)-8._8*uvt%p(i-1,j,k)+uvt%p(i-2,j,k)) / 12._8
+                ! dx = (uvt%p(i+3,j,k)/60._8-3._8/20._8*uvt%p(i+2,j,k)+3._8/4._8*uvt%p(i+1,j,k)-&
+                !       3._8/4._8*uvt%p(i-1,j,k)+3._8/20._8*uvt%p(i-2,j,k)-uvt%p(i-3,j,k)/60._8)
                 zl = .5_8+sign(.5_8,vt%p(i,j,k))
                 zr = 1._8-zl
-                dy = (zl*(uvt%p(i,j,k)-uvt%p(i,j-1,k))+zr*(uvt%p(i,j+1,k)-uvt%p(i,j,k)))
+                dy = (zl*( 3._8*uvt%p(i,j+1,k)+10._8*uvt%p(i,j,k)- &
+                          18._8*uvt%p(i,j-1,k)+6._8*uvt%p(i,j-2,k)-uvt%p(i,j-3,k))-&
+                      zr*( 3._8*uvt%p(i,j-1,k)+10._8*uvt%p(i,j,k)- &
+                          18._8*uvt%p(i,j+1,k)+6._8*uvt%p(i,j+2,k)-uvt%p(i,j+3,k))) / 12.0_8
+                ! dy = (zl*( 2._8*uvt%p(i,j+1,k)+3._8*uvt%p(i,j,k)- &
+                !           6._8*uvt%p(i,j-1,k)+1._8*uvt%p(i,j-2,k))+&
+                !       zr*( 2._8*uvt%p(i,j-1,k)+3._8*uvt%p(i,j,k)- &
+                !           6._8*uvt%p(i,j+1,k)+1._8*uvt%p(i,j+2,k))) / 6.0_8
+                ! dy = (zl*(uvt%p(i,j,k)-uvt%p(i,j-1,k))+zr*(uvt%p(i,j+1,k)-uvt%p(i,j,k)))
+                ! dy = 0.5_8*(uvt%p(i,j+1,k)-uvt%p(i,j-1,k))
+                !dy = (-uvt%p(i,j+2,k)+8._8*uvt%p(i,j+1,k)-8._8*uvt%p(i,j-1,k)+uvt%p(i,j-2,k)) / 12._8
+                ! dy = (uvt%p(i,j+3,k)/60._8-3._8/20._8*uvt%p(i,j+2,k)+3._8/4._8*uvt%p(i,j+1,k)-&
+                !       3._8/4._8*uvt%p(i,j-1,k)+3._8/20._8*uvt%p(i,j-2,k)-uvt%p(i,j-3,k)/60._8)
                 uvt_tend%p(i,j,k) =-(ut%p(i,j,k)*dx+vt%p(i,j,k)*dy) / (hx*scale)-&
                                     (ut%p(i,j,k)*ut%p(i,j,k)*mesh%T(1,1,component_num,i,j)+ &
                                      2.0_8*ut%p(i,j,k)*vt%p(i,j,k)*mesh%T(1,2,component_num,i,j)+ &
