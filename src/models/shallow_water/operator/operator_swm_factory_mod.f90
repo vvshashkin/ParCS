@@ -177,6 +177,10 @@ subroutine create_advective_swm_operator(operator, grav, swm_config, domain)
         swm_op%h_surf%tile(t)%p = 0.0_8
     end do
 
+    call create_grid_field(swm_op%KE_diag_u,  0, 0, domain%mesh_u)
+    call create_grid_field(swm_op%KE_diag_v,  0, 0, domain%mesh_v)
+    call create_grid_field(swm_op%PE_diag,    0, 0, domain%mesh_p)
+
     call move_alloc(swm_op, operator)
 
 end subroutine create_advective_swm_operator

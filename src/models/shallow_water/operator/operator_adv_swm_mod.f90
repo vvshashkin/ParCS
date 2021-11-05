@@ -52,7 +52,7 @@ contains
     procedure, public :: apply
     procedure, public :: get_diagnostics
     !procedure, public :: get_diagnostics_tend
-    !procedure, public :: calc_energy
+    procedure, public :: calc_energy
     !procedure, public :: calc_enstrophy
 end type operator_adv_swm_t
 
@@ -132,7 +132,7 @@ function get_diagnostics(this, v, domain) result(diagnostics)
 
     type(key_value_r8_t)  :: diagnostics
 
-    integer(kind=4), parameter :: ndiag = 3
+    integer(kind=4), parameter :: ndiag = 6
     real(kind=8) :: te, ke, pe, enstrophy
 
     allocate(diagnostics%keys(ndiag))
@@ -147,13 +147,13 @@ function get_diagnostics(this, v, domain) result(diagnostics)
         diagnostics%keys(3)%str = "mass"
         diagnostics%values(3) = this%quadrature_h%mass(v%h, domain%mesh_p, domain%parcomm)
 
-        ! call this%calc_energy(te,ke,pe,v, domain)
-        ! diagnostics%keys(4)%str = "TE"
-        ! diagnostics%values(4) = te
-        ! diagnostics%keys(5)%str = "KE"
-        ! diagnostics%values(5) = ke
-        ! diagnostics%keys(6)%str = "PE"
-        ! diagnostics%values(6) = pe
+        call this%calc_energy(te,ke,pe,v, domain)
+        diagnostics%keys(4)%str = "TE"
+        diagnostics%values(4) = te
+        diagnostics%keys(5)%str = "KE"
+        diagnostics%values(5) = ke
+        diagnostics%keys(6)%str = "PE"
+        diagnostics%values(6) = pe
 
         !call this%calc_enstrophy(enstrophy,v, domain)
         !diagnostics%keys(7)%str = "Enstrophy"
@@ -218,31 +218,29 @@ end function get_diagnostics
 !
 ! end function get_diagnostics_tend
 
-! subroutine calc_energy(this, te, ke, pe, vin, domain)
-!
-!
-!     class(operator_swm_t), intent(inout) :: this
-!     class(stvec_swm_t),    intent(inout) :: vin
-!     type(domain_t),        intent(in)    :: domain
-!
-!     real(kind=8), intent(out) :: te, ke, pe
-!
-!     call this%co2contra_op%transform(this%ut, this%vt, vin%u, vin%v, domain)
-!     call this%massflux_op%calc_massflux(this%hu, this%hv, &
-!                                              vin%h, this%ut, this%vt, domain)
-!     call this%massflux_op%calc_massflux(this%hu, this%hv, &
-!                                              vin%h, this%ut, this%vt, domain)
-!
-!     call this%KE_diag_u%assign_prod(0.5_8,this%hu,vin%u,domain%mesh_u)
-!     call this%KE_diag_v%assign_prod(0.5_8,this%hv,vin%v,domain%mesh_v)
-!     call this%PE_diag%assign_prod(0.5_8*this%grav,vin%h,vin%h,domain%mesh_p)
-!
-!     ke = this%quadrature_u%mass(this%KE_diag_u,domain%mesh_u,domain%parcomm)+&
-!          this%quadrature_v%mass(this%KE_diag_v,domain%mesh_v,domain%parcomm)
-!     pe   = this%quadrature_h%mass(this%PE_diag,domain%mesh_p,domain%parcomm)
-!
-!     te = ke+pe
-! end subroutine calc_energy
+subroutine calc_energy(this, te, ke, pe, vin, domain)
+
+
+    class(operator_adv_swm_t), intent(inout) :: this
+    class(stvec_swm_t),        intent(inout) :: vin
+    type(domain_t),            intent(in)    :: domain
+
+    real(kind=8), intent(out) :: te, ke, pe
+
+    call this%co2contra_op%transform2co(this%ut, this%vt, vin%u, vin%v, domain)
+    call this%massflux_op%calc_massflux(this%hu, this%hv, &
+                                             vin%h, vin%u, vin%v, domain)
+
+    call this%KE_diag_u%assign_prod(0.5_8,this%hu,this%ut,domain%mesh_u)
+    call this%KE_diag_v%assign_prod(0.5_8,this%hv,this%vt,domain%mesh_v)
+    call this%PE_diag%assign_prod(0.5_8*this%grav,vin%h,vin%h,domain%mesh_p)
+
+    ke = this%quadrature_u%mass(this%KE_diag_u,domain%mesh_u,domain%parcomm)+&
+         this%quadrature_v%mass(this%KE_diag_v,domain%mesh_v,domain%parcomm)
+    pe   = this%quadrature_h%mass(this%PE_diag,domain%mesh_p,domain%parcomm)
+
+    te = ke+pe
+end subroutine calc_energy
 !
 ! subroutine calc_enstrophy(this, enstrophy, vin, domain)
 !
