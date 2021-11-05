@@ -502,7 +502,7 @@ function compute_grid_field_minimum(this, mesh, parcomm) result(minimum_value)
 
     local_min = this%tile(mesh%ts)%minimum(mesh%tile(mesh%ts))
     do t = mesh%ts+1, mesh%te
-        local_min = max(local_min,this%tile(t)%minimum(mesh%tile(t)))
+        local_min = min(local_min,this%tile(t)%minimum(mesh%tile(t)))
     end do
 
     call mpi_allreduce(local_min, minimum_value, 1, mpi_double, mpi_min, parcomm%comm_w, ierr)

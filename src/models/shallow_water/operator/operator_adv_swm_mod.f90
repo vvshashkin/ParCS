@@ -142,7 +142,7 @@ function get_diagnostics(this, v, domain) result(diagnostics)
     type is (stvec_swm_t)
         diagnostics%keys(1)%str = "hmin"
         diagnostics%values(1) = v%h%minimum(domain%mesh_p, domain%parcomm)
-        diagnostics%keys(2)%str = "hmin"
+        diagnostics%keys(2)%str = "hmax"
         diagnostics%values(2) = v%h%maximum(domain%mesh_p, domain%parcomm)
         diagnostics%keys(3)%str = "mass"
         diagnostics%values(3) = this%quadrature_h%mass(v%h, domain%mesh_p, domain%parcomm)
