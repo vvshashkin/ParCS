@@ -5,7 +5,8 @@ program test_diffops
 use parcomm_mod,         only : init_global_parallel_enviroment, &
                                 deinit_global_parallel_enviroment, parcomm_global
 use test_diffops_mod, only: test_div, test_grad, test_conv, test_curl, test_grad_perp, &
-                            test_coriolis, test_curl_grad, test_co2contra, test_compatibility
+                            test_coriolis, test_curl_grad, test_co2contra, test_compatibility, &
+                            test_vec_advection
 use key_value_mod,    only : key_value_r8_t
 
 implicit none
@@ -45,25 +46,25 @@ call init_global_parallel_enviroment()
 !     print *, "divergence_c_sbp21"
 !     print "(A,5E15.7)", "Err: ", errs%values
 ! end if
-errs = test_div(N=32,div_oper_name="divergence_ch_sbp21",staggering="Ch")
-if(parcomm_global%myid == 0) then
-    print *, "divergence_ch_sbp21"
-    print "(A,5E15.7)", "Err: ", errs%values
-end if
-
-errs = test_div(N=32,div_oper_name="divergence_ch_sbp42",staggering="Ch")
-if(parcomm_global%myid == 0) then
-    print *, "divergence_ch_sbp21"
-    print "(A,5E15.7)", "Err: ", errs%values
-end if
-
-
-
-errs = test_div(N=32,div_oper_name="divergence_c_sbp42",staggering="C")
-if(parcomm_global%myid == 0) then
-    print *, "divergence_c_sbp42"
-    print "(A,5E15.7)", "Err: ", errs%values
-end if
+! errs = test_div(N=32,div_oper_name="divergence_ch_sbp21",staggering="Ch")
+! if(parcomm_global%myid == 0) then
+!     print *, "divergence_ch_sbp21"
+!     print "(A,5E15.7)", "Err: ", errs%values
+! end if
+!
+! errs = test_div(N=32,div_oper_name="divergence_ch_sbp42",staggering="Ch")
+! if(parcomm_global%myid == 0) then
+!     print *, "divergence_ch_sbp21"
+!     print "(A,5E15.7)", "Err: ", errs%values
+! end if
+!
+!
+!
+! errs = test_div(N=32,div_oper_name="divergence_c_sbp42",staggering="C")
+! if(parcomm_global%myid == 0) then
+!     print *, "divergence_c_sbp42"
+!     print "(A,5E15.7)", "Err: ", errs%values
+! end if
 
 ! errs = test_div(N=32,div_oper_name="divergence_ah2",staggering="Ah")
 ! if(parcomm_global%myid == 0) then
@@ -137,17 +138,17 @@ end if
 !     print "(A,4E15.7)", "Err: ", errs%values
 ! end if
 !
-errs = test_grad(N=32,grad_oper_name="gradient_ch_sbp21",staggering="Ch")
-if(parcomm_global%myid == 0) then
-    print *, "gradient_ch_sbp21_ecs"
-    print "(A,4E15.7)", "Err: ", errs%values
-end if
-
-errs = test_grad(N=32,grad_oper_name="gradient_ch_sbp42",staggering="Ch")
-if(parcomm_global%myid == 0) then
-    print *, "gradient_ch_sbp42_ecs"
-    print "(A,4E15.7)", "Err: ", errs%values
-end if
+! errs = test_grad(N=32,grad_oper_name="gradient_ch_sbp21",staggering="Ch")
+! if(parcomm_global%myid == 0) then
+!     print *, "gradient_ch_sbp21_ecs"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+!
+! errs = test_grad(N=32,grad_oper_name="gradient_ch_sbp42",staggering="Ch")
+! if(parcomm_global%myid == 0) then
+!     print *, "gradient_ch_sbp42_ecs"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
 
 ! errs = test_grad(N=32,grad_oper_name="gradient_ah_c42_sbp_ecs",staggering="Ah_C")
 ! if(parcomm_global%myid == 0) then
@@ -210,17 +211,17 @@ end if
 !     print "(A,4E15.7)", "Err: ", errs%values
 ! end if
 
-errs = test_co2contra(N=32,co2contra_oper_name="co2contra_ch_sbp21", staggering="Ch")
-if (parcomm_global%myid==0) then
-    print *, "co2contra_ch_sbp21"
-    print "(A,4E15.7)", "Err: ", errs%values
-end if
-
-errs = test_co2contra(N=32,co2contra_oper_name="co2contra_ch_sbp42", staggering="Ch")
-if (parcomm_global%myid==0) then
-    print *, "co2contra_ch_sbp42"
-    print "(A,4E15.7)", "Err: ", errs%values
-end if
+! errs = test_co2contra(N=32,co2contra_oper_name="co2contra_ch_sbp21", staggering="Ch")
+! if (parcomm_global%myid==0) then
+!     print *, "co2contra_ch_sbp21"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+!
+! errs = test_co2contra(N=32,co2contra_oper_name="co2contra_ch_sbp42", staggering="Ch")
+! if (parcomm_global%myid==0) then
+!     print *, "co2contra_ch_sbp42"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
 
 ! call test_conv(operator_name="gradient_c_sbp21",staggering="C",Ns=Ns)
 ! call test_conv(operator_name="divergence_c_sbp21",staggering="C",Ns=Ns)
@@ -295,6 +296,12 @@ end if
 !     print *, "grad_perp_c_sbp42"
 !     print "(A,4E15.7)", "Err: ", errs%values
 ! end if
+
+errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_C", staggering="C")
+if (parcomm_global%myid==0) then
+    print *, "vector_advection_C"
+    print "(A,4E25.16)", "Err: ", errs%values
+end if
 
 call deinit_global_parallel_enviroment()
 

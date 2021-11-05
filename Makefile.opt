@@ -960,7 +960,9 @@ $(DOBJ)vector_advection_c_mod.o: src/differential_operators/vec_advection/vector
 	$(DOBJ)interpolator_v2h_mod.o \
 	$(DOBJ)interpolator_h2v_mod.o \
 	$(DOBJ)abstract_vector_advection_mod.o \
-	$(DOBJ)parcomm_mod.o
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)tile_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -1758,6 +1760,8 @@ $(DOBJ)test_diffops_mod.o: src/test/test_diff_ops/test_diffops_mod.f90 \
 	$(DOBJ)halo_factory_mod.o \
 	$(DOBJ)coriolis_factory_mod.o \
 	$(DOBJ)abstract_coriolis_mod.o \
+	$(DOBJ)abstract_vector_advection_mod.o \
+	$(DOBJ)vector_advection_factory_mod.o \
 	$(DOBJ)exchange_abstract_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
 	$(DOBJ)quadrature_factory_mod.o \

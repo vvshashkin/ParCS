@@ -8,6 +8,7 @@ private
 public :: set_scalar_test_field, set_vector_test_field, set_perp_vector_test_field
 public :: xyz_scalar_field_generator_t, xyz_scalar_field_generator
 public :: solid_rotation_field_generator_t, solid_rotation_field_generator
+public :: solid_rotation_vecadv_tend_t, solid_rotation_vecadv_tend
 public :: xyz_grad_generator_t, xyz_grad_generator
 public :: cross_polar_flow_generator_t, cross_polar_flow_generator
 public :: cross_polar_flow_div_generator_t, cross_polar_flow_div_generator
@@ -64,6 +65,11 @@ type, extends(vector_field_generator_t) :: solid_rotation_field_generator_t
 contains
     procedure :: get_vector_field => generate_solid_rotation_vector_field
 end type solid_rotation_field_generator_t
+
+type, extends(vector_field_generator_t) :: solid_rotation_vecadv_tend_t
+contains
+    procedure :: get_vector_field => generate_solid_rotation_vecadv_tend
+end type solid_rotation_vecadv_tend_t
 
 type, extends(vector_field_generator_t) :: coriolis_force_field_generator_t
     class(vector_field_generator_t), allocatable :: input_field
@@ -172,6 +178,7 @@ end type barotropic_instability_wind_generator_t
 !!!field generator instances
 type(xyz_scalar_field_generator_t)     :: xyz_scalar_field_generator
 type(solid_rotation_field_generator_t) :: solid_rotation_field_generator
+type(solid_rotation_vecadv_tend_t)     :: solid_rotation_vecadv_tend
 type(xyz_grad_generator_t)             :: xyz_grad_generator
 type(cross_polar_flow_generator_t)     :: cross_polar_flow_generator
 type(cross_polar_flow_div_generator_t) :: cross_polar_flow_div_generator
@@ -463,6 +470,32 @@ subroutine generate_solid_rotation_vector_field(this,vx,vy,vz,npts,nlev,x,y,z)
         end do
     end do
 end subroutine generate_solid_rotation_vector_field
+
+subroutine generate_solid_rotation_vecadv_tend(this,vx,vy,vz,npts,nlev,x,y,z)
+    class(solid_rotation_vecadv_tend_t),      intent(in)  :: this
+    integer(kind=4),                          intent(in)  :: npts, nlev
+    real(kind=8),       dimension(npts),      intent(in)  :: x, y, z
+    real(kind=8),       dimension(npts,nlev), intent(out) :: vx, vy, vz
+
+    integer(kind=4) :: i, k, k1
+    real(kind=8)    :: ux, uy, uz, ra
+    real(kind=8)    :: axis(3,3) = reshape([1.0_8, 0.0_8, 0.0_8,  & !rotation axes for different levs
+                                            0.0_8, 1.0_8, 0.0_8,  &
+                                            0.0_8, 0.0_8, 1.0_8],[3,3])
+
+    do k = 1, nlev
+        k1 = mod(k-1,3)+1  !1,2,3,1,2,3,1,2 etc
+        do i=1, npts
+            ux = axis(2,k1)*z(i)-axis(3,k1)*y(i)
+            uy =-axis(1,k1)*z(i)+axis(3,k1)*x(i)
+            uz = axis(1,k1)*y(i)-axis(2,k1)*x(i)
+            ra = axis(1,k1)*x(i)+axis(2,k1)*y(i)+axis(3,k1)*z(i)
+            vx(i,k) =-(y(i)*uz-z(i)*uy)*ra
+            vy(i,k) = (x(i)*uz-z(i)*ux)*ra
+            vz(i,k) =-(x(i)*uy-y(i)*ux)*ra
+        end do
+    end do
+end subroutine generate_solid_rotation_vecadv_tend
 
 subroutine gen_solid_rotation_vec_field(this, vx, vy, vz, npts, nlev, x, y, z)
 

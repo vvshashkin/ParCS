@@ -15,7 +15,7 @@ private
 public :: test_div, test_grad, test_conv, &
           test_laplace_spectre, test_curl, test_coriolis,  &
           test_curl_grad, test_co2contra, test_KE, test_coriolis_vec_inv, &
-          test_compatibility, test_grad_perp, test_contra2co
+          test_compatibility, test_grad_perp, test_contra2co, test_vec_advection
 
 contains
 
@@ -662,6 +662,59 @@ function test_coriolis_vec_inv(N, coriolis_op_name, staggering) result(errs)
                      l2norm(cor_v, domain%mesh_v, domain%parcomm)
 
 end function test_coriolis_vec_inv
+
+type(key_value_r8_t) function test_vec_advection(N,vecadv_oper_name,staggering) result(errs)
+
+    use test_fields_mod,    only : set_vector_test_field, &
+                                   solid_rot=>solid_rotation_field_generator,&
+                                   solid_rot_tend=>solid_rotation_vecadv_tend
+    use mesh_mod, only : mesh_t
+
+    use abstract_vector_advection_mod, only : vector_advection_operator_t
+    use vector_advection_factory_mod,  only : create_vector_advection_operator
+
+    integer(kind=4),  intent(in) :: N
+    character(len=*), intent(in) :: vecadv_oper_name, staggering
+    !locals:
+    integer(kind=4), parameter  :: nz = 3
+    integer(kind=4), parameter  :: ex_halo_width = 8
+    type(grid_field_t)          :: ut, vt, ut_tend, vt_tend
+    type(grid_field_t)          :: ut_tend_true, vt_tend_true
+    type(domain_t)              :: domain
+    class(vector_advection_operator_t), allocatable :: vec_adv_op
+
+    call create_domain(domain, "cube", staggering, N, nz)
+
+    call create_grid_field(ut,     8, 0, domain%mesh_u)
+    call create_grid_field(vt,     8, 0, domain%mesh_v)
+    call create_grid_field(ut_tend,2, 0, domain%mesh_u)
+    call create_grid_field(vt_tend,2, 0, domain%mesh_v)
+    call create_grid_field(ut_tend_true, 1, 0, domain%mesh_u)
+    call create_grid_field(vt_tend_true, 1, 0, domain%mesh_v)
+
+    call set_vector_test_field(ut, vt, solid_rot, domain%mesh_u, domain%mesh_v, 0, "contravariant")
+    call set_vector_test_field(ut_tend_true, vt_tend_true, solid_rot_tend, &
+                               domain%mesh_u, domain%mesh_v, 0, "contravariant")
+
+    call create_vector_advection_operator(vec_adv_op, vecadv_oper_name, domain)
+    call vec_adv_op%calc_vec_advection_contra(ut_tend, vt_tend, ut, vt, domain)
+
+    call ut_tend%update(-1.0_8, ut_tend_true, domain%mesh_u)
+    call vt_tend%update(-1.0_8, vt_tend_true, domain%mesh_v)
+
+    allocate(errs%keys(4), errs%values(4))
+    errs%keys(1)%str = "u linf"
+    errs%keys(1)%str = "v linf"
+    errs%keys(2)%str = "u l2"
+    errs%keys(2)%str = "v l2"
+
+    errs%values(1) = ut_tend%maxabs(domain%mesh_u, domain%parcomm)
+    errs%values(2) = vt_tend%maxabs(domain%mesh_v, domain%parcomm)
+    errs%values(3) = l2norm(ut_tend, domain%mesh_u, domain%parcomm)
+    errs%values(4) = l2norm(vt_tend, domain%mesh_v, domain%parcomm)
+
+end function test_vec_advection
+
 subroutine test_laplace_spectre(div_operator_name, grad_operator_name, &
                                 co2contra_operator_name, staggering)
     use test_fields_mod,        only : set_vector_test_field, solid_rot=>solid_rotation_field_generator

@@ -1,5 +1,5 @@
 &domain
-    N = 256,
+    N = 32,
     Nz = 1,
     topology_type    = 'cube',
     staggering_type  = 'C',
@@ -69,13 +69,13 @@
     hordiff_uv_name   = 'hordiff_c_biharm_curl_div',
     h_diff_coeff      =  0.00,
     hordiff_h_name    = 'hordiff_scalar_C',
-    dt=60.0,
-    tau_write = 21600.0,
-    tau_diagnostics = 3600.0
-    simulation_time_days  = 30.0,
+    dt=900.0,
+    tau_write = 900.0,
+    tau_diagnostics = 900.0
+    simulation_time_days  = 0.0,
     simulation_time_hours = 0.0,
     simulation_time_min   = 0.0,
-    simulation_time_sec   = 0.0,
+    simulation_time_sec   = 3600.0,
 /
 &shallow_water_model_c
     swm_op_type       = 'vector_invariant'
