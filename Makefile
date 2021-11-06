@@ -688,6 +688,19 @@ $(DOBJ)hordiff_cgrid_mod.o: src/differential_operators/hordiff/hordiff_Cgrid_mod
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)v_nabla_mod.o: src/differential_operators/v_dot_nabla/v_nabla_mod.f90 \
+	$(DOBJ)abstract_v_nabla_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)mesh_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)abstract_v_nabla_mod.o: src/differential_operators/v_dot_nabla/abstract_v_nabla_mod.f90 \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)mesh_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)abstract_co2contra_mod.o: src/differential_operators/co2contra/abstract_co2contra_mod.f90 \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)domain_mod.o \
@@ -942,6 +955,7 @@ $(DOBJ)vector_advection_factory_mod.o: src/differential_operators/vec_advection/
 	$(DOBJ)abstract_vector_advection_mod.o \
 	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)v_nabla_mod.o \
 	$(DOBJ)vector_advection_ah_mod.o \
 	$(DOBJ)sbp_factory_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
@@ -949,17 +963,19 @@ $(DOBJ)vector_advection_factory_mod.o: src/differential_operators/vec_advection/
 	$(DOBJ)vector_advection_c_mod.o \
 	$(DOBJ)grid_field_factory_mod.o \
 	$(DOBJ)interpolator_h2v_factory_mod.o \
-	$(DOBJ)interpolator_v2h_factory_mod.o
+	$(DOBJ)interpolator_v2h_factory_mod.o \
+	$(DOBJ)abstract_v_nabla_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)vector_advection_c_mod.o: src/differential_operators/vec_advection/vector_advection_C_mod.f90 \
+	$(DOBJ)abstract_v_nabla_mod.o \
+	$(DOBJ)abstract_vector_advection_mod.o \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)halo_mod.o \
 	$(DOBJ)interpolator_v2h_mod.o \
 	$(DOBJ)interpolator_h2v_mod.o \
-	$(DOBJ)abstract_vector_advection_mod.o \
 	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)mesh_mod.o \
 	$(DOBJ)tile_mod.o

@@ -1,20 +1,22 @@
 module vector_advection_C_mod
 
+use abstract_v_nabla_mod,          only : v_nabla_operator_t
+use abstract_vector_advection_mod, only : vector_advection_operator_t
 use grid_field_mod,                only : grid_field_t, tile_field_t
 use domain_mod,                    only : domain_t
 use halo_mod,                      only : halo_vec_t
 use interpolator_v2h_mod,          only : interpolator_v2h_t
 use interpolator_h2v_mod,          only : interpolator_h2v_t
-use abstract_vector_advection_mod, only : vector_advection_operator_t
 use parcomm_mod,                   only : parcomm_global
 
 implicit none
 
 type, public, extends(vector_advection_operator_t) :: vector_advection_C_t
-    type(grid_field_t) :: u_at_v, v_at_u, uh, vh
-    type(interpolator_v2h_t) :: interp_v2h_op
-    type(interpolator_h2v_t) :: interp_h2v_op
-    class(halo_vec_t), allocatable :: halo_uv, tendency_edge_sync
+    class(v_nabla_operator_t), allocatable :: v_nabla_op
+    type(grid_field_t)                     :: u_at_v, v_at_u, uh, vh
+    type(interpolator_v2h_t)               :: interp_v2h_op
+    type(interpolator_h2v_t)               :: interp_h2v_op
+    class(halo_vec_t), allocatable         :: halo_uv, tendency_edge_sync
 contains
     procedure :: calc_vec_advection
     procedure :: calc_vec_advection_contra
@@ -46,17 +48,20 @@ subroutine calc_vec_advection_contra(this, u_tend, v_tend, ut, vt, domain)
 
     call this%halo_uv%get_halo_vector(ut, vt, domain, 3)
 
+    call this%v_nabla_op%calc_v_nabla(u_tend, ut, ut, this%v_at_u, domain%mesh_u)
+    call this%v_nabla_op%calc_v_nabla(v_tend, vt, this%u_at_v, vt, domain%mesh_v)
+
     do t = domain%mesh_o%ts, domain%mesh_o%te
-        call calc_advection_1comp_contra_tile(u_tend%tile(t), ut%tile(t), ut%tile(t), this%v_at_u%tile(t), &
-                                              domain%mesh_u%scale, domain%mesh_u%tile(t),"u")
-        call calc_advection_1comp_contra_tile(v_tend%tile(t), vt%tile(t), this%u_at_v%tile(t), vt%tile(t), &
-                                              domain%mesh_v%scale, domain%mesh_v%tile(t),"v")
+        call add_metric_terms_1comp_contra_tile(u_tend%tile(t), ut%tile(t), ut%tile(t), this%v_at_u%tile(t), &
+                                                domain%mesh_u%scale, domain%mesh_u%tile(t),"u")
+        call add_metric_terms_1comp_contra_tile(v_tend%tile(t), vt%tile(t), this%u_at_v%tile(t), vt%tile(t), &
+                                                domain%mesh_v%scale, domain%mesh_v%tile(t),"v")
     end do
 
     call this%tendency_edge_sync%get_halo_vector(u_tend, v_tend, domain, 1)
 end subroutine calc_vec_advection_contra
 
-subroutine calc_advection_1comp_contra_tile(uvt_tend, uvt, ut, vt, scale, mesh, component)
+subroutine add_metric_terms_1comp_contra_tile(uvt_tend, uvt, ut, vt, scale, mesh, component)
 
     use mesh_mod, only : tile_mesh_t
     use tile_mod, only : tile_t
@@ -91,37 +96,7 @@ subroutine calc_advection_1comp_contra_tile(uvt_tend, uvt, ut, vt, scale, mesh, 
     do k = ks, ke
         do j = js, je
             do i = is, ie
-                zl = .5_8+sign(.5_8,ut%p(i,j,k))
-                zr = 1._8-zl
-                dx = (zl*( 3._8*uvt%p(i+1,j,k)+10._8*uvt%p(i,j,k)- &
-                          18._8*uvt%p(i-1,j,k)+6._8*uvt%p(i-2,j,k)-uvt%p(i-3,j,k))-&
-                      zr*( 3._8*uvt%p(i-1,j,k)+10._8*uvt%p(i,j,k)- &
-                          18._8*uvt%p(i+1,j,k)+6._8*uvt%p(i+2,j,k)-uvt%p(i+3,j,k))) / 12.0_8
-                ! dx = (zl*( 2._8*uvt%p(i+1,j,k)+3._8*uvt%p(i,j,k)- &
-                !           6._8*uvt%p(i-1,j,k)+1._8*uvt%p(i-2,j,k))+&
-                !       zr*( 2._8*uvt%p(i-1,j,k)+3._8*uvt%p(i,j,k)- &
-                !           6._8*uvt%p(i+1,j,k)+1._8*uvt%p(i+2,j,k))) / 6.0_8
-                ! dx = (zl*(uvt%p(i,j,k)-uvt%p(i-1,j,k))+zr*(uvt%p(i+1,j,k)-uvt%p(i,j,k)))
-                ! dx = 0.5_8*(uvt%p(i+1,j,k)-uvt%p(i-1,j,k))
-                ! dx = (-uvt%p(i+2,j,k)+8._8*uvt%p(i+1,j,k)-8._8*uvt%p(i-1,j,k)+uvt%p(i-2,j,k)) / 12._8
-                ! dx = (uvt%p(i+3,j,k)/60._8-3._8/20._8*uvt%p(i+2,j,k)+3._8/4._8*uvt%p(i+1,j,k)-&
-                !       3._8/4._8*uvt%p(i-1,j,k)+3._8/20._8*uvt%p(i-2,j,k)-uvt%p(i-3,j,k)/60._8)
-                zl = .5_8+sign(.5_8,vt%p(i,j,k))
-                zr = 1._8-zl
-                dy = (zl*( 3._8*uvt%p(i,j+1,k)+10._8*uvt%p(i,j,k)- &
-                          18._8*uvt%p(i,j-1,k)+6._8*uvt%p(i,j-2,k)-uvt%p(i,j-3,k))-&
-                      zr*( 3._8*uvt%p(i,j-1,k)+10._8*uvt%p(i,j,k)- &
-                          18._8*uvt%p(i,j+1,k)+6._8*uvt%p(i,j+2,k)-uvt%p(i,j+3,k))) / 12.0_8
-                ! dy = (zl*( 2._8*uvt%p(i,j+1,k)+3._8*uvt%p(i,j,k)- &
-                !           6._8*uvt%p(i,j-1,k)+1._8*uvt%p(i,j-2,k))+&
-                !       zr*( 2._8*uvt%p(i,j-1,k)+3._8*uvt%p(i,j,k)- &
-                !           6._8*uvt%p(i,j+1,k)+1._8*uvt%p(i,j+2,k))) / 6.0_8
-                ! dy = (zl*(uvt%p(i,j,k)-uvt%p(i,j-1,k))+zr*(uvt%p(i,j+1,k)-uvt%p(i,j,k)))
-                ! dy = 0.5_8*(uvt%p(i,j+1,k)-uvt%p(i,j-1,k))
-                !dy = (-uvt%p(i,j+2,k)+8._8*uvt%p(i,j+1,k)-8._8*uvt%p(i,j-1,k)+uvt%p(i,j-2,k)) / 12._8
-                ! dy = (uvt%p(i,j+3,k)/60._8-3._8/20._8*uvt%p(i,j+2,k)+3._8/4._8*uvt%p(i,j+1,k)-&
-                !       3._8/4._8*uvt%p(i,j-1,k)+3._8/20._8*uvt%p(i,j-2,k)-uvt%p(i,j-3,k)/60._8)
-                uvt_tend%p(i,j,k) =-(ut%p(i,j,k)*dx+vt%p(i,j,k)*dy) / (hx*scale)-&
+                uvt_tend%p(i,j,k) = uvt_tend%p(i,j,k) -&
                                     (ut%p(i,j,k)*ut%p(i,j,k)*mesh%T(1,1,component_num,i,j)+ &
                                      2.0_8*ut%p(i,j,k)*vt%p(i,j,k)*mesh%T(1,2,component_num,i,j)+ &
                                      vt%p(i,j,k)*vt%p(i,j,k)*mesh%T(2,2,component_num,i,j)) / scale
@@ -129,6 +104,6 @@ subroutine calc_advection_1comp_contra_tile(uvt_tend, uvt, ut, vt, scale, mesh, 
         end do
     end do
 
-end subroutine calc_advection_1comp_contra_tile
+end subroutine add_metric_terms_1comp_contra_tile
 
 end module vector_advection_C_mod

@@ -297,7 +297,7 @@ call init_global_parallel_enviroment()
 !     print "(A,4E15.7)", "Err: ", errs%values
 ! end if
 
-errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_C", staggering="C")
+errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_C_up4", staggering="C")
 if (parcomm_global%myid==0) then
     print *, "vector_advection_C"
     print "(A,4E25.16)", "Err: ", errs%values
