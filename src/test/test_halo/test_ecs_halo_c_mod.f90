@@ -21,7 +21,7 @@ subroutine test_ecs_cvec_halo(halo_procedure, components_type)
 
     character(len=*), intent(in) :: halo_procedure, components_type
 
-    integer(kind=4), parameter         :: nh=32, nz=3, halo_width=3, ex_halo_width=8
+    integer(kind=4), parameter         :: nh=64, nz=3, halo_width=3, ex_halo_width=8
 
     type(domain_t)             :: domain
     type(grid_field_t)         :: u_test, v_test
