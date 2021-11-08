@@ -249,15 +249,21 @@ if (parcomm_global%myid==0) then
     print "(A,4E15.7)", "Err: ", errs%values
 end if
 
+errs = test_co2contra(N=32,co2contra_oper_name="co2contra_colocated", staggering="Ah")
+if (parcomm_global%myid==0) then
+    print *, "co2contra_colocated Ah grid"
+    print "(A,4E15.7)", "Err: ", errs%values
+end if
+
 errs = test_contra2co(N=32,contra2co_oper_name="co2contra_c_sbp42_new", staggering="C")
 if (parcomm_global%myid==0) then
     print *, "contra2co_c_sbp42_new"
     print "(A,4E15.7)", "Err: ", errs%values
 end if
 
-errs = test_co2contra(N=32,co2contra_oper_name="co2contra_colocated", staggering="Ah")
+errs = test_contra2co(N=32,contra2co_oper_name="co2contra_colocated", staggering="Ah")
 if (parcomm_global%myid==0) then
-    print *, "co2contra_colocated Ah grid"
+    print *, "contra2co_colocated"
     print "(A,4E15.7)", "Err: ", errs%values
 end if
 

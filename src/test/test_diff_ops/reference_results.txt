@@ -74,7 +74,9 @@ Err:   0.1313788E-01  0.7356931E-02
 Err:   0.6187488E-01  0.3405089E-01
  co2contra_ch_sbp42
 Err:   0.5641616E-02  0.3696864E-02
- contra2co_c_sbp42_new
-Err:   0.1036216E-01  0.6450221E-02
  co2contra_colocated Ah grid
 Err:   0.1554312E-14  0.1574317E-14
+ contra2co_c_sbp42_new
+Err:   0.1036216E-01  0.6450221E-02
+ contra2co_colocated
+Err:   0.1665335E-14  0.1839088E-14
