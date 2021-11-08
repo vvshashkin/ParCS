@@ -323,6 +323,24 @@ if (parcomm_global%myid==0) then
     print "(A,4E25.16)", "Err: ", errs%values
 end if
 
+errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_Ah21", staggering="Ah")
+if (parcomm_global%myid==0) then
+    print *, "vector_advection_Ah21"
+    print "(A,4E25.16)", "Err: ", errs%values
+end if
+
+errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_Ah42", staggering="Ah")
+if (parcomm_global%myid==0) then
+    print *, "vector_advection_Ah42"
+    print "(A,4E25.16)", "Err: ", errs%values
+end if
+
+errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_Ah63", staggering="Ah")
+if (parcomm_global%myid==0) then
+    print *, "vector_advection_Ah63"
+    print "(A,4E25.16)", "Err: ", errs%values
+end if
+
 call deinit_global_parallel_enviroment()
 
 end program test_diffops
