@@ -26,11 +26,11 @@ subroutine create_vector_advection_operator(vec_advection_op, vec_advection_op_n
 
     select case(vec_advection_op_name)
 
-    case("vector_advection_Ah21_covariant")
+    case("vector_advection_Ah21")
         call create_vector_advection_Ah_covariant(vec_advection_op, "d21", 1, domain)
-    case("vector_advection_Ah42_covariant")
+    case("vector_advection_Ah42")
         call create_vector_advection_Ah_covariant(vec_advection_op, "d42", 3, domain)
-    case("vector_advection_Ah63_covariant")
+    case("vector_advection_Ah63")
         call create_vector_advection_Ah_covariant(vec_advection_op, "d63", 5, domain)
     case("vector_advection_C_up4")
         call create_vector_advection_C(vec_advection_op, v_nabla_up4_operator_t(), &
