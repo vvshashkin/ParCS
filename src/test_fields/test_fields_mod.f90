@@ -254,19 +254,23 @@ subroutine set_vector_test_field(u, v, generator, mesh_u, mesh_v, halo_width, co
     real(kind=8),          optional, intent(in)    :: fill_value
 
     !locals
-    integer(kind=4) :: t
+    integer(kind=4) :: t, ncomponents
 
      do t = mesh_u%ts, mesh_u%te
         if(components_type=="contravariant") then
+            ncomponents = size(mesh_u%tile(t)%b1,1)
             call set_vector_test_field_1tile_1comp(u%tile(t),generator,mesh_u%tile(t),mesh_u%tile(t)%b1, &
-                                                   halo_width,fill_value)
+                                                   ncomponents, halo_width,fill_value)
+            ncomponents = size(mesh_u%tile(t)%b2,1)
             call set_vector_test_field_1tile_1comp(v%tile(t),generator,mesh_v%tile(t),mesh_v%tile(t)%b2, &
-                                                   halo_width,fill_value)
+                                                   ncomponents, halo_width,fill_value)
         else if (components_type=="covariant") then
+            ncomponents = size(mesh_u%tile(t)%a1,1)
             call set_vector_test_field_1tile_1comp(u%tile(t),generator,mesh_u%tile(t),mesh_u%tile(t)%a1, &
-                                                   halo_width,fill_value)
+                                                   ncomponents, halo_width,fill_value)
+            ncomponents = size(mesh_u%tile(t)%a2,1)
             call set_vector_test_field_1tile_1comp(v%tile(t),generator,mesh_v%tile(t),mesh_v%tile(t)%a2, &
-                                                   halo_width,fill_value)
+                                                   ncomponents, halo_width,fill_value)
         else
             call parcomm_global%abort("test_functions_mod, set_vector_test_field: unknown components type "// &
                                       components_type//" use covariant or contravariant")
@@ -276,15 +280,16 @@ subroutine set_vector_test_field(u, v, generator, mesh_u, mesh_v, halo_width, co
 
 end subroutine set_vector_test_field
 
-subroutine set_vector_test_field_1tile_1comp(u,generator,mesh,bvec,halo_width,fill_value)
+subroutine set_vector_test_field_1tile_1comp(u,generator,mesh,bvec,ncomp,halo_width,fill_value)
     use grid_field_mod, only : tile_field_t
     use mesh_mod,       only : tile_mesh_t
 
     type(tile_field_t),              intent(inout) :: u
     class(vector_field_generator_t), intent(in)    :: generator
     type(tile_mesh_t),               intent(in)    :: mesh
-    real(kind=8),                    intent(in)    :: bvec(1:3,mesh%is-mesh%halo_width:mesh%ie+mesh%halo_width, &
-                                                               mesh%js-mesh%halo_width:mesh%je+mesh%halo_width)
+    real(kind=8),                    intent(in)    :: bvec(ncomp,mesh%is-mesh%halo_width:mesh%ie+mesh%halo_width, &
+                                                                 mesh%js-mesh%halo_width:mesh%je+mesh%halo_width)
+    integer(kind=4),                 intent(in)    :: ncomp
     integer(kind=4),                 intent(in)    :: halo_width
     real(kind=8),          optional, intent(in)    :: fill_value
 

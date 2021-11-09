@@ -106,7 +106,9 @@ subroutine create_mesh(mesh, partition, metric, halo_width, points_type)
                 mesh%tile(t)%rz(i,j) = vec(3)
 
                 mesh%tile(t)%a1(1:3,i,j) = metric%a1(pind, alpha, beta)
+                mesh%tile(t)%a1(4,i,j) = 0.0_8
                 mesh%tile(t)%a2(1:3,i,j) = metric%a2(pind, alpha, beta)
+                mesh%tile(t)%a2(4,i,j) = 0.0_8
                 mesh%tile(t)%b1(1:3,i,j) = metric%b1(pind, alpha, beta)
                 mesh%tile(t)%b2(1:3,i,j) = metric%b2(pind, alpha, beta)
 

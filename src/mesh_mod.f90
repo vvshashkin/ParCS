@@ -51,8 +51,8 @@ subroutine init_tile_mesh(this, is, ie, js, je, ks, ke, halo_width)
     allocate(this%rx(isv:iev,jsv:jev))
     allocate(this%ry(isv:iev,jsv:jev))
     allocate(this%rz(isv:iev,jsv:jev))
-    allocate(this%a1(3,isv:iev,jsv:jev))
-    allocate(this%a2(3,isv:iev,jsv:jev))
+    allocate(this%a1(4,isv:iev,jsv:jev)) !4-th component for shallow atmosphere approximation
+    allocate(this%a2(4,isv:iev,jsv:jev))
     allocate(this%b1(3,isv:iev,jsv:jev))
     allocate(this%b2(3,isv:iev,jsv:jev))
     allocate(this%Q (3,isv:iev,jsv:jev)) !3 elements of 2x2 matrix are stored due to symmetricity
