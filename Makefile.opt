@@ -90,6 +90,13 @@ $(DEXE)TEST_REGRID: $(MKDIRS) $(DOBJ)test_regrid.o \
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_REGRID
+$(DEXE)TEST_HORDIFF_MAIN: $(MKDIRS) $(DOBJ)test_hordiff_main.o \
+	$(DOBJ)avost.o \
+	$(DOBJ)auxhs.o
+	@rm -f $(filter-out $(DOBJ)test_hordiff_main.o,$(EXESOBJ))
+	@echo $(LITEXT)
+	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
+EXES := $(EXES) TEST_HORDIFF_MAIN
 $(DEXE)TEST_DIFFOPS_ALL: $(MKDIRS) $(DOBJ)test_diffops_all.o \
 	$(DOBJ)avost.o \
 	$(DOBJ)auxhs.o
@@ -644,7 +651,8 @@ $(DOBJ)hordiff_colocated_mod.o: src/differential_operators/hordiff/hordiff_coloc
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)halo_mod.o \
 	$(DOBJ)domain_mod.o \
-	$(DOBJ)abstract_hordiff_mod.o
+	$(DOBJ)abstract_hordiff_mod.o \
+	$(DOBJ)vec_math_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -956,13 +964,11 @@ $(DOBJ)abstract_div_mod.o: src/differential_operators/divergence/abstract_div_mo
 $(DOBJ)vector_advection_ah_mod.o: src/differential_operators/vec_advection/vector_advection_Ah_mod.f90 \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)domain_mod.o \
-	$(DOBJ)sbp_operator_mod.o \
 	$(DOBJ)halo_mod.o \
 	$(DOBJ)exchange_abstract_mod.o \
 	$(DOBJ)abstract_vector_advection_mod.o \
 	$(DOBJ)abstract_v_nabla_mod.o \
-	$(DOBJ)mesh_mod.o \
-	$(DOBJ)tile_mod.o
+	$(DOBJ)mesh_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -973,7 +979,6 @@ $(DOBJ)vector_advection_factory_mod.o: src/differential_operators/vec_advection/
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)v_nabla_mod.o \
 	$(DOBJ)vector_advection_ah_mod.o \
-	$(DOBJ)sbp_factory_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
 	$(DOBJ)halo_factory_mod.o \
 	$(DOBJ)v_nabla_sbp_factory_mod.o \
@@ -1744,6 +1749,43 @@ $(DOBJ)test_regrid_mod.o: src/test/test_regrid/test_regrid_mod.f90 \
 $(DOBJ)test_regrid.o: src/test/test_regrid/test_regrid.f90 \
 	$(DOBJ)test_regrid_mod.o \
 	$(DOBJ)parcomm_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)test_hordiff_main.o: src/test/test_hordiff/test_hordiff_main.f90 \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)test_hordiff_scalar_mod.o \
+	$(DOBJ)test_hordiff_vector_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)test_hordiff_vector_mod.o: src/test/test_hordiff/test_hordiff_vector_mod.f90 \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)domain_factory_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)grid_field_factory_mod.o \
+	$(DOBJ)abstract_hordiff_mod.o \
+	$(DOBJ)hordiff_factory_mod.o \
+	$(DOBJ)test_fields_mod.o \
+	$(DOBJ)outputer_abstract_mod.o \
+	$(DOBJ)outputer_factory_mod.o \
+	$(DOBJ)halo_mod.o \
+	$(DOBJ)halo_factory_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)test_hordiff_scalar_mod.o: src/test/test_hordiff/test_hordiff_scalar_mod.f90 \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)domain_factory_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)grid_field_factory_mod.o \
+	$(DOBJ)abstract_hordiff_mod.o \
+	$(DOBJ)hordiff_factory_mod.o \
+	$(DOBJ)test_fields_mod.o \
+	$(DOBJ)outputer_abstract_mod.o \
+	$(DOBJ)outputer_factory_mod.o \
+	$(DOBJ)halo_mod.o \
+	$(DOBJ)halo_factory_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
