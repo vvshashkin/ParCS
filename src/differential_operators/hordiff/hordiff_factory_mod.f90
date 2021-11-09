@@ -30,6 +30,8 @@ subroutine create_hordiff_operator(hordiff_op, hordiff_op_name, hordiff_coeff, d
         call create_scalar_hordiff_operator(hordiff_op, hordiff_coeff, domain, "C", isscalar=.true.)
     case("hordiff_vec_Ah")
         call create_colocated_hordiff_operator(hordiff_op, hordiff_coeff, domain, "Ah")
+    case("hordiff_vec_xyz_Ah")
+        call create_colocated_vec_xyz_hordiff_operator(hordiff_op, hordiff_coeff, domain, "Ah")
     case default
         call domain%parcomm%abort("Unknown hordiff_op_name")
     end select
@@ -186,9 +188,9 @@ subroutine create_scalar_hordiff_operator(hordiff_op, hordiff_coeff, domain, &
         call create_grid_field(hordiff_scalar%gxt, halo_width, 0, domain%mesh_x)
         call create_grid_field(hordiff_scalar%gyt, halo_width, 0, domain%mesh_y)
 
-        hordiff_scalar%div_op = create_div_operator(domain, "divergence_c_sbp42")
+        hordiff_scalar%div_op = create_div_operator(domain, "divergence_c_sbp21")
         hordiff_scalar%grad_op = create_grad_operator(domain, "gradient_c_sbp21")
-        hordiff_scalar%co2contra_op = create_co2contra_operator(domain, "co2contra_c_sbp42")
+        hordiff_scalar%co2contra_op = create_co2contra_operator(domain, "co2contra_c_sbp21")
     case default
         call domain%parcomm%abort("This staggering: "//staggering//&
                                   "is not currently implemented in create_hordiff_scalar")
@@ -230,5 +232,45 @@ subroutine create_colocated_hordiff_operator(hordiff_op, hordiff_coeff, domain, 
     call move_alloc(hordiff_uv, hordiff_op)
 
 end subroutine create_colocated_hordiff_operator
+subroutine create_colocated_vec_xyz_hordiff_operator(hordiff_op, hordiff_coeff, domain, staggering)
 
+    use hordiff_colocated_mod,    only : hordiff_colocated_xyz_t
+    use halo_factory_mod,         only : create_vector_halo_procedure
+    use grid_field_factory_mod,   only : create_grid_field
+
+    class(hordiff_operator_t), allocatable, intent(out) :: hordiff_op
+    real(kind=8),                           intent(in)  :: hordiff_coeff
+    character(len=*),                       intent(in)  :: staggering
+    type(domain_t),                         intent(in)  :: domain
+
+    type(hordiff_colocated_xyz_t), allocatable :: hordiff_uv
+
+    integer(kind=4) :: halo_width
+
+    !WORKAROUND
+    halo_width = 5
+
+    allocate(hordiff_uv)
+
+    select case(staggering)
+    case ("Ah")
+        call create_scalar_hordiff_operator(hordiff_uv%hordiff_1comp, hordiff_coeff, domain, &
+                                           "Ah", isscalar=.false.) !WORKAROUND
+        call create_vector_halo_procedure(hordiff_uv%edge_sync, domain, 1, "ecs_Ah_vec_sync_covariant")
+
+        call create_grid_field(hordiff_uv%vx,      halo_width, 0, domain%mesh_p)
+        call create_grid_field(hordiff_uv%vy,      halo_width, 0, domain%mesh_p)
+        call create_grid_field(hordiff_uv%vz,      halo_width, 0, domain%mesh_p)
+        call create_grid_field(hordiff_uv%vx_tend,          0, 0, domain%mesh_p)
+        call create_grid_field(hordiff_uv%vy_tend,          0, 0, domain%mesh_p)
+        call create_grid_field(hordiff_uv%vz_tend,          0, 0, domain%mesh_p)
+
+    case default
+        call domain%parcomm%abort("This staggering: "//staggering//&
+                                  "is not currently implemented in create_colocated_vec_xyz_hordiff_operator")
+    end select
+
+    call move_alloc(hordiff_uv, hordiff_op)
+
+end subroutine create_colocated_vec_xyz_hordiff_operator
 end module hordiff_factory_mod
