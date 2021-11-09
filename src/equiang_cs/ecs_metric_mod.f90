@@ -234,43 +234,43 @@ function ecs_QI(this,panel_ind, alpha, beta) result(QI)
 
 end function ecs_QI
 
-function ecs_Christoffel(this,panel_ind, alpha, beta) result(T)
+function ecs_Christoffel(this,panel_ind, alpha, beta) result(G)
     !Calculate christoffel symbols
     class(ecs_metric_t), intent(in) :: this
     integer(kind=4),     intent(in) :: panel_ind
     real(kind=8),        intent(in) :: alpha,beta
-    real(kind=8)                    :: T(2,2,2)
+    real(kind=8)                    :: G(2,2,2)
     !local
     real(kind=8) X, Y, d2
 
     X = tan(alpha);   Y = tan(beta)
     d2 = 1._8+X**2+Y**2
 
-    T(1,1,1) = 2.0_8*X*Y**2 / d2
-    T(1,2,1) =-Y*(1+Y**2) / d2
-    T(2,1,1) =-Y*(1+Y**2) / d2
-    T(2,2,1) = 0.0_8
+    G(1,1,1) = 2.0_8*X*Y**2 / d2
+    G(1,2,1) =-Y*(1+Y**2) / d2
+    G(2,1,1) =-Y*(1+Y**2) / d2
+    G(2,2,1) = 0.0_8
 
-    T(1,1,2) = 0.0_8
-    T(1,2,2) =-X*(1+X**2) / d2
-    T(2,1,2) =-X*(1+X**2) / d2
-    T(2,2,2) = 2.0_8*X**2*Y / d2
+    G(1,1,2) = 0.0_8
+    G(1,2,2) =-X*(1+X**2) / d2
+    G(2,1,2) =-X*(1+X**2) / d2
+    G(2,2,2) = 2.0_8*X**2*Y / d2
 
 end function ecs_Christoffel
 
-function ecs_J(this,panel_ind,alpha,beta) result(G)
+function ecs_J(this,panel_ind,alpha,beta) result(J)
     !Compute sqrt of metric tensor
     class(ecs_metric_t), intent(in) :: this
     integer(kind=4),     intent(in) :: panel_ind
     real(kind=8),        intent(in) :: alpha, beta
-    real(kind=8)                    :: G
+    real(kind=8)                    :: J
     !local
     real(kind=8) ta,tb,sigm
 
     ta = tan(alpha);   tb = tan(beta)
     sigm = sqrt(1._8+ta**2+tb**2)
 
-    G = (1._8+ta**2)*(1._8+tb**2) / sigm**3
+    J = (1._8+ta**2)*(1._8+tb**2) / sigm**3
 end function ecs_J
 
 subroutine transform_cartesian_to_native_ecs(this,panel_ind, alpha, beta, r)
