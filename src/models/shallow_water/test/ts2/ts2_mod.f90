@@ -160,10 +160,10 @@ subroutine run_ts2()
                 call outputer_vec%write(state_err%u, state_err%v, domain, 'u_err.dat', 'v_err.dat', int(it/nstep_write))
 
                 l2err = l2norm(state_err%h, domain%mesh_p, domain%parcomm)/l2_ex
-                l2u = l2norm(state_err%u, domain%mesh_u, domain%parcomm)
-                l2v = l2norm(state_err%v, domain%mesh_v, domain%parcomm)
+                !l2u = l2norm(state_err%u, domain%mesh_u, domain%parcomm)
+                !l2v = l2norm(state_err%v, domain%mesh_v, domain%parcomm)
                 if (parcomm_global%myid==0) print*, "Hours = ", real(time/3600 ,4), &
-                                                    "L2err =", real(l2err,4),  real(l2u,4), real(l2v,4),&
+                                                    "L2err =", real(l2err,4),&
                                                     "irec=",int(it/nstep_write)+1
             end select
         end if
