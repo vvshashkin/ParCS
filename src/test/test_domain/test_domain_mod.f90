@@ -15,7 +15,7 @@ subroutine test_domain()
     type(domain_t) :: domain
     type(grid_field_t) :: f, f2
 
-    integer(kind=4)  :: nh=100, nz=10, halo_width=50
+    integer(kind=4)  :: nh=32, nz=10, halo_width=10
     character(len=1) :: hor_grid_type = 'C'
 
     call create_domain(domain, "cube", hor_grid_type, nh, nz)

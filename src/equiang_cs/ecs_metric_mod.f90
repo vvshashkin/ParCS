@@ -18,8 +18,8 @@ contains
     procedure :: b2      => ecs_b2
     procedure :: Q       => ecs_Q
     procedure :: QI      => ecs_QI
-    procedure :: G       => ecs_G
-    procedure :: T       => ecs_Christoffel
+    procedure :: J       => ecs_J
+    procedure :: G       => ecs_Christoffel
 end type ecs_metric_t
 
 contains
@@ -258,7 +258,7 @@ function ecs_Christoffel(this,panel_ind, alpha, beta) result(T)
 
 end function ecs_Christoffel
 
-function ecs_G(this,panel_ind,alpha,beta) result(G)
+function ecs_J(this,panel_ind,alpha,beta) result(G)
     !Compute sqrt of metric tensor
     class(ecs_metric_t), intent(in) :: this
     integer(kind=4),     intent(in) :: panel_ind
@@ -271,7 +271,7 @@ function ecs_G(this,panel_ind,alpha,beta) result(G)
     sigm = sqrt(1._8+ta**2+tb**2)
 
     G = (1._8+ta**2)*(1._8+tb**2) / sigm**3
-end function ecs_G
+end function ecs_J
 
 subroutine transform_cartesian_to_native_ecs(this,panel_ind, alpha, beta, r)
     import metric_t

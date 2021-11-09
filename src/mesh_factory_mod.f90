@@ -93,33 +93,36 @@ subroutine create_mesh(mesh, partition, metric, halo_width, points_type)
         mesh%tile(t)%alpha_0 = alpha_0
         mesh%tile(t)%beta_0  = beta_0
 
-        do j = js - halo_width, je + halo_width
-            beta = mesh%tile(t)%get_beta(j)
+        do k=ks, ke
+            do j = js - halo_width, je + halo_width
+                beta = mesh%tile(t)%get_beta(j)
 
-            do i = is - halo_width, ie + halo_width
-                alpha = mesh%tile(t)%get_alpha(i)
+                do i = is - halo_width, ie + halo_width
+                    alpha = mesh%tile(t)%get_alpha(i)
+                    vec(1:3) = metric%point_r(pind, alpha, beta)
 
-                vec(1:3) = metric%point_r(pind, alpha, beta)
+                    mesh%tile(t)%rx(i,j,k) = vec(1)
+                    mesh%tile(t)%ry(i,j,k) = vec(2)
+                    mesh%tile(t)%rz(i,j,k) = vec(3)
+                    mesh%tile(t)%h(i,j,k)  = 0.0_8
 
-                mesh%tile(t)%rx(i,j) = vec(1)
-                mesh%tile(t)%ry(i,j) = vec(2)
-                mesh%tile(t)%rz(i,j) = vec(3)
+                    mesh%tile(t)%Q (1:3,i,j,k) = metric%Q (pind, alpha, beta)
+                    mesh%tile(t)%Qi(1:3,i,j,k) = metric%QI(pind, alpha, beta)
 
-                mesh%tile(t)%a1(1:3,i,j) = metric%a1(pind, alpha, beta)
-                mesh%tile(t)%a1(4,i,j) = 0.0_8
-                mesh%tile(t)%a2(1:3,i,j) = metric%a2(pind, alpha, beta)
-                mesh%tile(t)%a2(4,i,j) = 0.0_8
-                mesh%tile(t)%b1(1:3,i,j) = metric%b1(pind, alpha, beta)
-                mesh%tile(t)%b2(1:3,i,j) = metric%b2(pind, alpha, beta)
+                    mesh%tile(t)%J(i,j,k)= metric%J(pind, alpha, beta)
 
-                mesh%tile(t)%Q (1:3,i,j) = metric%Q (pind, alpha, beta)
-                mesh%tile(t)%Qi(1:3,i,j) = metric%QI(pind, alpha, beta)
+                    mesh%tile(t)%G(1:2,1:2,1:2,i,j,k) = metric%G(pind,alpha,beta)
 
-                mesh%tile(t)%G(i,j)= metric%G(pind, alpha, beta)
-
-                mesh%tile(t)%T(1:2,1:2,1:2,i,j) = metric%T(pind,alpha,beta)
+                    mesh%tile(t)%a1(1:3,i,j,k) = metric%a1(pind, alpha, beta)
+                    mesh%tile(t)%a1(4,i,j,k) = 0.0_8
+                    mesh%tile(t)%a2(1:3,i,j,k) = metric%a2(pind, alpha, beta)
+                    mesh%tile(t)%a2(4,i,j,k) = 0.0_8
+                    mesh%tile(t)%b1(1:3,i,j,k) = metric%b1(pind, alpha, beta)
+                    mesh%tile(t)%b2(1:3,i,j,k) = metric%b2(pind, alpha, beta)
+                end do
             end do
         end do
+
     end do
 
 

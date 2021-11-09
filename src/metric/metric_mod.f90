@@ -25,8 +25,8 @@ contains
     !Metric tensor etc
     procedure(symtensor2),     deferred :: Q !metric tensor (a1*a1 a1*a2; a1*a2 a2*a2)
     procedure(symtensor2),     deferred :: QI !inversed metric tensor
-    procedure(tensor0),        deferred :: G !sqrt of metric tensor det
-    procedure(christoffel_interface), deferred :: T
+    procedure(tensor0),        deferred :: J !sqrt of metric tensor det
+    procedure(christoffel_interface), deferred :: G !Christoffel symbols of 2-nd kind
 
 end type metric_t
 

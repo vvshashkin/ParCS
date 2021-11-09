@@ -17,16 +17,17 @@ type, public :: tile_mesh_t
 !    integer(kind=4) :: panel_ind
     integer(kind=4) :: halo_width
 
-    real(kind=8), allocatable    :: rx(:,:), ry(:,:), rz(:,:) !cartesian coordinates of mesh points
-    real(kind=8), allocatable    :: a1(:,:,:), a2(:,:,:)      !cartesian coordinates of covariant vecs at mesh points
-    real(kind=8), allocatable    :: b1(:,:,:), b2(:,:,:)      !cartesian coordinates of contravariant vecs at mesh points
-    real(kind=8), allocatable    :: Q(:,:,:)                  !metric tensor at mesh-points
-    real(kind=8), allocatable    :: QI(:,:,:)                 !inverse metric tensor at mesh-points
-    real(kind=8), allocatable    :: G(:,:)                    !sqrt of metric tensor det at mesh-points
-    real(kind=8), allocatable    :: T(:,:,:,:,:)                !Christofel symbols (i j,k,ix,iy)
-    real(kind=8)                 :: hx, hy                    !horizontal grid step
-    real(kind=8)                 :: shift_i, shift_j          !determines shift of the first grid point from the boundary
-    real(kind=8)                 :: alpha_0, beta_0           !determines coord start
+    real(kind=8), allocatable    :: rx(:,:,:), ry(:,:,:), rz(:,:,:) !cartesian coordinates of mesh points
+    real(kind=8), allocatable    :: h(:,:,:)               !mean sea level height
+    real(kind=8), allocatable    :: a1(:,:,:,:), a2(:,:,:,:)   !cartesian coordinates of covariant vecs at mesh points
+    real(kind=8), allocatable    :: b1(:,:,:,:), b2(:,:,:,:)   !cartesian coordinates of contravariant vecs at mesh points
+    real(kind=8), allocatable    :: Q(:,:,:,:)             !metric tensor at mesh-points
+    real(kind=8), allocatable    :: QI(:,:,:,:)            !inverse metric tensor at mesh-points
+    real(kind=8), allocatable    :: J(:,:,:)               !sqrt of metric tensor det at mesh-points
+    real(kind=8), allocatable    :: G(:,:,:,:,:,:)         !Christofel symbols (i j,k,ix,iy,iz)
+    real(kind=8)                 :: hx, hy                 !horizontal grid step
+    real(kind=8)                 :: shift_i, shift_j       !determines shift of the first grid point from the boundary
+    real(kind=8)                 :: alpha_0, beta_0        !determines coord start
 
     character(:), allocatable    :: points_type
 contains
@@ -48,17 +49,18 @@ subroutine init_tile_mesh(this, is, ie, js, je, ks, ke, halo_width)
     isv = is - halo_width; iev = ie + halo_width
     jsv = js - halo_width; jev = je + halo_width
 
-    allocate(this%rx(isv:iev,jsv:jev))
-    allocate(this%ry(isv:iev,jsv:jev))
-    allocate(this%rz(isv:iev,jsv:jev))
-    allocate(this%a1(4,isv:iev,jsv:jev)) !4-th component for shallow atmosphere approximation
-    allocate(this%a2(4,isv:iev,jsv:jev))
-    allocate(this%b1(3,isv:iev,jsv:jev))
-    allocate(this%b2(3,isv:iev,jsv:jev))
-    allocate(this%Q (3,isv:iev,jsv:jev)) !3 elements of 2x2 matrix are stored due to symmetricity
-    allocate(this%QI(3,isv:iev,jsv:jev))! -'-'-
-    allocate(this%G (isv:iev,jsv:jev))
-    allocate(this%T (2,2,2,isv:iev,jsv:jev))
+    allocate(this%rx(isv:iev,jsv:jev,ks:ke))
+    allocate(this%ry(isv:iev,jsv:jev,ks:ke))
+    allocate(this%rz(isv:iev,jsv:jev,ks:ke))
+    allocate(this%h(isv:iev,jsv:jev,ks:ke))
+    allocate(this%a1(4,isv:iev,jsv:jev,ks:ke)) !4-th component for shallow atmosphere approximation
+    allocate(this%a2(4,isv:iev,jsv:jev,ks:ke))
+    allocate(this%b1(3,isv:iev,jsv:jev,ks:ke))
+    allocate(this%b2(3,isv:iev,jsv:jev,ks:ke))
+    allocate(this%Q (3,isv:iev,jsv:jev,ks:ke)) !3 elements of 2x2 matrix are stored due to symmetricity
+    allocate(this%QI(3,isv:iev,jsv:jev,ks:ke)) ! -'-'-
+    allocate(this%J(isv:iev,jsv:jev,ks:ke))
+    allocate(this%G(2,2,2,isv:iev,jsv:jev,ks:ke))
 
     this%is = is
     this%ie = ie
