@@ -89,30 +89,30 @@ logical function symmetricity_check_h(topology,mesh,tile,ind,panel_ind) result(l
     integer(kind=4), intent(in)        :: ind, panel_ind
     !local
     real(kind=8) ee(3)
-    integer(kind=4) is, ie, js, je
+    integer(kind=4) is, ie, js, je, ks, ke
 
 
     lsym_check = .true.
 
-    call tile%getind(is,ie,js,je)
+    call tile%getind(is,ie,js,je, ks, ke)
 
     ee = real(topology%ex(:,panel_ind),8)
-    lsym_check = lsym_check .and. symmetric( is,ie,js,js,ee)
-    lsym_check = lsym_check .and. symmetric( is,ie,je,je,ee)
+    lsym_check = lsym_check .and. symmetric( is,ie,js,js,ks,ke,ee)
+    lsym_check = lsym_check .and. symmetric( is,ie,je,je,ks,ke,ee)
     ee = real(topology%ey(:,panel_ind),8)
-    lsym_check = lsym_check .and. symmetric(is,is,js,je,ee)
-    lsym_check = lsym_check .and. symmetric(ie,ie,js,je,ee)
+    lsym_check = lsym_check .and. symmetric(is,is,js,je,ks,ke,ee)
+    lsym_check = lsym_check .and. symmetric(ie,ie,js,je,ks,ke,ee)
 
     contains
-    logical function symmetric(i1,i2,j1,j2,ee) result(lsym)
-        integer(kind=4), intent(in) :: i1,i2,j1,j2
+    logical function symmetric(i1,i2,j1,j2,k1,k2,ee) result(lsym)
+        integer(kind=4), intent(in) :: i1,i2,j1,j2,k1,k2
         real(kind=8),    intent(in) :: ee(3)
         !local
         real(kind=8) a(3), b(3), zpr
         real(kind=8), parameter :: zeps = 1e-16_8
 
-        a = [mesh%tile(ind)%rx(i1,j1), mesh%tile(ind)%ry(i1,j1), mesh%tile(ind)%rz(i1,j1)]
-        b = [mesh%tile(ind)%rx(i2,j2), mesh%tile(ind)%ry(i2,j2), mesh%tile(ind)%rz(i2,j2)]
+        a = [mesh%tile(ind)%rx(i1,j1,k1), mesh%tile(ind)%ry(i1,j1,k1), mesh%tile(ind)%rz(i1,j1,k1)]
+        b = [mesh%tile(ind)%rx(i2,j2,k1), mesh%tile(ind)%ry(i2,j2,k1), mesh%tile(ind)%rz(i2,j2,k1)]
         zpr = sum(a*ee)
         a = a - 2._8*zpr*ee !flip a-vector
         lsym = sum(abs(a-b))<zeps
@@ -125,7 +125,7 @@ end function symmetricity_check_h
 !2)covariant (a) vectors are orthogonal to contravariant (b) vectors
 !3)metric tensor is matrix of covariant vectors dot-prods
 !4)b1 = qi11*a1+qi12*a2 and the same for b2
-!5)G = det(Q) is determinant of Q
+!5)J = sqrt(det(Q)) is sqrt of determinant of Q
 subroutine test_mesh_metric(mesh,halo_width,points_type)
     use mesh_mod, only : mesh_t
 
@@ -133,8 +133,8 @@ subroutine test_mesh_metric(mesh,halo_width,points_type)
     integer(kind=4),  intent(in) :: halo_width
     character(len=*), intent(in) :: points_type
 
-    integer(kind=4) ts,te,is,ie,js,je
-    integer(kind=4) i, j, ind
+    integer(kind=4) ts,te,is,ie,js,je,ks,ke
+    integer(kind=4) i, j, k, ind
     real(kind=8) :: err_ort_rab=0.0_8, err_ort_abt=0.0_8, err_q=0.0_8, &
                     err_qi =0.0_8, err_g=0.0_8
 
@@ -146,42 +146,46 @@ subroutine test_mesh_metric(mesh,halo_width,points_type)
         ie = mesh%tile(ind)%ie
         js = mesh%tile(ind)%js
         je = mesh%tile(ind)%je
+        ks = mesh%tile(ind)%ks
+        ke = mesh%tile(ind)%ke
 
+        do k = ks, ke
         do j=js-halo_width,je+halo_width
             do i=is-halo_width,ie+halo_width
                 err_ort_rab = max(err_ort_rab, &
-                                  abs(mesh%tile(ind)%a1(1,i,j)*mesh%tile(ind)%rx(i,j)+&
-                                      mesh%tile(ind)%a1(2,i,j)*mesh%tile(ind)%ry(i,j)+&
-                                      mesh%tile(ind)%a1(3,i,j)*mesh%tile(ind)%rz(i,j)))
+                                  abs(mesh%tile(ind)%a1(1,i,j,k)*mesh%tile(ind)%rx(i,j,k)+&
+                                      mesh%tile(ind)%a1(2,i,j,k)*mesh%tile(ind)%ry(i,j,k)+&
+                                      mesh%tile(ind)%a1(3,i,j,k)*mesh%tile(ind)%rz(i,j,k)))
                 err_ort_rab = max(err_ort_rab, &
-                                  abs(mesh%tile(ind)%a2(1,i,j)*mesh%tile(ind)%rx(i,j)+&
-                                      mesh%tile(ind)%a2(2,i,j)*mesh%tile(ind)%ry(i,j)+&
-                                      mesh%tile(ind)%a2(3,i,j)*mesh%tile(ind)%rz(i,j)))
+                                  abs(mesh%tile(ind)%a2(1,i,j,k)*mesh%tile(ind)%rx(i,j,k)+&
+                                      mesh%tile(ind)%a2(2,i,j,k)*mesh%tile(ind)%ry(i,j,k)+&
+                                      mesh%tile(ind)%a2(3,i,j,k)*mesh%tile(ind)%rz(i,j,k)))
                 err_ort_rab = max(err_ort_rab, &
-                                  abs(mesh%tile(ind)%b1(1,i,j)*mesh%tile(ind)%rx(i,j)+&
-                                      mesh%tile(ind)%b1(2,i,j)*mesh%tile(ind)%ry(i,j)+&
-                                      mesh%tile(ind)%b1(3,i,j)*mesh%tile(ind)%rz(i,j)))
+                                  abs(mesh%tile(ind)%b1(1,i,j,k)*mesh%tile(ind)%rx(i,j,k)+&
+                                      mesh%tile(ind)%b1(2,i,j,k)*mesh%tile(ind)%ry(i,j,k)+&
+                                      mesh%tile(ind)%b1(3,i,j,k)*mesh%tile(ind)%rz(i,j,k)))
                 err_ort_rab = max(err_ort_rab, &
-                                  abs(mesh%tile(ind)%b2(1,i,j)*mesh%tile(ind)%rx(i,j)+&
-                                      mesh%tile(ind)%b2(2,i,j)*mesh%tile(ind)%ry(i,j)+&
-                                      mesh%tile(ind)%b2(3,i,j)*mesh%tile(ind)%rz(i,j)))
+                                  abs(mesh%tile(ind)%b2(1,i,j,k)*mesh%tile(ind)%rx(i,j,k)+&
+                                      mesh%tile(ind)%b2(2,i,j,k)*mesh%tile(ind)%ry(i,j,k)+&
+                                      mesh%tile(ind)%b2(3,i,j,k)*mesh%tile(ind)%rz(i,j,k)))
                 err_ort_abt = max(err_ort_abt, &
-                                  abs(sum(mesh%tile(ind)%a1(1:3,i,j)*mesh%tile(ind)%b2(1:3,i,j))))
+                                  abs(sum(mesh%tile(ind)%a1(1:3,i,j,k)*mesh%tile(ind)%b2(1:3,i,j,k))))
                 err_ort_abt = max(err_ort_abt, &
-                                  abs(sum(mesh%tile(ind)%a2(1:3,i,j)*mesh%tile(ind)%b1(1:3,i,j))))
-                err_q = max(err_q, abs(sum(mesh%tile(ind)%a1(1:3,i,j)**2)-mesh%tile(ind)%Q(1,i,j))+&
-                                   abs(sum(mesh%tile(ind)%a1(1:3,i,j)*mesh%tile(ind)%a2(1:3,i,j))- &
-                                                                                  mesh%tile(ind)%Q(2,i,j))+&
-                                   abs(sum(mesh%tile(ind)%a2(1:3,i,j)**2)-mesh%tile(ind)%Q(3,i,j)))
-                err_qi = max(err_qi, sum(abs(mesh%tile(ind)%b1(1:3,i,j)                    -&
-                                        mesh%tile(ind)%Qi(1,i,j)*mesh%tile(ind)%a1(1:3,i,j)-&
-                                        mesh%tile(ind)%Qi(2,i,j)*mesh%tile(ind)%a2(1:3,i,j))))
-                err_qi = max(err_qi, sum(abs(mesh%tile(ind)%b2(1:3,i,j)                    -&
-                                        mesh%tile(ind)%Qi(2,i,j)*mesh%tile(ind)%a1(1:3,i,j)-&
-                                        mesh%tile(ind)%Qi(3,i,j)*mesh%tile(ind)%a2(1:3,i,j))))
-                err_g = max(err_g, abs(sqrt(mesh%tile(ind)%Q(1,i,j)*mesh%tile(ind)%Q(3,i,j)-&
-                                            mesh%tile(ind)%Q(2,i,j)**2)-mesh%tile(ind)%G(i,j)))
+                                  abs(sum(mesh%tile(ind)%a2(1:3,i,j,k)*mesh%tile(ind)%b1(1:3,i,j,k))))
+                err_q = max(err_q, abs(sum(mesh%tile(ind)%a1(1:3,i,j,k)**2)-mesh%tile(ind)%Q(1,i,j,k))+&
+                                   abs(sum(mesh%tile(ind)%a1(1:3,i,j,k)*mesh%tile(ind)%a2(1:3,i,j,k))- &
+                                                                                  mesh%tile(ind)%Q(2,i,j,k))+&
+                                   abs(sum(mesh%tile(ind)%a2(1:3,i,j,k)**2)-mesh%tile(ind)%Q(3,i,j,k)))
+                err_qi = max(err_qi, sum(abs(mesh%tile(ind)%b1(1:3,i,j,k)                    -&
+                                        mesh%tile(ind)%Qi(1,i,j,k)*mesh%tile(ind)%a1(1:3,i,j,k)-&
+                                        mesh%tile(ind)%Qi(2,i,j,k)*mesh%tile(ind)%a2(1:3,i,j,k))))
+                err_qi = max(err_qi, sum(abs(mesh%tile(ind)%b2(1:3,i,j,k)                    -&
+                                        mesh%tile(ind)%Qi(2,i,j,k)*mesh%tile(ind)%a1(1:3,i,j,k)-&
+                                        mesh%tile(ind)%Qi(3,i,j,k)*mesh%tile(ind)%a2(1:3,i,j,k))))
+                err_g = max(err_g, abs(sqrt(mesh%tile(ind)%Q(1,i,j,k)*mesh%tile(ind)%Q(3,i,j,k)-&
+                                            mesh%tile(ind)%Q(2,i,j,k)**2)-mesh%tile(ind)%J(i,j,k)))
             end do
+        end do
         end do
     end do
     print *, "metric errors @ "//points_type//"-points", err_ort_rab, err_ort_abt, err_q, err_qi, err_g

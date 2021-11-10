@@ -62,6 +62,13 @@ $(DEXE)TEST_NAMELIST: $(MKDIRS) $(DOBJ)test_namelist.o \
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_NAMELIST
+$(DEXE)TEST_VERTICAL_TRANSFORM_MAIN: $(MKDIRS) $(DOBJ)test_vertical_transform_main.o \
+	$(DOBJ)avost.o \
+	$(DOBJ)auxhs.o
+	@rm -f $(filter-out $(DOBJ)test_vertical_transform_main.o,$(EXESOBJ))
+	@echo $(LITEXT)
+	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
+EXES := $(EXES) TEST_VERTICAL_TRANSFORM_MAIN
 $(DEXE)TEST_TS: $(MKDIRS) $(DOBJ)test_ts.o \
 	$(DOBJ)avost.o \
 	$(DOBJ)auxhs.o
@@ -358,6 +365,22 @@ $(DOBJ)config_metric_mod.o: src/metric/config_metric_mod.f90 \
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)metric_mod.o: src/metric/metric_mod.f90
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)vertical_transform_mod.o: src/metric/vertical_transform_mod.f90 \
+	$(DOBJ)abstract_vertical_transform_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)vertical_transform_factory_mod.o: src/metric/vertical_transform_factory_mod.f90 \
+	$(DOBJ)abstract_vertical_transform_mod.o \
+	$(DOBJ)vertical_transform_mod.o \
+	$(DOBJ)parcomm_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)abstract_vertical_transform_mod.o: src/metric/abstract_vertical_transform_mod.f90
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -1681,6 +1704,17 @@ $(DOBJ)test_namelist_mod.o: src/test/test_namelist/test_namelist_mod.f90 \
 $(DOBJ)test_namelist.o: src/test/test_namelist/test_namelist.f90 \
 	$(DOBJ)test_namelist_mod.o \
 	$(DOBJ)parcomm_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)test_vertical_transform_main.o: src/test/test_vertical_transform/test_vertical_transform_main.f90 \
+	$(DOBJ)test_vertical_transform_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)test_vertical_transform_mod.o: src/test/test_vertical_transform/test_vertical_transform_mod.f90 \
+	$(DOBJ)abstract_vertical_transform_mod.o \
+	$(DOBJ)vertical_transform_factory_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

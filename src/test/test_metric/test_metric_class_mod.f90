@@ -20,7 +20,7 @@ subroutine test_metric_class(topology_type,metric_type)
     class(topology_t), allocatable :: topology
     class(metric_t),   allocatable :: metric
     real(kind=8) a1(3), a2(3), b1(3), b2(3), r(3)
-    real(kind=8) Q(3), QI(3), G
+    real(kind=8) Q(3), QI(3), Jac
     real(kind=8), parameter :: stepx = 0.1
     real(kind=8), parameter :: stepy = 0.11
     integer(kind=4), parameter :: Nx = 1/stepx
@@ -49,7 +49,7 @@ subroutine test_metric_class(topology_type,metric_type)
                 b2 = metric%b2(panel_ind,alpha,beta)
                 Q  = metric%Q(panel_ind,alpha,beta)
                 QI = metric%QI(panel_ind,alpha,beta)
-                G  = metric%G(panel_ind,alpha,beta)
+                Jac  = metric%J(panel_ind,alpha,beta)
                 call check("a1 is not normal to b2",sum(a1(1:3)*b2(1:3)), 0.0_8, test_tolerace, is_correct)
                 call check("a2 is not normal to b1",sum(a2(1:3)*b1(1:3)), 0.0_8, test_tolerace, is_correct)
                 call check("Q(1) /= a1*a1",sum(a1(1:3)*a1(1:3)), Q(1), test_tolerace, is_correct)
@@ -60,7 +60,7 @@ subroutine test_metric_class(topology_type,metric_type)
                 call check("QI(2) /= b1*b2",sum(b1(1:3)*b2(1:3)), QI(2), test_tolerace, is_correct)
                 call check("QI(3) /= b2*b2",sum(b2(1:3)*b2(1:3)), QI(3), test_tolerace, is_correct)
 
-                call check("G**2 /= Q(1)*Q(3)-Q(2)**2",G**2, Q(1)*Q(3)-Q(2)**2, test_tolerace, is_correct)
+                call check("J**2 /= Q(1)*Q(3)-Q(2)**2",Jac**2, Q(1)*Q(3)-Q(2)**2, test_tolerace, is_correct)
 
                 if(metric_type == "ecs") then
                     r = metric%point_r(panel_ind,alpha,beta)
