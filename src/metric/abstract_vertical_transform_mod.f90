@@ -11,14 +11,14 @@ module abstract_vertical_transform_mod
     end type
 
     abstract interface
-        function calc_z_i(this, h_surf, h_top, eta) result(z)
+        pure function calc_z_i(this, h_surf, h_top, eta) result(z)
             import vertical_transform_t
             class(vertical_transform_t), intent(in) :: this
             real(kind=8),                intent(in) :: h_surf, h_top, eta
             real(kind=8)                            :: z
         end function calc_z_i
 
-        function calc_dz_dh_i(this, eta) result(dz_dh)
+        pure function calc_dz_dh_i(this, eta) result(dz_dh)
             import vertical_transform_t
             class(vertical_transform_t), intent(in) :: this
             real(kind=8),                intent(in) :: eta

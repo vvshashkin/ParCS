@@ -16,7 +16,7 @@ module vertical_transform_mod
 
 contains
 
-    function calc_z(this, h_surf, h_top, eta) result(z)
+    pure function calc_z(this, h_surf, h_top, eta) result(z)
         class(vertical_transform_default_t), intent(in) :: this
         real(kind=8), intent(in) :: h_surf, h_top, eta
         real(kind=8) :: z
@@ -24,7 +24,7 @@ contains
         z = h_surf+(h_top-h_surf)*eta
     end function calc_z
 
-    function calc_dz_deta(this, h_surf, h_top, eta) result(dz_deta)
+    pure function calc_dz_deta(this, h_surf, h_top, eta) result(dz_deta)
         class(vertical_transform_default_t), intent(in) :: this
         real(kind=8), intent(in) :: h_surf, h_top, eta
         real(kind=8) :: dz_deta
@@ -32,7 +32,7 @@ contains
         dz_deta = (h_top-h_surf)
     end function calc_dz_deta
 
-    function calc_dz_dh_surf(this,eta) result(dz_dh)
+    pure function calc_dz_dh_surf(this,eta) result(dz_dh)
         class(vertical_transform_default_t), intent(in) :: this
         real(kind=8), intent(in) :: eta
         real(kind=8) :: dz_dh
@@ -40,7 +40,7 @@ contains
         dz_dh = 1.0_8-eta
     end function calc_dz_dh_surf
 
-    function calc_dz_dh_top(this, eta) result(dz_dh)
+    pure function calc_dz_dh_top(this, eta) result(dz_dh)
         class(vertical_transform_default_t), intent(in) :: this
         real(kind=8), intent(in) :: eta
         real(kind=8) :: dz_dh
