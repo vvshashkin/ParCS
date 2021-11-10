@@ -27,6 +27,8 @@ contains
     procedure :: calculate_Qi_2d   => calculate_ecs_Qi_2d
     procedure :: calculate_J_orog => calculate_ecs_J_orog
     procedure :: calculate_J_2d   => calculate_ecs_J_2d
+    procedure :: calculate_G_orog => calculate_ecs_G_orog
+    procedure :: calculate_G_2d   => calculate_ecs_G_2d
     !Old interface
     procedure :: point_r => ecs_point_r
     procedure :: transform_cartesian_to_native => transform_cartesian_to_native_ecs
@@ -218,6 +220,28 @@ pure function calculate_ecs_J_2d(this, panel_ind, alpha, beta) result(J)
     J = ecs_J(this,panel_ind,alpha,beta)
 
 end function calculate_ecs_J_2d
+
+pure function calculate_ecs_G_orog(this, panel_ind, alpha, beta, eta, &
+                                         h_surf, dh_surf_dalpha, dh_surf_dbeta, h_top) result(G)
+    class(ecs_metric_t), intent(in) :: this
+    integer(kind=4),     intent(in) :: panel_ind
+    real(kind=8),        intent(in) :: alpha, beta, eta
+    real(kind=8),        intent(in) :: h_surf, dh_surf_dalpha, dh_surf_dbeta, h_top
+    real(kind=8)                    :: G(3,3,3)
+
+    G = calculate_ecs_G_2d(this, panel_ind, alpha, beta)
+
+end function calculate_ecs_G_orog
+
+pure function calculate_ecs_G_2d(this, panel_ind, alpha, beta) result(G)
+    class(ecs_metric_t), intent(in) :: this
+    integer(kind=4),     intent(in) :: panel_ind
+    real(kind=8),        intent(in) :: alpha, beta
+    real(kind=8)                    :: G(3,3,3)
+
+    G(1:3,1:3,1:3) = 0.0_8
+    G(1:2,1:2,1:2) = ecs_Christoffel(this,panel_ind,alpha,beta)
+end function calculate_ecs_G_2d
 
 pure function ecs_proto2realface(topology,rotation_matrix,panel_ind,r) result(r1)
     !transform prototype-face 3d Cartesian coords to real (spherical / elliptical) face
@@ -429,7 +453,7 @@ pure function ecs_QI(this,panel_ind, alpha, beta) result(QI)
 
 end function ecs_QI
 
-function ecs_Christoffel(this,panel_ind, alpha, beta) result(G)
+pure function ecs_Christoffel(this,panel_ind, alpha, beta) result(G)
     !Calculate christoffel symbols
     class(ecs_metric_t), intent(in) :: this
     integer(kind=4),     intent(in) :: panel_ind

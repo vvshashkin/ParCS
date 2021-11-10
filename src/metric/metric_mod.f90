@@ -40,6 +40,9 @@ contains
     procedure(calculate_jacobian_orog), deferred :: calculate_J_orog
     procedure(calculate_jacobian_2d),   deferred :: calculate_J_2d
     generic :: calculate_J => calculate_J_orog, calculate_J_2d
+    procedure(calculate_Christoffel_orog), deferred :: calculate_G_orog
+    procedure(calculate_Christoffel_2d), deferred   :: calculate_G_2d
+    generic :: calculate_Christoffel => calculate_G_orog, calculate_G_2d
     !Old interface (compatibility)
     procedure(vector_cart),    deferred :: point_r !Cartesian 3d coordinates of points
     procedure(cart_to_native_transform), deferred :: transform_cartesian_to_native
@@ -140,6 +143,23 @@ abstract interface
         real(kind=8),    intent(in) :: alpha, beta
         real(kind=8)                :: J
     end function calculate_jacobian_2d
+
+    pure function calculate_Christoffel_orog(this, panel_ind, alpha, beta, eta, &
+                                            h_surf, dh_surf_dalpha, dh_surf_dbeta, h_top) result(G)
+        import metric_t
+        class(metric_t), intent(in) :: this
+        integer(kind=4), intent(in) :: panel_ind
+        real(kind=8),    intent(in) :: alpha, beta, eta
+        real(kind=8),    intent(in) :: h_surf, dh_surf_dalpha, dh_surf_dbeta, h_top
+        real(kind=8)                :: G(3,3,3)
+    end function calculate_Christoffel_orog
+    pure function calculate_Christoffel_2d(this, panel_ind, alpha, beta) result(G)
+        import metric_t
+        class(metric_t), intent(in) :: this
+        integer(kind=4), intent(in) :: panel_ind
+        real(kind=8),    intent(in) :: alpha, beta
+        real(kind=8)                :: G(3,3,3)
+    end function calculate_Christoffel_2d
 
     function vector_cart(this,panel_ind, alpha, beta) result(r)
         import metric_t
