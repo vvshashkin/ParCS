@@ -10,6 +10,8 @@ module vertical_transform_mod
     contains
         procedure :: calc_z
         procedure :: calc_dz_deta
+        procedure :: calc_dz_dh_surf
+        procedure :: calc_dz_dh_top
     end type
 
 contains
@@ -29,5 +31,21 @@ contains
 
         dz_deta = (h_top-h_surf)
     end function calc_dz_deta
+
+    function calc_dz_dh_surf(this,eta) result(dz_dh)
+        class(vertical_transform_default_t), intent(in) :: this
+        real(kind=8), intent(in) :: eta
+        real(kind=8) :: dz_dh
+
+        dz_dh = 1.0_8-eta
+    end function calc_dz_dh_surf
+
+    function calc_dz_dh_top(this, eta) result(dz_dh)
+        class(vertical_transform_default_t), intent(in) :: this
+        real(kind=8), intent(in) :: eta
+        real(kind=8) :: dz_dh
+
+        dz_dh = eta
+    end function calc_dz_dh_top
 
 end module vertical_transform_mod

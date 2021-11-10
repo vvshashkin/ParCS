@@ -19,8 +19,12 @@ subroutine test_vertical_transform()
 
     vert_transform = create_vertical_transform_t("vertical_transform_default")
 
-    e1 = abs(vert_transform%calc_z(h_surf, h_top, eta=0.0_8) - h_surf)
-    e2 = abs(vert_transform%calc_z(h_surf, h_top, eta=1.0_8) - h_top)
+    e1 = abs(vert_transform%calc_z(h_surf, h_top, eta=0.0_8) - h_surf)+ &
+         abs(vert_transform%calc_dz_dh_surf(eta=0.0_8) - 1.0_8) +         &
+         abs(vert_transform%calc_dz_dh_surf(eta=1.0_8) - 0.0_8)
+    e2 = abs(vert_transform%calc_z(h_surf, h_top, eta=1.0_8) - h_top)+ &
+         abs(vert_transform%calc_dz_dh_top(eta=0.0_8) - 0.0_8) +         &
+         abs(vert_transform%calc_dz_dh_top(eta=1.0_8) - 1.0_8)
 
     e3 = 0.0_8
     do k=1, nz
