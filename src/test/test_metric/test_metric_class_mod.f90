@@ -19,8 +19,8 @@ subroutine test_metric_class(topology_type,metric_type)
 
     class(topology_t), allocatable :: topology
     class(metric_t),   allocatable :: metric
-    real(kind=8) a1(3), a2(3), b1(3), b2(3), r(3)
-    real(kind=8) Q(3), QI(3), Jac
+    real(kind=8) a1(3), a2(3), b1(3), b2(3), r(3), v4(4)
+    real(kind=8) Q(6), QI(6), Jac
     real(kind=8), parameter :: stepx = 0.1
     real(kind=8), parameter :: stepy = 0.11
     integer(kind=4), parameter :: Nx = 1/stepx
@@ -43,13 +43,15 @@ subroutine test_metric_class(topology_type,metric_type)
             do i = 0,Ny
                 alpha = alpha0+i*stepx*da
                 beta = beta0+j*stepy*db
-                a1 = metric%a1(panel_ind,alpha,beta)
-                a2 = metric%a2(panel_ind,alpha,beta)
-                b1 = metric%b1(panel_ind,alpha,beta)
-                b2 = metric%b2(panel_ind,alpha,beta)
-                Q  = metric%Q(panel_ind,alpha,beta)
-                QI = metric%QI(panel_ind,alpha,beta)
-                Jac  = metric%J(panel_ind,alpha,beta)
+                v4 = metric%calculate_a1(panel_ind, alpha, beta)
+                a1 = v4(1:3)
+                v4 = metric%calculate_a2(panel_ind, alpha, beta)
+                a2 = v4(1:3)
+                b1 = metric%calculate_b1(panel_ind, alpha, beta)
+                b2 = metric%calculate_b2(panel_ind, alpha, beta)
+                Q  = metric%calculate_Q(panel_ind,alpha,beta)
+                QI = metric%calculate_QI(panel_ind,alpha,beta)
+                Jac  = metric%calculate_J(panel_ind,alpha,beta)
                 call check("a1 is not normal to b2",sum(a1(1:3)*b2(1:3)), 0.0_8, test_tolerace, is_correct)
                 call check("a2 is not normal to b1",sum(a2(1:3)*b1(1:3)), 0.0_8, test_tolerace, is_correct)
                 call check("Q(1) /= a1*a1",sum(a1(1:3)*a1(1:3)), Q(1), test_tolerace, is_correct)
@@ -63,7 +65,7 @@ subroutine test_metric_class(topology_type,metric_type)
                 call check("J**2 /= Q(1)*Q(3)-Q(2)**2",Jac**2, Q(1)*Q(3)-Q(2)**2, test_tolerace, is_correct)
 
                 if(metric_type == "ecs") then
-                    r = metric%point_r(panel_ind,alpha,beta)
+                    r = metric%calculate_r(panel_ind,alpha,beta)
                     call check("a1 is not normal to r",sum(a1(1:3)*r(1:3)), 0.0_8, test_tolerace, is_correct)
                     call check("a2 is not normal to r",sum(a2(1:3)*r(1:3)), 0.0_8, test_tolerace, is_correct)
                     call check("b1 is not normal to r",sum(b1(1:3)*r(1:3)), 0.0_8, test_tolerace, is_correct)
