@@ -29,17 +29,9 @@ contains
     procedure :: calculate_J_2d   => calculate_ecs_J_2d
     procedure :: calculate_G_orog => calculate_ecs_G_orog
     procedure :: calculate_G_2d   => calculate_ecs_G_2d
-    !Old interface
-    procedure :: point_r => ecs_point_r
+
     procedure :: transform_cartesian_to_native => transform_cartesian_to_native_ecs
-    procedure :: a1      => ecs_a1
-    procedure :: a2      => ecs_a2
-    procedure :: b1      => ecs_b1
-    procedure :: b2      => ecs_b2
-    procedure :: Q       => ecs_Q
-    procedure :: QI      => ecs_QI
-    procedure :: J       => ecs_J
-    procedure :: G       => ecs_Christoffel
+
 end type ecs_metric_t
 
 contains
@@ -265,78 +257,6 @@ pure function ecs_proto2realface(topology,rotation_matrix,panel_ind,r) result(r1
     r1(2) = sum(rotation_matrix(1:3,2)*rtemp(1:3))
     r1(3) = sum(rotation_matrix(1:3,3)*rtemp(1:3))
 end function ecs_proto2realface
-
-function ecs_point_r(this,panel_ind,alpha,beta) result(r)
-    class(ecs_metric_t), intent(in) :: this
-    integer(kind=4),     intent(in) :: panel_ind
-    real(kind=8),        intent(in) :: alpha, beta
-    real(kind=8)                    :: r(3)
-
-    r = ecs_vector(this,panel_ind,"r",alpha,beta)
-end function ecs_point_r
-
-function ecs_a1(this,panel_ind,alpha,beta) result(a1)
-    class(ecs_metric_t), intent(in) :: this
-    integer(kind=4),     intent(in) :: panel_ind
-    real(kind=8),        intent(in) :: alpha, beta
-    real(kind=8)                    :: a1(3)
-
-    a1 = ecs_vector(this,panel_ind,"a1",alpha, beta)
-end function ecs_a1
-
-function ecs_a2(this,panel_ind,alpha,beta) result(a2)
-    class(ecs_metric_t), intent(in) :: this
-    integer(kind=4),     intent(in) :: panel_ind
-    real(kind=8),        intent(in) :: alpha, beta
-    real(kind=8)                    :: a2(3)
-
-    a2 = ecs_vector(this,panel_ind,"a2",alpha,beta)
-end function ecs_a2
-
-function ecs_b1(this,panel_ind,alpha,beta) result(b1)
-    class(ecs_metric_t), intent(in) :: this
-    integer(kind=4),     intent(in) :: panel_ind
-    real(kind=8),        intent(in) :: alpha, beta
-    real(kind=8)                    :: b1(3)
-
-    b1 = ecs_vector(this,panel_ind,"b1",alpha,beta)
-end function ecs_b1
-
-function ecs_b2(this,panel_ind,alpha,beta) result(b2)
-    class(ecs_metric_t), intent(in) :: this
-    integer(kind=4),     intent(in) :: panel_ind
-    real(kind=8),        intent(in) :: alpha,beta
-    real(kind=8)                    :: b2(3)
-
-    b2 = ecs_vector(this,panel_ind,"b2",alpha,beta)
-end function ecs_b2
-
-function ecs_vector(this,panel_ind,vector_type,alpha,beta) result(r)
-    class(ecs_metric_t), intent(in) :: this
-    integer(kind=4),     intent(in) :: panel_ind
-    character(len=*),    intent(in) :: vector_type
-    real(kind=8),        intent(in) :: alpha,beta
-    real(kind=8)                    :: r(3)
-
-    select case(vector_type)
-    case("r")
-        r = ecs_point_r_proto(alpha,beta)
-    case("a1")
-        r = ecs_a1_proto(alpha,beta)
-    case("a2")
-        r = ecs_a2_proto(alpha,beta)
-    case("b1")
-        r = ecs_b1_proto(alpha,beta)
-    case("b2")
-        r = ecs_b2_proto(alpha,beta)
-    case default
-        call parcomm_global%abort("unknown vector type " // vector_type //&
-                                 " in ecs_metric_mod")
-    end select
-
-    r = ecs_proto2realface(this%topology,this%rotation_matrix,panel_ind,r)
-
-end function ecs_vector
 
 pure function ecs_point_r_proto(alpha,beta) result(r)
     real(kind=8), intent(in)    :: alpha, beta

@@ -42,20 +42,10 @@ contains
     generic :: calculate_J => calculate_J_orog, calculate_J_2d
     procedure(calculate_Christoffel_orog), deferred :: calculate_G_orog
     procedure(calculate_Christoffel_2d), deferred   :: calculate_G_2d
-    generic :: calculate_Christoffel => calculate_G_orog, calculate_G_2d
-    !Old interface (compatibility)
-    procedure(vector_cart),    deferred :: point_r !Cartesian 3d coordinates of points
+    generic :: calculate_G => calculate_G_orog, calculate_G_2d
+
     procedure(cart_to_native_transform), deferred :: transform_cartesian_to_native
-    !3d cartesian coordinates of grid basis vectors
-    procedure(vector_cart),    deferred :: a1 !covariant dr/dx
-    procedure(vector_cart),    deferred :: a2 !covariant dr/dy
-    procedure(vector_cart),    deferred :: b1 !contravariant x direction
-    procedure(vector_cart),    deferred :: b2 !contravariant y direction
-    !Metric tensor etc
-    procedure(symtensor2),     deferred :: Q !metric tensor (a1*a1 a1*a2; a1*a2 a2*a2)
-    procedure(symtensor2),     deferred :: QI !inversed metric tensor
-    procedure(tensor0),        deferred :: J !sqrt of metric tensor det
-    procedure(christoffel_interface), deferred :: G !Christoffel symbols of 2-nd kind
+
 
 end type metric_t
 
@@ -161,14 +151,6 @@ abstract interface
         real(kind=8)                :: G(3,3,3)
     end function calculate_Christoffel_2d
 
-    function vector_cart(this,panel_ind, alpha, beta) result(r)
-        import metric_t
-        class(metric_t), intent(in) :: this
-        integer(kind=4), intent(in) :: panel_ind
-        real(kind=8),    intent(in) :: alpha, beta
-        real(kind=8)                :: r(3)
-    end function vector_cart
-
     subroutine cart_to_native_transform(this,panel_ind, alpha, beta, r)
         import metric_t
         class(metric_t), intent(in)  :: this
@@ -177,29 +159,6 @@ abstract interface
         real(kind=8),    intent(in)  :: r(3)
     end subroutine cart_to_native_transform
 
-    function symtensor2(this,panel_ind,alpha,beta) result(Q)
-        import metric_t
-        class(metric_t), intent(in) :: this
-        integer(kind=4), intent(in) :: panel_ind
-        real(kind=8),    intent(in) :: alpha, beta
-        real(kind=8)                :: Q(3)
-    end
-
-    function tensor0(this,panel_ind,alpha,beta) result(G)
-        import metric_t
-        class(metric_t), intent(in) :: this
-        integer(kind=4), intent(in) :: panel_ind
-        real(kind=8),    intent(in) :: alpha, beta
-        real(kind=8)                :: G
-    end
-
-    function christoffel_interface(this,panel_ind,alpha,beta) result(T)
-        import metric_t
-        class(metric_t), intent(in) :: this
-        integer(kind=4), intent(in) :: panel_ind
-        real(kind=8),    intent(in) :: alpha, beta
-        real(kind=8)                :: T(2,2,2)
-    end
 end interface
 
 end module metric_mod

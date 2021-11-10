@@ -99,28 +99,25 @@ subroutine create_mesh(mesh, partition, metric, halo_width, points_type)
 
                 do i = is - halo_width, ie + halo_width
                     alpha = mesh%tile(t)%get_alpha(i)
-                    vec(1:3) = metric%point_r(pind, alpha, beta)
+                    vec(1:3) = metric%calculate_r(pind, alpha, beta)
 
                     mesh%tile(t)%rx(i,j,k) = vec(1)
                     mesh%tile(t)%ry(i,j,k) = vec(2)
                     mesh%tile(t)%rz(i,j,k) = vec(3)
                     mesh%tile(t)%h(i,j,k)  = 0.0_8
 
-                    mesh%tile(t)%Q (1:3,i,j,k) = metric%Q (pind, alpha, beta)
-                    mesh%tile(t)%Q (4:6,i,j,k) = 0.0_8
-                    mesh%tile(t)%Qi(1:3,i,j,k) = metric%QI(pind, alpha, beta)
-                    mesh%tile(t)%Qi(4:6,i,j,k) = 0.0_8
+                    mesh%tile(t)%Q (1:6,i,j,k) = metric%calculate_Q(pind, alpha, beta)
+                    mesh%tile(t)%Qi(1:6,i,j,k) = metric%calculate_Qi(pind, alpha, beta)
 
-                    mesh%tile(t)%J(i,j,k)= metric%J(pind, alpha, beta)
+                    mesh%tile(t)%J(i,j,k)= metric%calculate_J(pind, alpha, beta)
 
-                    mesh%tile(t)%G(1:2,1:2,1:2,i,j,k) = metric%G(pind,alpha,beta)
+                    mesh%tile(t)%G(1:3,1:3,1:3,i,j,k) = metric%calculate_G(pind,alpha,beta)
 
-                    mesh%tile(t)%a1(1:3,i,j,k) = metric%a1(pind, alpha, beta)
-                    mesh%tile(t)%a1(4,i,j,k) = 0.0_8
-                    mesh%tile(t)%a2(1:3,i,j,k) = metric%a2(pind, alpha, beta)
-                    mesh%tile(t)%a2(4,i,j,k) = 0.0_8
-                    mesh%tile(t)%b1(1:3,i,j,k) = metric%b1(pind, alpha, beta)
-                    mesh%tile(t)%b2(1:3,i,j,k) = metric%b2(pind, alpha, beta)
+                    mesh%tile(t)%a1(1:4,i,j,k) = metric%calculate_a1(pind,alpha,beta)
+                    mesh%tile(t)%a2(1:4,i,j,k) = metric%calculate_a2(pind,alpha,beta)
+                    mesh%tile(t)%b1(1:3,i,j,k) = metric%calculate_b1(pind,alpha,beta)
+                    mesh%tile(t)%b2(1:3,i,j,k) = metric%calculate_b2(pind,alpha,beta)
+
                 end do
             end do
         end do
