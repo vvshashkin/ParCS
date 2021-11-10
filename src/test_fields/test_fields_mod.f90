@@ -218,7 +218,7 @@ subroutine set_scalar_test_field(f, generator, mesh, halo_width, fill_value)
     real(kind=8),          optional, intent(in)    :: fill_value
 
     !locals
-    integer(kind=4) t, isv, iev, jsv, jev, npoints, klev
+    integer(kind=4) t, isv, iev, jsv, jev, npoints, klev, ks
     real(kind=8), allocatable :: p(:,:,:)
     real(kind=8), dimension(:,:), allocatable :: px, py, pz
 
@@ -227,15 +227,17 @@ subroutine set_scalar_test_field(f, generator, mesh, halo_width, fill_value)
         iev = mesh%tile(t)%ie+halo_width
         jsv = mesh%tile(t)%js-halo_width
         jev = mesh%tile(t)%je+halo_width
+        ks  = mesh%tile(t)%ks
         npoints = (iev-isv+1)*(jev-jsv+1)
         klev = mesh%tile(t)%ke-mesh%tile(t)%ks+1
         if(present(fill_value)) f%tile(t)%p(:,:,:) = -fill_value
         !suppress temporary array warning (made tmp arrays manually)
         allocate(p(isv:iev,jsv:jev,1:klev))
         allocate(px(isv:iev,jsv:jev),py(isv:iev,jsv:jev),pz(isv:iev,jsv:jev))
-        px(isv:iev,jsv:jev) = mesh%tile(t)%rx(isv:iev,jsv:jev)
-        py(isv:iev,jsv:jev) = mesh%tile(t)%ry(isv:iev,jsv:jev)
-        pz(isv:iev,jsv:jev) = mesh%tile(t)%rz(isv:iev,jsv:jev)
+        !WORKAROUND: ks
+        px(isv:iev,jsv:jev) = mesh%tile(t)%rx(isv:iev,jsv:jev,ks)
+        py(isv:iev,jsv:jev) = mesh%tile(t)%ry(isv:iev,jsv:jev,ks)
+        pz(isv:iev,jsv:jev) = mesh%tile(t)%rz(isv:iev,jsv:jev,ks)
         call generator%get_scalar_field(p, npoints,klev,px,py,pz)
         f%tile(t)%p(isv:iev,jsv:jev,1:klev) = p(isv:iev,jsv:jev,1:klev)
         deallocate(p,px,py,pz)
@@ -288,13 +290,14 @@ subroutine set_vector_test_field_1tile_1comp(u,generator,mesh,bvec,ncomp,halo_wi
     class(vector_field_generator_t), intent(in)    :: generator
     type(tile_mesh_t),               intent(in)    :: mesh
     real(kind=8),                    intent(in)    :: bvec(ncomp,mesh%is-mesh%halo_width:mesh%ie+mesh%halo_width, &
-                                                                 mesh%js-mesh%halo_width:mesh%je+mesh%halo_width)
+                                                                 mesh%js-mesh%halo_width:mesh%je+mesh%halo_width, &
+                                                                 mesh%ks:mesh%ke)
     integer(kind=4),                 intent(in)    :: ncomp
     integer(kind=4),                 intent(in)    :: halo_width
     real(kind=8),          optional, intent(in)    :: fill_value
 
     !locals
-    integer(kind=4) :: isv, iev, jsv, jev, i, j, k, k1, klev, npoints
+    integer(kind=4) :: isv, iev, jsv, jev, i, j, k, k1, klev, npoints, ks
     real(kind=8), dimension(:,:,:), allocatable ::  vx, vy, vz
     real(kind=8), dimension(:,:), allocatable   :: px, py, pz
 
@@ -305,12 +308,13 @@ subroutine set_vector_test_field_1tile_1comp(u,generator,mesh,bvec,ncomp,halo_wi
     jsv = mesh%js-halo_width
     jev = mesh%je+halo_width
     klev = mesh%ke-mesh%ks+1
+    ks = mesh%ks
 
     allocate(vx(isv:iev,jsv:jev,1:klev),vy(isv:iev,jsv:jev,1:klev),vz(isv:iev,jsv:jev,1:klev))
     allocate(px(isv:iev,jsv:jev),py(isv:iev,jsv:jev),pz(isv:iev,jsv:jev))
-    px(isv:iev,jsv:jev) = mesh%rx(isv:iev,jsv:jev)
-    py(isv:iev,jsv:jev) = mesh%ry(isv:iev,jsv:jev)
-    pz(isv:iev,jsv:jev) = mesh%rz(isv:iev,jsv:jev)
+    px(isv:iev,jsv:jev) = mesh%rx(isv:iev,jsv:jev,ks)
+    py(isv:iev,jsv:jev) = mesh%ry(isv:iev,jsv:jev,ks)
+    pz(isv:iev,jsv:jev) = mesh%rz(isv:iev,jsv:jev,ks)
     npoints = (iev-isv+1)*(jev-jsv+1)
     call generator%get_vector_field(vx,vy,vz,npoints,klev,px,py,pz)
 
@@ -318,7 +322,7 @@ subroutine set_vector_test_field_1tile_1comp(u,generator,mesh,bvec,ncomp,halo_wi
         k1 = k-mesh%ks+1
         do j = jsv, jev
             do i = isv, iev
-            u%p(i,j,k) = sum([vx(i,j,k1),vy(i,j,k1),vz(i,j,k1)]*bvec(1:3,i,j))
+            u%p(i,j,k) = sum([vx(i,j,k1),vy(i,j,k1),vz(i,j,k1)]*bvec(1:3,i,j,ks))
             end do
         end do
     end do
@@ -339,18 +343,23 @@ subroutine set_perp_vector_test_field(u, v, generator, mesh_u, mesh_v, halo_widt
 
     !locals
     integer(kind=4) :: t
+    integer(kind=4) :: ncomponents
 
      do t = mesh_u%ts, mesh_u%te
         if(components_type=="contravariant") then
+            ncomponents = size(mesh_u%tile(t)%b1,1)
             call set_perp_vector_test_field_1tile_1comp(u%tile(t),generator,mesh_u%tile(t),mesh_u%tile(t)%b1, &
-                                                   halo_width,fill_value)
+                                                   ncomponents, halo_width,fill_value)
+            ncomponents = size(mesh_u%tile(t)%b2,1)
             call set_perp_vector_test_field_1tile_1comp(v%tile(t),generator,mesh_v%tile(t),mesh_v%tile(t)%b2, &
-                                                   halo_width,fill_value)
+                                                   ncomponents, halo_width,fill_value)
         else if (components_type=="covariant") then
+            ncomponents = size(mesh_u%tile(t)%a1,1)
             call set_perp_vector_test_field_1tile_1comp(u%tile(t),generator,mesh_u%tile(t),mesh_u%tile(t)%a1, &
-                                                   halo_width,fill_value)
+                                                   ncomponents, halo_width,fill_value)
+            ncomponents = size(mesh_u%tile(t)%a2,1)
             call set_perp_vector_test_field_1tile_1comp(v%tile(t),generator,mesh_v%tile(t),mesh_v%tile(t)%a2, &
-                                                   halo_width,fill_value)
+                                                   ncomponents, halo_width,fill_value)
         else
             call parcomm_global%abort("test_functions_mod, set_vector_test_field: unknown components type "// &
                                       components_type//" use covariant or contravariant")
@@ -360,20 +369,22 @@ subroutine set_perp_vector_test_field(u, v, generator, mesh_u, mesh_v, halo_widt
 
 end subroutine set_perp_vector_test_field
 
-subroutine set_perp_vector_test_field_1tile_1comp(u,generator,mesh,bvec,halo_width,fill_value)
+subroutine set_perp_vector_test_field_1tile_1comp(u,generator,mesh,bvec,ncomp,halo_width,fill_value)
     use grid_field_mod, only : tile_field_t
     use mesh_mod,       only : tile_mesh_t
 
     type(tile_field_t),              intent(inout) :: u
     class(vector_field_generator_t), intent(in)    :: generator
     type(tile_mesh_t),               intent(in)    :: mesh
-    real(kind=8),                    intent(in)    :: bvec(1:3,mesh%is-mesh%halo_width:mesh%ie+mesh%halo_width, &
-                                                               mesh%js-mesh%halo_width:mesh%je+mesh%halo_width)
+    real(kind=8),                    intent(in)    :: bvec(ncomp,mesh%is-mesh%halo_width:mesh%ie+mesh%halo_width, &
+                                                                 mesh%js-mesh%halo_width:mesh%je+mesh%halo_width, &
+                                                                 mesh%ks:mesh%ke)
+    integer(kind=4),                 intent(in)    :: ncomp
     integer(kind=4),                 intent(in)    :: halo_width
     real(kind=8),          optional, intent(in)    :: fill_value
 
     !locals
-    integer(kind=4) :: isv, iev, jsv, jev, i, j, k, k1, klev, npoints
+    integer(kind=4) :: isv, iev, jsv, jev, i, j, k, k1, klev, npoints, ks
     real(kind=8), dimension(:,:,:), allocatable ::  vx, vy, vz
     real(kind=8), dimension(:,:), allocatable   :: px, py, pz
     real(kind=8) :: nx, ny, nz
@@ -384,13 +395,14 @@ subroutine set_perp_vector_test_field_1tile_1comp(u,generator,mesh,bvec,halo_wid
     iev = mesh%ie+halo_width
     jsv = mesh%js-halo_width
     jev = mesh%je+halo_width
+    ks  = mesh%ks
     klev = mesh%ke-mesh%ks+1
 
     allocate(vx(isv:iev,jsv:jev,1:klev),vy(isv:iev,jsv:jev,1:klev),vz(isv:iev,jsv:jev,1:klev))
     allocate(px(isv:iev,jsv:jev),py(isv:iev,jsv:jev),pz(isv:iev,jsv:jev))
-    px(isv:iev,jsv:jev) = mesh%rx(isv:iev,jsv:jev)
-    py(isv:iev,jsv:jev) = mesh%ry(isv:iev,jsv:jev)
-    pz(isv:iev,jsv:jev) = mesh%rz(isv:iev,jsv:jev)
+    px(isv:iev,jsv:jev) = mesh%rx(isv:iev,jsv:jev,ks)
+    py(isv:iev,jsv:jev) = mesh%ry(isv:iev,jsv:jev,ks)
+    pz(isv:iev,jsv:jev) = mesh%rz(isv:iev,jsv:jev,ks)
     npoints = (iev-isv+1)*(jev-jsv+1)
     call generator%get_vector_field(vx,vy,vz,npoints,klev,px,py,pz)
 
@@ -404,7 +416,7 @@ subroutine set_perp_vector_test_field_1tile_1comp(u,generator,mesh,bvec,halo_wid
             !u%p(i,j,k) = sum([vx(i,j,k1),vy(i,j,k1),vz(i,j,k1)]*bvec(1:3,i,j))
             u%p(i,j,k) = sum([ny*vz(i,j,k)-nz*vy(i,j,k), &
                              -nx*vz(i,j,k)+nz*vx(i,j,k), &
-                              nx*vy(i,j,k)-ny*vx(i,j,k)]*bvec(1:3,i,j))
+                              nx*vy(i,j,k)-ny*vx(i,j,k)]*bvec(1:3,i,j,ks))
             end do
         end do
     end do
