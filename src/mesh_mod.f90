@@ -57,8 +57,8 @@ subroutine init_tile_mesh(this, is, ie, js, je, ks, ke, halo_width)
     allocate(this%a2(4,isv:iev,jsv:jev,ks:ke))
     allocate(this%b1(3,isv:iev,jsv:jev,ks:ke))
     allocate(this%b2(3,isv:iev,jsv:jev,ks:ke))
-    allocate(this%Q (3,isv:iev,jsv:jev,ks:ke)) !3 elements of 2x2 matrix are stored due to symmetricity
-    allocate(this%QI(3,isv:iev,jsv:jev,ks:ke)) ! -'-'-
+    allocate(this%Q (6,isv:iev,jsv:jev,ks:ke)) !3 elements of 2x2 matrix are stored due to symmetricity
+    allocate(this%QI(6,isv:iev,jsv:jev,ks:ke)) ! -'-'-
     allocate(this%J(isv:iev,jsv:jev,ks:ke))
     allocate(this%G(2,2,2,isv:iev,jsv:jev,ks:ke))
 
