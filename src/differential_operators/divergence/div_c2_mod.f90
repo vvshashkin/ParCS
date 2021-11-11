@@ -64,9 +64,9 @@ subroutine calc_div_on_tile(div, u, v, mesh_u, mesh_v, mesh_p, scale)
     do k = ks, ke
         do j = js, je
             do i = is, ie
-                div%p(i,j,k) = (mesh_u%G(i+1,j)*u%p(i+1,j,k)-mesh_u%G(i,j)*u%p(i,j,k)  +  &
-                                mesh_v%G(i,j+1)*v%p(i,j+1,k)-mesh_v%G(i,j)*v%p(i,j,k))/  &
-                                (mesh_p%G(i,j)*hx*scale)
+                div%p(i,j,k) = (mesh_u%J(i+1,j,k)*u%p(i+1,j,k)-mesh_u%J(i,j,k)*u%p(i,j,k)  +  &
+                                mesh_v%J(i,j+1,k)*v%p(i,j+1,k)-mesh_v%J(i,j,k)*v%p(i,j,k))/  &
+                                (mesh_p%J(i,j,k)*hx*scale)
             end do
         end do
     end do
@@ -115,61 +115,61 @@ subroutine calc_div_on_tile_sbp21(div, u, v, mesh_u, mesh_v, mesh_p, scale)
     do k = ks, ke
 
         do j=js,je
-            if(is == 1) dx(1,j) = (mesh_u%G(2,j)*u%p(2,j,k)-&
-                                   mesh_u%G(1,j)*(0.25_8*u%p(1,j,k)+0.75_8*u%p(0,j,k)))
+            if(is == 1) dx(1,j) = (mesh_u%J(2,j,k)*u%p(2,j,k)-&
+                                   mesh_u%J(1,j,k)*(0.25_8*u%p(1,j,k)+0.75_8*u%p(0,j,k)))
             if(is<=2 .and. ie >= 2) &
-                        dx(2,j) = (mesh_u%G(3,j)*u%p(3,j,k)-mesh_u%G(2,j)*u%p(2,j,k)- &
-                                   0.25_8*mesh_u%G(1,j)*(u%p(1,j,k)-u%p(0,j,k)))
+                        dx(2,j) = (mesh_u%J(3,j,k)*u%p(3,j,k)-mesh_u%J(2,j,k)*u%p(2,j,k)- &
+                                   0.25_8*mesh_u%J(1,j,k)*(u%p(1,j,k)-u%p(0,j,k)))
             do i=max(3,is),min(ie,mesh_p%nx-2)
-                dx(i,j) = (mesh_u%G(i+1,j)*u%p(i+1,j,k)-mesh_u%G(i,j)*u%p(i,j,k))
+                dx(i,j) = (mesh_u%J(i+1,j,k)*u%p(i+1,j,k)-mesh_u%J(i,j,k)*u%p(i,j,k))
             end do
             if(is <= mesh_p%nx-1 .and. ie >= mesh_p%nx-1) then
                 i = mesh_p%nx-1
-                dx(i,j) = (mesh_u%G(i+1,j)*u%p(i+1,j,k)-mesh_u%G(i,j)*u%p(i,j,k)+ &
-                           0.25_8*mesh_u%G(i+2,j)*(u%p(i+2,j,k)-u%p(i+3,j,k)))
+                dx(i,j) = (mesh_u%J(i+1,j,k)*u%p(i+1,j,k)-mesh_u%J(i,j,k)*u%p(i,j,k)+ &
+                           0.25_8*mesh_u%J(i+2,j,k)*(u%p(i+2,j,k)-u%p(i+3,j,k)))
             end if
             if(ie == mesh_p%nx) &
-                dx(ie,j) = (mesh_u%G(ie+1,j)*(0.75_8*u%p(ie+2,j,k)+0.25_8*u%p(ie+1,j,k))- &
-                            mesh_u%G(ie,j)*u%p(ie,j,k))
+                dx(ie,j) = (mesh_u%J(ie+1,j,k)*(0.75_8*u%p(ie+2,j,k)+0.25_8*u%p(ie+1,j,k))- &
+                            mesh_u%J(ie,j,k)*u%p(ie,j,k))
         end do
 
         if(js==1) then
             j=1
             do i=is,ie
-                dy(i,j) = (mesh_v%G(i,j+1)*v%p(i,j+1,k)- &
-                           mesh_v%G(i,j)*(0.25_8*v%p(i,j,k)+0.75_8*v%p(i,j-1,k)))
+                dy(i,j) = (mesh_v%J(i,j+1,k)*v%p(i,j+1,k)- &
+                           mesh_v%J(i,j,k)*(0.25_8*v%p(i,j,k)+0.75_8*v%p(i,j-1,k)))
             end do
         end if
         if(js<=2.and.je>=2) then
             j=2
             do i=is,ie
-                dy(i,j) = (mesh_v%G(i,j+1)*v%p(i,j+1,k)-mesh_v%G(i,j)*v%p(i,j,k)- &
-                                   0.25_8*mesh_v%G(i,j-1)*(v%p(i,j-1,k)-v%p(i,j-2,k)))
+                dy(i,j) = (mesh_v%J(i,j+1,k)*v%p(i,j+1,k)-mesh_v%J(i,j,k)*v%p(i,j,k)- &
+                                   0.25_8*mesh_v%J(i,j-1,k)*(v%p(i,j-1,k)-v%p(i,j-2,k)))
             end do
         end if
         do j=max(js,3),min(je,mesh_p%ny-2)
             do i=is,ie
-                dy(i,j) = (mesh_v%G(i,j+1)*v%p(i,j+1,k)-mesh_v%G(i,j)*v%p(i,j,k))
+                dy(i,j) = (mesh_v%J(i,j+1,k)*v%p(i,j+1,k)-mesh_v%J(i,j,k)*v%p(i,j,k))
             end do
         end do
         if(js<=mesh_p%ny-1.and.je>=mesh_p%ny-1) then
             j = mesh_p%ny-1
             do i=is,ie
-                dy(i,j) = (mesh_v%G(i,j+1)*v%p(i,j+1,k)-mesh_v%G(i,j)*v%p(i,j,k)+ &
-                            0.25_8*mesh_v%G(i,j+2)*(v%p(i,j+2,k)-v%p(i,j+3,k)))
+                dy(i,j) = (mesh_v%J(i,j+1,k)*v%p(i,j+1,k)-mesh_v%J(i,j,k)*v%p(i,j,k)+ &
+                            0.25_8*mesh_v%J(i,j+2,k)*(v%p(i,j+2,k)-v%p(i,j+3,k)))
             end do
         end if
         if(je==mesh_p%ny) then
             j = mesh_p%ny
             do i =is,ie
-                dy(i,j) = mesh_v%G(i,j+1)*(0.75_8*v%p(i,j+2,k)+0.25_8*v%p(i,j+1,k))- &
-                          mesh_v%G(i,j)*v%p(i,j,k)
+                dy(i,j) = mesh_v%J(i,j+1,k)*(0.75_8*v%p(i,j+2,k)+0.25_8*v%p(i,j+1,k))- &
+                          mesh_v%J(i,j,k)*v%p(i,j,k)
             end do
         end if
 
         do j = js,je
             do i = is, ie
-                div%p(i,j,k) =  (dx(i,j)+dy(i,j))/(mesh_p%G(i,j)*hx*scale)
+                div%p(i,j,k) =  (dx(i,j)+dy(i,j))/(mesh_p%J(i,j,k)*hx*scale)
             end do
         end do
     end do

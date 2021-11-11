@@ -176,10 +176,10 @@ subroutine transform_cov_to_contra_non_staggered(u,v,mesh)
                 do i=mesh%tile(t)%is,mesh%tile(t)%ie
                     zu = u%tile(t)%p(i,j,k)
                     zv = v%tile(t)%p(i,j,k)
-                    u%tile(t)%p(i,j,k) = mesh%tile(t)%Qi(1,i,j)*zu+ &
-                                         mesh%tile(t)%Qi(2,i,j)*zv
-                    v%tile(t)%p(i,j,k) = mesh%tile(t)%Qi(2,i,j)*zu+ &
-                                         mesh%tile(t)%Qi(3,i,j)*zv
+                    u%tile(t)%p(i,j,k) = mesh%tile(t)%Qi(1,i,j,k)*zu+ &
+                                         mesh%tile(t)%Qi(2,i,j,k)*zv
+                    v%tile(t)%p(i,j,k) = mesh%tile(t)%Qi(2,i,j,k)*zu+ &
+                                         mesh%tile(t)%Qi(3,i,j,k)*zv
                 end do
             end do
         end do

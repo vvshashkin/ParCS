@@ -50,7 +50,7 @@ subroutine calc_KE_detG_uv_on_tile(KE_uv, uv, uvt, mesh)
     do k = mesh%ks, mesh%ke
         do j = mesh%js, mesh%je
             do i = mesh%is, mesh%ie
-                KE_uv%p(i,j,k) = mesh%G(i,j)*(uv%p(i,j,k)*uvt%p(i,j,k))/2.0_8
+                KE_uv%p(i,j,k) = mesh%J(i,j,k)*(uv%p(i,j,k)*uvt%p(i,j,k))/2.0_8
             end do
         end do
     end do
@@ -68,7 +68,7 @@ subroutine calc_KE_on_tile(KE, KE_uh, KE_vh, mesh)
     do k = mesh%ks, mesh%ke
         do j = mesh%js, mesh%je
             do i = mesh%is, mesh%ie
-                KE%p(i,j,k) = (KE_uh%p(i,j,k)+KE_vh%p(i,j,k))/mesh%G(i,j)
+                KE%p(i,j,k) = (KE_uh%p(i,j,k)+KE_vh%p(i,j,k))/mesh%J(i,j,k)
             end do
         end do
     end do

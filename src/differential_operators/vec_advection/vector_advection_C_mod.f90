@@ -97,9 +97,9 @@ subroutine add_metric_terms_1comp_contra_tile(uvt_tend, uvt, ut, vt, scale, mesh
         do j = js, je
             do i = is, ie
                 uvt_tend%p(i,j,k) = uvt_tend%p(i,j,k) -&
-                                    (ut%p(i,j,k)*ut%p(i,j,k)*mesh%T(1,1,component_num,i,j)+ &
-                                     2.0_8*ut%p(i,j,k)*vt%p(i,j,k)*mesh%T(1,2,component_num,i,j)+ &
-                                     vt%p(i,j,k)*vt%p(i,j,k)*mesh%T(2,2,component_num,i,j)) / scale
+                                    (ut%p(i,j,k)*ut%p(i,j,k)*mesh%G(1,1,component_num,i,j,k)+ &
+                                     2.0_8*ut%p(i,j,k)*vt%p(i,j,k)*mesh%G(1,2,component_num,i,j,k)+ &
+                                     vt%p(i,j,k)*vt%p(i,j,k)*mesh%G(2,2,component_num,i,j,k)) / scale
             end do
         end do
     end do

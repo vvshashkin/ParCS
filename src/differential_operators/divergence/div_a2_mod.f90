@@ -75,9 +75,9 @@ subroutine calc_div_on_tile(div, u, v, mesh, scale)
     do k = ks, ke
         do j = js, je
             do i = is, ie
-                div%p(i,j,k) = (mesh%G(i+1,j)*u%p(i+1,j,k)-mesh%G(i-1,j)*u%p(i-1,j,k) +  &
-                                mesh%G(i,j+1)*v%p(i,j+1,k)-mesh%G(i,j-1)*v%p(i,j-1,k))/  &
-                                (2._8*mesh%G(i,j)*hx*scale)
+                div%p(i,j,k) = (mesh%J(i+1,j,k)*u%p(i+1,j,k)-mesh%J(i-1,j,k)*u%p(i-1,j,k) +  &
+                                mesh%J(i,j+1,k)*v%p(i,j+1,k)-mesh%J(i,j-1,k)*v%p(i,j-1,k))/  &
+                                (2._8*mesh%J(i,j,k)*hx*scale)
             end do
         end do
     end do
@@ -110,9 +110,9 @@ subroutine calc_div_on_tile_cons(div, u, v, mesh, nx, scale)
             do i = is, ie
                 im1 = max(1,i-1)
                 ip1 = min(nx,i+1)
-                div%p(i,j,k) = (mesh%G(ip1,j)*u%p(i+1,j,k)-mesh%G(im1,j)*u%p(i-1,j,k) +  &
-                                mesh%G(i,jp1)*v%p(i,j+1,k)-mesh%G(i,jm1)*v%p(i,j-1,k))/  &
-                                (2._8*mesh%G(i,j)*hx*scale)
+                div%p(i,j,k) = (mesh%J(ip1,j,k)*u%p(i+1,j,k)-mesh%J(im1,j,k)*u%p(i-1,j,k) +  &
+                                mesh%J(i,jp1,k)*v%p(i,j+1,k)-mesh%J(i,jm1,k)*v%p(i,j-1,k))/  &
+                                (2._8*mesh%J(i,j,k)*hx*scale)
             end do
         end do
     end do
@@ -139,11 +139,11 @@ subroutine calc_div_on_tile_fv(div, u, v, mesh_o, mesh_x, mesh_y, scale)
     do k = ks, ke
         do j = js, je
             do i = is, ie
-                div%p(i,j,k) = (mesh_x%G(i+1,j)*(u%p(i+1,j,k)+u%p(i,j,k)) -     &
-                                mesh_x%G(i  ,j)*(u%p(i  ,j,k)+u%p(i-1,j,k)) +   &
-                                mesh_y%G(i,j+1)*(v%p(i,j+1,k)+v%p(i,j,k))-      &
-                                mesh_y%G(i,j  )*(v%p(i,j  ,k)+v%p(i,j-1,k))) /  &
-                                (2._8*mesh_o%G(i,j)*hx*scale)
+                div%p(i,j,k) = (mesh_x%J(i+1,j,k)*(u%p(i+1,j,k)+u%p(i,j,k)) -     &
+                                mesh_x%J(i  ,j,k)*(u%p(i  ,j,k)+u%p(i-1,j,k)) +   &
+                                mesh_y%J(i,j+1,k)*(v%p(i,j+1,k)+v%p(i,j,k))-      &
+                                mesh_y%J(i,j  ,k)*(v%p(i,j  ,k)+v%p(i,j-1,k))) /  &
+                                (2._8*mesh_o%J(i,j,k)*hx*scale)
             end do
         end do
     end do

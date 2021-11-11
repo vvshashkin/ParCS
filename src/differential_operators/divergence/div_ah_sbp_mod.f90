@@ -76,21 +76,21 @@ subroutine calc_div_on_tile(div, u, v, mesh, sbp_op,scale)
 
         do j = max(js-3,1), min(je+3,mesh%ny)
             do i = max(is-3,1),min(ie+3,mesh%nx)
-                Gu(i,j,1) = mesh%G(i,j)*u%p(i,j,k)
+                Gu(i,j,1) = mesh%J(i,j,k)*u%p(i,j,k)
             end do
         end do
         call sbp_op%apply_array_to_array(Dx, dxdy_tile, dxdy_tile, mesh%nx, 'x', Gu, Gu_tile)
 
         do j = max(js-3,1), min(je+3,mesh%nx)
             do i = max(is-3,1),min(ie+3,mesh%nx)
-                Gv(i,j,1) = mesh%G(i,j)*v%p(i,j,k)
+                Gv(i,j,1) = mesh%J(i,j,k)*v%p(i,j,k)
             end do
         end do
         call sbp_op%apply_array_to_array(Dy, dxdy_tile, dxdy_tile, mesh%ny, 'y', Gv, Gv_tile)
 
         do j = js, je
             do i = is,ie
-                div%p(i,j,k) = (Dx(i,j,1)+Dy(i,j,1)) / (mesh%G(i,j)*hx*scale)
+                div%p(i,j,k) = (Dx(i,j,1)+Dy(i,j,1)) / (mesh%J(i,j,k)*hx*scale)
             end do
         end do
     end do

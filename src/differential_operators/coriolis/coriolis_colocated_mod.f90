@@ -50,8 +50,8 @@ subroutine calc_coriolis_on_tile(ut, vt, f, cor_u, cor_v, mesh_u, mesh_v)
     do k = mesh_u%ks, mesh_u%ke
         do j = mesh_u%js, mesh_u%je
             do i = mesh_u%is, mesh_u%ie
-                cor_u%p(i,j,k) =  f%p(i,j,1)*vt%p(i,j,k)*mesh_u%G(i,j)
-                cor_v%p(i,j,k) = -f%p(i,j,1)*ut%p(i,j,k)*mesh_u%G(i,j)
+                cor_u%p(i,j,k) =  f%p(i,j,1)*vt%p(i,j,k)*mesh_u%J(i,j,k)
+                cor_v%p(i,j,k) = -f%p(i,j,1)*ut%p(i,j,k)*mesh_u%J(i,j,k)
             end do
         end do
     end do
@@ -93,8 +93,8 @@ subroutine calc_coriolis_vec_inv_tile(hu, hv, h, curl, f, cor_u, cor_v, mesh_u, 
     do k = mesh_u%ks, mesh_u%ke
         do j = mesh_u%js, mesh_u%je
             do i = mesh_u%is, mesh_u%ie
-                cor_u%p(i,j,k) =  (f%p(i,j,1)+curl%p(i,j,k))*hv%p(i,j,k)/h%p(i,j,k)*mesh_u%G(i,j)
-                cor_v%p(i,j,k) = -(f%p(i,j,1)+curl%p(i,j,k))*hu%p(i,j,k)/h%p(i,j,k)*mesh_u%G(i,j)
+                cor_u%p(i,j,k) =  (f%p(i,j,1)+curl%p(i,j,k))*hv%p(i,j,k)/h%p(i,j,k)*mesh_u%J(i,j,k)
+                cor_v%p(i,j,k) = -(f%p(i,j,1)+curl%p(i,j,k))*hu%p(i,j,k)/h%p(i,j,k)*mesh_u%J(i,j,k)
             end do
         end do
     end do
@@ -136,10 +136,10 @@ subroutine calc_coriolis_contra_on_tile(ut, vt, f, cor_ut, cor_vt, mesh_u, mesh_
     do k = mesh_u%ks, mesh_u%ke
         do j = mesh_u%js, mesh_u%je
             do i = mesh_u%is, mesh_u%ie
-                u_covariant = mesh_u%Q(1,i,j)*ut%p(i,j,k)+mesh_u%Q(2,i,j)*vt%p(i,j,k)
-                v_covariant = mesh_v%Q(2,i,j)*ut%p(i,j,k)+mesh_v%Q(3,i,j)*vt%p(i,j,k)
-                cor_ut%p(i,j,k) =  f%p(i,j,1)*v_covariant/mesh_u%G(i,j)
-                cor_vt%p(i,j,k) = -f%p(i,j,1)*u_covariant/mesh_v%G(i,j)
+                u_covariant = mesh_u%Q(1,i,j,k)*ut%p(i,j,k)+mesh_u%Q(2,i,j,k)*vt%p(i,j,k)
+                v_covariant = mesh_v%Q(2,i,j,k)*ut%p(i,j,k)+mesh_v%Q(3,i,j,k)*vt%p(i,j,k)
+                cor_ut%p(i,j,k) =  f%p(i,j,1)*v_covariant/mesh_u%J(i,j,k)
+                cor_vt%p(i,j,k) = -f%p(i,j,1)*u_covariant/mesh_v%J(i,j,k)
             end do
         end do
     end do

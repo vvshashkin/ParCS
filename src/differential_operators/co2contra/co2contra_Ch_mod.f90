@@ -64,8 +64,8 @@ subroutine start_co2contra_transform_at_w_tile(uw, vw, mesh_w)
     do k = mesh_w%ks,mesh_w%ke
         do j = mesh_w%js, mesh_w%je
             do i = mesh_w%is, mesh_w%ie
-                u = uw%p(i,j,k)*mesh_w%G(i,j)*mesh_w%Qi(2,i,j)
-                v = vw%p(i,j,k)*mesh_w%G(i,j)*mesh_w%Qi(2,i,j)
+                u = uw%p(i,j,k)*mesh_w%J(i,j,k)*mesh_w%Qi(2,i,j,k)
+                v = vw%p(i,j,k)*mesh_w%J(i,j,k)*mesh_w%Qi(2,i,j,k)
                 !Change components for (u,v) to (v,u) interpolation
                 uw%p(i,j,k) = v
                 vw%p(i,j,k) = u
@@ -83,14 +83,14 @@ subroutine finalize_co2contra_transform_at_uv_tile(u_contra, v_contra, u_cov, v_
     do k = mesh_u%ks,mesh_u%ke
         do j = mesh_u%js, mesh_u%je
             do i = mesh_u%is, mesh_u%ie
-                u_contra%p(i,j,k) = mesh_u%Qi(1,i,j)*u_cov%p(i,j,k)+u_contra%p(i,j,k)/mesh_u%G(i,j)
+                u_contra%p(i,j,k) = mesh_u%Qi(1,i,j,k)*u_cov%p(i,j,k)+u_contra%p(i,j,k)/mesh_u%J(i,j,k)
             end do
         end do
     end do
     do k = mesh_v%ks,mesh_v%ke
         do j = mesh_v%js, mesh_v%je
             do i = mesh_v%is, mesh_v%ie
-                v_contra%p(i,j,k) = mesh_v%Qi(3,i,j)*v_cov%p(i,j,k)+v_contra%p(i,j,k)/mesh_v%G(i,j)
+                v_contra%p(i,j,k) = mesh_v%Qi(3,i,j,k)*v_cov%p(i,j,k)+v_contra%p(i,j,k)/mesh_v%J(i,j,k)
             end do
         end do
     end do
@@ -133,8 +133,8 @@ end subroutine finalize_co2contra_transform_at_uv_tile
 !     do k = mesh_o%ks,mesh_o%ke
 !         do j = mesh_o%js, mesh_o%je
 !             do i = mesh_o%is, mesh_o%ie
-!                 u = uh%p(i,j,k)*mesh_o%G(i,j)*mesh_o%Q(2,i,j)
-!                 v = vh%p(i,j,k)*mesh_o%G(i,j)*mesh_o%Q(2,i,j)
+!                 u = uh%p(i,j,k)*mesh_o%J(i,j,k)*mesh_o%Q(2,i,j)
+!                 v = vh%p(i,j,k)*mesh_o%J(i,j,k)*mesh_o%Q(2,i,j)
 !                 !Change components for (u,v) to (v,u) interpolation
 !                 uh%p(i,j,k) = v
 !                 vh%p(i,j,k) = u
@@ -152,14 +152,14 @@ end subroutine finalize_co2contra_transform_at_uv_tile
 !     do k = mesh_u%ks,mesh_u%ke
 !         do j = mesh_u%js, mesh_u%je
 !             do i = mesh_u%is, mesh_u%ie
-!                 u_cov%p(i,j,k) = mesh_u%Q(1,i,j)*u_contra%p(i,j,k)+u_cov%p(i,j,k)/mesh_u%G(i,j)
+!                 u_cov%p(i,j,k) = mesh_u%Q(1,i,j)*u_contra%p(i,j,k)+u_cov%p(i,j,k)/mesh_u%J(i,j,k)
 !             end do
 !         end do
 !     end do
 !     do k = mesh_v%ks,mesh_v%ke
 !         do j = mesh_v%js, mesh_v%je
 !             do i = mesh_v%is, mesh_v%ie
-!                 v_cov%p(i,j,k) = mesh_v%Q(3,i,j)*v_contra%p(i,j,k)+v_cov%p(i,j,k)/mesh_v%G(i,j)
+!                 v_cov%p(i,j,k) = mesh_v%Q(3,i,j)*v_contra%p(i,j,k)+v_cov%p(i,j,k)/mesh_v%J(i,j,k)
 !             end do
 !         end do
 !     end do

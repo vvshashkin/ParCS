@@ -76,7 +76,7 @@ subroutine calc_Ghuv_tile(Ghuv, uv, mesh)
     do k = mesh%ks, mesh%ke
         do j = mesh%js, mesh%je
             do i = mesh%is, mesh%ie
-                Ghuv%p(i,j,k) = mesh%G(i,j)*uv%p(i,j,k)
+                Ghuv%p(i,j,k) = mesh%J(i,j,k)*uv%p(i,j,k)
             end do
         end do
     end do

@@ -59,79 +59,79 @@ subroutine calc_div_on_tile(div, u, v, mesh,scale)
     do k = ks, ke
         !Corner cases:
         if(js==1 .and. is == 1) then
-            div%p(1,1,k) = mesh%G(2,1)*(u%p(2,1,k)-u%p(-1,1,k)+ &
-                                        v%p(1,2,k)-v%p(1,-1,k)+ &
-                                        v%p(0,2,k)+u%p(2,0,k))/ &
-                                             (3.0_8*mesh%G(1,1)*hx*scale)
+            div%p(1,1,k) = mesh%J(2,1,k)*(u%p(2,1,k)-u%p(-1,1,k)+ &
+                                          v%p(1,2,k)-v%p(1,-1,k)+ &
+                                          v%p(0,2,k)+u%p(2,0,k))/ &
+                                             (3.0_8*mesh%J(1,1,k)*hx*scale)
         end if
         n = mesh%nx-1
         if(js==1 .and. ie == n+1) then
-            div%p(n+1,1,k) = mesh%G(n,1)*(u%p(n+3,1,k)-u%p(n,1,k)+ &
-                                        v%p(n+1,2,k)-v%p(n+1,-1,k)+ &
-                                        v%p(n+2,2,k)-u%p(n,0,k))/ &
-                                             (3.0_8*mesh%G(n+1,1)*hx*scale)
+            div%p(n+1,1,k) = mesh%J(n,1,k)*(u%p(n+3,1,k)-u%p(n,1,k)+ &
+                                            v%p(n+1,2,k)-v%p(n+1,-1,k)+ &
+                                            v%p(n+2,2,k)-u%p(n,0,k))/ &
+                                             (3.0_8*mesh%J(n+1,1,k)*hx*scale)
         end if
         if(ie == mesh%nx .and. je==mesh%ny) then
             i = ie
             j = je
-            div%p(ie,je,k) = mesh%G(i-1,j)*(-u%p(i-1,j+1,k)+v%p(i,j+2,k)+ &
-                                            -u%p(i-1,j  ,k)-v%p(i,j-1,k)+ &
-                                             u%p(i+2,j  ,k)-v%p(i+1,j-1,k))/ &
-                                             (3.0_8*mesh%G(i,j)*hx*scale)
+            div%p(ie,je,k) = mesh%J(i-1,j,k)*(-u%p(i-1,j+1,k)+v%p(i,j+2,k)+ &
+                                              -u%p(i-1,j  ,k)-v%p(i,j-1,k)+ &
+                                               u%p(i+2,j  ,k)-v%p(i+1,j-1,k))/ &
+                                             (3.0_8*mesh%J(i,j,k)*hx*scale)
         end if
         if(is == 1 .and. je==mesh%ny) then
             i = is
             j = je
-            div%p(i,j,k) = mesh%G(i+1,j)*( u%p(i+1,j+1,k)+v%p(i,j+2,k)+ &
+            div%p(i,j,k) = mesh%J(i+1,j,k)*( u%p(i+1,j+1,k)+v%p(i,j+2,k)+ &
                                              u%p(i+1,j  ,k)-v%p(i,j-1,k)+ &
                                             -u%p(i-2,j  ,k)-v%p(i-1,j-1,k))/ &
-                                             (3.0_8*mesh%G(i,j)*hx*scale)
+                                             (3.0_8*mesh%J(i,j,k)*hx*scale)
         end if
         !Edge cases:
         if(js == 1) then
             j=1
             do i = max(is,2), min(ie,mesh%nx-1)
-                div%p(i,j,k) = (0.5_8*mesh%G(i+1,j)*(u%p(i+1,j,k)+u%p(i+1,j-1,k))- &
-                                0.5_8*mesh%G(i-1,j)*(u%p(i-1,j,k)+u%p(i-1,j-1,k)) +&
-                                mesh%G(i,j+1)*(v%p(i,j+1,k)-v%p(i,j-2,k)))/  &
-                                (2._8*mesh%G(i,j)*hx*scale)
+                div%p(i,j,k) = (0.5_8*mesh%J(i+1,j,k)*(u%p(i+1,j,k)+u%p(i+1,j-1,k))- &
+                                0.5_8*mesh%J(i-1,j,k)*(u%p(i-1,j,k)+u%p(i-1,j-1,k)) +&
+                                      mesh%J(i,j+1,k)*(v%p(i,j+1,k)-v%p(i,j-2,k)))/  &
+                                (2._8*mesh%J(i,j,k)*hx*scale)
             end do
         end if
         n = mesh%ny-1
         if(je == n+1) then
             j=n+1
             do i = max(is,2), min(ie,mesh%nx-1)
-                div%p(i,j,k) = (0.5_8*mesh%G(i+1,j)*(u%p(i+1,j,k)+u%p(i+1,j+1,k))- &
-                                0.5_8*mesh%G(i-1,j)*(u%p(i-1,j,k)+u%p(i-1,j+1,k)) +&
-                                mesh%G(i,j-1)*(v%p(i,j+2,k)-v%p(i,j-1,k)))/  &
-                                (2._8*mesh%G(i,j)*hx*scale)
+                div%p(i,j,k) = (0.5_8*mesh%J(i+1,j,k)*(u%p(i+1,j,k)+u%p(i+1,j+1,k))- &
+                                0.5_8*mesh%J(i-1,j,k)*(u%p(i-1,j,k)+u%p(i-1,j+1,k)) +&
+                                      mesh%J(i,j-1,k)*(v%p(i,j+2,k)-v%p(i,j-1,k)))/  &
+                                (2._8*mesh%J(i,j,k)*hx*scale)
             end do
         end if
         if(is == 1) then
             i=1
             do j = max(js,2), min(je,mesh%ny-1)
-                div%p(i,j,k) = (0.5_8*mesh%G(i,j+1)*(v%p(i,j+1,k)+v%p(i-1,j+1,k))- &
-                                0.5_8*mesh%G(i,j-1)*(v%p(i,j-1,k)+v%p(i-1,j-1,k)) +&
-                                mesh%G(i+1,j)*(u%p(i+1,j,k)-u%p(i-2,j,k)))/  &
-                                (2._8*mesh%G(i,j)*hx*scale)
+                div%p(i,j,k) = (0.5_8*mesh%J(i,j+1,k)*(v%p(i,j+1,k)+v%p(i-1,j+1,k))- &
+                                0.5_8*mesh%J(i,j-1,k)*(v%p(i,j-1,k)+v%p(i-1,j-1,k)) +&
+                                      mesh%J(i+1,j,k)*(u%p(i+1,j,k)-u%p(i-2,j,k)))/  &
+                                (2._8*mesh%J(i,j,k)*hx*scale)
             end do
         end if
         n = mesh%nx-1
         if(ie == n+1) then
             i=n+1
             do j = max(js,2), min(je,mesh%ny-1)
-                div%p(i,j,k) = (0.5_8*mesh%G(i,j+1)*(v%p(i,j+1,k)+v%p(i+1,j+1,k))- &
-                                0.5_8*mesh%G(i,j-1)*(v%p(i,j-1,k)+v%p(i+1,j-1,k)) +&
-                                mesh%G(i-1,j)*(u%p(i+2,j,k)-u%p(i-1,j,k)))/  &
-                                (2._8*mesh%G(i,j)*hx*scale)
+                div%p(i,j,k) = (0.5_8*mesh%J(i,j+1,k)*(v%p(i,j+1,k)+v%p(i+1,j+1,k))- &
+                                0.5_8*mesh%J(i,j-1,k)*(v%p(i,j-1,k)+v%p(i+1,j-1,k)) +&
+                                      mesh%J(i-1,j,k)*(u%p(i+2,j,k)-u%p(i-1,j,k)))/  &
+                                (2._8*mesh%J(i,j,k)*hx*scale)
             end do
         end if
         !Regular points:
         do j = max(js,2), min(je,mesh%ny-1)
             do i = max(is,2), min(ie,mesh%nx-1)
-                div%p(i,j,k) = (mesh%G(i+1,j)*u%p(i+1,j,k)-mesh%G(i-1,j)*u%p(i-1,j,k) +  &
-                                mesh%G(i,j+1)*v%p(i,j+1,k)-mesh%G(i,j-1)*v%p(i,j-1,k))/  &
-                                (2._8*mesh%G(i,j)*hx*scale)
+                div%p(i,j,k) = (mesh%J(i+1,j,k)*u%p(i+1,j,k)-mesh%J(i-1,j,k)*u%p(i-1,j,k) +  &
+                                mesh%J(i,j+1,k)*v%p(i,j+1,k)-mesh%J(i,j-1,k)*v%p(i,j-1,k))/  &
+                                (2._8*mesh%J(i,j,k)*hx*scale)
             end do
         end do
     end do

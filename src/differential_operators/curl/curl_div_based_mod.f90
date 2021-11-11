@@ -56,8 +56,8 @@ subroutine transform_vectors(u, v, ut, vt, mesh_u, mesh_v)
     do k = mesh_u%ks, mesh_u%ke
         do j = mesh_u%js, mesh_u%je
             do i = mesh_u%is, mesh_u%ie
-                ut%p(i,j,k) =  v%p(i,j,k)/mesh_u%G(i,j)
-                vt%p(i,j,k) = -u%p(i,j,k)/mesh_u%G(i,j)
+                ut%p(i,j,k) =  v%p(i,j,k)/mesh_u%J(i,j,k)
+                vt%p(i,j,k) = -u%p(i,j,k)/mesh_u%J(i,j,k)
             end do
         end do
     end do

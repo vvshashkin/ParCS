@@ -67,20 +67,20 @@ subroutine add_metric_terms_tile(u_tend, v_tend, u, v, ut, vt, mesh, scale)
         do j = js, je
             do i = is, ie
                 u_tend%p(i,j,k) =  u_tend%p(i,j,k)+&
-                                  (u%p(i,j,k)*ut%p(i,j,k)*mesh%T(1,1,1,i,j)+ &
-                                   v%p(i,j,k)*ut%p(i,j,k)*mesh%T(1,1,2,i,j)+ &
-                                   u%p(i,j,k)*vt%p(i,j,k)*mesh%T(1,2,1,i,j)+ &
-                                   v%p(i,j,k)*vt%p(i,j,k)*mesh%T(1,2,2,i,j)) / scale
+                                  (u%p(i,j,k)*ut%p(i,j,k)*mesh%G(1,1,1,i,j,k)+ &
+                                   v%p(i,j,k)*ut%p(i,j,k)*mesh%G(1,1,2,i,j,k)+ &
+                                   u%p(i,j,k)*vt%p(i,j,k)*mesh%G(1,2,1,i,j,k)+ &
+                                   v%p(i,j,k)*vt%p(i,j,k)*mesh%G(1,2,2,i,j,k)) / scale
             end do
         end do
 
         do j = js, je
             do i = is, ie
                 v_tend%p(i,j,k) =  v_tend%p(i,j,k)+&
-                                  (u%p(i,j,k)*ut%p(i,j,k)*mesh%T(2,1,1,i,j)+ &
-                                   v%p(i,j,k)*ut%p(i,j,k)*mesh%T(2,1,2,i,j)+ &
-                                   u%p(i,j,k)*vt%p(i,j,k)*mesh%T(2,2,1,i,j)+ &
-                                   v%p(i,j,k)*vt%p(i,j,k)*mesh%T(2,2,2,i,j)) / scale
+                                  (u%p(i,j,k)*ut%p(i,j,k)*mesh%G(2,1,1,i,j,k)+ &
+                                   v%p(i,j,k)*ut%p(i,j,k)*mesh%G(2,1,2,i,j,k)+ &
+                                   u%p(i,j,k)*vt%p(i,j,k)*mesh%G(2,2,1,i,j,k)+ &
+                                   v%p(i,j,k)*vt%p(i,j,k)*mesh%G(2,2,2,i,j,k)) / scale
             end do
         end do
 
@@ -133,18 +133,18 @@ subroutine add_metric_terms_contra_tile(u_tend, v_tend, ut, vt, mesh, scale)
         do j = js, je
             do i = is, ie
                 u_tend%p(i,j,k) = u_tend%p(i,j,k)-&
-                                  (ut%p(i,j,k)*ut%p(i,j,k)*mesh%T(1,1,1,i,j)+ &
-                                   2.0_8*ut%p(i,j,k)*vt%p(i,j,k)*mesh%T(1,2,1,i,j)+ &
-                                   vt%p(i,j,k)*vt%p(i,j,k)*mesh%T(2,2,1,i,j)) / scale
+                                  (ut%p(i,j,k)*ut%p(i,j,k)*mesh%G(1,1,1,i,j,k)+ &
+                                   2.0_8*ut%p(i,j,k)*vt%p(i,j,k)*mesh%G(1,2,1,i,j,k)+ &
+                                   vt%p(i,j,k)*vt%p(i,j,k)*mesh%G(2,2,1,i,j,k)) / scale
             end do
         end do
 
         do j = js, je
             do i = is, ie
                 v_tend%p(i,j,k) = v_tend%p(i,j,k)-&
-                                  (ut%p(i,j,k)*ut%p(i,j,k)*mesh%T(1,1,2,i,j)+ &
-                                   2.0_8*vt%p(i,j,k)*ut%p(i,j,k)*mesh%T(1,2,2,i,j)+ &
-                                   vt%p(i,j,k)*vt%p(i,j,k)*mesh%T(2,2,2,i,j)) / scale
+                                  (ut%p(i,j,k)*ut%p(i,j,k)*mesh%G(1,1,2,i,j,k)+ &
+                                   2.0_8*vt%p(i,j,k)*ut%p(i,j,k)*mesh%G(1,2,2,i,j,k)+ &
+                                   vt%p(i,j,k)*vt%p(i,j,k)*mesh%G(2,2,2,i,j,k)) / scale
             end do
         end do
 

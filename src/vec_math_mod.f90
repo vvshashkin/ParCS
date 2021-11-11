@@ -41,7 +41,7 @@ function calc_mass_tile(f, mesh) result(out)
     do k = mesh%ks, mesh%ke
         do j = mesh%js, mesh%je
             do i = mesh%is, mesh%ie
-                out = out + f%p(i,j,k)*mesh%G(i,j)*mesh%hx*mesh%hy
+                out = out + f%p(i,j,k)*mesh%J(i,j,k)*mesh%hx*mesh%hy
             end do
         end do
     end do
@@ -82,7 +82,7 @@ function calc_l2norm_squared_on_tile(f, mesh) result(out)
     do k = mesh%ks, mesh%ke
         do j = mesh%js, mesh%je
             do i = mesh%is, mesh%ie
-                out = out + f%p(i,j,k)**2*mesh%G(i,j)*mesh%hx*mesh%hy
+                out = out + f%p(i,j,k)**2*mesh%J(i,j,k)*mesh%hx*mesh%hy
             end do
         end do
     end do
@@ -116,7 +116,7 @@ subroutine calc_cube2cart_vec_tile(vx, vy, vz, u, v, mesh)
     do k = mesh%ks, mesh%ke
         do j = mesh%js, mesh%je
             do i = mesh%is, mesh%ie
-                v_xyz(1:3) = mesh%b1(1:3,i,j)*u%p(i,j,k)+mesh%b2(1:3,i,j)*v%p(i,j,k)
+                v_xyz(1:3) = mesh%b1(1:3,i,j,k)*u%p(i,j,k)+mesh%b2(1:3,i,j,k)*v%p(i,j,k)
                 vx%p(i,j,k) = v_xyz(1)
                 vy%p(i,j,k) = v_xyz(2)
                 vz%p(i,j,k) = v_xyz(3)
@@ -152,13 +152,13 @@ subroutine calc_cart2cube_vec_tile(u, v, vx, vy, vz, mesh)
     do k = mesh%ks, mesh%ke
         do j = mesh%js, mesh%je
             do i = mesh%is, mesh%ie
-                u%p(i,j,k) = vx%p(i,j,k)*mesh%b1(1,i,j) + &
-                             vy%p(i,j,k)*mesh%b1(2,i,j) + &
-                             vz%p(i,j,k)*mesh%b1(3,i,j)
+                u%p(i,j,k) = vx%p(i,j,k)*mesh%b1(1,i,j,k) + &
+                             vy%p(i,j,k)*mesh%b1(2,i,j,k) + &
+                             vz%p(i,j,k)*mesh%b1(3,i,j,k)
 
-                v%p(i,j,k) = vx%p(i,j,k)*mesh%b2(1,i,j) + &
-                             vy%p(i,j,k)*mesh%b2(2,i,j) + &
-                             vz%p(i,j,k)*mesh%b2(3,i,j)
+                v%p(i,j,k) = vx%p(i,j,k)*mesh%b2(1,i,j,k) + &
+                             vy%p(i,j,k)*mesh%b2(2,i,j,k) + &
+                             vz%p(i,j,k)*mesh%b2(3,i,j,k)
             end do
         end do
     end do
