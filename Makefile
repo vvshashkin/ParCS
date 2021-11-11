@@ -358,6 +358,12 @@ $(DOBJ)key_value_mod.o: src/stuff/key_value_mod.f90
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)shallow_atm_metric_mod.o: src/metric/shallow_atm_metric_mod.f90 \
+	$(DOBJ)metric_mod.o \
+	$(DOBJ)abstract_vertical_transform_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)config_metric_mod.o: src/metric/config_metric_mod.f90 \
 	$(DOBJ)config_mod.o \
 	$(DOBJ)parcomm_mod.o
@@ -390,7 +396,9 @@ $(DOBJ)metric_factory_mod.o: src/metric/metric_factory_mod.f90 \
 	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)config_metric_mod.o \
 	$(DOBJ)ecs_metric_mod.o \
-	$(DOBJ)ecs_metric_factory_mod.o
+	$(DOBJ)ecs_metric_factory_mod.o \
+	$(DOBJ)shallow_atm_metric_mod.o \
+	$(DOBJ)vertical_transform_factory_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

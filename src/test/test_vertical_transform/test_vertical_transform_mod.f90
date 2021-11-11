@@ -6,7 +6,7 @@ contains
 
 subroutine test_vertical_transform()
     use abstract_vertical_transform_mod, only : vertical_transform_t
-    use vertical_transform_factory_mod,  only : create_vertical_transform_t
+    use vertical_transform_factory_mod,  only : create_vertical_transform
 
     class(vertical_transform_t), allocatable :: vert_transform
     real(kind=8),    parameter :: h_surf = 1e3_8, h_top=30e3_8
@@ -17,7 +17,7 @@ subroutine test_vertical_transform()
     logical :: is_passed
     integer(kind=4) :: k
 
-    vert_transform = create_vertical_transform_t("vertical_transform_default")
+    vert_transform = create_vertical_transform("vertical_transform_default")
 
     e1 = abs(vert_transform%calc_z(h_surf, h_top, eta=0.0_8) - h_surf)+ &
          abs(vert_transform%calc_dz_dh_surf(eta=0.0_8) - 1.0_8) +         &

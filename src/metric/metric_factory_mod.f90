@@ -22,6 +22,8 @@ subroutine create_metric_by_config(metric, topology, metric_type, config)
     case("ecs")
         call create_ecs_metric(metric, topology, &
          config%scale, config%omega, config%rotation_matrix, config%rotation_axis)
+    case("shallow_atmosphere_metric")
+        call create_shallow_atmosphere_metric(metric,topology,metric_type,config)
     case default
         call parcomm_global%abort("Unknown metric_type var " // metric_type // &
                                                     " in metric_factory_mod")
@@ -36,13 +38,43 @@ subroutine create_metric(metric, topology, metric_type)
     character(len=*),             intent(in)  :: metric_type
     class(metric_t), allocatable, intent(out) :: metric
 
-    select case(metric_type)
-    case("ecs")
-        call create_ecs_metric(metric, topology)
-    case default
-        call parcomm_global%abort("Unknown metric_type var " // metric_type // &
-                                                    " in metric_factory_mod")
-    end select
+    type(config_metric_t) :: config
+
+    call config%set_defaults()
+    call create_metric_by_config(metric,topology,metric_type,config)
+
 end subroutine create_metric
+
+subroutine create_shallow_atmosphere_metric(metric, topology, metric_type, config)
+
+    use shallow_atm_metric_mod, only : shallow_atm_metric_t
+    use vertical_transform_factory_mod, only : create_vertical_transform
+
+    class(metric_t), allocatable, intent(out) :: metric
+    class(topology_t),            intent(in)  :: topology
+    character(len=*),             intent(in)  :: metric_type
+    type(config_metric_t),        intent(in)  :: config
+
+    type(shallow_atm_metric_t), allocatable :: metric_shallow_atm
+
+    allocate(metric_shallow_atm)
+
+    call create_metric_by_config(metric_shallow_atm%metric_2d, topology, config%metric_2d_type, config)
+
+    metric_shallow_atm%scale = config%scale
+    metric_shallow_atm%omega = config%omega
+    metric_shallow_atm%rotation_axis = config%rotation_axis
+    metric_shallow_atm%rotation_matrix = config%rotation_matrix
+    metric_shallow_atm%alpha0 = metric_shallow_atm%metric_2d%alpha0
+    metric_shallow_atm%alpha1 = metric_shallow_atm%metric_2d%alpha1
+    metric_shallow_atm%beta0 = metric_shallow_atm%metric_2d%beta0
+    metric_shallow_atm%beta1 = metric_shallow_atm%metric_2d%beta1
+
+    metric_shallow_atm%vertical_transform = &
+                    create_vertical_transform(config%vertical_transform_name)
+
+    call move_alloc(metric_shallow_atm, metric)
+
+end subroutine create_shallow_atmosphere_metric
 
 end module metric_factory_mod
