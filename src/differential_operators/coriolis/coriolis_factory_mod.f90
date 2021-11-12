@@ -160,7 +160,7 @@ subroutine calc_coriolis_parameter(f, mesh)
     do t = mesh%ts, mesh%te
         do j = mesh%tile(t)%js, mesh%tile(t)%je
             do i = mesh%tile(t)%is, mesh%tile(t)%ie
-                n = [mesh%tile(t)%rx(i,j),mesh%tile(t)%ry(i,j),mesh%tile(t)%rz(i,j)]
+                n = [mesh%tile(t)%rx(i,j,1),mesh%tile(t)%ry(i,j,1),mesh%tile(t)%rz(i,j,1)]
                 pr = dot_product(mesh%rotation_axis, n) / sqrt(dot_product(n,n))
                 f%tile(t)%p(i,j,1) = 2*mesh%omega*pr
             end do

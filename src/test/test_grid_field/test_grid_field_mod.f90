@@ -112,7 +112,7 @@ subroutine init_grid_field_fxyz(gf, mesh, f)
         do k = mesh%tile(t)%ks, mesh%tile(t)%ke
             do j = mesh%tile(t)%js, mesh%tile(t)%je
                 do i = mesh%tile(t)%is, mesh%tile(t)%ie
-                    gf%tile(t)%p(i,j,k) = f(mesh%tile(t)%rx(i,j), mesh%tile(t)%ry(i,j), mesh%tile(t)%rz(i,j),1.0_8*k)
+                    gf%tile(t)%p(i,j,k) = f(mesh%tile(t)%rx(i,j,k), mesh%tile(t)%ry(i,j,k), mesh%tile(t)%rz(i,j,k),1.0_8*k)
                 end do
             end do
         end do

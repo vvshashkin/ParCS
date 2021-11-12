@@ -118,7 +118,7 @@ subroutine calc_curl_c_sbp_tile(curl, u, v, sbp_diff, mesh_x, mesh_y, mesh_xy, s
 
         do j=js, je
             do i=is, ie
-                curl%p(i,j,k) = (dvx(i,j,1)-duy(i,j,1)) / (mesh_xy%G(i,j)*mesh_xy%hx*scale)
+                curl%p(i,j,k) = (dvx(i,j,1)-duy(i,j,1)) / (mesh_xy%J(i,j,k)*mesh_xy%hx*scale)
             end do
         end do
     end do

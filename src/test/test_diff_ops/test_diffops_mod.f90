@@ -1090,7 +1090,7 @@ real(kind=8) function mass(f,mesh) result(m)
                     else
                         wx = 1.0_8
                     end if
-                    m = m+wx*wy*mesh%tile(t)%G(i,j)*f%tile(t)%p(i,j,k)
+                    m = m+wx*wy*mesh%tile(t)%J(i,j,k)*f%tile(t)%p(i,j,k)
                 end do
             end do
         end do

@@ -60,7 +60,7 @@ subroutine multiply_uv_by_G_tile(Guv, uv, mesh_uv)
     do k = mesh_uv%ks, mesh_uv%ke
         do j = mesh_uv%js, mesh_uv%je
             do i = mesh_uv%is, mesh_uv%ie
-                Guv%p(i,j,k) = uv%p(i,j,k)*mesh_uv%G(i,j)
+                Guv%p(i,j,k) = uv%p(i,j,k)*mesh_uv%J(i,j,k)
             end do
         end do
     end do
@@ -101,7 +101,7 @@ subroutine calc_div_on_tile(div, Gu, Gv, sbp_op, scale, mesh_xy)
 
         do j = mesh_xy%js, mesh_xy%je
             do i = mesh_xy%is, mesh_xy%ie
-                div%p(i,j,k) = (Dx(i,j,1)/hx + Dy(i,j,1)/hy) / mesh_xy%G(i,j)
+                div%p(i,j,k) = (Dx(i,j,1)/hx + Dy(i,j,1)/hy) / mesh_xy%J(i,j,k)
             end do
         end do
     end do

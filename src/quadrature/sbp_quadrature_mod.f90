@@ -32,7 +32,7 @@ function calc_tile_mass_sbp(this, f, mesh) result(out)
     do k = mesh%ks, mesh%ke
         do j = mesh%js, mesh%je
             do i = mesh%is, mesh%ie
-                out = out + f%p(i,j,k)*mesh%G(i,j)*mesh%hx*mesh%hy*this%Ax(i)*this%Ay(j)
+                out = out + f%p(i,j,k)*mesh%J(i,j,k)*mesh%hx*mesh%hy*this%Ax(i)*this%Ay(j)
             end do
         end do
     end do
@@ -53,7 +53,7 @@ function calc_tile_dot_sbp(this, f1, f2, mesh) result(out)
     do k = mesh%ks, mesh%ke
         do j = mesh%js, mesh%je
             do i = mesh%is, mesh%ie
-                out = out + f1%p(i,j,k)*f2%p(i,j,k)*mesh%G(i,j)*mesh%hx*mesh%hy*this%Ax(i)*this%Ay(j)
+                out = out + f1%p(i,j,k)*f2%p(i,j,k)*mesh%J(i,j,k)*mesh%hx*mesh%hy*this%Ax(i)*this%Ay(j)
             end do
         end do
     end do

@@ -58,7 +58,7 @@ subroutine test_quadrature(quadrature_name, max_order_exact, staggering, points_
                     b = mesh%tile(t)%get_beta(j)
                     do i = mesh%tile(t)%is, mesh%tile(t)%ie
                         a = mesh%tile(t)%get_alpha(i)
-                        test_fun%tile(t)%p(i,j,k) = 1.0_8/mesh%tile(t)%G(i,j)*a**order*b**order
+                        test_fun%tile(t)%p(i,j,k) = 1.0_8/mesh%tile(t)%J(i,j,k)*a**order*b**order
                     end do
                 end do
             end do

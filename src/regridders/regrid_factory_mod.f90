@@ -84,7 +84,7 @@ subroutine create_latlon_vector_regrid(regrid_out, domain, Nlon, Nlat, interp_ty
     type(tile_t) :: stencil_bounds
     integer(kind=4), parameter :: A_halo_width = 2, A_ex_halo_width = 8
     real(kind=8) :: hlon, hlat, lon, lat
-    real(kind=8) :: r(3), iv(3), jv(3), a1(3), a2(3), b1(3), b2(3)
+    real(kind=8) :: r(3), iv(3), jv(3), a1(4), a2(4), b1(3), b2(3)
     real(kind=8) :: alpha, beta
     integer(kind=4) :: i, j, panel_ind
 
@@ -145,8 +145,8 @@ subroutine create_latlon_vector_regrid(regrid_out, domain, Nlon, Nlat, interp_ty
                 iv(1:3) = [-sin(lon),cos(lon),0.0_8]
                 jv(1:3) = [-sin(lat)*cos(lon),-sin(lat)*sin(lon),cos(lat)]
                 call domain%metric%transform_cartesian_to_native(panel_ind, alpha, beta, r)
-                a1(1:3) = domain%metric%a1(panel_ind,alpha,beta)
-                a2(1:3) = domain%metric%a2(panel_ind,alpha,beta)
+                a1(1:4) = domain%metric%calculate_a1(panel_ind,alpha,beta)
+                a2(1:4) = domain%metric%calculate_a2(panel_ind,alpha,beta)
                 regrid%u2u(i,j) = sum(iv(1:3)*a1(1:3))
                 regrid%u2v(i,j) = sum(jv(1:3)*a1(1:3))
                 regrid%v2u(i,j) = sum(iv(1:3)*a2(1:3))
@@ -163,8 +163,8 @@ subroutine create_latlon_vector_regrid(regrid_out, domain, Nlon, Nlat, interp_ty
                 iv(1:3) = [-sin(lon),cos(lon),0.0_8]
                 jv(1:3) = [-sin(lat)*cos(lon),-sin(lat)*sin(lon),cos(lat)]
                 call domain%metric%transform_cartesian_to_native(panel_ind, alpha, beta, r)
-                b1(1:3) = domain%metric%b1(panel_ind,alpha,beta)
-                b2(1:3) = domain%metric%b2(panel_ind,alpha,beta)
+                b1(1:3) = domain%metric%calculate_b1(panel_ind,alpha,beta)
+                b2(1:3) = domain%metric%calculate_b2(panel_ind,alpha,beta)
                 regrid%u2u(i,j) = sum(iv(1:3)*b1(1:3))
                 regrid%u2v(i,j) = sum(jv(1:3)*b1(1:3))
                 regrid%v2u(i,j) = sum(iv(1:3)*b2(1:3))

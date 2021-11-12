@@ -87,7 +87,7 @@ subroutine divide_by_G(uv, mesh)
     do k=mesh%ks, mesh%ke
         do j=mesh%js, mesh%je
             do i=mesh%is, mesh%ie
-                uv%p(i,j,k) = uv%p(i,j,k) / mesh%G(i,j)
+                uv%p(i,j,k) = uv%p(i,j,k) / mesh%J(i,j,k)
             end do
         end do
     end do

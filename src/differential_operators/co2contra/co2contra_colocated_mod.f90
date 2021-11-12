@@ -51,8 +51,8 @@ subroutine transform_co2contra_colocated_tile(u_contra, v_contra, u_cov, v_cov, 
     do k=ks, ke
         do j=js, je
             do i=is,ie
-                u_contra%p(i,j,k) = mesh%Qi(1,i,j)*u_cov%p(i,j,k)+mesh%Qi(2,i,j)*v_cov%p(i,j,k)
-                v_contra%p(i,j,k) = mesh%Qi(2,i,j)*u_cov%p(i,j,k)+mesh%Qi(3,i,j)*v_cov%p(i,j,k)
+                u_contra%p(i,j,k) = mesh%Qi(1,i,j,k)*u_cov%p(i,j,k)+mesh%Qi(2,i,j,k)*v_cov%p(i,j,k)
+                v_contra%p(i,j,k) = mesh%Qi(2,i,j,k)*u_cov%p(i,j,k)+mesh%Qi(3,i,j,k)*v_cov%p(i,j,k)
             end do
         end do
     end do
@@ -93,8 +93,8 @@ subroutine transform_contra2co_colocated_tile(u_cov, v_cov, u_contra, v_contra, 
     do k=ks, ke
         do j=js, je
             do i=is,ie
-                u_cov%p(i,j,k) = mesh%Q(1,i,j)*u_contra%p(i,j,k)+mesh%Q(2,i,j)*v_contra%p(i,j,k)
-                v_cov%p(i,j,k) = mesh%Q(2,i,j)*u_contra%p(i,j,k)+mesh%Q(3,i,j)*v_contra%p(i,j,k)
+                u_cov%p(i,j,k) = mesh%Q(1,i,j,k)*u_contra%p(i,j,k)+mesh%Q(2,i,j,k)*v_contra%p(i,j,k)
+                v_cov%p(i,j,k) = mesh%Q(2,i,j,k)*u_contra%p(i,j,k)+mesh%Q(3,i,j,k)*v_contra%p(i,j,k)
             end do
         end do
     end do
