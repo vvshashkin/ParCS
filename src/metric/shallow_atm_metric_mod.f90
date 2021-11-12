@@ -13,6 +13,7 @@ type, extends(metric_t) :: shallow_atm_metric_t
 
     procedure :: calculate_r_orog
     procedure :: calculate_r_2d
+    procedure :: calculate_h
     procedure :: calculate_a1_orog
     procedure :: calculate_a1_2d
     procedure :: calculate_a2_orog
@@ -54,7 +55,15 @@ pure function calculate_r_2d(this, panel_ind, alpha, beta) result(r)
 
     r = this%metric_2d%calculate_r(panel_ind,alpha,beta)
 end function calculate_r_2d
+pure function calculate_h(this,panel_ind,alpha,beta,eta,h_surf,h_top) result(h)
+    class(shallow_atm_metric_t), intent(in) :: this
+    integer(kind=4),             intent(in) :: panel_ind
+    real(kind=8),                intent(in) :: alpha, beta, eta
+    real(kind=8),                intent(in) :: h_surf, h_top
+    real(kind=8)                            :: h
 
+    h = this%vertical_transform%calc_z(h_surf,h_top,eta)
+end function calculate_h
 pure function calculate_a1_orog(this, panel_ind, alpha, beta, eta, &
                                          h_surf, dcov_h_surf, h_top) result(a)
     class(shallow_atm_metric_t), intent(in) :: this

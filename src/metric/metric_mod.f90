@@ -20,6 +20,7 @@ contains
     procedure(calculate_r_orog),  deferred :: calculate_r_orog
     procedure(calculate_r_2d),    deferred :: calculate_r_2d !no orography case
     generic :: calculate_r => calculate_r_orog, calculate_r_2d
+    procedure(calculate_h),       deferred :: calculate_h
     procedure(calculate_vec_cov_orog), deferred :: calculate_a1_orog
     procedure(calculate_vec_cov_2d),   deferred :: calculate_a1_2d
     generic :: calculate_a1 => calculate_a1_orog, calculate_a1_2d
@@ -67,7 +68,14 @@ abstract interface
         real(kind=8),    intent(in) :: alpha, beta
         real(kind=8)                :: r(3)
     end function calculate_r_2d
-
+    pure function calculate_h(this,panel_ind,alpha,beta,eta,h_surf,h_top) result(h)
+        import metric_t
+        class(metric_t), intent(in) :: this
+        integer(kind=4), intent(in) :: panel_ind
+        real(kind=8),    intent(in) :: alpha, beta, eta
+        real(kind=8),    intent(in) :: h_surf, h_top
+        real(kind=8)                :: h
+    end function calculate_h
     pure function calculate_vec_cov_orog(this, panel_ind, alpha, beta, eta, &
                                          h_surf, dcov_h_surf, h_top) result(a)
         import metric_t
