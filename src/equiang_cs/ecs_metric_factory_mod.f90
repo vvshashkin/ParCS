@@ -43,6 +43,7 @@ subroutine create_ecs_metric(metric, topology, sphere_r, sphere_omega, rotation_
     ecs_metric%beta1  = 0.25*pi
 
     ecs_metric%scale = local_sphere_r
+    ecs_metric%vertical_scale = 1.0_8
     ecs_metric%omega = local_sphere_omega
 
     ecs_metric%rotation_matrix = local_rotation_matrix

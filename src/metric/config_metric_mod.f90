@@ -9,6 +9,7 @@ type, public, extends(config_t) :: config_metric_t
     integer(kind=4) :: N, Nz
 
     real(kind=8) :: scale = 1.0_8
+    real(kind=8) :: vertical_scale = 1.0_8
     real(kind=8) :: omega = 1.0_8
     real(kind=8) :: rotation_matrix(3,3) = reshape([1,0,0, 0,1,0, 0,0,1], [3,3])
     real(kind=8) :: rotation_axis(3)     = [0, 0, 1]
@@ -25,6 +26,7 @@ subroutine set_defaults(this)
     class(config_metric_t), intent(inout) :: this
 
     this%scale = 1.0_8
+    this%vertical_scale = 1.0_8
     this%omega = 1.0_8
     this%rotation_matrix(1:3,1:3) = reshape([1,0,0, 0,1,0, 0,0,1], [3,3])
     this%rotation_axis(1:3)     = [0, 0, 1]

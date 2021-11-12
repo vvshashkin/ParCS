@@ -7,6 +7,8 @@ use config_metric_mod, only : config_metric_t
 
 implicit none
 
+generic :: create_metric => create_metric_by_param, create_metric_by_config
+
 contains
 
 subroutine create_metric_by_config(metric, topology, metric_type, config)
@@ -30,7 +32,7 @@ subroutine create_metric_by_config(metric, topology, metric_type, config)
     end select
 end subroutine create_metric_by_config
 
-subroutine create_metric(metric, topology, metric_type)
+subroutine create_metric_by_param(metric, topology, metric_type)
     use ecs_metric_mod,            only : ecs_metric_t
     use ecs_metric_factory_mod,    only : create_ecs_metric
 
@@ -43,7 +45,7 @@ subroutine create_metric(metric, topology, metric_type)
     call config%set_defaults()
     call create_metric_by_config(metric,topology,metric_type,config)
 
-end subroutine create_metric
+end subroutine create_metric_by_param
 
 subroutine create_shallow_atmosphere_metric(metric, topology, metric_type, config)
 
@@ -62,6 +64,7 @@ subroutine create_shallow_atmosphere_metric(metric, topology, metric_type, confi
     call create_metric_by_config(metric_shallow_atm%metric_2d, topology, config%metric_2d_type, config)
 
     metric_shallow_atm%scale = config%scale
+    metric_shallow_atm%vertical_scale = config%vertical_scale
     metric_shallow_atm%omega = config%omega
     metric_shallow_atm%rotation_axis = config%rotation_axis
     metric_shallow_atm%rotation_matrix = config%rotation_matrix

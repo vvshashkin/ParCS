@@ -9,7 +9,7 @@ program main
 
     call test_metric_class("cube","ecs")
     call test_metric_class("cube","shallow_atmosphere_metric")
-    ! call test_metric()
+    call test_metric()
 
     call deinit_global_parallel_enviroment()
 

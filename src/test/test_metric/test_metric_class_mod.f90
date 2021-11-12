@@ -5,13 +5,14 @@ implicit none
 private
 public :: test_metric_class
 
-real(kind=8), parameter :: test_tolerace = 3e-15_8
+real(kind=8), parameter :: test_tolerace = 8e-15_8
 
 contains
 
 subroutine test_metric_class(topology_type,metric_type)
     use metric_mod,           only : metric_t
     use metric_factory_mod,   only : create_metric
+    use config_metric_mod,    only : config_metric_t
     use topology_mod,         only : topology_t
     use topology_factory_mod, only : create_topology
 
@@ -21,8 +22,8 @@ subroutine test_metric_class(topology_type,metric_type)
     class(metric_t),   allocatable :: metric
     real(kind=8) a1(4), a2(4), b1(3), b2(3), r(3)
     real(kind=8) Q(6), QI(6), Jac
-    real(kind=8), parameter :: h_surf = 0.01, h_top = 1.0_8
-    real(kind=8), parameter :: dhdalpha = 0.1_8, dhdbeta = -0.2_8
+    real(kind=8), parameter :: h_surf = 1000.0_8, h_top = 30000.0_8
+    real(kind=8), parameter :: dhdalpha = 0.5_8, dhdbeta = -0.2_8
     real(kind=8), parameter :: stepx = 0.1
     real(kind=8), parameter :: stepy = 0.11
     real(kind=8), parameter :: stepz = 0.2
@@ -32,9 +33,13 @@ subroutine test_metric_class(topology_type,metric_type)
     integer(kind=4) npanels, panel_ind, i, j, k
     real(kind=8) alpha, beta, eta, alpha0, beta0, da, db, detQ
     logical :: is_correct
+    type(config_metric_t) :: config_metric
 
     topology = create_topology(topology_type)
-    call create_metric(metric, topology, metric_type)
+
+    call config_metric%set_defaults()
+    config_metric%vertical_scale = h_top
+    call create_metric(metric, topology, metric_type,config_metric)
 
     npanels = topology%npanels
     alpha0 = metric%alpha0

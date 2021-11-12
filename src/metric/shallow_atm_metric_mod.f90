@@ -158,7 +158,7 @@ pure function calculate_Q_orog(this, panel_ind, alpha, beta, eta, &
     dh_dhs = this%vertical_transform%calc_dz_dh_surf(eta)
     dh_dalpha  = dh_dhs*dh_surf_dalpha
     dh_dbeta   = dh_dhs*dh_surf_dbeta
-    dh_deta = this%vertical_transform%calc_dz_deta(h_surf,h_top,eta)
+    dh_deta = this%vertical_transform%calc_dz_deta(h_surf,h_top,eta) / this%vertical_scale
 
     Q(1) = Q(1) + dh_dalpha**2
     Q(2) = Q(2) + dh_dalpha*dh_dbeta
@@ -192,7 +192,7 @@ pure function calculate_Qi_orog(this, panel_ind, alpha, beta, eta, &
     dh_dhs = this%vertical_transform%calc_dz_dh_surf(eta)
     dh_dalpha  = dh_dhs*dh_surf_dalpha
     dh_dbeta   = dh_dhs*dh_surf_dbeta
-    dh_deta = this%vertical_transform%calc_dz_deta(h_surf,h_top,eta)
+    dh_deta = this%vertical_transform%calc_dz_deta(h_surf,h_top,eta) / this%vertical_scale
 
     Qi = this%metric_2d%calculate_Qi(panel_ind,alpha,beta)
     Qi(4) = -(dh_dalpha*Qi(1)+dh_dbeta*Qi(2)) / dh_deta
@@ -220,7 +220,7 @@ pure function calculate_J_orog(this, panel_ind, alpha, beta, eta, h_surf, h_top)
     real(kind=8)                    :: J
 
     J = this%metric_2d%calculate_J(panel_ind,alpha,beta)*&
-        this%vertical_transform%calc_dz_deta(h_surf,h_top,eta)
+        this%vertical_transform%calc_dz_deta(h_surf,h_top,eta) / this%vertical_scale
 end function calculate_J_orog
 
 pure function calculate_J_2d(this, panel_ind, alpha, beta) result(J)
