@@ -20,28 +20,45 @@ contains
     procedure(calculate_r_orog),  deferred :: calculate_r_orog
     procedure(calculate_r_2d),    deferred :: calculate_r_2d !no orography case
     generic :: calculate_r => calculate_r_orog, calculate_r_2d
+
     procedure(calculate_h),       deferred :: calculate_h
+
     procedure(calculate_vec_cov_orog), deferred :: calculate_a1_orog
     procedure(calculate_vec_cov_2d),   deferred :: calculate_a1_2d
     generic :: calculate_a1 => calculate_a1_orog, calculate_a1_2d
+
     procedure(calculate_vec_cov_orog), deferred :: calculate_a2_orog
     procedure(calculate_vec_cov_2d),   deferred :: calculate_a2_2d
     generic :: calculate_a2 => calculate_a2_orog, calculate_a2_2d
+
+    procedure(calculate_vec4_orog),    deferred :: calculate_a3_orog
+    procedure(calculate_vec_cov_2d),   deferred :: calculate_a3_2d
+    generic :: calculate_a3 => calculate_a3_orog, calculate_a3_2d
+
     procedure(calculate_vec_contra_orog), deferred :: calculate_b1_orog
     procedure(calculate_vec_contra_2d),   deferred :: calculate_b1_2d
     generic :: calculate_b1 => calculate_b1_orog, calculate_b1_2d
+
     procedure(calculate_vec_contra_orog), deferred :: calculate_b2_orog
     procedure(calculate_vec_contra_2d),   deferred :: calculate_b2_2d
     generic :: calculate_b2 => calculate_b2_orog, calculate_b2_2d
+
+    procedure(calculate_vec_contra4_orog), deferred :: calculate_b3_orog
+    procedure(calculate_vec_contra4_2d),   deferred :: calculate_b3_2d
+    generic :: calculate_b3 => calculate_b3_orog, calculate_b3_2d
+
     procedure(calculate_metric_tensor_orog), deferred :: calculate_Q_orog
     procedure(calculate_metric_tensor_2d),   deferred :: calculate_Q_2d
     generic :: calculate_Q => calculate_Q_orog, calculate_Q_2d
+
     procedure(calculate_metric_tensor_orog), deferred :: calculate_Qi_orog
     procedure(calculate_metric_tensor_2d),   deferred :: calculate_Qi_2d
     generic :: calculate_Qi => calculate_Qi_orog, calculate_Qi_2d
+
     procedure(calculate_jacobian_orog), deferred :: calculate_J_orog
     procedure(calculate_jacobian_2d),   deferred :: calculate_J_2d
     generic :: calculate_J => calculate_J_orog, calculate_J_2d
+
     procedure(calculate_Christoffel_orog), deferred :: calculate_G_orog
     procedure(calculate_Christoffel_2d), deferred   :: calculate_G_2d
     generic :: calculate_G => calculate_G_orog, calculate_G_2d
@@ -85,6 +102,15 @@ abstract interface
         real(kind=8),    intent(in) :: h_surf, dcov_h_surf, h_top
         real(kind=8)                :: a(4)
     end function calculate_vec_cov_orog
+    pure function calculate_vec4_orog(this, panel_ind, alpha, beta, eta, &
+                                         h_surf,h_top) result(a)
+        import metric_t
+        class(metric_t), intent(in) :: this
+        integer(kind=4), intent(in) :: panel_ind
+        real(kind=8),    intent(in) :: alpha, beta, eta
+        real(kind=8),    intent(in) :: h_surf, h_top
+        real(kind=8)                :: a(4)
+    end function calculate_vec4_orog
     pure function calculate_vec_cov_2d(this, panel_ind, alpha, beta) result(a)
         import metric_t
         class(metric_t), intent(in) :: this
@@ -109,6 +135,23 @@ abstract interface
         real(kind=8),    intent(in) :: alpha, beta
         real(kind=8)                :: b(3)
     end function calculate_vec_contra_2d
+
+    pure function calculate_vec_contra4_orog(this, panel_ind, alpha, beta, eta, &
+                                            h_surf, dh_surf_dalpha, dh_surf_dbeta, h_top) result(b)
+        import metric_t
+        class(metric_t), intent(in) :: this
+        integer(kind=4), intent(in) :: panel_ind
+        real(kind=8),    intent(in) :: alpha, beta, eta
+        real(kind=8),    intent(in) :: h_surf, dh_surf_dalpha, dh_surf_dbeta, h_top
+        real(kind=8)                :: b(4)
+    end function calculate_vec_contra4_orog
+    pure function calculate_vec_contra4_2d(this, panel_ind, alpha, beta) result(b)
+        import metric_t
+        class(metric_t), intent(in) :: this
+        integer(kind=4), intent(in) :: panel_ind
+        real(kind=8),    intent(in) :: alpha, beta
+        real(kind=8)                :: b(4)
+    end function calculate_vec_contra4_2d
 
     pure function calculate_metric_tensor_orog(this, panel_ind, alpha, beta, eta, &
                                             h_surf, dh_surf_dalpha, dh_surf_dbeta, h_top) result(Q)

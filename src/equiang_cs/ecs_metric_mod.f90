@@ -12,22 +12,32 @@ type, extends(metric_t) :: ecs_metric_t
 contains
     !New interface
     procedure :: calculate_r_orog  => calculate_ecs_r_orog
-    procedure :: calculate_h       => return_zero_h
     procedure :: calculate_r_2d    => calculate_ecs_r_2d
+
+    procedure :: calculate_h       => return_zero_h
+
     procedure :: calculate_a1_orog => calculate_ecs_a1_orog
     procedure :: calculate_a1_2d   => calculate_ecs_a1_2d
     procedure :: calculate_a2_orog => calculate_ecs_a2_orog
     procedure :: calculate_a2_2d   => calculate_ecs_a2_2d
+    procedure :: calculate_a3_orog => calculate_ecs_a3_orog
+    procedure :: calculate_a3_2d   => calculate_ecs_a3_2d
+
     procedure :: calculate_b1_orog => calculate_ecs_b1_orog
     procedure :: calculate_b1_2d   => calculate_ecs_b1_2d
     procedure :: calculate_b2_orog => calculate_ecs_b2_orog
     procedure :: calculate_b2_2d   => calculate_ecs_b2_2d
+    procedure :: calculate_b3_orog => calculate_ecs_b3_orog
+    procedure :: calculate_b3_2d   => calculate_ecs_b3_2d
+
     procedure :: calculate_Q_orog  => calculate_ecs_Q_orog
     procedure :: calculate_Q_2d    => calculate_ecs_Q_2d
     procedure :: calculate_Qi_orog => calculate_ecs_Qi_orog
     procedure :: calculate_Qi_2d   => calculate_ecs_Qi_2d
+
     procedure :: calculate_J_orog => calculate_ecs_J_orog
     procedure :: calculate_J_2d   => calculate_ecs_J_2d
+
     procedure :: calculate_G_orog => calculate_ecs_G_orog
     procedure :: calculate_G_2d   => calculate_ecs_G_2d
 
@@ -114,6 +124,28 @@ pure function calculate_ecs_a2_2d(this, panel_ind, alpha, beta) result(a)
     a(4) = 0._8
 end function calculate_ecs_a2_2d
 
+pure function calculate_ecs_a3_orog(this, panel_ind, alpha, beta, eta, &
+                                         h_surf, h_top) result(a)
+    class(ecs_metric_t), intent(in) :: this
+    integer(kind=4),     intent(in) :: panel_ind
+    real(kind=8),        intent(in) :: alpha, beta, eta
+    real(kind=8),        intent(in) :: h_surf, h_top
+    real(kind=8)                    :: a(4)
+
+    a = [0.0_8, 0.0_8, 0.0_8, 1.0_8]
+
+end function calculate_ecs_a3_orog
+
+pure function calculate_ecs_a3_2d(this, panel_ind, alpha, beta) result(a)
+    class(ecs_metric_t), intent(in) :: this
+    integer(kind=4),     intent(in) :: panel_ind
+    real(kind=8),        intent(in) :: alpha, beta
+    real(kind=8)                    :: a(4)
+
+    a = [0.0_8, 0.0_8, 0.0_8, 1.0_8]
+
+end function calculate_ecs_a3_2d
+
 pure function calculate_ecs_b1_orog(this, panel_ind, alpha, beta, eta, &
                                          h_surf, dh_surf_dalpha, dh_surf_dbeta, h_top) result(b)
     class(ecs_metric_t), intent(in) :: this
@@ -157,6 +189,28 @@ pure function calculate_ecs_b2_2d(this, panel_ind, alpha, beta) result(b)
     b(1:3) = ecs_b2_proto(alpha,beta)
     b(1:3) = ecs_proto2realface(this%topology,this%rotation_matrix,panel_ind,b(1:3))
 end function calculate_ecs_b2_2d
+
+pure function calculate_ecs_b3_orog(this, panel_ind, alpha, beta, eta, &
+                                         h_surf, dh_surf_dalpha, dh_surf_dbeta, h_top) result(b)
+    class(ecs_metric_t), intent(in) :: this
+    integer(kind=4),     intent(in) :: panel_ind
+    real(kind=8),        intent(in) :: alpha, beta, eta
+    real(kind=8),        intent(in) :: h_surf, dh_surf_dalpha, dh_surf_dbeta, h_top
+    real(kind=8)                    :: b(4)
+
+    b = [0.0_8, 0.0_8, 0.0_8, 1.0_8]
+
+end function calculate_ecs_b3_orog
+
+pure function calculate_ecs_b3_2d(this, panel_ind, alpha, beta) result(b)
+    class(ecs_metric_t), intent(in) :: this
+    integer(kind=4),     intent(in) :: panel_ind
+    real(kind=8),        intent(in) :: alpha, beta
+    real(kind=8)                    :: b(4)
+
+    b = [0.0_8, 0.0_8, 0.0_8, 1.0_8]
+
+end function calculate_ecs_b3_2d
 
 pure function calculate_ecs_Q_orog(this, panel_ind, alpha, beta, eta, &
                                          h_surf, dh_surf_dalpha, dh_surf_dbeta, h_top) result(Q)

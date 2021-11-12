@@ -18,10 +18,14 @@ type, extends(metric_t) :: shallow_atm_metric_t
     procedure :: calculate_a1_2d
     procedure :: calculate_a2_orog
     procedure :: calculate_a2_2d
+    procedure :: calculate_a3_orog
+    procedure :: calculate_a3_2d
     procedure :: calculate_b1_orog
     procedure :: calculate_b1_2d
     procedure :: calculate_b2_orog
     procedure :: calculate_b2_2d
+    procedure :: calculate_b3_orog
+    procedure :: calculate_b3_2d
     procedure :: calculate_Q_orog
     procedure :: calculate_Q_2d
     procedure :: calculate_Qi_orog
@@ -110,6 +114,29 @@ pure function calculate_a2_2d(this, panel_ind, alpha, beta) result(a)
 
 end function calculate_a2_2d
 
+pure function calculate_a3_orog(this, panel_ind, alpha, beta, eta, &
+                                         h_surf, h_top) result(a)
+    class(shallow_atm_metric_t), intent(in) :: this
+    integer(kind=4),     intent(in) :: panel_ind
+    real(kind=8),        intent(in) :: alpha, beta, eta
+    real(kind=8),        intent(in) :: h_surf, h_top
+    real(kind=8)                    :: a(4)
+
+    a(1:3) = [0.0_8, 0.0_8, 0.0_8]
+    a(4) = this%vertical_transform%calc_dz_deta(h_surf,h_top,eta) / this%vertical_scale
+
+end function calculate_a3_orog
+
+pure function calculate_a3_2d(this, panel_ind, alpha, beta) result(a)
+    class(shallow_atm_metric_t), intent(in) :: this
+    integer(kind=4),     intent(in) :: panel_ind
+    real(kind=8),        intent(in) :: alpha, beta
+    real(kind=8)                    :: a(4)
+
+    a = [0.0_8, 0.0_8, 0.0_8, 1.0_8]
+
+end function calculate_a3_2d
+
 pure function calculate_b1_orog(this, panel_ind, alpha, beta, eta, &
                                          h_surf, dh_surf_dalpha, dh_surf_dbeta, h_top) result(b)
     class(shallow_atm_metric_t), intent(in) :: this
@@ -151,6 +178,40 @@ pure function calculate_b2_2d(this, panel_ind, alpha, beta) result(b)
 
     b = this%metric_2d%calculate_b2(panel_ind,alpha,beta)
 end function calculate_b2_2d
+
+pure function calculate_b3_orog(this, panel_ind, alpha, beta, eta, &
+                                         h_surf, dh_surf_dalpha, dh_surf_dbeta, h_top) result(b)
+    class(shallow_atm_metric_t), intent(in) :: this
+    integer(kind=4),     intent(in) :: panel_ind
+    real(kind=8),        intent(in) :: alpha, beta, eta
+    real(kind=8),        intent(in) :: h_surf, dh_surf_dalpha, dh_surf_dbeta, h_top
+    real(kind=8)                    :: b(4)
+
+    real(kind=8) :: b1(3), b2(3), dh_dalpha, dh_dbeta, dh_deta, dh_dhs
+
+    b1 = this%metric_2d%calculate_b1(panel_ind,alpha,beta)
+    b2 = this%metric_2d%calculate_b2(panel_ind,alpha,beta)
+
+    dh_dhs = this%vertical_transform%calc_dz_dh_surf(eta)
+    dh_dalpha  = dh_dhs*dh_surf_dalpha
+    dh_dbeta   = dh_dhs*dh_surf_dbeta
+    dh_deta = this%vertical_transform%calc_dz_deta(h_surf,h_top,eta) / this%vertical_scale
+
+    b(1) =-(dh_dalpha*b1(1)+dh_dbeta*b2(1)) / dh_deta
+    b(2) =-(dh_dalpha*b1(2)+dh_dbeta*b2(2)) / dh_deta
+    b(3) =-(dh_dalpha*b1(3)+dh_dbeta*b2(3)) / dh_deta
+    b(4) = 1.0_8 / dh_deta
+
+end function calculate_b3_orog
+
+pure function calculate_b3_2d(this, panel_ind, alpha, beta) result(b)
+    class(shallow_atm_metric_t), intent(in) :: this
+    integer(kind=4),     intent(in) :: panel_ind
+    real(kind=8),        intent(in) :: alpha, beta
+    real(kind=8)                    :: b(4)
+
+    b = [0.0_8, 0.0_8, 0.0_8, 1.0_8]
+end function calculate_b3_2d
 
 pure function calculate_Q_orog(this, panel_ind, alpha, beta, eta, &
                                          h_surf, dh_surf_dalpha, dh_surf_dbeta, h_top) result(Q)

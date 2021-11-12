@@ -20,7 +20,9 @@ subroutine test_metric_class(topology_type,metric_type)
 
     class(topology_t), allocatable :: topology
     class(metric_t),   allocatable :: metric
-    real(kind=8) a1(4), a2(4), b1(3), b2(3), r(3)
+    real(kind=8) a1(4), a2(4), a3(4)
+    real(kind=8) b1(3), b2(3), b3(4)
+    real(kind=8) r(3)
     real(kind=8) Q(6), QI(6), Jac
     real(kind=8), parameter :: h_surf = 1000.0_8, h_top = 30000.0_8
     real(kind=8), parameter :: dhdalpha = 0.5_8, dhdbeta = -0.2_8
@@ -31,7 +33,7 @@ subroutine test_metric_class(topology_type,metric_type)
     integer(kind=4), parameter :: Ny = 1/stepy
     integer(kind=4), parameter :: Nz = 1/stepz
     integer(kind=4) npanels, panel_ind, i, j, k
-    real(kind=8) alpha, beta, eta, alpha0, beta0, da, db, detQ
+    real(kind=8) alpha, beta, eta, alpha0, beta0, da, db, detQ, h
     logical :: is_correct
     type(config_metric_t) :: config_metric
 
@@ -58,8 +60,10 @@ subroutine test_metric_class(topology_type,metric_type)
                     beta = beta0+j*stepy*db
                     a1 = metric%calculate_a1(panel_ind, alpha, beta, eta, h_surf, dhdalpha, h_top)
                     a2 = metric%calculate_a2(panel_ind, alpha, beta, eta, h_surf, dhdbeta, h_top)
+                    a3 = metric%calculate_a3(panel_ind, alpha, beta, eta, h_surf, h_top)
                     b1 = metric%calculate_b1(panel_ind, alpha, beta, eta, h_surf, dhdalpha, dhdbeta, h_top)
                     b2 = metric%calculate_b2(panel_ind, alpha, beta, eta, h_surf, dhdalpha, dhdbeta, h_top)
+                    b3 = metric%calculate_b3(panel_ind, alpha, beta, eta, h_surf, dhdalpha, dhdbeta, h_top)
                     Q  = metric%calculate_Q(panel_ind,alpha,beta, eta, h_surf, dhdalpha, dhdbeta, h_top)
                     QI = metric%calculate_QI(panel_ind,alpha,beta, eta, h_surf, dhdalpha, dhdbeta, h_top)
                     Jac  = metric%calculate_J(panel_ind,alpha,beta, eta, h_surf, h_top)
@@ -68,10 +72,16 @@ subroutine test_metric_class(topology_type,metric_type)
                     call check("Q(1) /= a1*a1",sum(a1(1:4)*a1(1:4)), Q(1), test_tolerace, is_correct)
                     call check("Q(2) /= a1*a2",sum(a1(1:4)*a2(1:4)), Q(2), test_tolerace, is_correct)
                     call check("Q(3) /= a2*a2",sum(a2(1:4)*a2(1:4)), Q(3), test_tolerace, is_correct)
+                    call check("Q(4) /= a1*a3",sum(a1(1:4)*a3(1:4)), Q(4), test_tolerace, is_correct)
+                    call check("Q(5) /= a2*a3",sum(a2(1:4)*a3(1:4)), Q(5), test_tolerace, is_correct)
+                    call check("Q(6) /= a3*a3",sum(a3(1:4)*a3(1:4)), Q(6), test_tolerace, is_correct)
 
                     call check("QI(1) /= b1*b1",sum(b1(1:3)*b1(1:3)), QI(1), test_tolerace, is_correct)
                     call check("QI(2) /= b1*b2",sum(b1(1:3)*b2(1:3)), QI(2), test_tolerace, is_correct)
                     call check("QI(3) /= b2*b2",sum(b2(1:3)*b2(1:3)), QI(3), test_tolerace, is_correct)
+                    call check("QI(4) /= b1*b3",sum(b1(1:3)*b3(1:3)), QI(4), test_tolerace, is_correct)
+                    call check("QI(5) /= b2*b3",sum(b2(1:3)*b3(1:3)), QI(5), test_tolerace, is_correct)
+                    call check("QI(6) /= b3*b3",sum(b3(1:4)*b3(1:4)), QI(6), test_tolerace, is_correct)
 
                     detQ = Q(1)*Q(3)*Q(6)+2.0_8*Q(2)*Q(5)*Q(4)-Q(4)**2*Q(3)-Q(1)*Q(5)**2-Q(2)**2*Q(6)
                     call check("J**2 /= det(Q)",Jac**2,detQ,test_tolerace, is_correct)
@@ -85,6 +95,12 @@ subroutine test_metric_class(topology_type,metric_type)
                         call check("a2 is not normal to r",sum(a2(1:3)*r(1:3)), 0.0_8, test_tolerace, is_correct)
                         call check("b1 is not normal to r",sum(b1(1:3)*r(1:3)), 0.0_8, test_tolerace, is_correct)
                         call check("b2 is not normal to r",sum(b2(1:3)*r(1:3)), 0.0_8, test_tolerace, is_correct)
+                    end if
+                    if(metric_type == "shallow_atmosphere_metric" .and. k == 0) then
+                        h = metric%calculate_h(panel_ind,alpha,beta,0.0_8,h_surf,h_top)
+                        call check("h(eta=0) /= h_surf",h, h_surf, test_tolerace, is_correct)
+                        h = metric%calculate_h(panel_ind,alpha,beta,1.0_8,h_surf,h_top)
+                        call check("h(eta=1) /= h_top",h, h_top, test_tolerace, is_correct)
                     end if
 
                     if(.not. is_correct) then

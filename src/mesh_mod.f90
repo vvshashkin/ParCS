@@ -20,7 +20,9 @@ type, public :: tile_mesh_t
     real(kind=8), allocatable    :: rx(:,:,:), ry(:,:,:), rz(:,:,:) !cartesian coordinates of mesh points
     real(kind=8), allocatable    :: h(:,:,:)               !mean sea level height
     real(kind=8), allocatable    :: a1(:,:,:,:), a2(:,:,:,:)   !cartesian coordinates of covariant vecs at mesh points
+    real(kind=8), allocatable    :: a3(:,:,:,:)
     real(kind=8), allocatable    :: b1(:,:,:,:), b2(:,:,:,:)   !cartesian coordinates of contravariant vecs at mesh points
+    real(kind=8), allocatable    :: b3(:,:,:,:)
     real(kind=8), allocatable    :: Q(:,:,:,:)             !metric tensor at mesh-points
     real(kind=8), allocatable    :: QI(:,:,:,:)            !inverse metric tensor at mesh-points
     real(kind=8), allocatable    :: J(:,:,:)               !sqrt of metric tensor det at mesh-points
@@ -55,9 +57,11 @@ subroutine init_tile_mesh(this, is, ie, js, je, ks, ke, halo_width)
     allocate(this%h(isv:iev,jsv:jev,ks:ke))
     allocate(this%a1(4,isv:iev,jsv:jev,ks:ke)) !4-th component for shallow atmosphere approximation
     allocate(this%a2(4,isv:iev,jsv:jev,ks:ke))
+    allocate(this%a3(4,isv:iev,jsv:jev,ks:ke))
     allocate(this%b1(3,isv:iev,jsv:jev,ks:ke))
     allocate(this%b2(3,isv:iev,jsv:jev,ks:ke))
-    allocate(this%Q (6,isv:iev,jsv:jev,ks:ke)) !3 elements of 2x2 matrix are stored due to symmetricity
+    allocate(this%b3(4,isv:iev,jsv:jev,ks:ke))
+    allocate(this%Q (6,isv:iev,jsv:jev,ks:ke)) !6 elements of 3x3 matrix are stored due to symmetricity
     allocate(this%QI(6,isv:iev,jsv:jev,ks:ke)) ! -'-'-
     allocate(this%J(isv:iev,jsv:jev,ks:ke))
     allocate(this%G(3,3,3,isv:iev,jsv:jev,ks:ke))
