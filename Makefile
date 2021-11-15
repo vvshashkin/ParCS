@@ -2053,6 +2053,7 @@ $(DOBJ)test_latlon_output_mod.o: src/test/test_latlon_output/test_latlon_output_
 $(DOBJ)test_metric_class_mod.o: src/test/test_metric/test_metric_class_mod.f90 \
 	$(DOBJ)metric_mod.o \
 	$(DOBJ)metric_factory_mod.o \
+	$(DOBJ)config_metric_mod.o \
 	$(DOBJ)topology_mod.o \
 	$(DOBJ)topology_factory_mod.o
 	@echo $(COTEXT)

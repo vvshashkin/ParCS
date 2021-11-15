@@ -15,7 +15,7 @@ type, public :: domain_t
     character(len=:),  allocatable  :: horizontal_staggering
     type(parcomm_t)   :: parcomm
     type(partition_t) :: partition
-    type(mesh_t)      :: mesh_o, mesh_x, mesh_y, mesh_xy
+    type(mesh_t)      :: mesh_o, mesh_x, mesh_y, mesh_xy, mesh_z
     type(mesh_t)      :: mesh_u, mesh_v, mesh_p, mesh_w
 
 contains

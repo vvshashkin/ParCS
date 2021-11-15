@@ -14,79 +14,11 @@ generic :: create_domain => create_domain_by_config, create_domain_by_arguments
 
 contains
 
-    subroutine create_domain_by_config(domain, config, parcomm)
-
-        use mesh_factory_mod,    only : create_mesh
-        use parcomm_factory_mod, only : create_parcomm
-        use parcomm_mod,         only : parcomm_global, parcomm_t
-
-        type(domain_t),             intent(out) :: domain
-        type(config_domain_t),      intent(in)  :: config
-        type(parcomm_t),  optional, intent(in)  :: parcomm
-
-        !class(metric_t), allocatable  :: metric
-        integer(kind=4) :: halo_width
-        integer(kind=4) :: mpi_comm_local
-
-    !have to be passed as an argument in future
-        halo_width = 8
-
-        domain%topology = create_topology(config%topology_type)
-
-        call create_metric_by_config(domain%metric, domain%topology, &
-            config%metric_type, config%config_metric)
-
-        domain%horizontal_staggering = config%staggering_type
-
-        mpi_comm_local = parcomm_global%comm_w
-        if(present(parcomm)) then
-            domain%parcomm = parcomm
-        else
-            !call create_parcomm(parcomm_glocal%comm_w, domain%parcomm)
-            domain%parcomm = parcomm_global
-        end if
-
-        call domain%partition%init(config%N, config%Nz, max(1,domain%parcomm%np/6), &
-                                   domain%parcomm%myid, domain%parcomm%Np,          &
-                                   config%staggering_type, strategy = 'default')
-
-        call create_mesh(domain%mesh_o,  domain%partition, domain%metric, halo_width, 'c')
-        call create_mesh(domain%mesh_x,  domain%partition, domain%metric, halo_width, 'x')
-        call create_mesh(domain%mesh_y,  domain%partition, domain%metric, halo_width, 'y')
-        call create_mesh(domain%mesh_xy, domain%partition, domain%metric, halo_width, 'xy')
-
-        select case(config%staggering_type)
-        case ('A')
-            domain%mesh_p = domain%mesh_o
-            domain%mesh_u = domain%mesh_o
-            domain%mesh_v = domain%mesh_o
-            domain%mesh_w = domain%mesh_o
-        case ('Ah') !all degrees of freedom at corner points
-            domain%mesh_p = domain%mesh_xy
-            domain%mesh_u = domain%mesh_xy
-            domain%mesh_v = domain%mesh_xy
-            domain%mesh_w = domain%mesh_xy
-        case ('C')
-            domain%mesh_p = domain%mesh_o
-            domain%mesh_u = domain%mesh_x
-            domain%mesh_v = domain%mesh_y
-            domain%mesh_w = domain%mesh_xy
-        case ('Ch')
-            domain%mesh_p = domain%mesh_xy
-            domain%mesh_u = domain%mesh_y
-            domain%mesh_v = domain%mesh_x
-            domain%mesh_w = domain%mesh_o
-        case default
-            call parcomm_global%abort("domain_factory_mod, unknown staggering type: "//config%staggering_type)
-        end select
-    end subroutine create_domain_by_config
-
 subroutine create_domain_by_arguments(domain, topology_type, staggering_type, nh, nz, &
-                         parcomm)
+                                      parcomm)
 
-    use mesh_factory_mod,    only : create_mesh
-    use parcomm_factory_mod, only : create_parcomm
-    use parcomm_mod,         only : parcomm_global, parcomm_t
+    use parcomm_mod,       only: parcomm_global, parcomm_t
+    use config_domain_mod, only: config_domain_t
 
     type(domain_t),   intent(out) :: domain
     character(len=*), intent(in)  :: topology_type
@@ -94,19 +26,42 @@ subroutine create_domain_by_arguments(domain, topology_type, staggering_type, nh
     integer(kind=4),  intent(in)  :: nh, nz
     type(parcomm_t),  optional, intent(in) :: parcomm
 
+    type(config_domain_t) :: config_domain
+
+    config_domain%N  = nh
+    config_domain%Nz = nz
+    config_domain%staggering_type = staggering_type
+    config_domain%metric_type     = "ecs"
+    config_domain%topology_type   = topology_type
+    call config_domain%config_metric%set_defaults()
+
+    call create_domain_by_config(domain,config_domain,parcomm)
+
+end subroutine create_domain_by_arguments
+
+subroutine create_domain_by_config(domain, config, parcomm)
+
+    use mesh_factory_mod,    only : create_mesh
+    use parcomm_factory_mod, only : create_parcomm
+    use parcomm_mod,         only : parcomm_global, parcomm_t
+
+    type(domain_t),             intent(out) :: domain
+    type(config_domain_t),      intent(in)  :: config
+    type(parcomm_t),  optional, intent(in)  :: parcomm
 
     !class(metric_t), allocatable  :: metric
     integer(kind=4) :: halo_width
     integer(kind=4) :: mpi_comm_local
 
-!have to be passed as an argument in future
+    !have to be passed as an argument in future
     halo_width = 8
 
-    domain%topology = create_topology(topology_type)
+    domain%topology = create_topology(config%topology_type)
 
-    call create_metric(domain%metric,domain%topology,"ecs")
+    call create_metric_by_config(domain%metric, domain%topology, &
+                                 config%metric_type, config%config_metric)
 
-    domain%horizontal_staggering = staggering_type
+    domain%horizontal_staggering = config%staggering_type
 
     mpi_comm_local = parcomm_global%comm_w
     if(present(parcomm)) then
@@ -116,15 +71,16 @@ subroutine create_domain_by_arguments(domain, topology_type, staggering_type, nh
         domain%parcomm = parcomm_global
     end if
 
-    call domain%partition%init(nh, nz, max(1,domain%parcomm%np/6), domain%parcomm%myid, domain%parcomm%Np, &
-                               staggering_type, strategy = 'default')
+    call domain%partition%init(config%N, config%Nz, max(1,domain%parcomm%np/6), &
+                               domain%parcomm%myid, domain%parcomm%Np,          &
+                               config%staggering_type, strategy = 'default')
 
-    call create_mesh(domain%mesh_o, domain%partition, domain%metric, halo_width, 'c')
-    call create_mesh(domain%mesh_x, domain%partition, domain%metric, halo_width, 'x')
-    call create_mesh(domain%mesh_y, domain%partition, domain%metric, halo_width, 'y')
+    call create_mesh(domain%mesh_o,  domain%partition, domain%metric, halo_width, 'c')
+    call create_mesh(domain%mesh_x,  domain%partition, domain%metric, halo_width, 'x')
+    call create_mesh(domain%mesh_y,  domain%partition, domain%metric, halo_width, 'y')
     call create_mesh(domain%mesh_xy, domain%partition, domain%metric, halo_width, 'xy')
 
-    select case(staggering_type)
+    select case(config%staggering_type)
     case ('A')
         domain%mesh_p = domain%mesh_o
         domain%mesh_u = domain%mesh_o
@@ -146,8 +102,8 @@ subroutine create_domain_by_arguments(domain, topology_type, staggering_type, nh
         domain%mesh_v = domain%mesh_x
         domain%mesh_w = domain%mesh_o
     case default
-        call parcomm_global%abort("domain_factory_mod, unknown staggering type: "//staggering_type)
+        call parcomm_global%abort("domain_factory_mod, unknown staggering type: "//config%staggering_type)
     end select
-end subroutine create_domain_by_arguments
+end subroutine create_domain_by_config
 
 end module domain_factory_mod
