@@ -10,6 +10,7 @@ type, public, extends(config_t) :: config_domain_t
     integer(kind=4) :: N, Nz
 
     character(len=:), allocatable :: staggering_type
+    character(len=:), allocatable :: vertical_staggering
     character(len=:), allocatable :: topology_type
     character(len=:), allocatable :: metric_type
 
@@ -33,6 +34,7 @@ subroutine parse(this, config_string)
     character(len=255) :: staggering_type
     character(len=255) :: topology_type
     character(len=255) :: metric_type
+    character(len=255) :: vertical_staggering = "None"
 
     namelist /domain/ N, Nz, staggering_type, topology_type, metric_type
 
@@ -44,6 +46,7 @@ subroutine parse(this, config_string)
     this%staggering_type = trim(staggering_type)
     this%topology_type   = trim(topology_type)
     this%metric_type     = trim(metric_type)
+    this%vertical_staggering     = trim(vertical_staggering)
 
     call this%config_metric%parse(config_string)
 

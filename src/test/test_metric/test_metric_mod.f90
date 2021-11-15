@@ -3,7 +3,7 @@ module test_metric_mod
 implicit none
 
 private
-public :: test_metric
+public :: test_metric, test_metric_vert
 
 real(kind=8), parameter :: test_tolerance=3e-15
 
@@ -197,87 +197,36 @@ subroutine test_mesh_metric(mesh,halo_width,points_type)
 
 end
 
-!Old code:
+subroutine test_metric_vert()
+    use domain_mod,             only : domain_t
+    use domain_factory_mod,     only : create_domain
+    use config_domain_mod,      only : config_domain_t
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!part of test-metric subroutine
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!Init arrays
+    type(domain_t)        :: domain
+    type(config_domain_t) :: config_domain
+    integer(kind=4), parameter         :: nh=16, nz=3
+    logical :: is_passed
 
-!call create_grid_field(f1, halo_width, 0, partition)
-!call create_grid_field(f2, halo_width, 0, partition)
-!
-!do ind = ts, te
-!     ifc = partition%tile(ind)%panel_number
-!     f1%block(ind)%p(:,:,1) = mesh(ind)%rhx(:,:)
-!     f1%block(ind)%p(:,:,2) = mesh(ind)%rhy(:,:)
-!     f1%block(ind)%p(:,:,3) = mesh(ind)%rhz(:,:)
-!     f2%block(ind)%p(:,:,:) = f1%block(ind)%p(:,:,:)
-!end do
+    config_domain%N  = nh
+    config_domain%Nz = nz
+    config_domain%staggering_type     = "C"
+    config_domain%vertical_staggering = "CharneyPhilips"
+    config_domain%metric_type         = "ecs"
+    config_domain%topology_type       = "cube"
+    call config_domain%config_metric%set_defaults()
 
-!!Init exchange
-!exch_halo = create_Agrid_halo_exchange(partition, halo_width, 'full', myid, np)
-!
-!!Perform exchange
-!call exch_halo%do(f1)
-!
-!lcross_edge_xyz = .true.
-!do ind = ts, te
-!    zq = f1%block(ind)%p(1:nh,0,:); zp = f2%block(ind)%p(1:nh,0,:)
-!    lcross_edge_xyz = lcross_edge_xyz .and. cross_edge_xyz_check(zq,zp,nh)
-!    zq = f1%block(ind)%p(1:nh,nh+1,:); zp = f2%block(ind)%p(1:nh,nh+1,:)
-!    lcross_edge_xyz = lcross_edge_xyz .and. cross_edge_xyz_check(zq,zp,nh)
-!    zq = f1%block(ind)%p(0,1:nh,:); zp = f2%block(ind)%p(0,1:nh,:)
-!    lcross_edge_xyz = lcross_edge_xyz .and. cross_edge_xyz_check(zq,zp,nh)
-!    zq = f1%block(ind)%p(nh+1,1:nh,:); zp = f2%block(ind)%p(nh+1,1:nh,:)
-!    lcross_edge_xyz = lcross_edge_xyz .and. cross_edge_xyz_check(zq,zp,nh)
-!end do
-!
-!if(lcross_edge_xyz) then
-!    print *, "cross edge xyz test passed"
-!else
-!    print *, "cross edge xyz test failed"
-!end if
+    call create_domain(domain, config_domain)
 
-!logical function cross_edge_xyz_check(q,p,nx) result(lpass)
-!real(kind=8) p(1:nx,3), q(1:nx,3)
-!integer nx
-!real(kind=8) znorm(3), zpr
-!real(kind=8) za(3), zb(3)
-!
-!za = [q(nx,1)-q(1,1),q(nx,2)-q(1,2),q(nx,3)-q(1,3)]
-!zb = [p(nx,1)-p(1,1),p(nx,2)-p(1,2),p(nx,3)-p(1,3)]
-!lpass = sum(za**2) > sum(zb**2)
-!
-!za = za / sqrt(sum(za**2))
-!zb = zb / sqrt(sum(zb**2))
-!
-!lpass = lpass .and. sum(abs(za-zb))<zeps
-!
-!znorm = [q(1,2)*q(nx,3)-q(1,3)*q(nx,2), q(1,3)*q(nx,1)-q(1,1)*q(nx,3), q(1,1)*q(nx,2)-q(1,2)*q(nx,1)]
-!
-!zpr = abs(sum(p(1,:)*znorm))+abs(sum(p(nx,:)*znorm))
-!
-!lpass = lpass .and. zpr<zeps
+    is_passed = (domain%mesh_z%tile(1)%ke == domain%mesh_o%tile(1)%ke+1)
+    is_passed = is_passed .and. (domain%mesh_z%tile(1)%hz == domain%mesh_o%tile(1)%hz)
+    is_passed = is_passed .and. (domain%mesh_xyz%tile(1)%ke == domain%mesh_xy%tile(1)%ke+1)
+    is_passed = is_passed .and. (domain%mesh_xyz%tile(1)%hz == domain%mesh_xy%tile(1)%hz)
 
-!middle connection check
-!if(mod(nx,2) == 0) then
-!    za = [q(nx/2,1)+q(nx/2+1,1),q(nx/2,2)+q(nx/2+1,2),q(nx/2,3)+q(nx/2+1,3)]
-!    zb = [p(nx/2,1)+p(nx/2+1,1),p(nx/2,2)+p(nx/2+1,2),p(nx/2,3)+p(nx/2+1,3)]
-!else
-!    za = [q(nx/2+1,1),q(nx/2+1,2),q(nx/2+1,3)]
-!    zb = [p(nx/2+1,1),p(nx/2+1,2),p(nx/2+1,3)]
-!end if
+    if(is_passed) then
+        print *, "vertical metric test passed"
+    else
+        print *, "vertical metric test failed"
+    end if
 
-!za = za / sqrt(sum(za**2))
-!zb = zb / sqrt(sum(zb**2))
-!
-!zpr = acos(sum(za*zb))
-!
-!lpass = lpass .and. abs(zpr) < zeps
-!
-!end function cross_edge_xyz_check
-!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
+end subroutine test_metric_vert
 end module test_metric_mod

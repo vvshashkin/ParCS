@@ -30,9 +30,10 @@ subroutine create_domain_by_arguments(domain, topology_type, staggering_type, nh
 
     config_domain%N  = nh
     config_domain%Nz = nz
-    config_domain%staggering_type = staggering_type
-    config_domain%metric_type     = "ecs"
-    config_domain%topology_type   = topology_type
+    config_domain%staggering_type     = staggering_type
+    config_domain%vertical_staggering = "None"
+    config_domain%metric_type         = "ecs"
+    config_domain%topology_type       = topology_type
     call config_domain%config_metric%set_defaults()
 
     call create_domain_by_config(domain,config_domain,parcomm)
@@ -75,10 +76,24 @@ subroutine create_domain_by_config(domain, config, parcomm)
                                domain%parcomm%myid, domain%parcomm%Np,          &
                                config%staggering_type, strategy = 'default')
 
-    call create_mesh(domain%mesh_o,  domain%partition, domain%metric, halo_width, 'c')
-    call create_mesh(domain%mesh_x,  domain%partition, domain%metric, halo_width, 'x')
-    call create_mesh(domain%mesh_y,  domain%partition, domain%metric, halo_width, 'y')
-    call create_mesh(domain%mesh_xy, domain%partition, domain%metric, halo_width, 'xy')
+    !WORKAROUND vertical staggering
+    select case(config%vertical_staggering)
+    case("None")
+        call create_mesh(domain%mesh_o,  domain%partition, domain%metric, halo_width, 'c', '0')
+        call create_mesh(domain%mesh_x,  domain%partition, domain%metric, halo_width, 'x', '0')
+        call create_mesh(domain%mesh_y,  domain%partition, domain%metric, halo_width, 'y', '0')
+        call create_mesh(domain%mesh_xy, domain%partition, domain%metric, halo_width, 'xy','0')
+    case("CharneyPhilips")
+        call create_mesh(domain%mesh_o,  domain%partition, domain%metric, halo_width, 'c', 'c')
+        call create_mesh(domain%mesh_x,  domain%partition, domain%metric, halo_width, 'x', 'c')
+        call create_mesh(domain%mesh_y,  domain%partition, domain%metric, halo_width, 'y', 'c')
+        call create_mesh(domain%mesh_xy, domain%partition, domain%metric, halo_width, 'xy','c')
+        call create_mesh(domain%mesh_z,  domain%partition, domain%metric, halo_width, 'c', 'z')
+        call create_mesh(domain%mesh_xyz,domain%partition, domain%metric, halo_width, 'xy','z')
+    case default
+        call parcomm_global%abort("create domain error, unknown vertical staggering: "//&
+                                  config%vertical_staggering)
+    end select
 
     select case(config%staggering_type)
     case ('A')

@@ -220,6 +220,7 @@ $(DOBJ)const_mod.o: src/const_mod.f90
 $(DOBJ)mesh_factory_mod.o: src/mesh_factory_mod.f90 \
 	$(DOBJ)mesh_mod.o \
 	$(DOBJ)tile_mod.o \
+	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)partition_mod.o \
 	$(DOBJ)metric_mod.o
 	@echo $(COTEXT)
@@ -608,9 +609,9 @@ $(DOBJ)domain_factory_mod.o: src/domain/domain_factory_mod.f90 \
 	$(DOBJ)metric_mod.o \
 	$(DOBJ)metric_factory_mod.o \
 	$(DOBJ)config_domain_mod.o \
+	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)mesh_factory_mod.o \
-	$(DOBJ)parcomm_factory_mod.o \
-	$(DOBJ)parcomm_mod.o
+	$(DOBJ)parcomm_factory_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

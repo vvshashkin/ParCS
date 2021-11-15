@@ -4,6 +4,7 @@ implicit none
 type, public :: mesh_t
     type(tile_mesh_t), allocatable :: tile(:)
     real(kind=8) :: scale !projection scale factor
+    real(kind=8) :: vertical_scale !vertical projection scale factor
     real(kind=8) :: omega !angular speed
     real(kind=8), allocatable :: rotation_axis(:) !angular velocity direction
     integer(kind=4) :: ts, te
@@ -13,7 +14,7 @@ end type mesh_t
 type, public :: tile_mesh_t
 
     integer(kind=4) :: is, ie, js, je, ks, ke
-    integer(kind=4) :: nx, ny                     !global horizontal grid dimension
+    integer(kind=4) :: nx, ny, nz                !global grid dimension
 !    integer(kind=4) :: panel_ind
     integer(kind=4) :: halo_width
 
@@ -28,14 +29,16 @@ type, public :: tile_mesh_t
     real(kind=8), allocatable    :: J(:,:,:)               !sqrt of metric tensor det at mesh-points
     real(kind=8), allocatable    :: G(:,:,:,:,:,:)         !Christofel symbols (i j,k,ix,iy,iz)
     real(kind=8)                 :: hx, hy                 !horizontal grid step
+    real(kind=8)                 :: hz                     !vertical grid step
     real(kind=8)                 :: shift_i, shift_j       !determines shift of the first grid point from the boundary
+    real(kind=8)                 :: shift_k                !determines shift of the first grid point from the boundary
     real(kind=8)                 :: alpha_0, beta_0        !determines coord start
 
     character(:), allocatable    :: points_type
 contains
 
     procedure, public :: init => init_tile_mesh
-    procedure, public :: get_alpha, get_beta
+    procedure, public :: get_alpha, get_beta, get_eta
 end type tile_mesh_t
 
 contains
@@ -98,5 +101,16 @@ pure function get_beta(this, j) result(beta)
     beta = this%beta_0 + (j-1+this%shift_j)*this%hy
 
 end function get_beta
+
+pure function get_eta(this, k) result(eta)
+
+    class(tile_mesh_t), intent(in) :: this
+    integer(kind=4),    intent(in) :: k
+
+    real(kind=8) :: eta
+
+    eta = (k-1+this%shift_k)*this%hz
+
+end function get_eta
 
 end module mesh_mod

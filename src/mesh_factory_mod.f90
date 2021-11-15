@@ -1,13 +1,14 @@
 module mesh_factory_mod
 
-use mesh_mod, only : mesh_t
-use tile_mod, only : tile_t
+use mesh_mod,    only : mesh_t
+use tile_mod,    only : tile_t
+use parcomm_mod, only : parcomm_global
 
 implicit none
 
 contains
 
-subroutine create_mesh(mesh, partition, metric, halo_width, points_type)
+subroutine create_mesh(mesh, partition, metric, halo_width, points_type, points_type_ver)
 
     use partition_mod, only : partition_t
     use metric_mod,    only : metric_t
@@ -17,14 +18,14 @@ subroutine create_mesh(mesh, partition, metric, halo_width, points_type)
     type(mesh_t),              intent(out) :: mesh
 
     integer(kind=4),  intent(in)   :: halo_width
-    character(len=*), intent(in)   :: points_type
+    character(len=*), intent(in)   :: points_type, points_type_ver
 
-    integer(kind=4) :: t, pind, i, j, k, ts, te, is, ie, js, je, ks, ke, nh, nx, ny
-    real(kind=8) :: alpha, beta, vec(3)
+    integer(kind=4) :: t, pind, i, j, k, ts, te, is, ie, js, je, ks, ke, nh, nx, ny, nz
+    real(kind=8) :: alpha, beta, eta, hz, vec(3)
 
-    type(tile_t), pointer :: tile(:)
+    type(tile_t), pointer :: tile(:), tile_c_vert(:), tile_xy_vert(:)
 
-    real(kind=8) :: shift_i, shift_j, alpha_0, beta_0
+    real(kind=8) :: shift_i, shift_j, shift_k, alpha_0, beta_0
 
     alpha_0 = metric%alpha0
     beta_0  = metric%beta0
@@ -32,9 +33,33 @@ subroutine create_mesh(mesh, partition, metric, halo_width, points_type)
     shift_i = 0.5_8
     shift_j = 0.5_8
 
+    select case(points_type_ver)
+    case("0")
+        tile_c_vert  => partition%tile
+        tile_xy_vert => partition%tile_xy
+        nz = partition%Nz
+        hz = 1.0_8 / max(1.0_8, real(nz-1,8))
+        shift_k = 0.0_8
+    case("c")
+        tile_c_vert  => partition%tile
+        tile_xy_vert => partition%tile_xy
+        nz = partition%Nz
+        hz = 1.0_8 / real(nz,8)
+        shift_k = 0.5_8
+    case("z")
+        tile_c_vert  => partition%tile_z
+        tile_xy_vert => partition%tile_xyz
+        nz = partition%Nz+1
+        hz = 1.0_8 / real(nz-1,8)
+        shift_k = 0.0_8
+    case default
+        call parcomm_global%abort("unknown vertical points type in mesh factory: "//&
+                                   points_type_ver)
+    end select
+
     select case(points_type)
     case('c')
-        tile => partition%tile
+        tile => tile_c_vert
         nx = partition%nh
         ny = partition%nh
     case('x')
@@ -50,12 +75,12 @@ subroutine create_mesh(mesh, partition, metric, halo_width, points_type)
     case('xy')
         shift_i = 0.0_8
         shift_j = 0.0_8
-        tile => partition%tile_xy
+        tile => tile_xy_vert
         nx = partition%nh+1
         ny = partition%nh+1
     case default
-        print*, 'Error! Wrong points_type! Abort!'
-        stop
+        call parcomm_global%abort("mesh factory error - unknown points type: "//&
+                                  points_type)
     end select
 
     ts = partition%ts
@@ -65,9 +90,10 @@ subroutine create_mesh(mesh, partition, metric, halo_width, points_type)
     mesh%ts = ts
     mesh%te = te
 
-    mesh%scale         = metric%scale
-    mesh%omega         = metric%omega
-    mesh%rotation_axis = metric%rotation_axis
+    mesh%scale          = metric%scale
+    mesh%vertical_scale = metric%vertical_scale
+    mesh%omega          = metric%omega
+    mesh%rotation_axis  = metric%rotation_axis
 
     nh = partition%nh
 
@@ -83,17 +109,21 @@ subroutine create_mesh(mesh, partition, metric, halo_width, points_type)
 
         mesh%tile(t)%nx = nx
         mesh%tile(t)%ny = ny
+        mesh%tile(t)%nz = nz
 
         mesh%tile(t)%hx = (metric%alpha1 - metric%alpha0)/real(nh,8)
         mesh%tile(t)%hy = (metric%beta1  - metric%beta0 )/real(nh,8)
+        mesh%tile(t)%hz = hz
 
         mesh%tile(t)%shift_i = shift_i
         mesh%tile(t)%shift_j = shift_j
+        mesh%tile(t)%shift_k = shift_k
 
         mesh%tile(t)%alpha_0 = alpha_0
         mesh%tile(t)%beta_0  = beta_0
 
         do k=ks, ke
+            eta = mesh%tile(t)%get_eta(k)
             do j = js - halo_width, je + halo_width
                 beta = mesh%tile(t)%get_beta(j)
 
