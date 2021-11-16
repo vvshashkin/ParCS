@@ -13,6 +13,7 @@ real(kind=8), parameter :: Day24h_sec = 24._8*3600._8 !day length in seconds
 real(kind=8), parameter :: rgaz = 0.2870597E+03_8 !dry air gas-constant
 real(kind=8), parameter :: Cp   = 3.5_8*rgaz
 real(kind=8), parameter :: Cv   = 2.5_8*rgaz
+real(kind=8), parameter :: kappa = 2.0_8 / 7.0_8
 
 contains
 

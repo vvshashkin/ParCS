@@ -41,6 +41,13 @@ $(DEXE)TS2_MAIN: $(MKDIRS) $(DOBJ)ts2_main.o \
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TS2_MAIN
+$(DEXE)TEST_VERTICAL_PROFILES_MAIN: $(MKDIRS) $(DOBJ)test_vertical_profiles_main.o \
+	$(DOBJ)avost.o \
+	$(DOBJ)auxhs.o
+	@rm -f $(filter-out $(DOBJ)test_vertical_profiles_main.o,$(EXESOBJ))
+	@echo $(LITEXT)
+	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
+EXES := $(EXES) TEST_VERTICAL_PROFILES_MAIN
 $(DEXE)TEST_DOMAIN_MAIN: $(MKDIRS) $(DOBJ)test_domain_main.o \
 	$(DOBJ)avost.o \
 	$(DOBJ)auxhs.o
@@ -505,6 +512,16 @@ $(DOBJ)test_fields_mod.o: src/test_fields/test_fields_mod.f90 \
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)latlon_functions_mod.o: src/test_fields/latlon_functions_mod.f90
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)const_n_profile_mod.o: src/test_fields/vertical_thermodynamic_profiles/const_N_profile_mod.f90 \
+	$(DOBJ)abstract_vertical_profile_mod.o \
+	$(DOBJ)const_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)abstract_vertical_profile_mod.o: src/test_fields/vertical_thermodynamic_profiles/abstract_vertical_profile_mod.f90
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -1671,6 +1688,17 @@ $(DOBJ)ts2_main.o: src/models/shallow_water/test/ts2/ts2_main.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)test_vertical_profiles_mod.o: src/test/test_vertical_profiles/test_vertical_profiles_mod.f90 \
+	$(DOBJ)abstract_vertical_profile_mod.o \
+	$(DOBJ)const_n_profile_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)test_vertical_profiles_main.o: src/test/test_vertical_profiles/test_vertical_profiles_main.f90 \
+	$(DOBJ)test_vertical_profiles_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)test_domain_main.o: src/test/test_domain/test_domain_main.f90 \
 	$(DOBJ)test_domain_mod.o \
 	$(DOBJ)parcomm_mod.o
@@ -2075,7 +2103,8 @@ $(DOBJ)test_metric_mod.o: src/test/test_metric/test_metric_mod.f90 \
 	$(DOBJ)grid_field_factory_mod.o \
 	$(DOBJ)mesh_factory_mod.o \
 	$(DOBJ)mesh_mod.o \
-	$(DOBJ)tile_mod.o
+	$(DOBJ)tile_mod.o \
+	$(DOBJ)config_domain_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
