@@ -8,7 +8,7 @@ implicit none
 
 contains
 
-subroutine create_mesh(mesh, partition, metric, halo_width, points_type, points_type_ver)
+subroutine create_mesh(mesh, partition, metric, halo_width, h_top, points_type, points_type_ver)
 
     use partition_mod, only : partition_t
     use metric_mod,    only : metric_t
@@ -18,6 +18,7 @@ subroutine create_mesh(mesh, partition, metric, halo_width, points_type, points_
     type(mesh_t),              intent(out) :: mesh
 
     integer(kind=4),  intent(in)   :: halo_width
+    real(kind=8),     intent(in)   :: h_top
     character(len=*), intent(in)   :: points_type, points_type_ver
 
     integer(kind=4) :: t, pind, i, j, k, ts, te, is, ie, js, je, ks, ke, nh, nx, ny, nz
@@ -134,7 +135,7 @@ subroutine create_mesh(mesh, partition, metric, halo_width, points_type, points_
                     mesh%tile(t)%rx(i,j,k) = vec(1)
                     mesh%tile(t)%ry(i,j,k) = vec(2)
                     mesh%tile(t)%rz(i,j,k) = vec(3)
-                    mesh%tile(t)%h(i,j,k)  = 0.0_8
+                    mesh%tile(t)%h(i,j,k)  = metric%calculate_h(pind,alpha,beta,eta,0.0_8,h_top)
 
                     mesh%tile(t)%Q (1:6,i,j,k) = metric%calculate_Q(pind, alpha, beta)
                     mesh%tile(t)%Qi(1:6,i,j,k) = metric%calculate_Qi(pind, alpha, beta)

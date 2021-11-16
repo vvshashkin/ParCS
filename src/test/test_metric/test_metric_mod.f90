@@ -211,8 +211,9 @@ subroutine test_metric_vert()
     config_domain%Nz = nz
     config_domain%staggering_type     = "C"
     config_domain%vertical_staggering = "CharneyPhilips"
-    config_domain%metric_type         = "ecs"
+    config_domain%metric_type         = "shallow_atmosphere_metric"
     config_domain%topology_type       = "cube"
+    config_domain%h_top = 30e3
     call config_domain%config_metric%set_defaults()
 
     call create_domain(domain, config_domain)
@@ -227,6 +228,8 @@ subroutine test_metric_vert()
     else
         print *, "vertical metric test failed"
     end if
+    print *, domain%mesh_z%tile(1)%h(1,1,:)
+    print *, domain%mesh_xyz%tile(1)%h(1,1,:)
 
 end subroutine test_metric_vert
 end module test_metric_mod
