@@ -81,7 +81,7 @@ end subroutine get_scalar_field_tile
 
 subroutine get_vector_component_tile(this,v,mesh,halo_width, &
                                      base_vec, n_comp)
-    import scalar_field3d_t, tile_field_t, tile_mesh_t
+
     class(vertical_ExnerP_grad_t), intent(in)    :: this
     type(tile_field_t),            intent(inout) :: v
     type(tile_mesh_t),             intent(in)    :: mesh

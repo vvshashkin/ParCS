@@ -14,6 +14,7 @@ contains
 end type scalar_field3d_t
 
 type, abstract :: vector_field3d_t
+    class(scalar_field3d_t), allocatable :: div
 contains
     procedure, public :: get_vector_field
     procedure, public :: get_vertical_component

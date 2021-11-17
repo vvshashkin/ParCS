@@ -532,6 +532,14 @@ $(DOBJ)abstract_vertical_profile_mod.o: src/test_fields/vertical_thermodynamic_p
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)vertical_div_test_field_mod.o: src/test_fields/test_fields_3d/vertical_div_test_field_mod.f90 \
+	$(DOBJ)test_fieds_3d_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)const_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)test_fieds_3d_mod.o: src/test_fields/test_fields_3d/test_fieds_3d_mod.f90 \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)mesh_mod.o \
@@ -1323,7 +1331,8 @@ $(DOBJ)sbp_vertical_operator_mod.o: src/differential_operators/vertical/sbp_vert
 	$(DOBJ)abstract_vertical_operator_mod.o \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)grid_field_mod.o \
-	$(DOBJ)sbp_operator_mod.o
+	$(DOBJ)sbp_operator_mod.o \
+	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -2135,14 +2144,15 @@ $(DOBJ)test_vertical_operators_mod.o: src/test/test_vertical_operators/test_vert
 	$(DOBJ)abstract_vertical_operator_mod.o \
 	$(DOBJ)vertical_operator_factory_mod.o \
 	$(DOBJ)test_fieds_3d_mod.o \
-	$(DOBJ)vertical_test_field_mod.o \
-	$(DOBJ)const_n_profile_mod.o \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)domain_factory_mod.o \
 	$(DOBJ)config_domain_mod.o \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)grid_field_factory_mod.o \
-	$(DOBJ)vec_math_mod.o
+	$(DOBJ)vec_math_mod.o \
+	$(DOBJ)vertical_test_field_mod.o \
+	$(DOBJ)const_n_profile_mod.o \
+	$(DOBJ)vertical_div_test_field_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
