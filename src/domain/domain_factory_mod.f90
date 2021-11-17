@@ -130,6 +130,21 @@ subroutine create_domain_by_config(domain, config, parcomm)
     case default
         call parcomm_global%abort("domain_factory_mod, unknown staggering type: "//config%staggering_type)
     end select
+    select case(config%vertical_staggering)
+    case("None")
+        domain%mesh_n = domain%mesh_p
+    case("CharneyPhilips")
+            select case(config%staggering_type)
+            case ('A','C')
+                domain%mesh_n = domain%mesh_z
+            case ('Ah','Ch') !all degrees of freedom at corner points
+                domain%mesh_n = domain%mesh_xyz
+            case default
+                call parcomm_global%abort("domain_factory_mod, unknown staggering type: "//config%staggering_type)
+            end select
+    case default
+        call parcomm_global%abort("domain_factory_mod, unknown vertical staggering type: "//config%vertical_staggering)
+    end select
 end subroutine create_domain_by_config
 
 end module domain_factory_mod

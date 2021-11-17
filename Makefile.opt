@@ -174,6 +174,13 @@ $(DEXE)TEST_LATLON_OUTPUT: $(MKDIRS) $(DOBJ)test_latlon_output.o \
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_LATLON_OUTPUT
+$(DEXE)TEST_VERTICAL_OPERATORS_MAIN: $(MKDIRS) $(DOBJ)test_vertical_operators_main.o \
+	$(DOBJ)avost.o \
+	$(DOBJ)auxhs.o
+	@rm -f $(filter-out $(DOBJ)test_vertical_operators_main.o,$(EXESOBJ))
+	@echo $(LITEXT)
+	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
+EXES := $(EXES) TEST_VERTICAL_OPERATORS_MAIN
 $(DEXE)TEST_METRIC_MAIN: $(MKDIRS) $(DOBJ)test_metric_main.o \
 	$(DOBJ)avost.o \
 	$(DOBJ)auxhs.o
@@ -522,6 +529,21 @@ $(DOBJ)const_n_profile_mod.o: src/test_fields/vertical_thermodynamic_profiles/co
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)abstract_vertical_profile_mod.o: src/test_fields/vertical_thermodynamic_profiles/abstract_vertical_profile_mod.f90
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)test_fieds_3d_mod.o: src/test_fields/test_fields_3d/test_fieds_3d_mod.f90 \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)parcomm_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)vertical_test_field_mod.o: src/test_fields/test_fields_3d/vertical_test_field_mod.f90 \
+	$(DOBJ)test_fieds_3d_mod.o \
+	$(DOBJ)abstract_vertical_profile_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)mesh_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -1690,7 +1712,8 @@ $(DOBJ)ts2_main.o: src/models/shallow_water/test/ts2/ts2_main.f90 \
 
 $(DOBJ)test_vertical_profiles_mod.o: src/test/test_vertical_profiles/test_vertical_profiles_mod.f90 \
 	$(DOBJ)abstract_vertical_profile_mod.o \
-	$(DOBJ)const_n_profile_mod.o
+	$(DOBJ)const_n_profile_mod.o \
+	$(DOBJ)const_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -2076,6 +2099,24 @@ $(DOBJ)test_latlon_output_mod.o: src/test/test_latlon_output/test_latlon_output_
 	$(DOBJ)outputer_factory_mod.o \
 	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)test_fields_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)test_vertical_operators_main.o: src/test/test_vertical_operators/test_vertical_operators_main.f90 \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)test_vertical_operators_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)test_vertical_operators_mod.o: src/test/test_vertical_operators/test_vertical_operators_mod.f90 \
+	$(DOBJ)test_fieds_3d_mod.o \
+	$(DOBJ)vertical_test_field_mod.o \
+	$(DOBJ)const_n_profile_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)domain_factory_mod.o \
+	$(DOBJ)config_domain_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)grid_field_factory_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
