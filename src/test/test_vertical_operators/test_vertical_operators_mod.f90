@@ -26,6 +26,8 @@ subroutine test_vertical_gradient_operator()
     type(domain_t)     :: domain
     type(grid_field_t) :: p, pz_true, pz
 
+    ! integer(kind=4) :: k
+
     class(vertical_operator_t), allocatable :: vert_grad
 
     scalar_gen = vertical_ExnerP_t(t0=300.0_8, p0=1e5_8, &
@@ -59,6 +61,9 @@ subroutine test_vertical_gradient_operator()
     call pz%update(-1.0_8,pz_true,domain%mesh_n)
     print *, "l2 error:", l2norm(pz, domain%mesh_n,domain%parcomm)
     print *, "linf error:", pz%maxabs(domain%mesh_n,domain%parcomm)
+    ! do k=1, nz
+    !     print *, k, pz%tile(1)%p(1,1,k)
+    ! end do
 
 end subroutine test_vertical_gradient_operator
 

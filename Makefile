@@ -1319,7 +1319,7 @@ $(DOBJ)massflux_cgrid_mod.o: src/differential_operators/horizontal/massflux/mass
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
-$(DOBJ)sbp_vertical_gradient_mod.o: src/differential_operators/vertical/sbp_vertical_gradient_mod.f90 \
+$(DOBJ)sbp_vertical_operator_mod.o: src/differential_operators/vertical/sbp_vertical_operator_mod.f90 \
 	$(DOBJ)abstract_vertical_operator_mod.o \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)grid_field_mod.o \
@@ -1335,13 +1335,15 @@ $(DOBJ)abstract_vertical_operator_mod.o: src/differential_operators/vertical/abs
 
 $(DOBJ)vertical_operator_factory_mod.o: src/differential_operators/vertical/vertical_operator_factory_mod.f90 \
 	$(DOBJ)abstract_vertical_operator_mod.o \
-	$(DOBJ)sbp_vertical_gradient_mod.o \
-	$(DOBJ)parcomm_mod.o
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)sbp_vertical_operator_mod.o \
+	$(DOBJ)sbp_factory_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)sbp_operator_mod.o: src/differential_operators/sbp_operators/sbp_operator_mod.f90 \
 	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)mesh_mod.o \
 	$(DOBJ)tile_mod.o \
 	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)

@@ -1,6 +1,7 @@
 module sbp_operator_mod
 
-use grid_field_mod, only : tile_field_t
+use grid_field_mod, only : grid_field_t, tile_field_t
+use mesh_mod,       only : mesh_t, tile_mesh_t
 use tile_mod,       only : tile_t
 use parcomm_mod,    only : parcomm_global
 
@@ -31,6 +32,10 @@ type sbp_operator_t
     !array in -> array out
     procedure, public :: apply_array_to_array   => apply_sbp_array_to_array
     generic :: apply => apply_gf_to_array, apply_array_to_array, apply_gf_to_gf
+
+    procedure, public:: apply_z_grid_field => apply_sbp_z_gridfield
+    procedure, public:: apply_z_tile_field => apply_sbp_z_tilefield
+    generic :: apply_z => apply_z_grid_field, apply_z_tile_field
 
     procedure, public :: add_penalty_gf
     procedure, public :: add_penalty_array
@@ -221,6 +226,67 @@ subroutine sbp_apply(df,is1,ie1,js1,je1,is,ie,js,je,                          &
     call parcomm_global%abort("unknown direction in sbp_apply: "//direction)
     end select
 end subroutine sbp_apply
+
+subroutine apply_sbp_z_gridfield(this, f_out, f_in, mesh_out)
+    class(sbp_operator_t), intent(in)  :: this
+    !work_tile = indices where operator action will be calculated
+    type(grid_field_t),    intent(in)  :: f_in
+    type(mesh_t),          intent(in)  :: mesh_out
+    !output:
+    type(grid_field_t),    intent(inout) :: f_out
+
+    integer(kind=4) :: t
+
+    do t = mesh_out%ts, mesh_out%te
+        call apply_sbp_z_tilefield(this,f_out%tile(t), f_in%tile(t), mesh_out%tile(t))
+    end do
+end subroutine apply_sbp_z_gridfield
+
+subroutine apply_sbp_z_tilefield(this, f_out, f_in, mesh_out)
+    class(sbp_operator_t), intent(in) :: this
+    !work_tile = indices where operator action will be calculated
+    type(tile_field_t),    intent(in)  :: f_in
+    type(tile_mesh_t),     intent(in)  :: mesh_out
+    !output:
+    type(tile_field_t),    intent(inout) :: f_out
+
+    integer(kind=4) i, j, k, is, ie, js, je, ks, ke, m, kr
+    integer(kind=4) :: l_edge_size, r_edge_size, nwr, nwst, inwidth, inend
+    integer(kind=4) :: nz_out, nz_in
+
+    l_edge_size = size(this%W_edge_l,2)
+    r_edge_size = size(this%W_edge_r,2)
+    nwr = size(this%W_edge_r,1)
+    inwidth = size(this%W_in)
+    inend = inwidth+this%in_shift-1
+    nz_out = mesh_out%nz
+    nz_in = nz_out - this%dnx
+
+    is = mesh_out%is; ie = mesh_out%ie
+    js = mesh_out%js; je = mesh_out%je
+    ks = mesh_out%ks; ke = mesh_out%ke
+
+    do k = max(ks,1),min(l_edge_size,ke)
+        do j = js, je;  do i = is, ie
+            m = this%edge_last_l(k)
+            f_out%p(i,j,k) = sum(this%W_edge_l(1:m,k)*f_in%p(i,j,1:m))
+        end do; end do
+    end do
+    do k = max(l_edge_size+1,ks), min(ke,nz_out-r_edge_size)
+        do j = js, je;  do i = is, ie
+            f_out%p(i,j,k) = sum(this%W_in(1:inwidth)*f_in%p(i,j,k+this%in_shift:k+inend))
+        end do; end do
+    end do
+    do k = max(ks,nz_out-r_edge_size+1),min(ke,nz_out)
+        do j = js, je;  do i = is, ie
+            kr = k - (nz_out-r_edge_size)
+            m  = nz_in+this%edge_first_shift_r(kr)
+            nwst = nwr+this%edge_first_shift_r(kr)
+            f_out%p(i,j,k) = sum(this%W_edge_r(nwst:nwr,kr)*f_in%p(i,j,m:nz_in))
+        end do; end do
+    end do
+
+end subroutine apply_sbp_z_tilefield
 
 subroutine add_penalty_gf(this, f_out, work_tile, nx_out_grid, direction, &
                                                              penalty_type,f_in)
