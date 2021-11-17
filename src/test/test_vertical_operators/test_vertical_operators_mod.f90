@@ -1,5 +1,8 @@
 module test_vertical_operators_mod
 
+use abstract_vertical_operator_mod, only: vertical_operator_t
+use vertical_operator_factory_mod,  only: create_vertical_operator
+
 use test_fields_3d_mod,       only: scalar_field3d_t
 use vertical_test_field_mod,  only: vertical_ExnerP_t
 use const_N_profile_mod,      only: const_N_profile_t
@@ -8,6 +11,7 @@ use domain_factory_mod,       only: create_domain
 use config_domain_mod,        only: config_domain_t
 use grid_field_mod,           only: grid_field_t
 use grid_field_factory_mod,   only: create_grid_field
+use vec_math_mod,             only : l2norm
 
 implicit none
 
@@ -21,6 +25,8 @@ subroutine test_vertical_gradient_operator()
     type(config_domain_t) :: config_domain
     type(domain_t)     :: domain
     type(grid_field_t) :: p, pz_true, pz
+
+    class(vertical_operator_t), allocatable :: vert_grad
 
     scalar_gen = vertical_ExnerP_t(t0=300.0_8, p0=1e5_8, &
                                    vert_profile=const_N_profile_t(N=0.01))
@@ -38,6 +44,7 @@ subroutine test_vertical_gradient_operator()
     call create_domain(domain, config_domain)
 
     call create_grid_field(p,0,0,domain%mesh_p)
+    call create_grid_field(pz,0,0,domain%mesh_n)
     call create_grid_field(pz_true,0,0,domain%mesh_n)
 
     call scalar_gen%get_scalar_field(p,domain%mesh_p,0)
@@ -45,6 +52,13 @@ subroutine test_vertical_gradient_operator()
 
     print *, p%tile(1)%p(1,1,2)-p%tile(1)%p(1,1,1)
     print *, pz_true%tile(1)%p(1,1,2)*3e3_8
+
+    call create_vertical_operator(vert_grad,"vertical_grad_staggered_sbp21")
+    call vert_grad%apply(pz,p,domain)
+
+    call pz%update(-1.0_8,pz_true,domain%mesh_n)
+    print *, "l2 error:", l2norm(pz, domain%mesh_n,domain%parcomm)
+    print *, "linf error:", pz%maxabs(domain%mesh_n,domain%parcomm)
 
 end subroutine test_vertical_gradient_operator
 
