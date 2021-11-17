@@ -17,8 +17,12 @@ implicit none
 
 contains
 
-subroutine test_vertical_gradient_operator()
-    integer, parameter :: nh = 8, nz = 10
+subroutine test_vertical_gradient_operator(nz,vertical_grad_name,vertical_staggering)
+
+    integer(kind=4),  intent(in) :: nz
+    character(len=*), intent(in) :: vertical_grad_name, vertical_staggering
+
+    integer, parameter :: nh = 8
     real(kind=8), parameter :: h_top = 30e3_8
 
     class(scalar_field3d_t), allocatable :: scalar_gen
@@ -36,7 +40,7 @@ subroutine test_vertical_gradient_operator()
     config_domain%N  = nh
     config_domain%Nz = nz
     config_domain%staggering_type     = "C"
-    config_domain%vertical_staggering = "CharneyPhilips"
+    config_domain%vertical_staggering = vertical_staggering
     config_domain%metric_type         = "shallow_atmosphere_metric"
     config_domain%topology_type       = "cube"
     config_domain%h_top = h_top
@@ -52,18 +56,15 @@ subroutine test_vertical_gradient_operator()
     call scalar_gen%get_scalar_field(p,domain%mesh_p,0)
     call scalar_gen%grad%get_vertical_component(pz_true,domain%mesh_n,0,"covariant")
 
-    print *, p%tile(1)%p(1,1,2)-p%tile(1)%p(1,1,1)
-    print *, pz_true%tile(1)%p(1,1,2)*3e3_8
-
-    call create_vertical_operator(vert_grad,"vertical_grad_staggered_sbp21")
+    call create_vertical_operator(vert_grad,vertical_grad_name)
     call vert_grad%apply(pz,p,domain)
 
     call pz%update(-1.0_8,pz_true,domain%mesh_n)
-    print *, "l2 error:", l2norm(pz, domain%mesh_n,domain%parcomm)
-    print *, "linf error:", pz%maxabs(domain%mesh_n,domain%parcomm)
-    ! do k=1, nz
-    !     print *, k, pz%tile(1)%p(1,1,k)
-    ! end do
+    print *, vertical_grad_name
+    print *, "rel l2 error:", l2norm(pz, domain%mesh_n,domain%parcomm) / &
+                              l2norm(pz_true, domain%mesh_n,domain%parcomm)
+    print *, "rel linf error:", pz%maxabs(domain%mesh_n,domain%parcomm) / &
+                                pz_true%maxabs(domain%mesh_n,domain%parcomm)
 
 end subroutine test_vertical_gradient_operator
 

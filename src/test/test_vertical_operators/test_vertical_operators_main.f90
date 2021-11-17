@@ -8,7 +8,11 @@ implicit none
 
 call init_global_parallel_enviroment()
 
-call test_vertical_gradient_operator()
+call test_vertical_gradient_operator(20,"vertical_grad_staggered_sbp21","CharneyPhilips")
+call test_vertical_gradient_operator(20,"vertical_grad_staggered_sbp42","CharneyPhilips")
+call test_vertical_gradient_operator(20,"vertical_grad_sbp21","None")
+call test_vertical_gradient_operator(20,"vertical_grad_sbp42","None")
+call test_vertical_gradient_operator(20,"vertical_grad_sbp63","None")
 
 call deinit_global_parallel_enviroment()
 
