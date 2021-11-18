@@ -51,21 +51,21 @@ subroutine test_vertical_gradient_operator(nz,vertical_grad_name,vertical_stagge
     call create_domain(domain, config_domain)
 
     call create_grid_field(p,0,0,domain%mesh_p)
-    call create_grid_field(pz,0,0,domain%mesh_n)
-    call create_grid_field(pz_true,0,0,domain%mesh_n)
+    call create_grid_field(pz,0,0,domain%mesh_w)
+    call create_grid_field(pz_true,0,0,domain%mesh_w)
 
     call scalar_gen%get_scalar_field(p,domain%mesh_p,0)
-    call scalar_gen%grad%get_vertical_component(pz_true,domain%mesh_n,0,"covariant")
+    call scalar_gen%grad%get_vertical_component(pz_true,domain%mesh_w,0,"covariant")
 
     call create_vertical_operator(vert_grad,vertical_grad_name)
     call vert_grad%apply(pz,p,domain)
 
-    call pz%update(-1.0_8,pz_true,domain%mesh_n)
+    call pz%update(-1.0_8,pz_true,domain%mesh_w)
     print *, vertical_grad_name
-    print *, "rel l2 error:", l2norm(pz, domain%mesh_n,domain%parcomm) / &
-                              l2norm(pz_true, domain%mesh_n,domain%parcomm)
-    print *, "rel linf error:", pz%maxabs(domain%mesh_n,domain%parcomm) / &
-                                pz_true%maxabs(domain%mesh_n,domain%parcomm)
+    print *, "rel l2 error:", l2norm(pz, domain%mesh_w,domain%parcomm) / &
+                              l2norm(pz_true, domain%mesh_w,domain%parcomm)
+    print *, "rel linf error:", pz%maxabs(domain%mesh_w,domain%parcomm) / &
+                                pz_true%maxabs(domain%mesh_w,domain%parcomm)
 
 end subroutine test_vertical_gradient_operator
 
@@ -100,11 +100,11 @@ subroutine test_vertical_div_operator(nz,vertical_div_name,vertical_staggering)
 
     call create_domain(domain, config_domain)
 
-    call create_grid_field(w,0,0,domain%mesh_n)
+    call create_grid_field(w,0,0,domain%mesh_w)
     call create_grid_field(w_div,0,0,domain%mesh_p)
     call create_grid_field(w_div_true,0,0,domain%mesh_p)
 
-    call vector_gen%get_vertical_component(w,domain%mesh_n,0,"contravariant")
+    call vector_gen%get_vertical_component(w,domain%mesh_w,0,"contravariant")
     call vector_gen%div%get_scalar_field(w_div_true,domain%mesh_p,0)
 
     call create_vertical_operator(vert_div,vertical_div_name)
