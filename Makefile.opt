@@ -2152,6 +2152,7 @@ $(DOBJ)test_vertical_operators_mod.o: src/test/test_vertical_operators/test_vert
 	$(DOBJ)vec_math_mod.o \
 	$(DOBJ)vertical_test_field_mod.o \
 	$(DOBJ)const_n_profile_mod.o \
+	$(DOBJ)abstract_vertical_profile_mod.o \
 	$(DOBJ)vertical_div_test_field_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@

@@ -8,14 +8,14 @@ implicit none
 
 call init_global_parallel_enviroment()
 
-call test_vertical_gradient_operator(20,"vertical_grad_staggered_sbp21","CharneyPhilips")
-call test_vertical_gradient_operator(20,"vertical_grad_staggered_sbp42","CharneyPhilips")
-call test_vertical_gradient_operator(20,"vertical_grad_sbp21","None")
-call test_vertical_gradient_operator(20,"vertical_grad_sbp42","None")
-call test_vertical_gradient_operator(20,"vertical_grad_sbp63","None")
+call test_vertical_gradient_operator(20,"eta_diff_p2w_sbp21","CharneyPhilips")
+call test_vertical_gradient_operator(20,"eta_diff_p2w_sbp42","CharneyPhilips")
+call test_vertical_gradient_operator(20,"eta_diff_sbp21","None")
+call test_vertical_gradient_operator(20,"eta_diff_sbp42","None")
+call test_vertical_gradient_operator(20,"eta_diff_sbp63","None")
 
-call test_vertical_div_operator(20,"vertical_div_staggered_sbp21","CharneyPhilips")
-call test_vertical_div_operator(20,"vertical_div_staggered_sbp42","CharneyPhilips")
+call test_vertical_div_operator(20,"eta_diff_w2p_sbp21","CharneyPhilips")
+call test_vertical_div_operator(20,"eta_diff_w2p_sbp42","CharneyPhilips")
 
 call deinit_global_parallel_enviroment()
 

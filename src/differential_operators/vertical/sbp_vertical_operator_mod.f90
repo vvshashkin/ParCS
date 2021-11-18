@@ -26,7 +26,7 @@ subroutine apply(this, f_out, f_in, domain)
     real(kind=8) :: scale, hz
 
     select case(this%tagret_grid)
-    case("n")
+    case("w")
         call this%sbp_op%apply_z(f_out,f_in,domain%mesh_w)
         scale = domain%mesh_w%vertical_scale
         hz    = domain%mesh_w%tile(domain%mesh_w%ts)%hz
