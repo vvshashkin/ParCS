@@ -53,19 +53,19 @@ subroutine transform_co2contra_ch_sbp(this, u_contra, v_contra, u_cov, v_cov, do
     end do
 
 end subroutine transform_co2contra_ch_sbp
-subroutine start_co2contra_transform_at_w_tile(uw, vw, mesh_w)
+subroutine start_co2contra_transform_at_w_tile(uw, vw, mesh_q)
 
     type(tile_field_t),     intent(inout) :: uw, vw
-    type(tile_mesh_t),      intent(in)    :: mesh_w
+    type(tile_mesh_t),      intent(in)    :: mesh_q
 
     real(kind=8)    :: u, v
     integer(kind=4) :: i, j, k
 
-    do k = mesh_w%ks,mesh_w%ke
-        do j = mesh_w%js, mesh_w%je
-            do i = mesh_w%is, mesh_w%ie
-                u = uw%p(i,j,k)*mesh_w%J(i,j,k)*mesh_w%Qi(2,i,j,k)
-                v = vw%p(i,j,k)*mesh_w%J(i,j,k)*mesh_w%Qi(2,i,j,k)
+    do k = mesh_q%ks,mesh_q%ke
+        do j = mesh_q%js, mesh_q%je
+            do i = mesh_q%is, mesh_q%ie
+                u = uw%p(i,j,k)*mesh_q%J(i,j,k)*mesh_q%Qi(2,i,j,k)
+                v = vw%p(i,j,k)*mesh_q%J(i,j,k)*mesh_q%Qi(2,i,j,k)
                 !Change components for (u,v) to (v,u) interpolation
                 uw%p(i,j,k) = v
                 vw%p(i,j,k) = u

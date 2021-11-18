@@ -71,13 +71,13 @@ subroutine create_vector_invariant_swm_operator(operator, grav, swm_config, doma
     call create_quadrature(swm_op%quadrature_h, swm_config%quadrature_name, domain%mesh_p)
     call create_quadrature(swm_op%quadrature_u, swm_config%quadrature_name, domain%mesh_u)
     call create_quadrature(swm_op%quadrature_v, swm_config%quadrature_name, domain%mesh_v)
-    call create_quadrature(swm_op%quadrature_w, swm_config%quadrature_name, domain%mesh_w)
+    call create_quadrature(swm_op%quadrature_w, swm_config%quadrature_name, domain%mesh_q)
 
     call create_grid_field(swm_op%KE,  halo_width_xy, 0, domain%mesh_p)
     call create_grid_field(swm_op%div, halo_width_xy, 0, domain%mesh_p)
 
 
-    call create_grid_field(swm_op%curl, halo_width_xy, 0, domain%mesh_w)
+    call create_grid_field(swm_op%curl, halo_width_xy, 0, domain%mesh_q)
 
     call create_grid_field(swm_op%hu, halo_width_xy, 0, domain%mesh_u)
     call create_grid_field(swm_op%hv, halo_width_xy, 0, domain%mesh_v)

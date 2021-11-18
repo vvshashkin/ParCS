@@ -125,7 +125,7 @@ subroutine create_Cgrid_hordiff_curl_operator(hordiff_op, hordiff_coeff, domain)
     !WORKAROUND
     halo_width = 4
 
-    call create_grid_field(hordiff_curl%curl, halo_width, 0, domain%mesh_w)
+    call create_grid_field(hordiff_curl%curl, halo_width, 0, domain%mesh_q)
     call create_grid_field(hordiff_curl%ut,   halo_width, 0, domain%mesh_u)
     call create_grid_field(hordiff_curl%vt,   halo_width, 0, domain%mesh_v)
 

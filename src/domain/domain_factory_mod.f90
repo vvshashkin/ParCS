@@ -111,22 +111,22 @@ subroutine create_domain_by_config(domain, config, parcomm)
         domain%mesh_p = domain%mesh_o
         domain%mesh_u = domain%mesh_o
         domain%mesh_v = domain%mesh_o
-        domain%mesh_w = domain%mesh_o
+        domain%mesh_q = domain%mesh_o
     case ('Ah') !all degrees of freedom at corner points
         domain%mesh_p = domain%mesh_xy
         domain%mesh_u = domain%mesh_xy
         domain%mesh_v = domain%mesh_xy
-        domain%mesh_w = domain%mesh_xy
+        domain%mesh_q = domain%mesh_xy
     case ('C')
         domain%mesh_p = domain%mesh_o
         domain%mesh_u = domain%mesh_x
         domain%mesh_v = domain%mesh_y
-        domain%mesh_w = domain%mesh_xy
+        domain%mesh_q = domain%mesh_xy
     case ('Ch')
         domain%mesh_p = domain%mesh_xy
         domain%mesh_u = domain%mesh_y
         domain%mesh_v = domain%mesh_x
-        domain%mesh_w = domain%mesh_o
+        domain%mesh_q = domain%mesh_o
     case default
         call parcomm_global%abort("domain_factory_mod, unknown staggering type: "//config%staggering_type)
     end select

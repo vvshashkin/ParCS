@@ -33,7 +33,7 @@ subroutine interp_w2h(this, fh, fw, domain)
     do t = domain%partition%ts, domain%partition%te
         call interp_w2v_tile(this%fu%tile(t), this%fv%tile(t), fw%tile(t), &
                     this%sbp_interp_w2v, domain%mesh_u%tile(t), &
-                    domain%mesh_v%tile(t), domain%mesh_w%tile(t))
+                    domain%mesh_v%tile(t), domain%mesh_q%tile(t))
     end do
 
     call this%interp_v2h_op%interp_v2h(this%fuh, this%fvh, this%fu, this%fv, domain)

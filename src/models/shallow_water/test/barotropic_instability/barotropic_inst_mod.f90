@@ -137,7 +137,7 @@ subroutine run_barotropic_inst()
         call outputer_vec%write(state%u,state%v,domain,"u.dat","v.dat",1)
     end select
 
-    call create_grid_field(curl, halo_width, 0, domain%mesh_w)
+    call create_grid_field(curl, halo_width, 0, domain%mesh_q)
 
 
     do it = 1, int(config%simulation_time/dt)

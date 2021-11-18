@@ -247,9 +247,9 @@ subroutine calc_enstrophy(this, enstrophy, vin, domain)
     enstrophy = 0.0_8
 
     call this%curl_op%calc_curl(this%curl, vin%u, vin%v, domain)
-    call this%curl%assign_prod(0.5_8,this%curl, this%curl, domain%mesh_w)
+    call this%curl%assign_prod(0.5_8,this%curl, this%curl, domain%mesh_q)
 
-    enstrophy = this%quadrature_w%mass(this%curl, domain%mesh_w, domain%parcomm)
+    enstrophy = this%quadrature_w%mass(this%curl, domain%mesh_q, domain%parcomm)
 
 end subroutine calc_enstrophy
 
