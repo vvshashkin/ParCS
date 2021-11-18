@@ -17,8 +17,9 @@ contains
 
 subroutine test_vertical_gradient_operator(nz,vertical_grad_name,vertical_staggering)
 
-    use vertical_test_field_mod,  only: vertical_ExnerP_t
+    use vertical_test_field_mod,  only: vertical_ExnerP_t, vertical_ExnerP_grad_t
     use const_N_profile_mod,      only: const_N_profile_t
+    use abstract_vertical_profile_mod, only : vertical_profile_t
 
     integer(kind=4),  intent(in) :: nz
     character(len=*), intent(in) :: vertical_grad_name, vertical_staggering
@@ -26,7 +27,8 @@ subroutine test_vertical_gradient_operator(nz,vertical_grad_name,vertical_stagge
     integer, parameter :: nh = 8
     real(kind=8), parameter :: h_top = 30e3_8
 
-    class(scalar_field3d_t), allocatable :: scalar_gen
+    type(vertical_ExnerP_t)      :: scalar_gen
+    type(vertical_ExnerP_grad_t) :: grad_gen
     type(config_domain_t) :: config_domain
     type(domain_t)     :: domain
     type(grid_field_t) :: p, pz_true, pz
@@ -35,8 +37,13 @@ subroutine test_vertical_gradient_operator(nz,vertical_grad_name,vertical_stagge
 
     class(vertical_operator_t), allocatable :: vert_grad
 
-    scalar_gen = vertical_ExnerP_t(t0=300.0_8, p0=1e5_8, &
-                                   vert_profile=const_N_profile_t(N=0.01))
+    scalar_gen%t0 = 300.0_8
+    scalar_gen%p0 = 1e5_8
+    scalar_gen%vert_profile = const_N_profile_t(N=0.01)
+    
+    grad_gen%t0 = 300.0_8
+    grad_gen%p0 = 1e5_8
+    grad_gen%vert_profile = const_N_profile_t(N=0.01)
 
     config_domain%N  = nh
     config_domain%Nz = nz
@@ -55,7 +62,7 @@ subroutine test_vertical_gradient_operator(nz,vertical_grad_name,vertical_stagge
     call create_grid_field(pz_true,0,0,domain%mesh_w)
 
     call scalar_gen%get_scalar_field(p,domain%mesh_p,0)
-    call scalar_gen%grad%get_vertical_component(pz_true,domain%mesh_w,0,"covariant")
+    call grad_gen%get_vertical_component(pz_true,domain%mesh_w,0,"covariant")
 
     call create_vertical_operator(vert_grad,vertical_grad_name)
     call vert_grad%apply(pz,p,domain)
@@ -71,7 +78,7 @@ end subroutine test_vertical_gradient_operator
 
 subroutine test_vertical_div_operator(nz,vertical_div_name,vertical_staggering)
 
-    use vertical_div_test_field_mod,  only: simple_divergent_w_t
+    use vertical_div_test_field_mod,  only: simple_divergent_w_t, simple_wdiv_t
 
     integer(kind=4),  intent(in) :: nz
     character(len=*), intent(in) :: vertical_div_name, vertical_staggering
@@ -79,7 +86,8 @@ subroutine test_vertical_div_operator(nz,vertical_div_name,vertical_staggering)
     integer, parameter :: nh = 8
     real(kind=8), parameter :: h_top = 30e3_8
 
-    class(vector_field3d_t), allocatable :: vector_gen
+    type(simple_divergent_w_t) :: vector_gen
+    type(simple_wdiv_t)        :: div_gen
     type(config_domain_t) :: config_domain
     type(domain_t)     :: domain
     type(grid_field_t) :: w, w_div,w_div_true
@@ -87,6 +95,7 @@ subroutine test_vertical_div_operator(nz,vertical_div_name,vertical_staggering)
     class(vertical_operator_t), allocatable :: vert_div
 
     vector_gen = simple_divergent_w_t(h_top)
+    div_gen    = simple_wdiv_t(h_top)
 
     config_domain%N  = nh
     config_domain%Nz = nz
@@ -105,7 +114,7 @@ subroutine test_vertical_div_operator(nz,vertical_div_name,vertical_staggering)
     call create_grid_field(w_div_true,0,0,domain%mesh_p)
 
     call vector_gen%get_vertical_component(w,domain%mesh_w,0,"contravariant")
-    call vector_gen%div%get_scalar_field(w_div_true,domain%mesh_p,0)
+    call div_gen%get_scalar_field(w_div_true,domain%mesh_p,0)
 
     call create_vertical_operator(vert_div,vertical_div_name)
     call vert_div%apply(w_div,w,domain)

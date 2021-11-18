@@ -23,39 +23,7 @@ type, extends(vector_field3d_t) :: vertical_ExnerP_grad_t
     procedure :: get_vector_component_tile
 end type vertical_ExnerP_grad_t
 
-interface vertical_ExnerP_t
-    procedure :: new_vertical_ExnerP
-end interface vertical_ExnerP_t
-
-interface vertical_ExnerP_grad_t
-    procedure :: new_vertical_ExnerP_grad
-end interface vertical_ExnerP_grad_t
-
 contains
-
-function new_vertical_ExnerP(t0,p0,vert_profile) result(vertical_ExnerP)
-    real(kind=8), intent(in) :: t0,p0
-    class(vertical_profile_t), intent(in) :: vert_profile
-
-    type(vertical_ExnerP_t) :: vertical_ExnerP
-
-    vertical_ExnerP%t0 = t0
-    vertical_ExnerP%p0 = p0
-    vertical_ExnerP%vert_profile = vert_profile
-    vertical_ExnerP%grad = new_vertical_ExnerP_grad(t0,p0,vert_profile)
-end function new_vertical_ExnerP
-
-function new_vertical_ExnerP_grad(t0,p0,vert_profile) result(vertical_ExnerP_grad)
-    real(kind=8), intent(in) :: t0,p0
-    class(vertical_profile_t), intent(in) :: vert_profile
-
-    type(vertical_ExnerP_grad_t) :: vertical_ExnerP_grad
-
-    vertical_ExnerP_grad%t0 = t0
-    vertical_ExnerP_grad%p0 = p0
-    vertical_ExnerP_grad%vert_profile = vert_profile
-
-end function new_vertical_ExnerP_grad
 
 subroutine get_scalar_field_tile(this,f,mesh,halo_width)
     class(vertical_ExnerP_t),    intent(in)    :: this

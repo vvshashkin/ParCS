@@ -7,14 +7,12 @@ use parcomm_mod,    only : parcomm_global
 implicit none
 
 type, abstract :: scalar_field3d_t
-    class(vector_field3d_t), allocatable :: grad
 contains
     procedure, public :: get_scalar_field
     procedure(generate_scalar_field_tile), deferred :: get_scalar_field_tile
 end type scalar_field3d_t
 
 type, abstract :: vector_field3d_t
-    class(scalar_field3d_t), allocatable :: div
 contains
     procedure, public :: get_vector_field
     procedure, public :: get_vertical_component

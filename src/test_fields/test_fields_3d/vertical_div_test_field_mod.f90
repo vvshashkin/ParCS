@@ -19,21 +19,7 @@ type, extends(vector_field3d_t) :: simple_divergent_w_t
     procedure :: get_vector_component_tile
 end type simple_divergent_w_t
 
-interface simple_divergent_w_t
-    procedure :: new_simple_divergent_w_t
-end interface simple_divergent_w_t
-
 contains
-
-function new_simple_divergent_w_t(h_top) result(divergent_w)
-
-    real(kind=8),   intent(in) :: h_top
-    type(simple_divergent_w_t) :: divergent_w
-
-    divergent_w%h_top = h_top
-    divergent_w%div = simple_wdiv_t(h_top=h_top)
-
-end function new_simple_divergent_w_t
 
 subroutine get_scalar_field_tile(this,f,mesh,halo_width)
     class(simple_wdiv_t),    intent(in)    :: this
