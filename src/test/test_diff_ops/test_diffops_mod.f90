@@ -15,7 +15,8 @@ private
 public :: test_div, test_grad, test_conv, &
           test_laplace_spectre, test_curl, test_coriolis,  &
           test_curl_grad, test_co2contra, test_KE, test_coriolis_vec_inv, &
-          test_compatibility, test_grad_perp, test_contra2co, test_vec_advection
+          test_compatibility, test_grad_perp, test_contra2co, test_vec_advection, &
+          test_grad_3d
 
 contains
 
@@ -687,6 +688,88 @@ type(key_value_r8_t) function test_vec_advection(N,vecadv_oper_name,staggering) 
     errs%values(4) = l2norm(vt_tend, domain%mesh_v, domain%parcomm)
 
 end function test_vec_advection
+
+function test_grad_3d(Nh, Nz, hor_grad_name, vert_grad_name, &
+                                  horizontal_staggering, vertical_staggering) result(errs)
+
+    use grad_3d_factory_mod,  only : create_grad_3d_operator
+    use abstract_grad_3d_mod, only : grad_3d_operator_t
+    use config_domain_mod,    only : config_domain_t
+
+    use test_fields_3d_mod, only : scalar_field3d_t, vector_field3d_t
+    use vertical_test_field_mod, only : vertical_ExnerP_t, vertical_ExnerP_grad_t
+    use test_vertical_profiles_mod, only : const_N_profile_t
+
+    integer(kind=4), intent(in)  :: Nh, Nz
+    character(len=*), intent(in) :: hor_grad_name, vert_grad_name
+    character(len=*), intent(in) :: horizontal_staggering, vertical_staggering
+
+    type(key_value_r8_t) :: errs
+
+    class(grad_3d_operator_t), allocatable :: grad_3d
+
+    type(config_domain_t) :: config_domain
+    type(domain_t)        :: domain
+
+    type(grid_field_t) :: f, fx, fy, fz, fx_true, fy_true, fz_true
+
+    type(vertical_ExnerP_t)       :: test_field
+    type(vertical_ExnerP_grad_t)  :: test_field_grad
+
+    integer(kind=4) :: halo_width = 8
+
+    config_domain%N  = nh
+    config_domain%Nz = nz
+    config_domain%staggering_type     = horizontal_staggering
+    config_domain%vertical_staggering = vertical_staggering
+    config_domain%metric_type         = "shallow_atmosphere_metric"
+    config_domain%topology_type       = "cube"
+    call config_domain%config_metric%set_defaults()
+
+    call create_domain(domain, config_domain)
+
+    call create_grad_3d_operator(grad_3d, domain, hor_grad_name, vert_grad_name)
+
+    call create_grid_field(f,  halo_width, 0, domain%mesh_p)
+
+    call create_grid_field(fx, 0, 0, domain%mesh_u)
+    call create_grid_field(fy, 0, 0, domain%mesh_v)
+    call create_grid_field(fz, 0, 0, domain%mesh_w)
+
+    call create_grid_field(fx_true, 0, 0, domain%mesh_u)
+    call create_grid_field(fy_true, 0, 0, domain%mesh_v)
+    call create_grid_field(fz_true, 0, 0, domain%mesh_w)
+
+    test_field%t0 = 300.0_8
+    test_field%p0 = 1e5_8
+    test_field%vert_profile = const_N_profile_t(N=0.01)
+
+    test_field_grad%t0 = 300.0_8
+    test_field_grad%p0 = 1e5_8
+    test_field_grad%vert_profile = const_N_profile_t(N=0.01)
+
+    call test_field%get_scalar_field(f, domain%mesh_p, 0)
+    call test_field_grad%get_vector_field(fx_true, fy_true, fz_true, &
+                                         domain%mesh_u, domain%mesh_v, domain%mesh_w, &
+                                         0,"covariant")
+
+    call grad_3d%calc_grad(fx, fy, fz, f, domain)
+
+    allocate(errs%keys(2), errs%values(2))
+    errs%keys(1)%str = "vertical_ExnerP C_norm"
+    errs%keys(2)%str = "vertical_ExnerP L2_norm"
+
+    call fx%assign(domain%mesh_u%scale, fx, -1.0_8, fx_true, domain%mesh_u)
+    call fy%assign(domain%mesh_v%scale, fy, -1.0_8, fy_true, domain%mesh_v)
+    call fz%assign(domain%mesh_w%scale, fz, -1.0_8, fz_true, domain%mesh_w)
+    errs%values(1) = fx%maxabs(domain%mesh_u, domain%parcomm)  + &
+                     fy%maxabs(domain%mesh_v, domain%parcomm)  + &
+                     fz%maxabs(domain%mesh_w, domain%parcomm)
+    errs%values(2) = l2norm(fx, domain%mesh_u, domain%parcomm) + &
+                     l2norm(fy, domain%mesh_v, domain%parcomm) + &
+                     l2norm(fz, domain%mesh_w, domain%parcomm)
+
+end function test_grad_3d
 
 subroutine test_laplace_spectre(div_operator_name, grad_operator_name, &
                                 co2contra_operator_name, staggering)
