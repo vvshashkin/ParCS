@@ -40,7 +40,7 @@ subroutine test_vertical_gradient_operator(nz,vertical_grad_name,vertical_stagge
     scalar_gen%t0 = 300.0_8
     scalar_gen%p0 = 1e5_8
     scalar_gen%vert_profile = const_N_profile_t(N=0.01)
-    
+
     grad_gen%t0 = 300.0_8
     grad_gen%p0 = 1e5_8
     grad_gen%vert_profile = const_N_profile_t(N=0.01)
@@ -127,5 +127,71 @@ subroutine test_vertical_div_operator(nz,vertical_div_name,vertical_staggering)
                                 w_div_true%maxabs(domain%mesh_p,domain%parcomm)
 
 end subroutine test_vertical_div_operator
+
+subroutine test_vertical_interpolation(nz,vertical_interp_name,vertical_staggering,meshes)
+
+    use vertical_test_field_mod, only: vertical_ExnerP_t
+    use const_N_profile_mod,     only: const_N_profile_t
+    use mesh_mod,                only: mesh_t
+
+    integer(kind=4),  intent(in) :: nz
+    character(len=*), intent(in) :: vertical_interp_name, vertical_staggering,meshes
+
+    integer, parameter :: nh = 8
+    real(kind=8), parameter :: h_top = 30e3_8
+
+    type(vertical_ExnerP_t)      :: scalar_gen
+    type(config_domain_t) :: config_domain
+    type(domain_t), target     :: domain
+    type(grid_field_t) :: psrc, ptarg_true, ptarg
+    type(mesh_t), pointer :: mesh_source, mesh_target
+    class(vertical_operator_t), allocatable :: vert_interp
+
+    if(meshes == "p2w") then
+        mesh_source => domain%mesh_p
+        mesh_target => domain%mesh_w
+    else if(meshes == "w2p") then
+        mesh_source => domain%mesh_w
+        mesh_target => domain%mesh_p
+    else
+        print *, "vertical interpolation test failed, "//&
+                 "unsupported meshes arg: "// meshes
+        return
+    end if
+
+    scalar_gen%t0 = 300.0_8
+    scalar_gen%p0 = 1e5_8
+    scalar_gen%vert_profile = const_N_profile_t(N=0.01)
+
+    config_domain%N  = nh
+    config_domain%Nz = nz
+    config_domain%staggering_type     = "C"
+    config_domain%vertical_staggering = vertical_staggering
+    config_domain%metric_type         = "shallow_atmosphere_metric"
+    config_domain%topology_type       = "cube"
+    config_domain%h_top = h_top
+    call config_domain%config_metric%set_defaults()
+    config_domain%config_metric%vertical_scale = h_top
+
+    call create_domain(domain, config_domain)
+
+    call create_grid_field(psrc,0,0,mesh_source)
+    call create_grid_field(ptarg,0,0,mesh_target)
+    call create_grid_field(ptarg_true,0,0,mesh_target)
+
+    call scalar_gen%get_scalar_field(psrc,mesh_source,0)
+    call scalar_gen%get_scalar_field(ptarg_true,mesh_target,0)
+
+    call create_vertical_operator(vert_interp,vertical_interp_name)
+    call vert_interp%apply(ptarg,psrc,domain)
+
+    call ptarg%update(-1.0_8,ptarg_true,mesh_target)
+    print *, vertical_interp_name
+    print *, "rel l2 error:", l2norm(ptarg, mesh_target,domain%parcomm) / &
+                              l2norm(ptarg_true, mesh_target,domain%parcomm)
+    print *, "rel linf error:", ptarg%maxabs(mesh_target,domain%parcomm) / &
+                                ptarg_true%maxabs(mesh_target,domain%parcomm)
+
+end subroutine test_vertical_interpolation
 
 end module test_vertical_operators_mod
