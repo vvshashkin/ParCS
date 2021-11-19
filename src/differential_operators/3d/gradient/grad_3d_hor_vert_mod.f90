@@ -9,8 +9,8 @@ use abstract_vertical_operator_mod, only : vertical_operator_t
 implicit none
 
 type, public, extends(grad_3d_operator_t) :: grad_3d_hor_vert_t
-    class(grad_operator_t),     allocatable :: grad_xy !horizontal part of grad
-    class(vertical_operator_t), allocatable :: grad_z  !vertical   part of grad
+    class(grad_operator_t),     allocatable :: grad_xy  !horizontal part of grad
+    class(vertical_operator_t), allocatable :: diff_eta !vertical   part of grad
 contains
     procedure, public:: calc_grad
 end type grad_3d_hor_vert_t
@@ -25,7 +25,7 @@ subroutine calc_grad(this, gx, gy, gz, f, domain)
     type(grid_field_t),        intent(inout) :: gx, gy, gz
 
     call this%grad_xy%calc_grad(gx, gy, f, domain)
-    call this%grad_z%apply(gz, f, domain)
+    call this%diff_eta%apply(gz, f, domain)
 
 end subroutine calc_grad
 

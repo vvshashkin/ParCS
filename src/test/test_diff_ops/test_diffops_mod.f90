@@ -16,7 +16,7 @@ public :: test_div, test_grad, test_conv, &
           test_laplace_spectre, test_curl, test_coriolis,  &
           test_curl_grad, test_co2contra, test_KE, test_coriolis_vec_inv, &
           test_compatibility, test_grad_perp, test_contra2co, test_vec_advection, &
-          test_grad_3d
+          test_grad_3d, test_div_3d
 
 contains
 
@@ -689,7 +689,7 @@ type(key_value_r8_t) function test_vec_advection(N,vecadv_oper_name,staggering) 
 
 end function test_vec_advection
 
-function test_grad_3d(Nh, Nz, hor_grad_name, vert_grad_name, &
+function test_grad_3d(Nh, Nz, hor_grad_name, diff_eta_name, &
                                   horizontal_staggering, vertical_staggering) result(errs)
 
     use grad_3d_factory_mod,  only : create_grad_3d_operator
@@ -701,7 +701,7 @@ function test_grad_3d(Nh, Nz, hor_grad_name, vert_grad_name, &
     use test_vertical_profiles_mod, only : const_N_profile_t
 
     integer(kind=4), intent(in)  :: Nh, Nz
-    character(len=*), intent(in) :: hor_grad_name, vert_grad_name
+    character(len=*), intent(in) :: hor_grad_name, diff_eta_name
     character(len=*), intent(in) :: horizontal_staggering, vertical_staggering
 
     type(key_value_r8_t) :: errs
@@ -728,7 +728,7 @@ function test_grad_3d(Nh, Nz, hor_grad_name, vert_grad_name, &
 
     call create_domain(domain, config_domain)
 
-    call create_grad_3d_operator(grad_3d, domain, hor_grad_name, vert_grad_name)
+    call create_grad_3d_operator(grad_3d, domain, hor_grad_name, diff_eta_name)
 
     call create_grid_field(f,  halo_width, 0, domain%mesh_p)
 
@@ -770,6 +770,80 @@ function test_grad_3d(Nh, Nz, hor_grad_name, vert_grad_name, &
                      l2norm(fz, domain%mesh_w, domain%parcomm)
 
 end function test_grad_3d
+
+function test_div_3d(Nh, Nz, hor_div_name, diff_eta_name, &
+                                  horizontal_staggering, vertical_staggering) result(errs)
+
+    use div_3d_factory_mod,  only : create_div_3d_operator
+    use abstract_div_3d_mod, only : div_3d_operator_t
+    use config_domain_mod,    only : config_domain_t
+
+    use test_fields_3d_mod,         only : scalar_field3d_t, vector_field3d_t
+    use vertical_test_field_mod,    only : vertical_ExnerP_t, vertical_ExnerP_grad_t
+    use test_vertical_profiles_mod, only : const_N_profile_t
+
+    integer(kind=4),  intent(in) :: Nh, Nz
+    character(len=*), intent(in) :: hor_div_name, diff_eta_name
+    character(len=*), intent(in) :: horizontal_staggering, vertical_staggering
+
+    type(key_value_r8_t) :: errs
+
+    class(div_3d_operator_t), allocatable :: div_3d
+
+    type(config_domain_t) :: config_domain
+    type(domain_t)        :: domain
+
+    type(grid_field_t) :: div, u, v, w, div_true
+
+    type(vertical_ExnerP_grad_t)  :: test_field
+    type(vertical_ExnerP_t)       :: test_field_div
+
+    integer(kind=4) :: halo_width = 8
+
+    config_domain%N  = nh
+    config_domain%Nz = nz
+    config_domain%staggering_type     = horizontal_staggering
+    config_domain%vertical_staggering = vertical_staggering
+    config_domain%metric_type         = "shallow_atmosphere_metric"
+    config_domain%topology_type       = "cube"
+    call config_domain%config_metric%set_defaults()
+
+    call create_domain(domain, config_domain)
+
+    call create_div_3d_operator(div_3d, domain, hor_div_name, diff_eta_name)
+
+
+    call create_grid_field(u, halo_width, 0, domain%mesh_u)
+    call create_grid_field(v, halo_width, 0, domain%mesh_v)
+    call create_grid_field(w, halo_width, 0, domain%mesh_w)
+
+    call create_grid_field(div,      0, 0, domain%mesh_p)
+    call create_grid_field(div_true, 0, 0, domain%mesh_p)
+
+    test_field%t0 = 300.0_8
+    test_field%p0 = 1e5_8
+    test_field%vert_profile = const_N_profile_t(N=0.01)
+
+    test_field_div%t0 = 300.0_8
+    test_field_div%p0 = 1e5_8
+    test_field_div%vert_profile = const_N_profile_t(N=0.01)
+
+    call test_field%get_vector_field(u, v, w, &
+                                     domain%mesh_u, domain%mesh_v, domain%mesh_w, &
+                                     0,"contravariant")
+    call test_field_div%get_scalar_field(div_true, domain%mesh_p, 0)
+
+    call div_3d%calc_div(div, u, v, w, domain)
+
+    allocate(errs%keys(2), errs%values(2))
+    errs%keys(1)%str = "vertical_ExnerP C_norm"
+    errs%keys(2)%str = "vertical_ExnerP L2_norm"
+
+    call div%assign(domain%mesh_p%scale, div, -1.0_8, div_true, domain%mesh_p)
+    errs%values(1) = div%maxabs(domain%mesh_p, domain%parcomm)
+    errs%values(2) = l2norm(div, domain%mesh_p, domain%parcomm)
+
+end function test_div_3d
 
 subroutine test_laplace_spectre(div_operator_name, grad_operator_name, &
                                 co2contra_operator_name, staggering)
