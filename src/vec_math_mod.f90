@@ -164,4 +164,126 @@ subroutine calc_cart2cube_vec_tile(u, v, vx, vy, vz, mesh)
     end do
 end subroutine calc_cart2cube_vec_tile
 
+subroutine multiply_by_J(Jf, f, mesh)
+
+    type(grid_field_t), intent(in)    :: f
+    type(grid_field_t), intent(inout) :: Jf
+    type(mesh_t),       intent(in)    :: mesh
+
+    integer(kind=4) :: t
+
+    do t = mesh%ts, mesh%te
+        call multiply_by_J_tile(Jf%tile(t), f%tile(t), mesh%tile(t))
+    end do
+
+end subroutine multiply_by_J
+
+subroutine multiply_by_J_tile(Jf, f, mesh)
+
+    type(tile_field_t), intent(in)    :: f
+    type(tile_field_t), intent(inout) :: Jf
+    type(tile_mesh_t),  intent(in)    :: mesh
+
+    integer(kind=4) :: i, j, k
+
+    do k = mesh%ks, mesh%ke
+        do j = mesh%js, mesh%je
+            do i = mesh%is, mesh%ie
+                Jf%p(i,j,k) = f%p(i,j,k)*mesh%J(i,j,k)
+            end do
+        end do
+    end do
+
+end subroutine multiply_by_J_tile
+
+subroutine devide_by_J(Jf, f, mesh)
+
+    type(grid_field_t), intent(in)    :: f
+    type(grid_field_t), intent(inout) :: Jf
+    type(mesh_t),       intent(in)    :: mesh
+
+    integer(kind=4) :: t
+
+    do t = mesh%ts, mesh%te
+        call devide_by_J_tile(Jf%tile(t), f%tile(t), mesh%tile(t))
+    end do
+
+end subroutine devide_by_J
+
+subroutine devide_by_J_tile(Jf, f, mesh)
+
+    type(tile_field_t), intent(in)    :: f
+    type(tile_field_t), intent(inout) :: Jf
+    type(tile_mesh_t),  intent(in)    :: mesh
+
+    integer(kind=4) :: i, j, k
+
+    do k = mesh%ks, mesh%ke
+        do j = mesh%js, mesh%je
+            do i = mesh%is, mesh%ie
+                Jf%p(i,j,k) = f%p(i,j,k)/mesh%J(i,j,k)
+            end do
+        end do
+    end do
+
+end subroutine devide_by_J_tile
+subroutine multiply_by_J_self(f, mesh)
+
+    type(grid_field_t), intent(inout) :: f
+    type(mesh_t),       intent(in)    :: mesh
+
+    integer(kind=4) :: t
+
+    do t = mesh%ts, mesh%te
+        call multiply_by_J_self_tile(f%tile(t), mesh%tile(t))
+    end do
+
+end subroutine multiply_by_J_self
+
+subroutine multiply_by_J_self_tile(f, mesh)
+
+    type(tile_field_t), intent(inout) :: f
+    type(tile_mesh_t),  intent(in)    :: mesh
+
+    integer(kind=4) :: i, j, k
+
+    do k = mesh%ks, mesh%ke
+        do j = mesh%js, mesh%je
+            do i = mesh%is, mesh%ie
+                f%p(i,j,k) = f%p(i,j,k)*mesh%J(i,j,k)
+            end do
+        end do
+    end do
+
+end subroutine multiply_by_J_self_tile
+
+subroutine devide_by_J_self(f, mesh)
+
+    type(grid_field_t), intent(inout) :: f
+    type(mesh_t),       intent(in)    :: mesh
+
+    integer(kind=4) :: t
+
+    do t = mesh%ts, mesh%te
+        call devide_by_J_tile_self(f%tile(t), mesh%tile(t))
+    end do
+
+end subroutine devide_by_J_self
+
+subroutine devide_by_J_tile_self(f, mesh)
+
+    type(tile_field_t), intent(inout) :: f
+    type(tile_mesh_t),  intent(in)    :: mesh
+
+    integer(kind=4) :: i, j, k
+
+    do k = mesh%ks, mesh%ke
+        do j = mesh%js, mesh%je
+            do i = mesh%is, mesh%ie
+                f%p(i,j,k) = f%p(i,j,k)/mesh%J(i,j,k)
+            end do
+        end do
+    end do
+
+end subroutine devide_by_J_tile_self
 end module vec_math_mod

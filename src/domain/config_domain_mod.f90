@@ -36,8 +36,9 @@ subroutine parse(this, config_string)
     character(len=255) :: topology_type
     character(len=255) :: metric_type
     character(len=255) :: vertical_staggering = "None"
+    real(kind=8)       :: h_top = 1.0_8
 
-    namelist /domain/ N, Nz, staggering_type, topology_type, metric_type
+    namelist /domain/ N, Nz, staggering_type, topology_type, metric_type, h_top
 
     read(config_string, domain)
 
@@ -48,6 +49,8 @@ subroutine parse(this, config_string)
     this%topology_type   = trim(topology_type)
     this%metric_type     = trim(metric_type)
     this%vertical_staggering     = trim(vertical_staggering)
+   
+    this%h_top = h_top
 
     call this%config_metric%parse(config_string)
 
