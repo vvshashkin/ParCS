@@ -678,6 +678,78 @@ $(DOBJ)config_domain_mod.o: src/domain/config_domain_mod.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)abstract_div_3d_mod.o: src/differential_operators/3d/divergence/abstract_div_3d_mod.f90 \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)domain_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)div_3d_factory_mod.o: src/differential_operators/3d/divergence/div_3d_factory_mod.f90 \
+	$(DOBJ)abstract_div_3d_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)div_3d_hor_vert_mod.o \
+	$(DOBJ)div_factory_mod.o \
+	$(DOBJ)vertical_operator_factory_mod.o \
+	$(DOBJ)grid_field_factory_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)div_3d_hor_vert_mod.o: src/differential_operators/3d/divergence/div_3d_hor_vert_mod.f90 \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)abstract_div_3d_mod.o \
+	$(DOBJ)abstract_div_mod.o \
+	$(DOBJ)abstract_vertical_operator_mod.o \
+	$(DOBJ)vec_math_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)grad_3d_hor_vert_mod.o: src/differential_operators/3d/gradient/grad_3d_hor_vert_mod.f90 \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)abstract_grad_3d_mod.o \
+	$(DOBJ)abstract_grad_mod.o \
+	$(DOBJ)abstract_vertical_operator_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)abstract_grad_3d_mod.o: src/differential_operators/3d/gradient/abstract_grad_3d_mod.f90 \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)domain_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)grad_3d_factory_mod.o: src/differential_operators/3d/gradient/grad_3d_factory_mod.f90 \
+	$(DOBJ)abstract_grad_3d_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)grad_3d_hor_vert_mod.o \
+	$(DOBJ)grad_factory_mod.o \
+	$(DOBJ)vertical_operator_factory_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)interpolator_w2uv_factory_mod.o: src/differential_operators/3d/interpolators/interpolator_w2uv_factory_mod.f90 \
+	$(DOBJ)abstract_interpolators3d_mod.o \
+	$(DOBJ)interpolators_w2uv_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)abstract_interpolators3d_mod.o: src/differential_operators/3d/interpolators/abstract_interpolators3d_mod.f90 \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)domain_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)interpolators_w2uv_mod.o: src/differential_operators/3d/interpolators/interpolators_w2uv_mod.f90 \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)abstract_vertical_operator_mod.o \
+	$(DOBJ)interpolator_h2v_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)curl_factory_mod.o: src/differential_operators/horizontal/curl/curl_factory_mod.f90 \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)abstract_curl_mod.o \
@@ -1963,6 +2035,16 @@ $(DOBJ)test_diffops_mod.o: src/test/test_diff_ops/test_diffops_mod.f90 \
 	$(DOBJ)abstract_coriolis_mod.o \
 	$(DOBJ)abstract_vector_advection_mod.o \
 	$(DOBJ)vector_advection_factory_mod.o \
+	$(DOBJ)grad_3d_factory_mod.o \
+	$(DOBJ)abstract_grad_3d_mod.o \
+	$(DOBJ)config_domain_mod.o \
+	$(DOBJ)test_fieds_3d_mod.o \
+	$(DOBJ)vertical_test_field_mod.o \
+	$(DOBJ)test_vertical_profiles_mod.o \
+	$(DOBJ)div_3d_factory_mod.o \
+	$(DOBJ)abstract_div_3d_mod.o \
+	$(DOBJ)interpolator_w2uv_factory_mod.o \
+	$(DOBJ)abstract_interpolators3d_mod.o \
 	$(DOBJ)exchange_abstract_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
 	$(DOBJ)quadrature_factory_mod.o \
@@ -2153,7 +2235,8 @@ $(DOBJ)test_vertical_operators_mod.o: src/test/test_vertical_operators/test_vert
 	$(DOBJ)vertical_test_field_mod.o \
 	$(DOBJ)const_n_profile_mod.o \
 	$(DOBJ)abstract_vertical_profile_mod.o \
-	$(DOBJ)vertical_div_test_field_mod.o
+	$(DOBJ)vertical_div_test_field_mod.o \
+	$(DOBJ)mesh_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

@@ -6,7 +6,7 @@ use parcomm_mod,         only : init_global_parallel_enviroment, &
                                 deinit_global_parallel_enviroment, parcomm_global
 use test_diffops_mod, only: test_div, test_grad, test_conv, test_curl, test_grad_perp, &
                             test_coriolis, test_curl_grad, test_co2contra, test_compatibility, &
-                            test_vec_advection, test_grad_3d, test_div_3d
+                            test_vec_advection, test_grad_3d, test_div_3d, test_w2uv_interp
 use key_value_mod,    only : key_value_r8_t
 
 implicit none
@@ -297,69 +297,83 @@ call init_global_parallel_enviroment()
 !     print "(A,4E15.7)", "Err: ", errs%values
 ! end if
 
-errs =  test_div_3d(Nh = 32, Nz = 8, &
-                    hor_div_name = "divergence_c_sbp42", &
-                    diff_eta_name = "eta_diff_w2p_sbp42", &
-                    horizontal_staggering = "C", vertical_staggering = "CharneyPhilips")
+! errs =  test_div_3d(Nh = 32, Nz = 8, &
+!                     hor_div_name = "divergence_c_sbp42", &
+!                     diff_eta_name = "eta_diff_w2p_sbp42", &
+!                     horizontal_staggering = "C", vertical_staggering = "CharneyPhilips")
+! if (parcomm_global%myid==0) then
+!     print *, "div_3d_c_sbp42"
+!     print "(A,4E25.16)", "Err: ", errs%values
+! end if
+!
+! errs =  test_grad_3d(Nh = 32, Nz = 8, &
+!                     hor_grad_name = "gradient_c_sbp42", &
+!                     diff_eta_name = "eta_diff_p2w_sbp42", &
+!                     horizontal_staggering = "C", vertical_staggering = "CharneyPhilips")
+! if (parcomm_global%myid==0) then
+!     print *, "grad_3d_c_sbp42"
+!     print "(A,4E25.16)", "Err: ", errs%values
+! end if
 
-if (parcomm_global%myid==0) then
-    print *, "div_3d_c_sbp42"
-    print "(A,4E25.16)", "Err: ", errs%values
-end if
+! errs =  test_w2uv_interp(Nh = 32, Nz = 8, &
+!                          w2uv_interpolator_name = "w2uv_colocated", &
+!                          horizontal_staggering = "Ah", vertical_staggering = "None")
+! if (parcomm_global%myid==0) then
+!     print *, "w2uv_colocated"
+!     print "(A,4E25.16)", "Err: ", errs%values
+! end if
 
-errs =  test_grad_3d(Nh = 32, Nz = 8, &
-                    hor_grad_name = "gradient_c_sbp42", &
-                    diff_eta_name = "eta_diff_p2w_sbp42", &
-                    horizontal_staggering = "C", vertical_staggering = "CharneyPhilips")
-
+errs =  test_w2uv_interp(Nh = 32, Nz = 20, &
+                         w2uv_interpolator_name = "w2uv_hor_colocated_sbp21", &
+                         horizontal_staggering = "Ah", vertical_staggering = "CharneyPhilips")
 if (parcomm_global%myid==0) then
-    print *, "grad_3d_c_sbp42"
+    print *, "w2uv_colocated"
     print "(A,4E25.16)", "Err: ", errs%values
 end if
-
-errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_C_up4", staggering="C")
-if (parcomm_global%myid==0) then
-    print *, "vector_advection_C_up4"
-    print "(A,4E25.16)", "Err: ", errs%values
-end if
-errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_C_up3", staggering="C")
-if (parcomm_global%myid==0) then
-    print *, "vector_advection_C_up3"
-    print "(A,4E25.16)", "Err: ", errs%values
-end if
-errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_C_up1", staggering="C")
-if (parcomm_global%myid==0) then
-    print *, "vector_advection_C_up1"
-    print "(A,4E25.16)", "Err: ", errs%values
-end if
-errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_C_c2", staggering="C")
-if (parcomm_global%myid==0) then
-    print *, "vector_advection_C_c2"
-    print "(A,4E25.16)", "Err: ", errs%values
-end if
-errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_C_c4", staggering="C")
-if (parcomm_global%myid==0) then
-    print *, "vector_advection_C_c4"
-    print "(A,4E25.16)", "Err: ", errs%values
-end if
-
-errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_Ah21", staggering="Ah")
-if (parcomm_global%myid==0) then
-    print *, "vector_advection_Ah21"
-    print "(A,4E25.16)", "Err: ", errs%values
-end if
-
-errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_Ah42", staggering="Ah")
-if (parcomm_global%myid==0) then
-    print *, "vector_advection_Ah42"
-    print "(A,4E25.16)", "Err: ", errs%values
-end if
-
-errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_Ah63", staggering="Ah")
-if (parcomm_global%myid==0) then
-    print *, "vector_advection_Ah63"
-    print "(A,4E25.16)", "Err: ", errs%values
-end if
+!
+! errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_C_up4", staggering="C")
+! if (parcomm_global%myid==0) then
+!     print *, "vector_advection_C_up4"
+!     print "(A,4E25.16)", "Err: ", errs%values
+! end if
+! errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_C_up3", staggering="C")
+! if (parcomm_global%myid==0) then
+!     print *, "vector_advection_C_up3"
+!     print "(A,4E25.16)", "Err: ", errs%values
+! end if
+! errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_C_up1", staggering="C")
+! if (parcomm_global%myid==0) then
+!     print *, "vector_advection_C_up1"
+!     print "(A,4E25.16)", "Err: ", errs%values
+! end if
+! errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_C_c2", staggering="C")
+! if (parcomm_global%myid==0) then
+!     print *, "vector_advection_C_c2"
+!     print "(A,4E25.16)", "Err: ", errs%values
+! end if
+! errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_C_c4", staggering="C")
+! if (parcomm_global%myid==0) then
+!     print *, "vector_advection_C_c4"
+!     print "(A,4E25.16)", "Err: ", errs%values
+! end if
+!
+! errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_Ah21", staggering="Ah")
+! if (parcomm_global%myid==0) then
+!     print *, "vector_advection_Ah21"
+!     print "(A,4E25.16)", "Err: ", errs%values
+! end if
+!
+! errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_Ah42", staggering="Ah")
+! if (parcomm_global%myid==0) then
+!     print *, "vector_advection_Ah42"
+!     print "(A,4E25.16)", "Err: ", errs%values
+! end if
+!
+! errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_Ah63", staggering="Ah")
+! if (parcomm_global%myid==0) then
+!     print *, "vector_advection_Ah63"
+!     print "(A,4E25.16)", "Err: ", errs%values
+! end if
 
 call deinit_global_parallel_enviroment()
 

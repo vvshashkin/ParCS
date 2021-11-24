@@ -71,8 +71,6 @@ subroutine init(this, Nh, Nz, num_tiles, myid, Np, staggering_type, strategy)
     this%tile_x  = this%tile
     this%tile_y  = this%tile
     this%tile_xy = this%tile
-    this%tile_z = this%tile_o
-    this%tile_xyz = this%tile_xy
 
     do t=1, this%num_panels*this%num_tiles
         if(this%tile_x(t)%ie == nh) this%tile_x(t)%ie = this%nh+1
@@ -82,6 +80,12 @@ subroutine init(this, Nh, Nz, num_tiles, myid, Np, staggering_type, strategy)
         if(this%tile_xy(t)%ie == nh) this%tile_xy(t)%ie = this%nh+1
         if(this%tile_xy(t)%je == nh) this%tile_xy(t)%je = this%nh+1
 
+    end do
+
+    this%tile_z = this%tile_o
+    this%tile_xyz = this%tile_xy
+
+    do t=1, this%num_panels*this%num_tiles
         if(this%tile_z(t)%ke == this%Nz) this%tile_z(t)%ke = this%Nz+1
         if(this%tile_xyz(t)%ke == this%Nz) this%tile_xyz(t)%ke = this%Nz+1
     end do

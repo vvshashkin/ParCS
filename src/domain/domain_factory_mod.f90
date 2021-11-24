@@ -137,7 +137,7 @@ subroutine create_domain_by_config(domain, config, parcomm)
             select case(config%staggering_type)
             case ('A','C')
                 domain%mesh_w = domain%mesh_z
-            case ('Ah','Ch') !all degrees of freedom at corner points
+            case ('Ah','Ch')
                 domain%mesh_w = domain%mesh_xyz
             case default
                 call parcomm_global%abort("domain_factory_mod, unknown staggering type: "//config%staggering_type)
