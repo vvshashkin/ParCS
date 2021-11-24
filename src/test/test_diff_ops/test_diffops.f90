@@ -322,14 +322,39 @@ call init_global_parallel_enviroment()
 !     print *, "w2uv_colocated"
 !     print "(A,4E25.16)", "Err: ", errs%values
 ! end if
-
-errs =  test_w2uv_interp(Nh = 32, Nz = 20, &
+!
+errs =  test_w2uv_interp(Nh = 32, Nz = 8, &
                          w2uv_interpolator_name = "w2uv_hor_colocated_sbp21", &
                          horizontal_staggering = "Ah", vertical_staggering = "CharneyPhilips")
 if (parcomm_global%myid==0) then
-    print *, "w2uv_colocated"
+    print *, "w2uv_hor_colocated_sbp21"
     print "(A,4E25.16)", "Err: ", errs%values
 end if
+
+errs =  test_w2uv_interp(Nh = 32, Nz = 8, &
+                         w2uv_interpolator_name = "w2uv_hor_colocated_sbp42", &
+                         horizontal_staggering = "Ah", vertical_staggering = "CharneyPhilips")
+if (parcomm_global%myid==0) then
+    print *, "w2uv_hor_colocated_sbp42"
+    print "(A,4E25.16)", "Err: ", errs%values
+end if
+
+errs =  test_w2uv_interp(Nh = 32, Nz = 8, &
+                         w2uv_interpolator_name = "w2uv_staggered_C_sbp42_v_sbp21", &
+                         horizontal_staggering = "C", vertical_staggering = "CharneyPhilips")
+if (parcomm_global%myid==0) then
+    print *, "w2uv_staggered_C_sbp42_v_sbp42"
+    print "(A,4E25.16)", "Err: ", errs%values
+end if
+
+errs =  test_w2uv_interp(Nh = 32, Nz = 8, &
+                         w2uv_interpolator_name = "w2uv_staggered_C_sbp42_v_sbp42", &
+                         horizontal_staggering = "C", vertical_staggering = "CharneyPhilips")
+if (parcomm_global%myid==0) then
+    print *, "w2uv_staggered_C_sbp42_v_sbp21"
+    print "(A,4E25.16)", "Err: ", errs%values
+end if
+
 !
 ! errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_C_up4", staggering="C")
 ! if (parcomm_global%myid==0) then

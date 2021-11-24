@@ -887,7 +887,7 @@ function test_w2uv_interp(Nh, Nz, w2uv_interpolator_name, &
 
     call create_domain(domain, config_domain)
 
-    call create_w2uv_interpolator(w2uv_operator,w2uv_interpolator_name)
+    call create_w2uv_interpolator(w2uv_operator,w2uv_interpolator_name,domain)
 
     call create_grid_field(w, halo_width, 0,  domain%mesh_w)
     call create_grid_field(wu, halo_width, 0, domain%mesh_u)
