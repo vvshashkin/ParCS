@@ -924,10 +924,10 @@ subroutine generate_barotropic_instability_height(this, f, npts, nlev, x, y, z)
     real(kind=8),                       intent(in)  :: x(npts), y(npts), z(npts)
     real(kind=8),                       intent(out) :: f(npts,nlev)
 
-    integer(kind=4) :: i, k, indx
+    integer(kind=4) :: i, k, indy
     real(kind=8), parameter :: phi0 = pi/7d0, phi1 = .5d0*pi-phi0
     real(kind=8),  parameter :: lat_diam = 1.0_8/15.0_8, lon_diam = 1.0_8/3.0_8
-    real(kind=8) :: phi, lam
+    real(kind=8) :: phi, lam, zdy
 
 
     do k = 1, nlev
@@ -938,10 +938,10 @@ subroutine generate_barotropic_instability_height(this, f, npts, nlev, x, y, z)
             else if(phi >phi1) then
                 f(i,k) = this%H_north
             else
-                phi = (phi-phi0) / this%dphi
-                indx = floor(phi)
-                phi = phi - indx
-                f(i,k) = this%H_zonal(indx) + (this%H_zonal(indx+1)-this%H_zonal(indx))*phi
+                zdy = (phi-phi0) / this%dphi
+                indy = floor(zdy)
+                zdy = zdy - indy
+                f(i,k) = this%H_zonal(indy) + (this%H_zonal(indy+1)-this%H_zonal(indy))*zdy
             end if
             if(lam>pi) lam = lam -2.0_8*pi
             f(i,k) = f(i,k) + this%h_pert*cos(phi)* &
