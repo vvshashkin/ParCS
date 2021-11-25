@@ -561,6 +561,11 @@ $(DOBJ)vertical_test_field_mod.o: src/test_fields/test_fields_3d/vertical_test_f
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)div3d_test_field_mod.o: src/test_fields/test_fields_3d/div3d_test_field_mod.f90 \
+	$(DOBJ)test_fields_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)timescheme_factory_mod.o: src/time_schemes/timescheme_factory_mod.f90 \
 	$(DOBJ)stvec_mod.o \
 	$(DOBJ)timescheme_mod.o \
@@ -2056,6 +2061,7 @@ $(DOBJ)test_diffops_mod.o: src/test/test_diff_ops/test_diffops_mod.f90 \
 	$(DOBJ)test_vertical_profiles_mod.o \
 	$(DOBJ)div_3d_factory_mod.o \
 	$(DOBJ)abstract_div_3d_mod.o \
+	$(DOBJ)div3d_test_field_mod.o \
 	$(DOBJ)interpolator_w2uv_factory_mod.o \
 	$(DOBJ)abstract_interpolators3d_mod.o \
 	$(DOBJ)exchange_abstract_mod.o \
