@@ -692,13 +692,14 @@ end function test_vec_advection
 function test_grad_3d(Nh, Nz, hor_grad_name, diff_eta_name, &
                                   horizontal_staggering, vertical_staggering) result(errs)
 
-    use grad_3d_factory_mod,  only : create_grad_3d_operator
-    use abstract_grad_3d_mod, only : grad_3d_operator_t
-    use config_domain_mod,    only : config_domain_t
+    use const_mod, only : Earth_radii
 
-    use test_fields_3d_mod, only : scalar_field3d_t, vector_field3d_t
-    use vertical_test_field_mod, only : vertical_ExnerP_t, vertical_ExnerP_grad_t
-    use test_vertical_profiles_mod, only : const_N_profile_t
+    use grad_3d_factory_mod,   only : create_grad_3d_operator
+    use abstract_grad_3d_mod,  only : grad_3d_operator_t
+    use config_domain_mod,     only : config_domain_t
+
+    use test_fields_3d_mod,    only : scalar_field3d_t, vector_field3d_t
+    use grad3d_test_field_mod, only : grad3d_test_input_t, grad3d_test_out_t
 
     integer(kind=4), intent(in)  :: Nh, Nz
     character(len=*), intent(in) :: hor_grad_name, diff_eta_name
@@ -707,16 +708,16 @@ function test_grad_3d(Nh, Nz, hor_grad_name, diff_eta_name, &
     type(key_value_r8_t) :: errs
 
     class(grad_3d_operator_t), allocatable :: grad_3d
-
     type(config_domain_t) :: config_domain
     type(domain_t)        :: domain
 
+    type(grad3d_test_input_t) :: scalar_generator
+    type(grad3d_test_out_t)   :: grad_generator
+
     type(grid_field_t) :: f, fx, fy, fz, fx_true, fy_true, fz_true
 
-    type(vertical_ExnerP_t)       :: test_field
-    type(vertical_ExnerP_grad_t)  :: test_field_grad
-
     integer(kind=4) :: halo_width = 8
+    real(kind=8), parameter :: h_top = 30e3, T0 = 300._8
 
     config_domain%N  = nh
     config_domain%Nz = nz
@@ -724,7 +725,10 @@ function test_grad_3d(Nh, Nz, hor_grad_name, diff_eta_name, &
     config_domain%vertical_staggering = vertical_staggering
     config_domain%metric_type         = "shallow_atmosphere_metric"
     config_domain%topology_type       = "cube"
+    config_domain%h_top = h_top
     call config_domain%config_metric%set_defaults()
+    config_domain%config_metric%vertical_scale = h_top
+    config_domain%config_metric%scale = Earth_radii
 
     call create_domain(domain, config_domain)
 
@@ -740,16 +744,11 @@ function test_grad_3d(Nh, Nz, hor_grad_name, diff_eta_name, &
     call create_grid_field(fy_true, 0, 0, domain%mesh_v)
     call create_grid_field(fz_true, 0, 0, domain%mesh_w)
 
-    test_field%t0 = 300.0_8
-    test_field%p0 = 1e5_8
-    test_field%vert_profile = const_N_profile_t(N=0.01)
 
-    test_field_grad%t0 = 300.0_8
-    test_field_grad%p0 = 1e5_8
-    test_field_grad%vert_profile = const_N_profile_t(N=0.01)
-
-    call test_field%get_scalar_field(f, domain%mesh_p, 0)
-    call test_field_grad%get_vector_field(fx_true, fy_true, fz_true, &
+    scalar_generator = grad3d_test_input_t(h_top=h_top,T0=T0)
+    grad_generator   = grad3d_test_out_t(h_top=h_top,T0=T0)
+    call scalar_generator%get_scalar_field(f, domain%mesh_p, 0)
+    call grad_generator%get_vector_field(fx_true, fy_true, fz_true, &
                                          domain%mesh_u, domain%mesh_v, domain%mesh_w, &
                                          0,"covariant")
 
@@ -759,9 +758,9 @@ function test_grad_3d(Nh, Nz, hor_grad_name, diff_eta_name, &
     errs%keys(1)%str = "vertical_ExnerP C_norm"
     errs%keys(2)%str = "vertical_ExnerP L2_norm"
 
-    call fx%assign(domain%mesh_u%scale, fx, -1.0_8, fx_true, domain%mesh_u)
-    call fy%assign(domain%mesh_v%scale, fy, -1.0_8, fy_true, domain%mesh_v)
-    call fz%assign(domain%mesh_w%scale, fz, -1.0_8, fz_true, domain%mesh_w)
+    call fx%update(-1.0_8, fx_true, domain%mesh_u)
+    call fy%update(-1.0_8, fy_true, domain%mesh_v)
+    call fz%update(-1.0_8, fz_true, domain%mesh_w)
     errs%values(1) = fx%maxabs(domain%mesh_u, domain%parcomm)  + &
                      fy%maxabs(domain%mesh_v, domain%parcomm)  + &
                      fz%maxabs(domain%mesh_w, domain%parcomm)

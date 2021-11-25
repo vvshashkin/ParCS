@@ -297,23 +297,23 @@ call init_global_parallel_enviroment()
 !     print "(A,4E15.7)", "Err: ", errs%values
 ! end if
 
-errs =  test_div_3d(Nh = 32, Nz = 20, &
-                    hor_div_name = "divergence_c_sbp42", &
-                    diff_eta_name = "eta_diff_w2p_sbp42", &
-                    horizontal_staggering = "C", vertical_staggering = "CharneyPhilips")
-if (parcomm_global%myid==0) then
-    print *, "div_3d_c_sbp42"
-    print "(A,4E25.16)", "Err: ", errs%values
-end if
-!
-! errs =  test_grad_3d(Nh = 32, Nz = 8, &
-!                     hor_grad_name = "gradient_c_sbp42", &
-!                     diff_eta_name = "eta_diff_p2w_sbp42", &
+! errs =  test_div_3d(Nh = 32, Nz = 20, &
+!                     hor_div_name = "divergence_c_sbp42", &
+!                     diff_eta_name = "eta_diff_w2p_sbp42", &
 !                     horizontal_staggering = "C", vertical_staggering = "CharneyPhilips")
 ! if (parcomm_global%myid==0) then
-!     print *, "grad_3d_c_sbp42"
+!     print *, "div_3d_c_sbp42"
 !     print "(A,4E25.16)", "Err: ", errs%values
 ! end if
+!
+errs =  test_grad_3d(Nh = 32, Nz = 8, &
+                    hor_grad_name = "gradient_c_sbp42", &
+                    diff_eta_name = "eta_diff_p2w_sbp42", &
+                    horizontal_staggering = "C", vertical_staggering = "CharneyPhilips")
+if (parcomm_global%myid==0) then
+    print *, "grad_3d_c_sbp42"
+    print "(A,4E25.16)", "Err: ", errs%values
+end if
 
 ! errs =  test_w2uv_interp(Nh = 32, Nz = 8, &
 !                          w2uv_interpolator_name = "w2uv_colocated", &
