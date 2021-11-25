@@ -2,6 +2,7 @@ module test_vertical_profiles_mod
 
 use abstract_vertical_profile_mod, only : vertical_profile_t
 use const_N_profile_mod,           only : const_N_profile_t
+use isothermal_profile_mod,        only : isothermal_profile_t
 
 implicit none
 
@@ -13,6 +14,7 @@ contains
 subroutine test_vertical_profiles()
 
     call test_N_const()
+    call test_isothermal()
 
 end subroutine
 
@@ -46,6 +48,30 @@ subroutine test_N_const
     end if
     print *, "const_N_profile test passed"
 end subroutine test_N_const
+
+subroutine test_isothermal
+    real(kind=8), parameter :: p0 = 101325._8, t0=297._8, grav = 10.0_8 !test if works with non-standard values
+    real(kind=8), parameter :: h(4) = [0.0_8, 1e3_8, 10e3_8, 30e3_8]
+    real(kind=8) :: theta(size(h)), d_theta(size(h))
+    real(kind=8) err
+
+    class(vertical_profile_t), allocatable :: profile
+
+    profile = isothermal_profile_t(grav=grav,p0=101325.0_8)
+
+    err = check_surface(profile)
+    if(err > tolerance1) then
+        print *, "isothermal profile surface checks failed", err
+        stop
+    end if
+
+    err = check_hydristatic_equilibrium(profile,grav,h)
+    if(err > tolerance1) then
+        print *, "isothermal profile hydrostatic equilibrium check failed", err
+        stop
+    end if
+    print *, "isothermal_profile test passed"
+end subroutine test_isothermal
 
 function check_surface(profile) result(err)
     class(vertical_profile_t), intent(in) :: profile

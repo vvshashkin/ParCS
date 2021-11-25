@@ -532,6 +532,12 @@ $(DOBJ)abstract_vertical_profile_mod.o: src/test_fields/vertical_thermodynamic_p
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)isotermal_profile_mod.o: src/test_fields/vertical_thermodynamic_profiles/isotermal_profile_mod.f90 \
+	$(DOBJ)abstract_vertical_profile_mod.o \
+	$(DOBJ)const_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)vertical_div_test_field_mod.o: src/test_fields/test_fields_3d/vertical_div_test_field_mod.f90 \
 	$(DOBJ)test_fieds_3d_mod.o \
 	$(DOBJ)grid_field_mod.o \
@@ -732,7 +738,12 @@ $(DOBJ)grad_3d_factory_mod.o: src/differential_operators/3d/gradient/grad_3d_fac
 
 $(DOBJ)interpolator_w2uv_factory_mod.o: src/differential_operators/3d/interpolators/interpolator_w2uv_factory_mod.f90 \
 	$(DOBJ)abstract_interpolators3d_mod.o \
-	$(DOBJ)interpolators_w2uv_mod.o
+	$(DOBJ)interpolators_w2uv_mod.o \
+	$(DOBJ)vertical_operator_factory_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)interpolator_h2v_factory_mod.o \
+	$(DOBJ)grid_field_factory_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -743,6 +754,7 @@ $(DOBJ)abstract_interpolators3d_mod.o: src/differential_operators/3d/interpolato
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)interpolators_w2uv_mod.o: src/differential_operators/3d/interpolators/interpolators_w2uv_mod.f90 \
+	$(DOBJ)abstract_interpolators3d_mod.o \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)abstract_vertical_operator_mod.o \
@@ -1817,6 +1829,7 @@ $(DOBJ)ts2_main.o: src/models/shallow_water/test/ts2/ts2_main.f90 \
 $(DOBJ)test_vertical_profiles_mod.o: src/test/test_vertical_profiles/test_vertical_profiles_mod.f90 \
 	$(DOBJ)abstract_vertical_profile_mod.o \
 	$(DOBJ)const_n_profile_mod.o \
+	$(DOBJ)isotermal_profile_mod.o \
 	$(DOBJ)const_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
