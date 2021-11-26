@@ -20,6 +20,13 @@ COTEXT  = "Compiling $(<F)"
 LITEXT  = "Assembling $@"
 
 #building rules
+$(DEXE)NH_MAIN: $(MKDIRS) $(DOBJ)nh_main.o \
+	$(DOBJ)avost.o \
+	$(DOBJ)auxhs.o
+	@rm -f $(filter-out $(DOBJ)nh_main.o,$(EXESOBJ))
+	@echo $(LITEXT)
+	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
+EXES := $(EXES) NH_MAIN
 $(DEXE)RH4_WAVE_MAIN: $(MKDIRS) $(DOBJ)rh4_wave_main.o \
 	$(DOBJ)avost.o \
 	$(DOBJ)auxhs.o
@@ -1626,6 +1633,111 @@ $(DOBJ)operator_iomega_mod.o: src/models/iomega_model/operator_iomega_mod.f90 \
 	$(DOBJ)stvec_iomega_mod.o \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)parcomm_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)nh_main.o: src/models/NH/NH_main.f90 \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)cmd_args_mod.o \
+	$(DOBJ)namelist_read_mod.o \
+	$(DOBJ)nh_model_mod.o \
+	$(DOBJ)nh_model_config_mod.o \
+	$(DOBJ)nh_model_factory_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)nh_model_config_mod.o: src/models/NH/nh_model_config_mod.f90 \
+	$(DOBJ)config_mod.o \
+	$(DOBJ)config_domain_mod.o \
+	$(DOBJ)config_postnh_mod.o \
+	$(DOBJ)const_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)nh_model_factory_mod.o: src/models/NH/nh_model_factory_mod.f90 \
+	$(DOBJ)nh_model_mod.o \
+	$(DOBJ)nh_model_config_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)domain_factory_mod.o \
+	$(DOBJ)stvec_nh_factory_mod.o \
+	$(DOBJ)timescheme_factory_mod.o \
+	$(DOBJ)nh_testcases_mod.o \
+	$(DOBJ)postprocessing_nh_factory_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)nh_model_mod.o: src/models/NH/nh_model_mod.f90 \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)timescheme_mod.o \
+	$(DOBJ)stvec_mod.o \
+	$(DOBJ)abstract_postprocessing_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)stvec_nh_factory_mod.o: src/models/NH/stvec/stvec_nh_factory_mod.f90 \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)stvec_mod.o \
+	$(DOBJ)stvec_nh_mod.o \
+	$(DOBJ)grid_field_factory_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)stvec_nh_mod.o: src/models/NH/stvec/stvec_nh_mod.f90 \
+	$(DOBJ)stvec_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)domain_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)abstract_postprocessing_mod.o: src/models/NH/postprocessing/abstract_postprocessing_mod.f90 \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)stvec_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)simple_postnh_mod.o: src/models/NH/postprocessing/simple_postnh_mod.f90 \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)stvec_mod.o \
+	$(DOBJ)abstract_postprocessing_mod.o \
+	$(DOBJ)outputer_abstract_mod.o \
+	$(DOBJ)stvec_nh_mod.o \
+	$(DOBJ)parcomm_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)config_postnh_mod.o: src/models/NH/postprocessing/config_postnh_mod.f90 \
+	$(DOBJ)config_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)postprocessing_nh_factory_mod.o: src/models/NH/postprocessing/postprocessing_nh_factory_mod.f90 \
+	$(DOBJ)abstract_postprocessing_mod.o \
+	$(DOBJ)simple_postnh_mod.o \
+	$(DOBJ)config_postnh_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)outputer_factory_mod.o \
+	$(DOBJ)parcomm_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)nh_testcases_mod.o: src/models/NH/testcases/nh_testcases_mod.f90 \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)stvec_mod.o \
+	$(DOBJ)gw_testcase_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)gw_testcase_mod.o: src/models/NH/testcases/GW_testcase_mod.f90 \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)stvec_mod.o \
+	$(DOBJ)stvec_nh_mod.o \
+	$(DOBJ)test_fieds_3d_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)const_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

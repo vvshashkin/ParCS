@@ -1,0 +1,28 @@
+&domain
+    N = 32,
+    Nz = 10,
+    topology_type       = 'cube',
+    staggering_type     = 'Ah',
+    vertical_staggering = 'CharneyPhilips'
+    metric_type         = 'shallow_atmosphere_metric'
+    h_top               = 10e3
+/
+&metric
+  metric_2d_type = "ecs"
+  vertical_transform_name = "vertical_transform_default"
+  scale               = 50969.832
+/
+&nh_model
+    timescheme_name  = "rk4"
+    operator_type    = "Ptheta_linear"
+    testcase_name    = "GW_linear"
+/
+&nh_postprocessing
+    Nlon = 128
+    Nlat = 65
+    outputer_name = "latlon"
+/
+&comments
+  Earth_radii = 0.6371229d7
+  Earth_radii_gw_test = 50969.832
+/

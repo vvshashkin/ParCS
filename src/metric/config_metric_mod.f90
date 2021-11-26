@@ -45,8 +45,11 @@ subroutine parse(this, config_string)
     real(kind=8) :: omega = 1.0_8
     real(kind=8) :: rotation_matrix(3,3) = reshape([1,0,0, 0,1,0, 0,0,1], [3,3])
     real(kind=8) :: rotation_axis(3)     = [0, 0, 1]
+    character(len=255) :: metric_2d_type = "ecs"
+    character(len=255) :: vertical_transform_name = "vertical_transform_default"
 
-    namelist /metric/ scale, omega, rotation_matrix, rotation_axis
+    namelist /metric/ scale, omega, rotation_matrix, rotation_axis, &
+                      metric_2d_type, vertical_transform_name
 
     read(config_string, metric)
 
@@ -54,6 +57,8 @@ subroutine parse(this, config_string)
     this%omega = omega
     this%rotation_matrix = rotation_matrix
     this%rotation_axis = rotation_axis
+    this%metric_2d_type = trim(metric_2d_type)
+    this%vertical_transform_name = trim(vertical_transform_name)
 
 end subroutine parse
 
