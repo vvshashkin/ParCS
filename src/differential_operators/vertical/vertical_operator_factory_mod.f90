@@ -8,6 +8,9 @@ implicit none
 contains
 
 subroutine create_vertical_operator(vertical_op, vertical_op_name)
+
+    use identity_vertical_operator_mod, only : identity_vertical_operator_t
+
     class(vertical_operator_t), allocatable, intent(out) :: vertical_op
     character(len=*), intent(in) :: vertical_op_name
 
@@ -34,6 +37,8 @@ subroutine create_vertical_operator(vertical_op, vertical_op_name)
         call create_sbp_vertical_op(vertical_op, "W21_stagered_interp_i2c","p",is_diff=.false.)
     case("vertical_interp_w2p_sbp42")
         call create_sbp_vertical_op(vertical_op, "W42_stagered_interp_i2c","p",is_diff=.false.)
+    case("identity_p")
+        vertical_op = identity_vertical_operator_t(points_type = "p")
     case default
         call parcomm_global%abort("create_vertical_operator error, unknown operator "//&
                                   vertical_op_name)

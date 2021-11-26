@@ -5,7 +5,7 @@ use domain_mod,                     only : domain_t
 use abstract_div_3d_mod,            only : div_3d_operator_t
 use abstract_div_mod,               only : div_operator_t
 use abstract_vertical_operator_mod, only : vertical_operator_t
-use vec_math_mod,                   only : multiply_by_J, devide_by_J_self
+use vec_math_mod,                   only : multiply_by_J, divide_by_J_self
 
 implicit none
 
@@ -33,7 +33,7 @@ subroutine calc_div(this, div, u, v, w, domain)
     call this%diff_eta_op%apply(this%diff_eta, this%Jw, domain)
 
     !use diff_eta to store diff_eta(Jw)/J
-    call devide_by_J_self(this%diff_eta, domain%mesh_p)
+    call divide_by_J_self(this%diff_eta, domain%mesh_p)
 
     call div%update(1.0_8, this%diff_eta, domain%mesh_p)
 

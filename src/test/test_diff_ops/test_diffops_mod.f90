@@ -346,14 +346,18 @@ type(key_value_r8_t) function test_co2contra_3d(Nh, nz, co2contra_3d_oper_name, 
     call v_test%update(-1.0_8, v_true, domain%mesh_v)
     call w_test%update(-1.0_8, w_true, domain%mesh_w)
 
-    errs%values(1) = u_test%maxabs(domain%mesh_u, domain%parcomm) + &
-                     v_test%maxabs(domain%mesh_v, domain%parcomm) + &
-                     w_test%maxabs(domain%mesh_w, domain%parcomm)
-
-    errs%values(2) = l2norm(u_test, domain%mesh_u, domain%parcomm) + &
-                     l2norm(v_test, domain%mesh_v, domain%parcomm) + &
-                     l2norm(w_test, domain%mesh_w, domain%parcomm)
-
+    errs%values(1) = (u_test%maxabs(domain%mesh_u, domain%parcomm) + &
+                      v_test%maxabs(domain%mesh_v, domain%parcomm) + &
+                      w_test%maxabs(domain%mesh_w, domain%parcomm)) / &
+                     (u_true%maxabs(domain%mesh_u, domain%parcomm) + &
+                      v_true%maxabs(domain%mesh_v, domain%parcomm) + &
+                      w_true%maxabs(domain%mesh_w, domain%parcomm))
+    errs%values(2) = (l2norm(u_test, domain%mesh_u, domain%parcomm) + &
+                      l2norm(v_test, domain%mesh_v, domain%parcomm) + &
+                      l2norm(w_test, domain%mesh_w, domain%parcomm)) / &
+                     (l2norm(u_true, domain%mesh_u, domain%parcomm) + &
+                      l2norm(v_true, domain%mesh_v, domain%parcomm) + &
+                      l2norm(w_true, domain%mesh_w, domain%parcomm))
 end function test_co2contra_3d
 function test_grad_perp(N, grad_perp_oper_name, staggering) result(errs)
 

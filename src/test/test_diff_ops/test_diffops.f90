@@ -322,6 +322,13 @@ if (parcomm_global%myid==0) then
     print *, "co2contra_3d_colocated"
     print "(A,4E25.16)", "Err: ", errs%values
 end if
+errs =  test_co2contra_3d(Nh = 32, Nz = 8, &
+                    co2contra_3d_oper_name = "co2contra_3d_Cgrid_h_sbp42_v_sbp42", &
+                    horizontal_staggering = "C", vertical_staggering = "CharneyPhilips")
+if (parcomm_global%myid==0) then
+    print *, "co2contra_3d_C_CharneyPhilips"
+    print "(A,4E25.16)", "Err: ", errs%values
+end if
 ! errs =  test_w2uv_interp(Nh = 32, Nz = 8, &
 !                          w2uv_interpolator_name = "w2uv_colocated", &
 !                          horizontal_staggering = "Ah", vertical_staggering = "None")
