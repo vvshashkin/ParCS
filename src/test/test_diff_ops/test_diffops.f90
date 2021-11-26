@@ -6,7 +6,8 @@ use parcomm_mod,         only : init_global_parallel_enviroment, &
                                 deinit_global_parallel_enviroment, parcomm_global
 use test_diffops_mod, only: test_div, test_grad, test_conv, test_curl, test_grad_perp, &
                             test_coriolis, test_curl_grad, test_co2contra, test_compatibility, &
-                            test_vec_advection, test_grad_3d, test_div_3d, test_w2uv_interp
+                            test_vec_advection, test_grad_3d, test_div_3d, test_w2uv_interp, &
+                            test_co2contra_3d
 use key_value_mod,    only : key_value_r8_t
 
 implicit none
@@ -306,15 +307,21 @@ call init_global_parallel_enviroment()
 !     print "(A,4E25.16)", "Err: ", errs%values
 ! end if
 !
-errs =  test_grad_3d(Nh = 32, Nz = 8, &
-                    hor_grad_name = "gradient_c_sbp42", &
-                    diff_eta_name = "eta_diff_p2w_sbp42", &
-                    horizontal_staggering = "C", vertical_staggering = "CharneyPhilips")
+! errs =  test_grad_3d(Nh = 32, Nz = 8, &
+!                     hor_grad_name = "gradient_c_sbp42", &
+!                     diff_eta_name = "eta_diff_p2w_sbp42", &
+!                     horizontal_staggering = "C", vertical_staggering = "CharneyPhilips")
+! if (parcomm_global%myid==0) then
+!     print *, "grad_3d_c_sbp42"
+!     print "(A,4E25.16)", "Err: ", errs%values
+! end if
+errs =  test_co2contra_3d(Nh = 32, Nz = 8, &
+                    co2contra_3d_oper_name = "co2contra_3d_colocated", &
+                    horizontal_staggering = "Ah", vertical_staggering = "None")
 if (parcomm_global%myid==0) then
-    print *, "grad_3d_c_sbp42"
+    print *, "co2contra_3d_colocated"
     print "(A,4E25.16)", "Err: ", errs%values
 end if
-
 ! errs =  test_w2uv_interp(Nh = 32, Nz = 8, &
 !                          w2uv_interpolator_name = "w2uv_colocated", &
 !                          horizontal_staggering = "Ah", vertical_staggering = "None")

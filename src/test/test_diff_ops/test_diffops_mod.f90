@@ -16,7 +16,7 @@ public :: test_div, test_grad, test_conv, &
           test_laplace_spectre, test_curl, test_coriolis,  &
           test_curl_grad, test_co2contra, test_KE, test_coriolis_vec_inv, &
           test_compatibility, test_grad_perp, test_contra2co, test_vec_advection, &
-          test_grad_3d, test_div_3d, test_w2uv_interp
+          test_grad_3d, test_div_3d, test_w2uv_interp, test_co2contra_3d
 
 contains
 
@@ -271,6 +271,90 @@ type(key_value_r8_t) function test_contra2co(N,contra2co_oper_name,staggering) r
                      l2norm(v_test, domain%mesh_v, domain%parcomm)
 
 end function test_contra2co
+type(key_value_r8_t) function test_co2contra_3d(Nh, nz, co2contra_3d_oper_name, &
+                            horizontal_staggering, vertical_staggering) result(errs)
+
+    use test_fields_mod,    only : set_vector_test_field, set_scalar_test_field, &
+                                   vec_field_gen => cross_polar_flow_generator
+
+    use abstract_co2contra_3d_mod, only : co2contra_3d_operator_t
+    use co2contra_3d_factory_mod,  only : create_co2contra_3d_operator
+    use mesh_mod,                  only : mesh_t
+    use config_domain_mod,         only : config_domain_t
+    use const_mod,                 only : Earth_radii
+    use grad3d_test_field_mod,     only : grad3d_test_out_t
+
+    integer(kind=4),  intent(in) :: Nh, nz
+    character(len=*), intent(in) :: co2contra_3d_oper_name, horizontal_staggering, &
+                                    vertical_staggering
+    !locals:
+    integer(kind=4), parameter  :: ex_halo_width = 8
+    type(grid_field_t)          :: u_cov,  v_cov,  w_cov,  &
+                                   u_test, v_test, w_test, &
+                                   u_true, v_true, w_true
+
+    type(domain_t)        :: domain
+    type(config_domain_t) :: config_domain
+
+    class(co2contra_3d_operator_t), allocatable :: co2contra_3d_op
+    type(grad3d_test_out_t)   :: vec_generator
+    real(kind=8), parameter :: h_top = 30e3, T0 = 300._8
+
+    config_domain%N  = nh
+    config_domain%Nz = nz
+    config_domain%staggering_type     = horizontal_staggering
+    config_domain%vertical_staggering = vertical_staggering
+    config_domain%metric_type         = "shallow_atmosphere_metric"
+    config_domain%topology_type       = "cube"
+    config_domain%h_top = h_top
+    call config_domain%config_metric%set_defaults()
+    config_domain%config_metric%vertical_scale = h_top
+    config_domain%config_metric%scale = Earth_radii
+
+    call create_domain(domain, config_domain)
+
+    call create_grid_field(u_cov, ex_halo_width, 0, domain%mesh_u)
+    call create_grid_field(v_cov, ex_halo_width, 0, domain%mesh_v)
+    call create_grid_field(w_cov, ex_halo_width, 0, domain%mesh_w)
+
+    call create_grid_field(u_test, ex_halo_width, 0, domain%mesh_u)
+    call create_grid_field(v_test, ex_halo_width, 0, domain%mesh_v)
+    call create_grid_field(w_test, ex_halo_width, 0, domain%mesh_w)
+
+    call create_grid_field(u_true, ex_halo_width, 0, domain%mesh_u)
+    call create_grid_field(v_true, ex_halo_width, 0, domain%mesh_v)
+    call create_grid_field(w_true, ex_halo_width, 0, domain%mesh_w)
+
+    vec_generator = grad3d_test_out_t(h_top=h_top,T0=T0)
+    call vec_generator%get_vector_field(u_cov, v_cov, w_cov,                          &
+                                         domain%mesh_u, domain%mesh_v, domain%mesh_w, &
+                                         0,"covariant")
+    call vec_generator%get_vector_field(u_true, v_true, w_true,                      &
+                                        domain%mesh_u, domain%mesh_v, domain%mesh_w, &
+                                        0,"contravariant")
+
+    call create_co2contra_3d_operator(co2contra_3d_op, domain, co2contra_3d_oper_name)
+
+    call co2contra_3d_op%transform(u_test, v_test, w_test, &
+                                   u_cov,  v_cov,  w_cov, domain)
+
+    allocate(errs%keys(2), errs%values(2))
+    errs%keys(1)%str = "l_inf"
+    errs%keys(2)%str = "l2"
+
+    call u_test%update(-1.0_8, u_true, domain%mesh_u)
+    call v_test%update(-1.0_8, v_true, domain%mesh_v)
+    call w_test%update(-1.0_8, w_true, domain%mesh_w)
+
+    errs%values(1) = u_test%maxabs(domain%mesh_u, domain%parcomm) + &
+                     v_test%maxabs(domain%mesh_v, domain%parcomm) + &
+                     w_test%maxabs(domain%mesh_w, domain%parcomm)
+
+    errs%values(2) = l2norm(u_test, domain%mesh_u, domain%parcomm) + &
+                     l2norm(v_test, domain%mesh_v, domain%parcomm) + &
+                     l2norm(w_test, domain%mesh_w, domain%parcomm)
+
+end function test_co2contra_3d
 function test_grad_perp(N, grad_perp_oper_name, staggering) result(errs)
 
     use test_fields_mod,    only : set_perp_vector_test_field, set_scalar_test_field, &
