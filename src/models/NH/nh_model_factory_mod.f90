@@ -1,13 +1,14 @@
 module nh_model_factory_mod
 
-use nh_model_mod,           only : nh_model_t
-use config_nh_model_mod,    only : config_nh_model_t
-use domain_mod,             only : domain_t
-use domain_factory_mod,     only : create_domain
-use stvec_nh_factory_mod,   only : create_stvec_nh
-use timescheme_factory_mod, only : create_timescheme
-use nh_testcases_mod,       only : get_initial_conditions
+use nh_model_mod,                  only : nh_model_t
+use config_nh_model_mod,           only : config_nh_model_t
+use domain_mod,                    only : domain_t
+use domain_factory_mod,            only : create_domain
+use stvec_nh_factory_mod,          only : create_stvec_nh
+use timescheme_factory_mod,        only : create_timescheme
+use nh_testcases_mod,              only : get_initial_conditions
 use postprocessing_nh_factory_mod, only : create_nh_postprocessing
+use nh_operator_factory_mod,       only : create_nh_operator
 
 implicit none
 
@@ -21,14 +22,14 @@ subroutine create_nh_model(nh_model, config)
     class(nh_model_t),       intent(out)   :: nh_model
     type(config_nh_model_t), intent(in)    :: config
 
-    print *, "Operator type: still not initialized", config%operator_type
-
     call create_domain(nh_model%domain, config%config_domain)
 
     call create_stvec_nh(nh_model%stvec, nh_model%domain, halo_width_hor, halo_width_ver)
     call get_initial_conditions(nh_model%stvec, nh_model%domain, config%testcase_name)
 
     call create_timescheme(nh_model%timescheme, nh_model%stvec, config%timescheme_name)
+
+    call create_nh_operator(nh_model%operator, config%config_operator, nh_model%domain)
 
     nh_model%simulation_time = config%simulation_time
     nh_model%dt              = config%dt

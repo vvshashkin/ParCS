@@ -1650,7 +1650,8 @@ $(DOBJ)nh_model_config_mod.o: src/models/NH/nh_model_config_mod.f90 \
 	$(DOBJ)config_mod.o \
 	$(DOBJ)config_domain_mod.o \
 	$(DOBJ)config_postnh_mod.o \
-	$(DOBJ)const_mod.o
+	$(DOBJ)const_mod.o \
+	$(DOBJ)config_nh_operator_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -1662,7 +1663,8 @@ $(DOBJ)nh_model_factory_mod.o: src/models/NH/nh_model_factory_mod.f90 \
 	$(DOBJ)stvec_nh_factory_mod.o \
 	$(DOBJ)timescheme_factory_mod.o \
 	$(DOBJ)nh_testcases_mod.o \
-	$(DOBJ)postprocessing_nh_factory_mod.o
+	$(DOBJ)postprocessing_nh_factory_mod.o \
+	$(DOBJ)nh_operator_factory_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -1670,6 +1672,8 @@ $(DOBJ)nh_model_mod.o: src/models/NH/nh_model_mod.f90 \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)timescheme_mod.o \
 	$(DOBJ)stvec_mod.o \
+	$(DOBJ)operator_mod.o \
+	$(DOBJ)stvec_nh_mod.o \
 	$(DOBJ)abstract_postprocessing_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -1717,6 +1721,47 @@ $(DOBJ)postprocessing_nh_factory_mod.o: src/models/NH/postprocessing/postprocess
 	$(DOBJ)config_postnh_mod.o \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)outputer_factory_mod.o \
+	$(DOBJ)parcomm_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)nh_operator_factory_mod.o: src/models/NH/operators/nh_operator_factory_mod.f90 \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)operator_mod.o \
+	$(DOBJ)config_mod.o \
+	$(DOBJ)config_nh_operator_mod.o \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)ptheta_linear_nh_oper_mod.o \
+	$(DOBJ)grad_3d_factory_mod.o \
+	$(DOBJ)div_3d_factory_mod.o \
+	$(DOBJ)co2contra_factory_mod.o \
+	$(DOBJ)interpolator_w2uv_factory_mod.o \
+	$(DOBJ)vertical_operator_factory_mod.o \
+	$(DOBJ)grid_field_factory_mod.o \
+	$(DOBJ)vertical_test_field_mod.o \
+	$(DOBJ)const_n_profile_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)ptheta_linear_nh_oper_mod.o: src/models/NH/operators/Ptheta_linear_nh_oper_mod.f90 \
+	$(DOBJ)operator_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)abstract_grad_3d_mod.o \
+	$(DOBJ)abstract_div_3d_mod.o \
+	$(DOBJ)abstract_co2contra_mod.o \
+	$(DOBJ)abstract_interpolators3d_mod.o \
+	$(DOBJ)abstract_vertical_operator_mod.o \
+	$(DOBJ)stvec_mod.o \
+	$(DOBJ)stvec_nh_mod.o \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)const_mod.o \
+	$(DOBJ)mesh_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)config_nh_operator_mod.o: src/models/NH/operators/config_nh_operator_mod.f90 \
+	$(DOBJ)config_mod.o \
 	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
