@@ -25,6 +25,8 @@ subroutine create_stvec_nh(stvec, domain, halo_width_xy, halo_width_z)
     call create_grid_field(stvec_nh%theta, halo_width_xy, halo_width_z, domain%mesh_w)
     call create_grid_field(stvec_nh%P, halo_width_xy, halo_width_z, domain%mesh_P)
 
+    stvec_nh%model_time = 0.0_8
+
     call move_alloc(stvec_nh, stvec)
 
 end subroutine create_stvec_nh

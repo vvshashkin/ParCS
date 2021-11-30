@@ -72,6 +72,8 @@ subroutine apply(this, vout, vin, domain)
         call this%div3%assign_prod(-rgaz/Cv,this%P0,this%div3,domain%mesh_p)
         call vout%P%update(1.0_8,this%div3,domain%mesh_p)
 
+        vout%model_time = 1.0_8 != dt / dt
+
         call apply_0boundary_conds(vout%eta_dot,domain%mesh_w)
     class default
         call parcomm_global%abort("Ptheta_linear_nh_oper_t, vin type error")

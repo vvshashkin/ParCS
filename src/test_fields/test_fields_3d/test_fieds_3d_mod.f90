@@ -19,6 +19,10 @@ contains
     procedure(generate_vector_component_tile), deferred :: get_vector_component_tile
 end type vector_field3d_t
 
+type, abstract, extends(vector_field3d_t) :: non_stationary_vector_field3d_t
+    real(kind=8) :: t = 0.0_8
+end type non_stationary_vector_field3d_t
+
 abstract interface
     subroutine generate_scalar_field_tile(this,f,mesh,halo_width)
         import scalar_field3d_t, tile_field_t, tile_mesh_t

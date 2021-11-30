@@ -560,6 +560,13 @@ $(DOBJ)test_fieds_3d_mod.o: src/test_fields/test_fields_3d/test_fieds_3d_mod.f90
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)solid_rotation_wind_field_mod.o: src/test_fields/test_fields_3d/solid_rotation_wind_field_mod.f90 \
+	$(DOBJ)test_fieds_3d_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)grid_field_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)vertical_test_field_mod.o: src/test_fields/test_fields_3d/vertical_test_field_mod.f90 \
 	$(DOBJ)test_fieds_3d_mod.o \
 	$(DOBJ)abstract_vertical_profile_mod.o \
@@ -706,6 +713,39 @@ $(DOBJ)config_domain_mod.o: src/domain/config_domain_mod.f90 \
 	$(DOBJ)config_mod.o \
 	$(DOBJ)config_metric_mod.o \
 	$(DOBJ)parcomm_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)abstract_scalar_advection_mod.o: src/differential_operators/3d/advection/abstract_scalar_advection_mod.f90 \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)domain_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)scalar_advection_factory_mod.o: src/differential_operators/3d/advection/scalar_advection_factory_mod.f90 \
+	$(DOBJ)abstract_scalar_advection_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)v_nabla_mod.o \
+	$(DOBJ)adv_z_factory_mod.o \
+	$(DOBJ)halo_factory_mod.o \
+	$(DOBJ)advection_p3d_mod.o \
+	$(DOBJ)interpolator_v2h_factory_mod.o \
+	$(DOBJ)vertical_operator_factory_mod.o \
+	$(DOBJ)grid_field_factory_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)advection_p3d_mod.o: src/differential_operators/3d/advection/advection_p3d_mod.f90 \
+	$(DOBJ)abstract_scalar_advection_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)halo_mod.o \
+	$(DOBJ)interpolator_v2h_mod.o \
+	$(DOBJ)sbp_vertical_operator_mod.o \
+	$(DOBJ)abstract_v_nabla_mod.o \
+	$(DOBJ)abstract_adv_z_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -1445,9 +1485,29 @@ $(DOBJ)sbp_vertical_operator_mod.o: src/differential_operators/vertical/sbp_vert
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)adv_z_factory_mod.o: src/differential_operators/vertical/adv_z_factory_mod.f90 \
+	$(DOBJ)abstract_adv_z_mod.o \
+	$(DOBJ)adv_z_mod.o \
+	$(DOBJ)parcomm_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)adv_z_mod.o: src/differential_operators/vertical/adv_z_mod.f90 \
+	$(DOBJ)abstract_adv_z_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)mesh_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)abstract_vertical_operator_mod.o: src/differential_operators/vertical/abstract_vertical_operator_mod.f90 \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)grid_field_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)abstract_adv_z_mod.o: src/differential_operators/vertical/abstract_adv_z_mod.f90 \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)mesh_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -1739,7 +1799,11 @@ $(DOBJ)nh_operator_factory_mod.o: src/models/NH/operators/nh_operator_factory_mo
 	$(DOBJ)vertical_operator_factory_mod.o \
 	$(DOBJ)grid_field_factory_mod.o \
 	$(DOBJ)vertical_test_field_mod.o \
-	$(DOBJ)const_n_profile_mod.o
+	$(DOBJ)const_n_profile_mod.o \
+	$(DOBJ)advection3d_oper_mod.o \
+	$(DOBJ)scalar_advection_factory_mod.o \
+	$(DOBJ)solid_rotation_wind_field_mod.o \
+	$(DOBJ)const_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -1760,6 +1824,18 @@ $(DOBJ)ptheta_linear_nh_oper_mod.o: src/models/NH/operators/Ptheta_linear_nh_ope
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)advection3d_oper_mod.o: src/models/NH/operators/advection3d_oper_mod.f90 \
+	$(DOBJ)operator_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)stvec_mod.o \
+	$(DOBJ)stvec_nh_mod.o \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)abstract_scalar_advection_mod.o \
+	$(DOBJ)test_fieds_3d_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)config_nh_operator_mod.o: src/models/NH/operators/config_nh_operator_mod.f90 \
 	$(DOBJ)config_mod.o \
 	$(DOBJ)parcomm_mod.o
@@ -1770,7 +1846,20 @@ $(DOBJ)nh_testcases_mod.o: src/models/NH/testcases/nh_testcases_mod.f90 \
 	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)stvec_mod.o \
-	$(DOBJ)gw_testcase_mod.o
+	$(DOBJ)gw_testcase_mod.o \
+	$(DOBJ)advection3d_testcases_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)advection3d_testcases_mod.o: src/models/NH/testcases/advection3d_testcases_mod.f90 \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)stvec_mod.o \
+	$(DOBJ)stvec_nh_mod.o \
+	$(DOBJ)test_fieds_3d_mod.o \
+	$(DOBJ)const_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)mesh_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

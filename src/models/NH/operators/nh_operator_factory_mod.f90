@@ -3,7 +3,7 @@ module nh_operator_factory_mod
 use domain_mod,             only : domain_t
 use operator_mod,           only : operator_t
 use config_mod,             only : config_t
-use config_nh_operator_mod, only : config_Ptheta_linear_t
+use config_nh_operator_mod, only : config_Ptheta_linear_t, config_advection3d_t
 use parcomm_mod,            only : parcomm_global
 
 implicit none
@@ -18,6 +18,8 @@ subroutine create_nh_operator(nh_operator, config, domain)
     select type(config)
     class is (config_Ptheta_linear_t)
         call create_Ptheta_linear_nh_operator(nh_operator, config, domain)
+    class is (config_advection3d_t)
+        call create_advection3d_operator(nh_operator, config, domain)
     class default
         call parcomm_global%abort("unknown operator config type in create_nh_operator")
     end select
@@ -108,5 +110,41 @@ subroutine create_Ptheta_linear_nh_operator(nh_operator,config,domain)
     call move_alloc(operator, nh_operator)
 
 end subroutine create_Ptheta_linear_nh_operator
+
+subroutine create_advection3d_operator(nh_operator,config,domain)
+
+    use advection3d_oper_mod,          only : advection3d_operator_t
+    use scalar_advection_factory_mod,  only : create_scalar_advection3d_operator
+    use grid_field_factory_mod,        only : create_grid_field
+    use solid_rotation_wind_field_mod, only : solid_rotation_wind_field_t
+    use const_mod, only : pi, Earth_radii, Day24h_sec
+
+    integer(kind=4), parameter :: halo_width = 8
+
+    class(operator_t), allocatable,  intent(out) :: nh_operator
+    class(config_advection3d_t),     intent(in)  :: config
+    type(domain_t),                  intent(in)  :: domain
+
+    type(advection3d_operator_t), allocatable :: operator
+
+    allocate(operator)
+    call create_scalar_advection3d_operator(operator%p_adv_oper,config%p_advection_oper_name, &
+                                            config%p_hor_advection_oper_name,                 &
+                                            config%p_z_advection_oper_name,domain)
+    call create_grid_field(operator%u_adv,halo_width,0,domain%mesh_u)
+    call create_grid_field(operator%v_adv,halo_width,0,domain%mesh_v)
+    call create_grid_field(operator%eta_dot_adv,halo_width,0,domain%mesh_w)
+
+    select case(config%wind_field)
+    case("solid_rotation")
+        operator%wind_generator = solid_rotation_wind_field_t(w_max = 0.01_8, &
+                                        u0 = 2.0_8*pi*Earth_radii / (12.0_8*Day24h_sec))
+    case default
+        call parcomm_global%abort("create_advection3d_operator, unknown wind_field: "//&
+                                   config%wind_field)
+    end select
+
+    call move_alloc(operator,nh_operator)
+end subroutine create_advection3d_operator
 
 end module nh_operator_factory_mod

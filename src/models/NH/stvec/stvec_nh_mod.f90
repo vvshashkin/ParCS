@@ -9,6 +9,7 @@ implicit none
 
 type, extends(stvec_t) :: stvec_nh_t
     type(grid_field_t) :: u, v, eta_dot, theta, P
+    real(kind=8)       :: model_time
 contains
     procedure, public :: create_similar
     procedure, public :: assign_s1v1s2v2
@@ -30,6 +31,7 @@ subroutine create_similar(this, destination)
         destination%eta_dot = this%eta_dot%create_similar()
         destination%theta = this%theta%create_similar()
         destination%P = this%P%create_similar()
+        destination%model_time = 0.0_8
     class default
         call parcomm_global%abort("stvec_nh_t%create_similar: types error")
     end select
@@ -53,7 +55,7 @@ subroutine assign_s1v1s2v2(this, scalar1, v1, scalar2, v2, domain)
             call this%eta_dot%assign(scalar1, v1%eta_dot, scalar2, v2%eta_dot, domain%mesh_w)
             call this%theta%assign(scalar1, v1%theta, scalar2, v2%theta, domain%mesh_w)
             call this%P%assign(scalar1, v1%P, scalar2, v2%P, domain%mesh_p)
-
+            this%model_time = scalar1*v1%model_time+scalar2*v2%model_time
     class default
         call parcomm_global%abort("stvec_nh_t%assign_s1v1s2v2: types error")
     end select
@@ -80,6 +82,7 @@ subroutine update_s1v1s2v2(this, scalar1, v1, scalar2, v2, domain)
             call this%eta_dot%update(scalar1, v1%eta_dot, scalar2, v2%eta_dot, domain%mesh_w)
             call this%theta%update(scalar1, v1%theta, scalar2, v2%theta, domain%mesh_w)
             call this%P%update(scalar1, v1%P, scalar2, v2%P, domain%mesh_p)
+            this%model_time = this%model_time+scalar1*v1%model_time+scalar2*v2%model_time
     class default
         call parcomm_global%abort("stvec_nh_t%update_s1v1s2v2: types error")
     end select
@@ -104,6 +107,7 @@ subroutine update_s1v1(this, scalar1, v1, domain)
         call this%eta_dot%update(scalar1, v1%eta_dot, domain%mesh_w)
         call this%theta%update(scalar1, v1%theta, domain%mesh_w)
         call this%P%update(scalar1, v1%P, domain%mesh_p)
+        this%model_time = this%model_time+scalar1*v1%model_time
     class default
         call parcomm_global%abort("stvec_nh_t%update_s1v1: types error")
     end select

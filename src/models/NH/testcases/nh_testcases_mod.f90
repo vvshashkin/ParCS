@@ -4,7 +4,8 @@ use parcomm_mod,  only : parcomm_global
 use domain_mod,   only : domain_t
 use stvec_mod,    only : stvec_t
 
-use NH_GW_testcase_mod, only : get_GW_initial_conditions 
+use NH_GW_testcase_mod,        only : get_GW_initial_conditions
+use advection3d_testcases_mod, only : get_advection3d_initial_conditions
 
 implicit none
 
@@ -18,6 +19,8 @@ subroutine get_initial_conditions(stvec, domain, testcase_name)
     select case(testcase_name)
     case("GW", "GW_linear")
         call get_GW_initial_conditions(stvec,domain,testcase_name)
+    case("advection3d_solid_rotation")
+        call get_advection3d_initial_conditions(stvec,domain,testcase_name)
     case default
         call parcomm_global%abort("unknown NH testcases name: "//testcase_name)
     end select

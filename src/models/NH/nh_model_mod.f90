@@ -51,7 +51,9 @@ subroutine run(this)
         end if
         select type(stvec=>this%stvec)
         type is (stvec_nh_t)
-            print *, istep, "w maxabs", stvec%eta_dot%maxabs(this%domain%mesh_w,this%domain%parcomm)
+            print *, istep, "w maxabs", stvec%eta_dot%maxabs(this%domain%mesh_w,this%domain%parcomm) &
+                          , "T maxabs", stvec%theta%maxabs(this%domain%mesh_w,this%domain%parcomm)   &
+                          , "P maxabs", stvec%P%maxabs(this%domain%mesh_p,this%domain%parcomm)
         class default
             print *, istep, "***"
         end select
