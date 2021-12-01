@@ -563,7 +563,8 @@ $(DOBJ)test_fieds_3d_mod.o: src/test_fields/test_fields_3d/test_fieds_3d_mod.f90
 $(DOBJ)solid_rotation_wind_field_mod.o: src/test_fields/test_fields_3d/solid_rotation_wind_field_mod.f90 \
 	$(DOBJ)test_fieds_3d_mod.o \
 	$(DOBJ)mesh_mod.o \
-	$(DOBJ)grid_field_mod.o
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)const_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -746,6 +747,55 @@ $(DOBJ)advection_p3d_mod.o: src/differential_operators/3d/advection/advection_p3
 	$(DOBJ)sbp_vertical_operator_mod.o \
 	$(DOBJ)abstract_v_nabla_mod.o \
 	$(DOBJ)abstract_adv_z_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)co2contra_3d_factory_mod.o: src/differential_operators/3d/co2contra/co2contra_3d_factory_mod.f90 \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)abstract_co2contra_3d_mod.o \
+	$(DOBJ)co2contra_3d_colocated_mod.o \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)co2contra_3d_cgrid_mod.o \
+	$(DOBJ)vertical_operator_factory_mod.o \
+	$(DOBJ)interpolator_h2v_factory_mod.o \
+	$(DOBJ)interpolator_v2h_factory_mod.o \
+	$(DOBJ)grid_field_factory_mod.o \
+	$(DOBJ)co2contra_3d_h_colocated_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)co2contra_3d_h_colocated_mod.o: src/differential_operators/3d/co2contra/co2contra_3d_h_colocated_mod.f90 \
+	$(DOBJ)abstract_co2contra_3d_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)abstract_vertical_operator_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)co2contra_3d_cgrid_mod.o: src/differential_operators/3d/co2contra/co2contra_3d_Cgrid_mod.f90 \
+	$(DOBJ)abstract_co2contra_3d_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)abstract_vertical_operator_mod.o \
+	$(DOBJ)interpolator_h2v_mod.o \
+	$(DOBJ)interpolator_v2h_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)co2contra_3d_colocated_mod.o: src/differential_operators/3d/co2contra/co2contra_3d_colocated_mod.f90 \
+	$(DOBJ)abstract_co2contra_3d_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)mesh_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)abstract_co2contra_3d_mod.o: src/differential_operators/3d/co2contra/abstract_co2contra_3d_mod.f90 \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -1476,6 +1526,14 @@ $(DOBJ)massflux_cgrid_mod.o: src/differential_operators/horizontal/massflux/mass
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)identity_vertical_operator_mod.o: src/differential_operators/vertical/identity_vertical_operator_mod.f90 \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)abstract_vertical_operator_mod.o \
+	$(DOBJ)parcomm_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)sbp_vertical_operator_mod.o: src/differential_operators/vertical/sbp_vertical_operator_mod.f90 \
 	$(DOBJ)abstract_vertical_operator_mod.o \
 	$(DOBJ)domain_mod.o \
@@ -1514,6 +1572,7 @@ $(DOBJ)abstract_adv_z_mod.o: src/differential_operators/vertical/abstract_adv_z_
 $(DOBJ)vertical_operator_factory_mod.o: src/differential_operators/vertical/vertical_operator_factory_mod.f90 \
 	$(DOBJ)abstract_vertical_operator_mod.o \
 	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)identity_vertical_operator_mod.o \
 	$(DOBJ)sbp_vertical_operator_mod.o \
 	$(DOBJ)sbp_factory_mod.o
 	@echo $(COTEXT)
@@ -2300,6 +2359,11 @@ $(DOBJ)test_diffops_mod.o: src/test/test_diff_ops/test_diffops_mod.f90 \
 	$(DOBJ)abstract_grad_mod.o \
 	$(DOBJ)abstract_co2contra_mod.o \
 	$(DOBJ)co2contra_factory_mod.o \
+	$(DOBJ)abstract_co2contra_3d_mod.o \
+	$(DOBJ)co2contra_3d_factory_mod.o \
+	$(DOBJ)config_domain_mod.o \
+	$(DOBJ)const_mod.o \
+	$(DOBJ)grad3d_test_field_mod.o \
 	$(DOBJ)grad_perp_factory_mod.o \
 	$(DOBJ)abstract_grad_perp_mod.o \
 	$(DOBJ)curl_factory_mod.o \
@@ -2312,12 +2376,9 @@ $(DOBJ)test_diffops_mod.o: src/test/test_diff_ops/test_diffops_mod.f90 \
 	$(DOBJ)abstract_coriolis_mod.o \
 	$(DOBJ)abstract_vector_advection_mod.o \
 	$(DOBJ)vector_advection_factory_mod.o \
-	$(DOBJ)const_mod.o \
 	$(DOBJ)grad_3d_factory_mod.o \
 	$(DOBJ)abstract_grad_3d_mod.o \
-	$(DOBJ)config_domain_mod.o \
 	$(DOBJ)test_fieds_3d_mod.o \
-	$(DOBJ)grad3d_test_field_mod.o \
 	$(DOBJ)div_3d_factory_mod.o \
 	$(DOBJ)abstract_div_3d_mod.o \
 	$(DOBJ)div3d_test_field_mod.o \

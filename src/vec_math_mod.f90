@@ -257,7 +257,7 @@ subroutine multiply_by_J_self_tile(f, mesh)
 
 end subroutine multiply_by_J_self_tile
 
-subroutine devide_by_J_self(f, mesh)
+subroutine divide_by_J_self(f, mesh)
 
     type(grid_field_t), intent(inout) :: f
     type(mesh_t),       intent(in)    :: mesh
@@ -265,12 +265,12 @@ subroutine devide_by_J_self(f, mesh)
     integer(kind=4) :: t
 
     do t = mesh%ts, mesh%te
-        call devide_by_J_tile_self(f%tile(t), mesh%tile(t))
+        call divide_by_J_tile_self(f%tile(t), mesh%tile(t))
     end do
 
-end subroutine devide_by_J_self
+end subroutine divide_by_J_self
 
-subroutine devide_by_J_tile_self(f, mesh)
+subroutine divide_by_J_tile_self(f, mesh)
 
     type(tile_field_t), intent(inout) :: f
     type(tile_mesh_t),  intent(in)    :: mesh
@@ -285,5 +285,5 @@ subroutine devide_by_J_tile_self(f, mesh)
         end do
     end do
 
-end subroutine devide_by_J_tile_self
+end subroutine divide_by_J_tile_self
 end module vec_math_mod
