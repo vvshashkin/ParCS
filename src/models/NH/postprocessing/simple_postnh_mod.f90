@@ -12,6 +12,7 @@ implicit none
 type, extends(postprocessing_t) :: simple_postnh_t
     integer(kind=4) :: Nlon, Nlat
     class(outputer_t), allocatable :: outputer_theta
+    class(outputer_t), allocatable :: outputer_P
 contains
     procedure :: write_fields
 end type simple_postnh_t
@@ -26,7 +27,7 @@ subroutine write_fields(this, irec, stvec, domain)
     select type(stvec)
     class is (stvec_nh_t)
         call this%outputer_theta%write(stvec%theta, domain, 'theta.dat', irec)
-        call this%outputer_theta%write(stvec%P, domain, 'P.dat', irec)
+        call this%outputer_P%write(stvec%P, domain, 'P.dat', irec)
     class default
         call parcomm_global%abort("unsupported state vector type in simple_postnh_t%write")
     end select

@@ -17,7 +17,9 @@ subroutine create_halo_procedure(halo,domain,halo_width,halo_type)
     if(halo_type=="A_default") then
         call create_A_default_halo_procedure(halo,domain,halo_width)
     else if(halo_type == "ECS_O") then
-        call create_ecs_o_scalar_halo(halo,domain,halo_width)
+        call create_ecs_o_scalar_halo(halo,domain,halo_width,is_z_interfaces=.false.)
+    else if(halo_type == "ECS_Oz") then
+        call create_ecs_o_scalar_halo(halo,domain,halo_width,is_z_interfaces=.true.)
     else if(halo_type == "Ah_scalar_sync") then
         call create_Ah_scalar_sync_halo_procedure(halo,domain,halo_width)
     else

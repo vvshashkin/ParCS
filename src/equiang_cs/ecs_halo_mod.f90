@@ -39,6 +39,7 @@ type, extends(halo_t) :: ecs_halo_t
     integer(kind=4)                    :: ts, te
     class(exchange_t),     allocatable :: exch_halo
     type(ecs_tile_halo_t), allocatable :: tile(:)
+    logical :: is_z_interfaces
 
     contains
 
@@ -81,7 +82,11 @@ subroutine get_ecs_halo(this,f,domain,halo_width)
     call this%exch_halo%do(f, domain%parcomm)
 
     do t=this%ts,this%te
-        call this%tile(t)%interp(f%tile(t),domain%partition%tile(t),halo_width)
+        if(this%is_z_interfaces) then
+            call this%tile(t)%interp(f%tile(t),domain%partition%tile_z(t),halo_width)
+        else
+            call this%tile(t)%interp(f%tile(t),domain%partition%tile(t),halo_width)
+        end if
     end do
 end subroutine get_ecs_halo
 

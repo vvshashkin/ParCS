@@ -8,6 +8,7 @@ use tile_mod,      only : tile_t
 implicit none
 
 contains
+
 function create_symm_halo_exchange_A(partition, parcomm, topology, halo_width, halo_type) result(exchange)
 
     use exchange_halo_mod, only : exchange_2D_halo_t
@@ -17,6 +18,40 @@ function create_symm_halo_exchange_A(partition, parcomm, topology, halo_width, h
     integer(kind=4),   intent(in) :: halo_width
     character(*),      intent(in) :: halo_type
     type(parcomm_t),   intent(in) :: parcomm
+
+    type(exchange_2D_halo_t) :: exchange
+
+    exchange = create_symm_halo_exchange_AAz(partition, parcomm, topology, &
+                                             halo_width, halo_type,is_z_interfaces=.false.)
+end function create_symm_halo_exchange_A
+
+function create_symm_halo_exchange_Az(partition, parcomm, topology, halo_width, halo_type) result(exchange)
+
+    use exchange_halo_mod, only : exchange_2D_halo_t
+
+    type(partition_t), target, intent(in)    :: partition
+    class(topology_t), intent(in) :: topology
+    integer(kind=4),   intent(in) :: halo_width
+    character(*),      intent(in) :: halo_type
+    type(parcomm_t),   intent(in) :: parcomm
+
+    type(exchange_2D_halo_t) :: exchange
+
+    exchange = create_symm_halo_exchange_AAz(partition, parcomm, topology, &
+                                             halo_width, halo_type,is_z_interfaces=.true.)
+end function create_symm_halo_exchange_Az
+
+function create_symm_halo_exchange_AAz(partition, parcomm, topology, halo_width, &
+                                       halo_type, is_z_interfaces) result(exchange)
+
+    use exchange_halo_mod, only : exchange_2D_halo_t
+
+    type(partition_t), target, intent(in)    :: partition
+    class(topology_t), intent(in) :: topology
+    integer(kind=4),   intent(in) :: halo_width
+    character(*),      intent(in) :: halo_type
+    type(parcomm_t),   intent(in) :: parcomm
+    logical,           intent(in) :: is_z_interfaces
 
     type(exchange_2D_halo_t) :: exchange
 
@@ -54,14 +89,23 @@ function create_symm_halo_exchange_A(partition, parcomm, topology, halo_width, h
 
         if (partition%proc_map(local_ind) /= parcomm%myid) cycle
 
-        local_tile => partition%tile(local_ind)
+        if(.not. is_z_interfaces) then
+            local_tile => partition%tile(local_ind)
+        else
+            local_tile => partition%tile_z(local_ind)
+        end if
+
         local_panel = partition%panel_map(local_ind)
 
         do remote_ind = 1, partition%num_panels*partition%num_tiles
 
             if (remote_ind == local_ind) cycle
 
-            remote_tile => partition%tile(remote_ind)
+            if(.not. is_z_interfaces) then
+                remote_tile => partition%tile(remote_ind)
+            else
+                remote_tile => partition%tile_z(remote_ind)
+            end if
             remote_panel = partition%panel_map(remote_ind)
 
             call topology%transform_tile_coords(remote_panel, remote_tile, &
@@ -125,7 +169,7 @@ function create_symm_halo_exchange_A(partition, parcomm, topology, halo_width, h
         call exchange%send_buff(ind)%init(2*send_pts_num(ind))
     end do
 
-end function create_symm_halo_exchange_A
+end function create_symm_halo_exchange_AAz
 
 function create_symm_halo_exchange_Ah(partition, parcomm, topology, halo_width, halo_type) result(exchange)
 

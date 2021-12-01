@@ -6,7 +6,7 @@ implicit none
 
 type, public :: partition_t
     !array of partition tiles
-    type(tiles_t) :: tiles_o, tiles_x, tiles_y, tiles_xy
+    type(tiles_t) :: tiles_o, tiles_x, tiles_y, tiles_xy, tiles_z, tiles_xyz
     type(tiles_t) :: tiles_u, tiles_v, tiles_p
     type(tile_t),    allocatable :: tile_o(:), tile_x(:), tile_y(:), tile_xy(:)
     type(tile_t),    allocatable :: tile_z(:), tile_xyz(:)
@@ -167,6 +167,16 @@ subroutine init(this, Nh, Nz, num_tiles, myid, Np, staggering_type, strategy)
 
         if(this%tiles_xy%ie(t) == nh) this%tiles_xy%ie(t) = this%nh+1
         if(this%tiles_xy%je(t) == nh) this%tiles_xy%je(t) = this%nh+1
+    end do
+
+    this%tiles_z      = this%tiles_o
+    this%tiles_xyz    = this%tiles_xy
+    this%tiles_z%Nk   = this%Nz+1
+    this%tiles_xyz%Nk = this%Nz+1
+
+    do t=1, this%num_panels*this%num_tiles
+        if(this%tiles_z%ke(t) == this%Nz) this%tiles_z%ke(t) = this%Nz+1
+        if(this%tiles_xyz%ke(t) == this%Nz) this%tiles_xyz%ke(t) = this%Nz+1
     end do
 
     if (staggering_type == 'A') then
@@ -345,8 +355,12 @@ subroutine get_points_type_tile(this, points_type, tile)
         tile = this%tile_x
     case('y')
         tile = this%tile_y
+    case('z')
+        tile = this%tile_z
     case('xy')
         tile = this%tile_xy
+    case('xyz')
+        tile = this%tile_xyz
     case('p')
         tile = this%tile_p
     case('u')

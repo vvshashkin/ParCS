@@ -43,7 +43,8 @@ subroutine create_master_paneled_outputer(outputer, points_type, domain, master_
 
 end subroutine create_master_paneled_outputer
 
-subroutine create_latlon_outputer(outputer, Nlat, Nlon, scalar_grid_type, domain, master_id)
+subroutine create_latlon_outputer(outputer, Nlat, Nlon, scalar_grid_type, domain, &
+                                  master_id, is_z_interfaces)
 
     use latlon_outputer_mod,         only : latlon_outputer_t
     use grid_field_factory_mod,      only : create_grid_field_global, &
@@ -60,14 +61,19 @@ subroutine create_latlon_outputer(outputer, Nlat, Nlon, scalar_grid_type, domain
     character(len=*),               intent(in)  :: scalar_grid_type
     type(domain_t),                 intent(in)  :: domain
     integer(kind=4),  optional,     intent(in)  :: master_id
+    logical,          optional,     intent(in)  :: is_z_interfaces
 
     type(latlon_outputer_t), allocatable :: latlon_outputer
     integer(kind=4) :: i, master_id_loc
     character(len=:), allocatable :: points_type
     type(parcomm_t) :: master_parcomm
+    logical :: is_z_interfaces_loc
 
     master_id_loc = 0
     if (present(master_id)) master_id_loc = master_id
+
+    is_z_interfaces_loc = .false.
+    if(present(is_z_interfaces)) is_z_interfaces_loc = is_z_interfaces
 
     allocate(latlon_outputer)
 
@@ -96,14 +102,26 @@ subroutine create_latlon_outputer(outputer, Nlat, Nlon, scalar_grid_type, domain
         allocate(latlon_outputer%buffer(Nlon,Nlat,1))
     end if
 
-    if(scalar_grid_type == 'A') then
-        latlon_outputer%tiles = domain%partition%tiles_o
-        points_type = "o"
-    else if(scalar_grid_type == 'Ah') then
-        latlon_outputer%tiles = domain%partition%tiles_xy
-        points_type = "xy"
+    if(is_z_interfaces_loc) then
+        if(scalar_grid_type == 'A') then
+            latlon_outputer%tiles = domain%partition%tiles_z
+            points_type = "z"
+        else if(scalar_grid_type == 'Ah') then
+            latlon_outputer%tiles = domain%partition%tiles_xyz
+            points_type = "xyz"
+        else
+            call parcomm_global%abort("latlon outputer supports only A and Ah scalar grids")
+        end if
     else
-        call parcomm_global%abort("latlon outputer supports only A and Ah scalar grids")
+        if(scalar_grid_type == 'A') then
+            latlon_outputer%tiles = domain%partition%tiles_o
+            points_type = "o"
+        else if(scalar_grid_type == 'Ah') then
+            latlon_outputer%tiles = domain%partition%tiles_xy
+            points_type = "xy"
+        else
+            call parcomm_global%abort("latlon outputer supports only A and Ah scalar grids")
+        end if
     end if
 
     if (domain%parcomm%myid == master_id_loc) then

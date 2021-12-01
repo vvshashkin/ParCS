@@ -26,12 +26,19 @@ subroutine create_nh_postprocessing(post,config,domain)
     select case(config%outputer_name)
     case("latlon")
         if(domain%horizontal_staggering == "C") then
-            call create_latlon_outputer(post_loc%outputer_theta,config%Nlat,config%Nlon,"A",domain)
+            call create_latlon_outputer(post_loc%outputer_theta,config%Nlat,config%Nlon, &
+                                        "A",domain,is_z_interfaces = .true.)
+            call create_latlon_outputer(post_loc%outputer_P,config%Nlat,config%Nlon, &
+                                        "A",domain,is_z_interfaces = .false.)
         else if(domain%horizontal_staggering == "Ah") then
-            call create_latlon_outputer(post_loc%outputer_theta,config%Nlat,config%Nlon,"Ah", domain)
+            call create_latlon_outputer(post_loc%outputer_theta,config%Nlat,config%Nlon, &
+                                        "Ah", domain,is_z_interfaces=.true.)
+            call create_latlon_outputer(post_loc%outputer_P,config%Nlat,config%Nlon, &
+                                        "Ah", domain,is_z_interfaces=.false.)
         end if
     case("paneled")
         call create_master_paneled_outputer(post_loc%outputer_theta, "w", domain)
+        call create_master_paneled_outputer(post_loc%outputer_P, "p", domain)
     case default
         call parcomm_global%abort("create_nh_postprocessing, unknown outputer: "//&
                                    config%outputer_name)
