@@ -16,7 +16,7 @@ public :: test_div, test_grad, test_conv, &
           test_laplace_spectre, test_curl, test_coriolis,  &
           test_curl_grad, test_co2contra, test_KE, test_coriolis_vec_inv, &
           test_compatibility, test_grad_perp, test_contra2co, test_vec_advection, &
-          test_grad_3d, test_div_3d, test_w2uv_interp, test_co2contra_3d
+          test_grad_3d, test_div_3d, test_w2uv_interp, test_uv2w_interp, test_co2contra_3d
 
 contains
 
@@ -935,9 +935,10 @@ function test_w2uv_interp(Nh, Nz, w2uv_interpolator_name, &
     use abstract_interpolators3d_mod,   only : interpolator_w2uv_t
     use config_domain_mod,              only : config_domain_t
 
-    use test_fields_3d_mod,         only : scalar_field3d_t, vector_field3d_t
-    use vertical_test_field_mod,    only : vertical_ExnerP_t
-    use test_vertical_profiles_mod, only : const_N_profile_t
+    !use test_fields_3d_mod,         only : scalar_field3d_t, vector_field3d_t
+    !use vertical_test_field_mod,    only : vertical_ExnerP_t
+    !use test_vertical_profiles_mod, only : const_N_profile_t
+    use grad3d_test_field_mod,       only : grad3d_test_input_t
 
     real(kind=8), parameter :: h_top = 30e3_8
 
@@ -954,7 +955,8 @@ function test_w2uv_interp(Nh, Nz, w2uv_interpolator_name, &
 
     type(grid_field_t) :: w, wu, wv, wu_true, wv_true
 
-    type(vertical_ExnerP_t) :: scalar_field
+    !type(vertical_ExnerP_t) :: scalar_field
+    type(grad3d_test_input_t) :: scalar_field = grad3d_test_input_t(h_top=h_top,T0=300.0_8)
 
     integer(kind=4) :: halo_width = 8
 
@@ -978,9 +980,9 @@ function test_w2uv_interp(Nh, Nz, w2uv_interpolator_name, &
     call create_grid_field(wu_true, halo_width, 0, domain%mesh_u)
     call create_grid_field(wv_true, halo_width, 0, domain%mesh_v)
 
-    scalar_field%t0 = 300.0_8
-    scalar_field%p0 = 1e5_8
-    scalar_field%vert_profile = const_N_profile_t(N=0.01)
+    !scalar_field%t0 = 300.0_8
+    !scalar_field%p0 = 1e5_8
+    !scalar_field%vert_profile = const_N_profile_t(N=0.01)
     call scalar_field%get_scalar_field(w, domain%mesh_w, 0)
     call scalar_field%get_scalar_field(wu_true, domain%mesh_u, 0)
     call scalar_field%get_scalar_field(wv_true, domain%mesh_v, 0)
@@ -1004,6 +1006,78 @@ function test_w2uv_interp(Nh, Nz, w2uv_interpolator_name, &
 
 end function test_w2uv_interp
 
+function test_uv2w_interp(Nh, Nz, uv2w_interpolator_name, &
+                                  horizontal_staggering, vertical_staggering) result(errs)
+
+    use interpolator_uv2w_factory_mod,  only : create_uv2w_interpolator
+    use abstract_interpolators3d_mod,   only : interpolator_uv2w_t
+    use config_domain_mod,              only : config_domain_t
+
+    use grad3d_test_field_mod,   only : grad3d_test_out_t
+
+    real(kind=8), parameter :: h_top = 30e3_8
+
+    integer(kind=4),  intent(in) :: Nh, Nz
+    character(len=*), intent(in) :: uv2w_interpolator_name
+    character(len=*), intent(in) :: horizontal_staggering, vertical_staggering
+
+    type(key_value_r8_t) :: errs
+
+    class(interpolator_uv2w_t), allocatable :: uv2w_operator
+
+    type(config_domain_t) :: config_domain
+    type(domain_t)        :: domain
+
+    type(grid_field_t) :: u, v, uw, vw, uw_true, vw_true
+
+    type(grad3d_test_out_t) :: vec_field_gen = grad3d_test_out_t(h_top=h_top,T0=300.0_8)
+
+    integer(kind=4) :: halo_width = 8
+
+    config_domain%N  = nh
+    config_domain%Nz = nz
+    config_domain%staggering_type     = horizontal_staggering
+    config_domain%vertical_staggering = vertical_staggering
+    config_domain%metric_type         = "shallow_atmosphere_metric"
+    config_domain%topology_type       = "cube"
+    config_domain%h_top = h_top
+    call config_domain%config_metric%set_defaults()
+    config_domain%config_metric%vertical_scale = h_top
+
+    call create_domain(domain, config_domain)
+
+    call create_uv2w_interpolator(uv2w_operator,uv2w_interpolator_name,domain)
+
+    call create_grid_field(u, halo_width, 0, domain%mesh_u)
+    call create_grid_field(v, halo_width, 0, domain%mesh_v)
+    call create_grid_field(uw, halo_width, 0,  domain%mesh_w)
+    call create_grid_field(vw, halo_width, 0,  domain%mesh_w)
+    call create_grid_field(uw_true, halo_width, 0, domain%mesh_w)
+    call create_grid_field(vw_true, halo_width, 0, domain%mesh_w)
+
+    call vec_field_gen%get_vector_field(u,v,uw,domain%mesh_u,domain%mesh_v,&
+                                        domain%mesh_w,0,"contravariant")
+    call vec_field_gen%get_vector_field(uw_true,vw_true,uw,domain%mesh_w,&
+                                        domain%mesh_w,domain%mesh_w,0,"contravariant")
+
+    call uv2w_operator%interp_uv2w(uw,vw,u,v,domain)
+
+    allocate(errs%keys(2), errs%values(2))
+    errs%keys(1)%str = "vertical_ExnerP C_norm"
+    errs%keys(2)%str = "vertical_ExnerP L2_norm"
+
+    call uw%update(-1.0_8, uw_true, domain%mesh_w)
+    call vw%update(-1.0_8, vw_true, domain%mesh_w)
+    errs%values(1) = (uw%maxabs(domain%mesh_w, domain%parcomm)+&
+                      vw%maxabs(domain%mesh_w, domain%parcomm)) / &
+                     (uw_true%maxabs(domain%mesh_w, domain%parcomm)+&
+                      vw_true%maxabs(domain%mesh_w, domain%parcomm))
+    errs%values(2) = (l2norm(uw, domain%mesh_w, domain%parcomm)+&
+                      l2norm(vw, domain%mesh_w, domain%parcomm)) / &
+                     (l2norm(uw_true, domain%mesh_w, domain%parcomm)+&
+                      l2norm(vw_true, domain%mesh_w, domain%parcomm))
+
+end function test_uv2w_interp
 
 subroutine test_laplace_spectre(div_operator_name, grad_operator_name, &
                                 co2contra_operator_name, staggering)

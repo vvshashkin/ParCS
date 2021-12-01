@@ -868,12 +868,32 @@ $(DOBJ)abstract_interpolators3d_mod.o: src/differential_operators/3d/interpolato
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)interpolators_uv2w_mod.o: src/differential_operators/3d/interpolators/interpolators_uv2w_mod.f90 \
+	$(DOBJ)abstract_interpolators3d_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)abstract_vertical_operator_mod.o \
+	$(DOBJ)interpolator_v2h_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)interpolators_w2uv_mod.o: src/differential_operators/3d/interpolators/interpolators_w2uv_mod.f90 \
 	$(DOBJ)abstract_interpolators3d_mod.o \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)abstract_vertical_operator_mod.o \
 	$(DOBJ)interpolator_h2v_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)interpolator_uv2w_factory_mod.o: src/differential_operators/3d/interpolators/interpolator_uv2w_factory_mod.f90 \
+	$(DOBJ)abstract_interpolators3d_mod.o \
+	$(DOBJ)interpolators_uv2w_mod.o \
+	$(DOBJ)vertical_operator_factory_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)interpolator_v2h_factory_mod.o \
+	$(DOBJ)grid_field_factory_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -2386,6 +2406,7 @@ $(DOBJ)test_diffops_mod.o: src/test/test_diff_ops/test_diffops_mod.f90 \
 	$(DOBJ)abstract_interpolators3d_mod.o \
 	$(DOBJ)vertical_test_field_mod.o \
 	$(DOBJ)test_vertical_profiles_mod.o \
+	$(DOBJ)interpolator_uv2w_factory_mod.o \
 	$(DOBJ)exchange_abstract_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
 	$(DOBJ)quadrature_factory_mod.o \
