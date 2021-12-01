@@ -131,6 +131,10 @@ subroutine create_advection3d_operator(nh_operator,config,domain)
     call create_scalar_advection3d_operator(operator%p_adv_oper,config%p_advection_oper_name, &
                                             config%p_hor_advection_oper_name,                 &
                                             config%p_z_advection_oper_name,domain)
+    call create_scalar_advection3d_operator(operator%theta_adv_oper,              &
+                                            config%theta_advection_oper_name,     &
+                                            config%theta_hor_advection_oper_name, &
+                                            config%theta_z_advection_oper_name,domain)
     call create_grid_field(operator%u_adv,halo_width,0,domain%mesh_u)
     call create_grid_field(operator%v_adv,halo_width,0,domain%mesh_v)
     call create_grid_field(operator%eta_dot_adv,halo_width,0,domain%mesh_w)

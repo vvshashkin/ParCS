@@ -21,6 +21,9 @@ type, extends(config_t) :: config_advection3d_t
     character(:), allocatable :: p_advection_oper_name
     character(:), allocatable :: p_hor_advection_oper_name
     character(:), allocatable :: p_z_advection_oper_name
+    character(:), allocatable :: theta_advection_oper_name
+    character(:), allocatable :: theta_hor_advection_oper_name
+    character(:), allocatable :: theta_z_advection_oper_name
     character(:), allocatable :: wind_field
     contains
     procedure :: parse => parse_advection3d_config
@@ -81,19 +84,28 @@ subroutine parse_advection3d_config(this,config_string)
     namelist /advection3d_operator/  p_advection_oper_name,     &
                                      p_hor_advection_oper_name, &
                                      p_z_advection_oper_name,   &
+                                     theta_advection_oper_name,     &
+                                     theta_hor_advection_oper_name, &
+                                     theta_z_advection_oper_name,   &
                                      wind_field
 
     character(len=256) ::  p_advection_oper_name,     &
                            p_hor_advection_oper_name, &
                            p_z_advection_oper_name,   &
+                           theta_advection_oper_name,     &
+                           theta_hor_advection_oper_name, &
+                           theta_z_advection_oper_name,   &
                            wind_field
 
     read(config_string,advection3d_operator)
 
-    this%p_advection_oper_name     = trim(p_advection_oper_name)
-    this%p_hor_advection_oper_name = trim(p_hor_advection_oper_name)
-    this%p_z_advection_oper_name   = trim(p_z_advection_oper_name)
-    this%wind_field                = trim(wind_field)
+    this%p_advection_oper_name         = trim(p_advection_oper_name)
+    this%p_hor_advection_oper_name     = trim(p_hor_advection_oper_name)
+    this%p_z_advection_oper_name       = trim(p_z_advection_oper_name)
+    this%theta_advection_oper_name     = trim(theta_advection_oper_name)
+    this%theta_hor_advection_oper_name = trim(theta_hor_advection_oper_name)
+    this%theta_z_advection_oper_name   = trim(theta_z_advection_oper_name)
+    this%wind_field                    = trim(wind_field)
 
 end subroutine parse_advection3d_config
 

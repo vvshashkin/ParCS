@@ -13,7 +13,7 @@ implicit none
 
 type, extends(operator_t) :: advection3d_operator_t
 
-    class(scalar_advection3d_t), allocatable :: p_adv_oper
+    class(scalar_advection3d_t), allocatable :: p_adv_oper, theta_adv_oper
     class(vector_field3d_t),     allocatable :: wind_generator
     type(grid_field_t) :: u_adv, v_adv, eta_dot_adv
     contains
@@ -45,8 +45,9 @@ subroutine apply(this, vout, vin, domain)
         call vout%u%assign(0.0_8, domain%mesh_u)
         call vout%v%assign(0.0_8, domain%mesh_v)
         call vout%eta_dot%assign(0.0_8, domain%mesh_w)
-        call vout%theta%assign(0.0_8, domain%mesh_w)
-
+        !call vout%theta%assign(0.0_8, domain%mesh_w)
+        call this%theta_adv_oper%calc_adv3d(vout%theta,vin%theta,this%u_adv,this%v_adv, &
+                                            this%eta_dot_adv,domain)
         call this%p_adv_oper%calc_adv3d(vout%P,vin%P,this%u_adv,this%v_adv, &
                                         this%eta_dot_adv,domain)
         vout%model_time = 1.0_8 != dt / dt

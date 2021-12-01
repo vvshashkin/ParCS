@@ -25,10 +25,13 @@
     simulation_time_sec   = 0.0,
 /
 &advection3d_operator
-    p_advection_oper_name     = "advection_p_staggered",
-    p_hor_advection_oper_name = "up4",
-    p_z_advection_oper_name   = "adv_z_c2",
-    wind_field                = "solid_rotation"
+    p_advection_oper_name         = "advection_p_staggered",
+    p_hor_advection_oper_name     = "up4",
+    p_z_advection_oper_name       = "adv_z_c2",
+    theta_advection_oper_name     = "advection_w_staggered",
+    theta_hor_advection_oper_name = "up4",
+    theta_z_advection_oper_name   = "adv_z_c2",
+    wind_field                    = "solid_rotation"
 /
 &nh_postprocessing
     Nlon = 128
