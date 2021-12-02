@@ -1,0 +1,47 @@
+&domain
+    N = 80,
+    Nz = 10,
+    topology_type       = 'cube',
+    staggering_type     = 'C',
+    vertical_staggering = 'CharneyPhilips'
+    metric_type         = 'shallow_atmosphere_metric'
+    h_top               = 10e3
+/
+&metric
+  metric_2d_type = "ecs"
+  vertical_transform_name = "vertical_transform_default"
+  scale               = 50969.832
+/
+&nh_model
+    timescheme_name  = "rk4"
+    operator_type    = "Ptheta_linear"
+    testcase_name    = "GW_linear"
+    dt= 1.0,
+    tau_write = 100.0,
+    tau_diagnostics = 2.0
+    simulation_time_days  = 0.0,
+    simulation_time_hours = 0.0,
+    simulation_time_min   = 0.0,
+    simulation_time_sec   = 3600.0,
+/
+&nh_postprocessing
+    Nlon = 320
+    Nlat = 161
+    outputer_name = "latlon"
+/
+&Ptheta_linear_nh_operator
+    Nb = 0.01,
+    T0 = 288.0,
+    background_type     ="Nb_const"
+    grad_hor_part_name  = "gradient_c_sbp42",
+    grad_vert_part_name = "eta_diff_p2w_sbp21",
+    div_hor_part_name   = "divergence_c_sbp42",
+    div_vert_part_name  = "eta_diff_w2p_sbp21",
+    co2contra_operator_name = "co2contra_c_sbp42_new",
+    w2uv_operator_name  = "w2uv_staggered_C_sbp42_v_sbp21",
+    w2p_operator_name   = "vertical_interp_w2p_sbp21"
+/
+&comments
+  Earth_radii = 0.6371229d7
+  Earth_radii_gw_test = 50969.832
+/

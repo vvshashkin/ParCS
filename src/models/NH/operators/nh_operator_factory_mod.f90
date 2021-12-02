@@ -3,7 +3,8 @@ module nh_operator_factory_mod
 use domain_mod,             only : domain_t
 use operator_mod,           only : operator_t
 use config_mod,             only : config_t
-use config_nh_operator_mod, only : config_Ptheta_linear_t, config_advection3d_t
+use config_nh_operator_mod, only : config_Ptheta_linear_t, config_advection3d_t, &
+                                   config_nonlin_nh_operator_t
 use parcomm_mod,            only : parcomm_global
 
 implicit none
@@ -16,6 +17,8 @@ subroutine create_nh_operator(nh_operator, config, domain)
     type(domain_t),    intent(in)  :: domain
 
     select type(config)
+    class is (config_nonlin_nh_operator_t)
+        call create_nonlin_nh_operator(nh_operator, config, domain)
     class is (config_Ptheta_linear_t)
         call create_Ptheta_linear_nh_operator(nh_operator, config, domain)
     class is (config_advection3d_t)
@@ -150,5 +153,64 @@ subroutine create_advection3d_operator(nh_operator,config,domain)
 
     call move_alloc(operator,nh_operator)
 end subroutine create_advection3d_operator
+
+subroutine create_nonlin_nh_operator(nh_operator,config,domain)
+
+    use nonlin_nh_oper_mod,             only: nonlin_nh_operator_t
+    use grad_3d_factory_mod,            only: create_grad_3d_operator
+    use div_3d_factory_mod,             only: create_div_3d_operator
+    use co2contra_factory_mod,          only: create_co2contra_operator
+    use interpolator_w2uv_factory_mod,  only: create_w2uv_interpolator
+    use grid_field_factory_mod,         only: create_grid_field
+    use scalar_advection_factory_mod,   only: create_scalar_advection3d_operator
+    use vector_advection3d_factory_mod, only: create_vector_advection3d_operator
+    use const_mod,                      only: Earth_grav
+
+    class(operator_t), allocatable,       intent(out) :: nh_operator
+    class(config_nonlin_nh_operator_t),   intent(in)  :: config
+    type(domain_t),                       intent(in)  :: domain
+
+    type(nonlin_nh_operator_t), allocatable :: operator
+
+    integer(kind=4), parameter :: halo_width_xy = 4
+
+    allocate(operator)
+
+    call create_grad_3d_operator(operator%grad_op, domain, &
+                                 config%grad_hor_part_name, config%grad_vert_part_name)
+
+    call create_div_3d_operator(operator%div_op, domain, &
+                                config%div_hor_part_name, config%div_vert_part_name)
+
+    operator%co2contra_op = create_co2contra_operator(domain, config%co2contra_operator_name)
+
+    call create_w2uv_interpolator(operator%theta2uv_op,config%theta2uv_operator_name,domain)
+
+    call create_scalar_advection3d_operator(operator%p_adv_oper,config%p_advection_oper_name, &
+                                            config%p_hor_advection_oper_name,                 &
+                                            config%p_z_advection_oper_name,domain)
+    call create_scalar_advection3d_operator(operator%theta_adv_oper,              &
+                                            config%theta_advection_oper_name,     &
+                                            config%theta_hor_advection_oper_name, &
+                                            config%theta_z_advection_oper_name,domain)
+    call create_vector_advection3d_operator(operator%momentum_adv_op, config%vec_adv_op_name,    &
+                                            config%uv_hor_adv_op_name, config%uv_ver_adv_op_name,&
+                                            config%w_adv_op_name, config%w_adv_hor_part_name,    &
+                                            config%w_adv_ver_part_name, domain)
+
+    call create_grid_field(operator%theta_u, 0, 0, domain%mesh_u)
+    call create_grid_field(operator%theta_v, 0, 0, domain%mesh_v)
+    call create_grid_field(operator%div3, 0, 0, domain%mesh_p)
+    call create_grid_field(operator%grad_x, halo_width_xy, 0, domain%mesh_u)
+    call create_grid_field(operator%grad_y, halo_width_xy, 0, domain%mesh_v)
+    call create_grid_field(operator%grad_x_contra, 0, 0, domain%mesh_u)
+    call create_grid_field(operator%grad_y_contra, 0, 0, domain%mesh_v)
+    call create_grid_field(operator%grad_z, 0, 0, domain%mesh_w)
+    call create_grid_field(operator%grad_phi_z, 0, 0, domain%mesh_w)
+    call operator%grad_phi_z%assign(Earth_grav,domain%mesh_w)
+
+    call move_alloc(operator, nh_operator)
+
+end subroutine create_nonlin_nh_operator
 
 end module nh_operator_factory_mod

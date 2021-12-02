@@ -14,8 +14,8 @@
 /
 &nh_model
     timescheme_name  = "rk4"
-    operator_type    = "Ptheta_linear"
-    testcase_name    = "GW_linear"
+    operator_type    = "nonlinear_nh"
+    testcase_name    = "GW"
     dt= 1.0,
     tau_write = 100.0,
     tau_diagnostics = 2.0
@@ -29,17 +29,25 @@
     Nlat = 161
     outputer_name = "latlon"
 /
-&Ptheta_linear_nh_operator
-    Nb = 0.01,
-    T0 = 288.0,
-    background_type     ="Nb_const"
-    grad_hor_part_name  = "gradient_c_sbp42",
-    grad_vert_part_name = "eta_diff_p2w_sbp21",
-    div_hor_part_name   = "divergence_c_sbp42",
-    div_vert_part_name  = "eta_diff_w2p_sbp21",
-    co2contra_operator_name = "co2contra_c_sbp42_new",
-    w2uv_operator_name  = "w2uv_staggered_C_sbp42_v_sbp21",
-    w2p_operator_name   = "vertical_interp_w2p_sbp21"
+&nonlin_nh_operator
+    grad_hor_part_name            = "gradient_c_sbp42",
+    grad_vert_part_name           = "eta_diff_p2w_sbp21",
+    div_hor_part_name             = "divergence_c_sbp42",
+    div_vert_part_name            = "eta_diff_w2p_sbp21",
+    co2contra_operator_name       = "co2contra_c_sbp42_new",
+    theta2uv_operator_name        = "w2uv_staggered_C_sbp42_v_sbp21",
+    p_advection_oper_name         = "advection_p_staggered",
+    p_hor_advection_oper_name     = "up4",
+    p_z_advection_oper_name       = "adv_z_c2",
+    theta_advection_oper_name     = "advection_w_staggered",
+    theta_hor_advection_oper_name = "up4",
+    theta_z_advection_oper_name   = "adv_z_c2",
+    vec_adv_op_name               = "shallow_atm_staggered_vector_advection",
+    uv_hor_adv_op_name            = "vector_advection_C_up4",
+    uv_ver_adv_op_name            = "adv_z_c2",
+    w_adv_op_name                 = "advection_w_staggered",
+    w_adv_hor_part_name           = "up4",
+    w_adv_ver_part_name           = "adv_z_c2"
 /
 &comments
   Earth_radii = 0.6371229d7
