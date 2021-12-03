@@ -11,6 +11,11 @@ type, extends(adv_z_t) :: adv_z_c2_t
     procedure :: calc_z_adv_tile => calc_z_adv_c2_tile
 end type adv_z_c2_t
 
+type, extends(adv_z_t) :: adv_z_c4_t
+    contains
+    procedure :: calc_z_adv_tile => calc_z_adv_c4_tile
+end type adv_z_c4_t
+
 contains
 
 subroutine calc_z_adv_c2_tile(this, f_tend, f, eta_dot, mesh,scale)
@@ -40,5 +45,36 @@ subroutine calc_z_adv_c2_tile(this, f_tend, f, eta_dot, mesh,scale)
         end do
     end do
 end subroutine calc_z_adv_c2_tile
+
+subroutine calc_z_adv_c4_tile(this, f_tend, f, eta_dot, mesh,scale)
+    class(adv_z_c4_t),  intent(in)    :: this
+    type(tile_field_t), intent(in)    :: f, eta_dot
+    type(tile_mesh_t),  intent(in)    :: mesh
+    real(kind=8),       intent(in)    :: scale
+    !output
+    type(tile_field_t), intent(inout) :: f_tend
+
+    integer(kind=4) :: is, ie, js, je, ks, ke
+    integer(kind=4) :: i, j, k
+    integer(kind=4) :: km1, kp1, km2, kp2
+    real(kind=8)    :: df
+
+    is = mesh%is; ie = mesh%ie
+    js = mesh%js; je = mesh%je
+    ks = mesh%ks; ke = mesh%ke
+
+    do k=ks, ke
+        !constant extension of field above/below the the upper/lower boundary
+        km1 = max(k-1,ks); km2 = max(k-2,ks)
+        kp1 = min(k+1,ke); kp2 = min(k+2,ke)
+        do j=js, je
+            do i=is, ie
+                df = (-f%p(i,j,kp2)+8._8*f%p(i,j,kp1)-8._8*f%p(i,j,km1)+f%p(i,j,km2)) &
+                                                         / (12.0_8*mesh%hz*scale)
+                f_tend%p(i,j,k) =-eta_dot%p(i,j,k)*df
+            end do
+        end do
+    end do
+end subroutine calc_z_adv_c4_tile
 
 end module adv_z_mod
