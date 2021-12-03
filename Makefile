@@ -560,14 +560,6 @@ $(DOBJ)test_fieds_3d_mod.o: src/test_fields/test_fields_3d/test_fieds_3d_mod.f90
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
-$(DOBJ)solid_rotation_wind_field_mod.o: src/test_fields/test_fields_3d/solid_rotation_wind_field_mod.f90 \
-	$(DOBJ)test_fieds_3d_mod.o \
-	$(DOBJ)mesh_mod.o \
-	$(DOBJ)grid_field_mod.o \
-	$(DOBJ)const_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
 $(DOBJ)vertical_test_field_mod.o: src/test_fields/test_fields_3d/vertical_test_field_mod.f90 \
 	$(DOBJ)test_fieds_3d_mod.o \
 	$(DOBJ)abstract_vertical_profile_mod.o \
@@ -591,6 +583,30 @@ $(DOBJ)grad3d_test_field_mod.o: src/test_fields/test_fields_3d/grad3d_test_field
 	$(DOBJ)mesh_mod.o \
 	$(DOBJ)const_mod.o \
 	$(DOBJ)sph_coords_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)solid_rotation_fields_factory_mod.o: src/test_fields/test_fields_3d/solid_rotation/solid_rotation_fields_factory_mod.f90 \
+	$(DOBJ)test_fieds_3d_mod.o \
+	$(DOBJ)solid_rotation_therm_mod.o \
+	$(DOBJ)solid_rotation_wind_field_mod.o \
+	$(DOBJ)parcomm_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)solid_rotation_therm_mod.o: src/test_fields/test_fields_3d/solid_rotation/solid_rotation_therm_mod.f90 \
+	$(DOBJ)test_fieds_3d_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)const_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)solid_rotation_wind_field_mod.o: src/test_fields/test_fields_3d/solid_rotation/solid_rotation_wind_field_mod.f90 \
+	$(DOBJ)test_fieds_3d_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)const_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -2019,12 +2035,11 @@ $(DOBJ)gw_testcase_mod.o: src/models/NH/testcases/GW_testcase_mod.f90 \
 	$(DOBJ)stvec_mod.o \
 	$(DOBJ)stvec_nh_mod.o \
 	$(DOBJ)test_fieds_3d_mod.o \
+	$(DOBJ)solid_rotation_fields_factory_mod.o \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)grid_field_factory_mod.o \
-	$(DOBJ)vertical_test_field_mod.o \
-	$(DOBJ)const_n_profile_mod.o \
-	$(DOBJ)mesh_mod.o \
-	$(DOBJ)const_mod.o
+	$(DOBJ)const_mod.o \
+	$(DOBJ)mesh_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

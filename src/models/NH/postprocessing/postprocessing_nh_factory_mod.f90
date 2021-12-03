@@ -4,7 +4,8 @@ use abstract_postprocessing_mod, only : postprocessing_t
 use simple_postnh_mod,           only : simple_postnh_t
 use config_postnh_mod,           only : config_postnh_t
 use domain_mod,                  only : domain_t
-use outputer_factory_mod,        only : create_latlon_outputer, &
+use outputer_factory_mod,        only : create_latlon_outputer,      &
+                                        create_latlon_vec_outputer,  &
                                         create_master_paneled_outputer
 use parcomm_mod,                 only : parcomm_global
 
@@ -30,11 +31,15 @@ subroutine create_nh_postprocessing(post,config,domain)
                                         "A",domain,is_z_interfaces = .true.)
             call create_latlon_outputer(post_loc%outputer_P,config%Nlat,config%Nlon, &
                                         "A",domain,is_z_interfaces = .false.)
+            call create_latlon_vec_outputer(post_loc%outputer_uv,  config%Nlat, config%Nlon, "C", &
+                                            "contravariant", domain)
         else if(domain%horizontal_staggering == "Ah") then
             call create_latlon_outputer(post_loc%outputer_theta,config%Nlat,config%Nlon, &
                                         "Ah", domain,is_z_interfaces=.true.)
             call create_latlon_outputer(post_loc%outputer_P,config%Nlat,config%Nlon, &
                                         "Ah", domain,is_z_interfaces=.false.)
+            call create_latlon_vec_outputer(post_loc%outputer_uv,  config%Nlat, config%Nlon, "Ah", &
+                                            "contravariant", domain)
         end if
     case("paneled")
         call create_master_paneled_outputer(post_loc%outputer_theta, "w", domain)
