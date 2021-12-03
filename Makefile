@@ -2013,7 +2013,21 @@ $(DOBJ)nh_testcases_mod.o: src/models/NH/testcases/nh_testcases_mod.f90 \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)stvec_mod.o \
 	$(DOBJ)gw_testcase_mod.o \
-	$(DOBJ)advection3d_testcases_mod.o
+	$(DOBJ)advection3d_testcases_mod.o \
+	$(DOBJ)straka_testcase_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)straka_testcase_mod.o: src/models/NH/testcases/Straka_testcase_mod.f90 \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)stvec_mod.o \
+	$(DOBJ)stvec_nh_mod.o \
+	$(DOBJ)test_fieds_3d_mod.o \
+	$(DOBJ)const_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)sph_coords_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

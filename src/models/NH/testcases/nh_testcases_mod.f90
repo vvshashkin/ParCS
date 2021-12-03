@@ -6,6 +6,7 @@ use stvec_mod,    only : stvec_t
 
 use NH_GW_testcase_mod,        only : get_GW_initial_conditions
 use advection3d_testcases_mod, only : get_advection3d_initial_conditions
+use Straka_testcase_mod,       only : get_Straka_initial_conditions
 
 implicit none
 
@@ -19,6 +20,8 @@ subroutine get_initial_conditions(stvec, domain, testcase_name)
     select case(testcase_name)
     case("GW", "GW_linear")
         call get_GW_initial_conditions(stvec,domain,testcase_name)
+    case("Straka","straka")
+        call get_Straka_initial_conditions(stvec,domain)
     case("advection3d_solid_rotation")
         call get_advection3d_initial_conditions(stvec,domain,testcase_name)
     case default
