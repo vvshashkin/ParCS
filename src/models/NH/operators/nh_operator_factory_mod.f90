@@ -146,6 +146,10 @@ subroutine create_advection3d_operator(nh_operator,config,domain)
     case("solid_rotation")
         operator%wind_generator = solid_rotation_wind_field_t(w_max = 0.01_8, &
                                         u0 = 2.0_8*pi*Earth_radii / (12.0_8*Day24h_sec))
+    case("descending_flow")
+        operator%wind_generator = solid_rotation_wind_field_t(w_max =-10.0_8, &
+                                                              tau=1e16,u0 = 0.0_8, &
+                                                              Lz=domain%mesh_w%vertical_scale)
     case default
         call parcomm_global%abort("create_advection3d_operator, unknown wind_field: "//&
                                    config%wind_field)

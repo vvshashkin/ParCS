@@ -2038,6 +2038,7 @@ $(DOBJ)advection3d_testcases_mod.o: src/models/NH/testcases/advection3d_testcase
 	$(DOBJ)stvec_nh_mod.o \
 	$(DOBJ)test_fieds_3d_mod.o \
 	$(DOBJ)const_mod.o \
+	$(DOBJ)straka_testcase_mod.o \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)mesh_mod.o
 	@echo $(COTEXT)

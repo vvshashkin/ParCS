@@ -1,0 +1,44 @@
+&domain
+    N =  50,
+    Nz = 25,
+    topology_type       = 'cube',
+    staggering_type     = 'C',
+    vertical_staggering = 'CharneyPhilips'
+    metric_type         = 'shallow_atmosphere_metric'
+    h_top               = 5e3
+/
+&metric
+  metric_2d_type = "ecs"
+  vertical_transform_name = "vertical_transform_default"
+  scale               = 0.6371229d4
+/
+&nh_model
+    timescheme_name  = "rk4"
+    operator_type    = "advection_3d"
+    testcase_name    = "Straka_buble"
+    dt= 0.25,
+    tau_write = 10.0,
+    tau_diagnostics = 2.0
+    simulation_time_days  = 0.0,
+    simulation_time_hours = 0.0,
+    simulation_time_min   = 0.0,
+    simulation_time_sec   = 900.0,
+/
+&nh_postprocessing
+    Nlon = 200
+    Nlat = 101
+    outputer_name = "latlon"
+/
+&advection3d_operator
+    p_advection_oper_name         = "advection_p_staggered",
+    p_hor_advection_oper_name     = "up4",
+    p_z_advection_oper_name       = "adv_z_up4",
+    theta_advection_oper_name     = "advection_w_staggered",
+    theta_hor_advection_oper_name = "up4",
+    theta_z_advection_oper_name   = "adv_z_up4",
+    wind_field                    = "descending_flow"
+/
+&comments
+  Earth_radii = 0.6371229d7
+  Earth_radii_gw_test = 50969.832
+/

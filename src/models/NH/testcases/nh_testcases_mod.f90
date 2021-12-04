@@ -22,7 +22,7 @@ subroutine get_initial_conditions(stvec, domain, testcase_name)
         call get_GW_initial_conditions(stvec,domain,testcase_name)
     case("Straka","straka")
         call get_Straka_initial_conditions(stvec,domain)
-    case("advection3d_solid_rotation")
+    case("advection3d_solid_rotation","Straka_buble")
         call get_advection3d_initial_conditions(stvec,domain,testcase_name)
     case default
         call parcomm_global%abort("unknown NH testcases name: "//testcase_name)

@@ -27,6 +27,8 @@ subroutine get_advection3d_initial_conditions(stvec, domain, testcase_name)
     select case(testcase_name)
     case("advection3d_solid_rotation")
         call get_advection3d_solid_rotation_initial_conditions(stvec, domain)
+    case("Straka_buble")
+        call get_Straka_buble_initial_conditions(stvec,domain)
     case default
         call parcomm_global%abort("unknown advection3d testcase name: "//testcase_name)
     end select
@@ -52,6 +54,28 @@ subroutine get_advection3d_solid_rotation_initial_conditions(stvec, domain)
     call parcomm_global%abort("unsupported stvec type in get_advection3d_solid_rotation_initial_conditions")
     end select
 end subroutine get_advection3d_solid_rotation_initial_conditions
+
+subroutine get_Straka_buble_initial_conditions(stvec, domain)
+    use Straka_testcase_mod, only : Straka_theta_t
+
+    class(stvec_t),   intent(inout) :: stvec
+    type(domain_t),   intent(in)    :: domain
+
+    type(Straka_theta_t) :: f_generator
+
+    select type(stvec)
+    type is (stvec_nh_t)
+        call stvec%u%assign(0.0_8,domain%mesh_u)
+        call stvec%v%assign(0.0_8,domain%mesh_v)
+        call stvec%eta_dot%assign(0.0_8,domain%mesh_w)
+        f_generator%scale = domain%mesh_p%scale
+        f_generator%h0 = 2500.0_8
+        call f_generator%get_scalar_field(stvec%theta,domain%mesh_w,0)
+        call f_generator%get_scalar_field(stvec%P,domain%mesh_p,0)
+    class default
+    call parcomm_global%abort("unsupported stvec type in get_advection3d_solid_rotation_initial_conditions")
+    end select
+end subroutine get_Straka_buble_initial_conditions
 
 subroutine get_cosine_bell_tile(this,f,mesh,halo_width)
     use grid_field_mod, only : tile_field_t

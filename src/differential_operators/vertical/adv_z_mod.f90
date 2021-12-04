@@ -102,7 +102,7 @@ subroutine calc_z_adv_up4_tile(this, f_tend, f, eta_dot, mesh,scale)
     do k=ks, ke
         !constant extension of field above/below the the upper/lower boundary
         km1 = max(k-1,ks); km2 = max(k-2,ks); km3 = max(k-3,ks)
-        kp1 = min(k+1,ke); kp2 = min(k+2,ke); kp3 = min(k+3,ks)
+        kp1 = min(k+1,ke); kp2 = min(k+2,ke); kp3 = min(k+3,ke)
         do j=js, je
             do i=is, ie
                 left  = 0.5_8+sign(0.5_8,eta_dot%p(i,j,k))
