@@ -8,6 +8,7 @@ use abstract_co2contra_mod,          only : co2contra_operator_t
 use abstract_interpolators3d_mod,    only : interpolator_w2uv_t
 use abstract_scalar_advection3d_mod, only : scalar_advection3d_t
 use abstract_vector_advection3d_mod, only : vector_advection3d_t
+use abstract_coriolis_mod,           only : coriolis_operator_t
 use stvec_mod,                       only : stvec_t
 use stvec_nh_mod,                    only : stvec_nh_t
 use parcomm_mod,                     only : parcomm_global
@@ -23,6 +24,7 @@ type, extends(operator_t) :: nonlin_nh_operator_t
     class(interpolator_w2uv_t),  allocatable :: theta2uv_op
     class(scalar_advection3d_t), allocatable :: p_adv_oper, theta_adv_oper
     class(vector_advection3d_t), allocatable :: momentum_adv_op
+    class(coriolis_operator_t),  allocatable :: coriolis_op
 
     type(grid_field_t) :: theta_u, theta_v
     type(grid_field_t) :: grad_x, grad_y, grad_z, grad_x_contra, grad_y_contra
@@ -67,6 +69,11 @@ subroutine apply(this, vout, vin, domain)
                                          this%grad_x, this%grad_y, domain)
         call vout%u%update(1.0_8,this%grad_x_contra,domain%mesh_u)
         call vout%v%update(1.0_8,this%grad_y_contra,domain%mesh_v)
+
+        call this%coriolis_op%calc_coriolis_contra(this%grad_x, this%grad_y, &
+                                                           vin%u, vin%v, domain)
+        call vout%u%update(1.0_8,this%grad_x,domain%mesh_u)
+        call vout%v%update(1.0_8,this%grad_y,domain%mesh_v)
 
         call this%grad_z%assign_prod(-Cp,this%grad_z,vin%theta,domain%mesh_w)
         call vout%eta_dot%update(1.0_8,this%grad_z,-1.0_8,this%grad_phi_z,domain%mesh_w)

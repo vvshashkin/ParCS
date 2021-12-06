@@ -1940,6 +1940,7 @@ $(DOBJ)nonlin_nh_oper_mod.o: src/models/NH/operators/nonlin_nh_oper_mod.f90 \
 	$(DOBJ)abstract_interpolators3d_mod.o \
 	$(DOBJ)abstract_scalar_advection3d_mod.o \
 	$(DOBJ)abstract_vector_advection3d_mod.o \
+	$(DOBJ)abstract_coriolis_mod.o \
 	$(DOBJ)stvec_mod.o \
 	$(DOBJ)stvec_nh_mod.o \
 	$(DOBJ)parcomm_mod.o \
@@ -1969,7 +1970,8 @@ $(DOBJ)nh_operator_factory_mod.o: src/models/NH/operators/nh_operator_factory_mo
 	$(DOBJ)solid_rotation_wind_field_mod.o \
 	$(DOBJ)const_mod.o \
 	$(DOBJ)nonlin_nh_oper_mod.o \
-	$(DOBJ)vector_advection3d_factory_mod.o
+	$(DOBJ)vector_advection3d_factory_mod.o \
+	$(DOBJ)coriolis_factory_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -2013,6 +2015,7 @@ $(DOBJ)nh_testcases_mod.o: src/models/NH/testcases/nh_testcases_mod.f90 \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)stvec_mod.o \
 	$(DOBJ)gw_testcase_mod.o \
+	$(DOBJ)nh_solid_rotation_testcase_mod.o \
 	$(DOBJ)advection3d_testcases_mod.o \
 	$(DOBJ)straka_testcase_mod.o \
 	$(DOBJ)hot_bubble_testcase_mod.o
@@ -2069,6 +2072,19 @@ $(DOBJ)hot_bubble_testcase_mod.o: src/models/NH/testcases/hot_bubble_testcase_mo
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)mesh_mod.o \
 	$(DOBJ)sph_coords_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)nh_solid_rotation_testcase_mod.o: src/models/NH/testcases/nh_solid_rotation_testcase_mod.f90 \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)stvec_mod.o \
+	$(DOBJ)stvec_nh_mod.o \
+	$(DOBJ)test_fieds_3d_mod.o \
+	$(DOBJ)solid_rotation_fields_factory_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)grid_field_factory_mod.o \
+	$(DOBJ)const_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

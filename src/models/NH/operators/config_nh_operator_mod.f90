@@ -43,6 +43,7 @@ type, extends(config_t) :: config_nonlin_nh_operator_t
     character(:), allocatable :: vec_adv_op_name
     character(:), allocatable :: uv_hor_adv_op_name, uv_ver_adv_op_name
     character(:), allocatable :: w_adv_op_name, w_adv_hor_part_name, w_adv_ver_part_name
+    character(:), allocatable :: coriolis_op_name
 
     contains
     procedure :: parse => parse_nonlinear_nh_operator_config
@@ -149,7 +150,8 @@ subroutine parse_nonlinear_nh_operator_config(this,config_string)
                                   uv_ver_adv_op_name,                      &
                                   w_adv_op_name,                           &
                                   w_adv_hor_part_name,                     &
-                                  w_adv_ver_part_name
+                                  w_adv_ver_part_name,                     &
+                                  coriolis_op_name
 
     character(len=256) :: grad_hor_part_name, grad_vert_part_name, &
                           div_hor_part_name, div_vert_part_name,   &
@@ -166,7 +168,8 @@ subroutine parse_nonlinear_nh_operator_config(this,config_string)
                           uv_ver_adv_op_name,                      &
                           w_adv_op_name,                           &
                           w_adv_hor_part_name,                     &
-                          w_adv_ver_part_name
+                          w_adv_ver_part_name,                     &
+                          coriolis_op_name
 
     read(config_string,nonlin_nh_operator)
 
@@ -188,6 +191,7 @@ subroutine parse_nonlinear_nh_operator_config(this,config_string)
     this%w_adv_op_name                 = trim(w_adv_op_name)
     this%w_adv_hor_part_name           = trim(w_adv_hor_part_name)
     this%w_adv_ver_part_name           = trim(w_adv_ver_part_name)
+    this%coriolis_op_name              = trim(coriolis_op_name)
 
 end subroutine parse_nonlinear_nh_operator_config
 

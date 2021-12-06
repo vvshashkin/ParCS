@@ -168,6 +168,7 @@ subroutine create_nonlin_nh_operator(nh_operator,config,domain)
     use grid_field_factory_mod,         only: create_grid_field
     use scalar_advection_factory_mod,   only: create_scalar_advection3d_operator
     use vector_advection3d_factory_mod, only: create_vector_advection3d_operator
+    use coriolis_factory_mod,           only: create_coriolis
     use const_mod,                      only: Earth_grav
 
     class(operator_t), allocatable,       intent(out) :: nh_operator
@@ -201,6 +202,8 @@ subroutine create_nonlin_nh_operator(nh_operator,config,domain)
                                             config%uv_hor_adv_op_name, config%uv_ver_adv_op_name,&
                                             config%w_adv_op_name, config%w_adv_hor_part_name,    &
                                             config%w_adv_ver_part_name, domain)
+
+    call create_coriolis(operator%coriolis_op, config%coriolis_op_name, domain)
 
     call create_grid_field(operator%theta_u, 0, 0, domain%mesh_u)
     call create_grid_field(operator%theta_v, 0, 0, domain%mesh_v)

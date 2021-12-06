@@ -8,9 +8,10 @@
     h_top               = 10e3
 /
 &metric
-  metric_2d_type = "ecs"
-  vertical_transform_name = "vertical_transform_default"
-  scale               = 50969.832
+  metric_2d_type = "ecs",
+  vertical_transform_name = "vertical_transform_default",
+  scale               = 50969.832,
+  omega = 0.0
 /
 &nh_model
     timescheme_name  = "rk4"

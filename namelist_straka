@@ -8,9 +8,10 @@
     h_top               = 5e3
 /
 &metric
-  metric_2d_type = "ecs"
-  vertical_transform_name = "vertical_transform_default"
-  scale               = 0.6371229d4
+  metric_2d_type = "ecs",
+  vertical_transform_name = "vertical_transform_default",
+  scale               = 0.6371229d4,
+  omega               = 0.0
 /
 &nh_model
     timescheme_name  = "rk4"
@@ -47,7 +48,8 @@
     uv_ver_adv_op_name            = "adv_z_up4",
     w_adv_op_name                 = "advection_w_staggered",
     w_adv_hor_part_name           = "up4",
-    w_adv_ver_part_name           = "adv_z_up4"
+    w_adv_ver_part_name           = "adv_z_up4",
+    coriolis_op_name  = 'coriolis_Cgrid_noncons_sbp42',
 /
 &comments
   Earth_radii = 0.6371229d7

@@ -1,6 +1,6 @@
 &domain
-    N = 80,
-    Nz = 10,
+    N  = 64,
+    Nz = 20,
     topology_type       = 'cube',
     staggering_type     = 'C',
     vertical_staggering = 'CharneyPhilips'
@@ -11,23 +11,23 @@
   metric_2d_type = "ecs",
   vertical_transform_name = "vertical_transform_default",
   scale               = 50969.832,
-  omega = 0.0
+  omega = 9.115e-3
 /
 &nh_model
     timescheme_name  = "rk4"
     operator_type    = "nonlinear_nh"
-    testcase_name    = "GW"
+    testcase_name    = "solid_rotation"
     dt= 1.0,
     tau_write = 100.0,
-    tau_diagnostics = 2.0
+    tau_diagnostics = 100.0
     simulation_time_days  = 0.0,
     simulation_time_hours = 0.0,
     simulation_time_min   = 0.0,
-    simulation_time_sec   = 3600.0,
+    simulation_time_sec   = 16000.0,
 /
 &nh_postprocessing
-    Nlon = 320
-    Nlat = 161
+    Nlon = 128
+    Nlat = 65
     outputer_name = "latlon"
 /
 &nonlin_nh_operator
