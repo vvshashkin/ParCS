@@ -46,7 +46,7 @@ subroutine create_p_3d_advection(adv_op, hor_adv_op_name, z_adv_op_name, domain)
 
     allocate(adv_p3d)
 
-    call create_v2h_interpolator(adv_p3d%interp_uv2p_op, "W42_stagered_interp_c2i", domain)
+    call create_v2h_interpolator(adv_p3d%interp_uv2p_op, "W42_stagered_interp_i2c", domain)
     call create_vertical_operator(adv_p3d%interp_w2p_op, "vertical_interp_w2p_sbp42")
 
     call create_v_nabla_hor_operator(adv_p3d%v_nabla_op,halo_width,hor_adv_op_name)
