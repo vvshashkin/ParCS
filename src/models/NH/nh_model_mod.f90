@@ -8,6 +8,7 @@ use operator_mod,   only : operator_t
 use stvec_nh_mod, only : stvec_nh_t
 
 use abstract_postprocessing_mod, only : postprocessing_t
+use mpi
 
 implicit none
 
@@ -37,6 +38,8 @@ subroutine run(this)
 
     integer(kind=4) :: nstep, nzap
     integer(kind=4) :: istep
+    real(kind=8)    :: tmax, pmax, wmax
+    real(kind=8)    :: time
 
     nstep = int(this%simulation_time / this%dt)
     nzap  = int(this%tau_write / this%dt)
@@ -44,16 +47,22 @@ subroutine run(this)
     call this%postproc%write_fields(1,this%stvec,this%domain)
 
     do istep = 1, nstep
+        time = mpi_wtime()
         call this%timescheme%step(this%stvec, this%operator, this%domain, this%dt)
         if(mod(istep,nzap) == 0) then
             call this%postproc%write_fields(istep/nzap+1,this%stvec,this%domain)
+            if(this%domain%parcomm%myid == 0) &
             print *, "wr", istep/nzap+1
         end if
         select type(stvec=>this%stvec)
         type is (stvec_nh_t)
-            print *, istep, "w maxabs", stvec%eta_dot%maxabs(this%domain%mesh_w,this%domain%parcomm) &
-                          , "T maxabs", stvec%theta%maxabs(this%domain%mesh_w,this%domain%parcomm)   &
-                          , "P maxabs", stvec%P%maxabs(this%domain%mesh_p,this%domain%parcomm)
+            tmax = stvec%theta%maxabs(this%domain%mesh_w,this%domain%parcomm)
+            wmax = stvec%eta_dot%maxabs(this%domain%mesh_w,this%domain%parcomm)
+            pmax = stvec%P%maxabs(this%domain%mesh_p,this%domain%parcomm)
+            if(this%domain%parcomm%myid == 0) print *, istep, "w_maxabs", wmax, "t_maxabs", tmax, "pmaxabs", pmax, "time=", mpi_wtime()-time
+            !print *, istep, "w maxabs", stvec%eta_dot%maxabs(this%domain%mesh_w,this%domain%parcomm) &
+            !              , "T maxabs", stvec%theta%maxabs(this%domain%mesh_w,this%domain%parcomm)   &
+            !              , "P maxabs", stvec%P%maxabs(this%domain%mesh_p,this%domain%parcomm)
         class default
             print *, istep, "***"
         end select
