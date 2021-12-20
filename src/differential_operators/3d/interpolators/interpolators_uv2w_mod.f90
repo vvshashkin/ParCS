@@ -8,6 +8,17 @@ use interpolator_v2h_mod,           only : interpolator_v2h_t
 
 implicit none
 
+type, extends(interpolator_uv2w_t) :: uv2w_colocated_t
+contains
+    procedure :: interp_uv2w => interp_uv2w_colocated
+end type uv2w_colocated_t
+
+type, extends(interpolator_uv2w_t) :: uv2w_hor_colocated_t
+    class(vertical_operator_t), allocatable :: p2w_oper
+contains
+    procedure :: interp_uv2w => interp_uv2w_hor_colocated
+end type uv2w_hor_colocated_t
+
 type, extends(interpolator_uv2w_t) :: uv2w_staggered_t
     class(vertical_operator_t), allocatable :: p2w_oper
     type(grid_field_t)                      :: up, vp
@@ -17,6 +28,28 @@ contains
 end type uv2w_staggered_t
 
 contains
+
+subroutine interp_uv2w_colocated(this, uw, vw, u, v, domain)
+    class(uv2w_colocated_t),      intent(inout) :: this
+    type(grid_field_t),           intent(inout) :: u, v
+    type(domain_t),               intent(in)    :: domain
+    !output:
+    type(grid_field_t),           intent(inout) :: uw, vw
+
+    call uw%assign(1.0_8,u,domain%mesh_u)
+    call vw%assign(1.0_8,v,domain%mesh_v)
+end subroutine interp_uv2w_colocated
+
+subroutine interp_uv2w_hor_colocated(this, uw, vw, u, v, domain)
+    class(uv2w_hor_colocated_t),  intent(inout) :: this
+    type(grid_field_t),           intent(inout) :: u, v
+    type(domain_t),               intent(in)    :: domain
+    !output:
+    type(grid_field_t),           intent(inout) :: uw, vw
+
+    call this%p2w_oper%apply(uw,u,domain)
+    call this%p2w_oper%apply(vw,v,domain)
+end subroutine interp_uv2w_hor_colocated
 
 subroutine interp_uv2w_staggered(this, uw, vw, u, v, domain)
     class(uv2w_staggered_t),      intent(inout) :: this

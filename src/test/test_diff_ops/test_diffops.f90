@@ -345,6 +345,14 @@ call init_global_parallel_enviroment()
 ! end if
 !
 errs =  test_w2uv_interp(Nh = 32, Nz = 8, &
+                         w2uv_interpolator_name = "w2uv_colocated", &
+                         horizontal_staggering = "Ah", vertical_staggering = "None")
+if (parcomm_global%myid==0) then
+    print *, "w2uv_colocated"
+    print "(A,4E25.16)", "Err: ", errs%values
+end if
+
+errs =  test_w2uv_interp(Nh = 32, Nz = 8, &
                          w2uv_interpolator_name = "w2uv_hor_colocated_sbp21", &
                          horizontal_staggering = "Ah", vertical_staggering = "CharneyPhilips")
 if (parcomm_global%myid==0) then
@@ -364,7 +372,7 @@ errs =  test_w2uv_interp(Nh = 32, Nz = 8, &
                          w2uv_interpolator_name = "w2uv_staggered_C_sbp42_v_sbp21", &
                          horizontal_staggering = "C", vertical_staggering = "CharneyPhilips")
 if (parcomm_global%myid==0) then
-    print *, "w2uv_staggered_C_sbp42_v_sbp42"
+    print *, "w2uv_staggered_C_sbp42_v_sbp21"
     print "(A,4E25.16)", "Err: ", errs%values
 end if
 
@@ -372,7 +380,31 @@ errs =  test_w2uv_interp(Nh = 32, Nz = 8, &
                          w2uv_interpolator_name = "w2uv_staggered_C_sbp42_v_sbp42", &
                          horizontal_staggering = "C", vertical_staggering = "CharneyPhilips")
 if (parcomm_global%myid==0) then
-    print *, "w2uv_staggered_C_sbp42_v_sbp21"
+    print *, "w2uv_staggered_C_sbp42_v_sbp42"
+    print "(A,4E25.16)", "Err: ", errs%values
+end if
+
+errs =  test_uv2w_interp(Nh = 32, Nz = 8, &
+                         uv2w_interpolator_name = "uv2w_colocated", &
+                         horizontal_staggering = "Ah", vertical_staggering = "None")
+if (parcomm_global%myid==0) then
+    print *, "uv2w_colocated"
+    print "(A,4E25.16)", "Err: ", errs%values
+end if
+
+errs =  test_uv2w_interp(Nh = 32, Nz = 8, &
+                         uv2w_interpolator_name = "uv2w_hor_colocated_sbp21", &
+                         horizontal_staggering = "Ah", vertical_staggering = "CharneyPhilips")
+if (parcomm_global%myid==0) then
+    print *, "uv2w_hor_colocated_sbp21"
+    print "(A,4E25.16)", "Err: ", errs%values
+end if
+
+errs =  test_uv2w_interp(Nh = 32, Nz = 8, &
+                         uv2w_interpolator_name = "uv2w_hor_colocated_sbp42", &
+                         horizontal_staggering = "Ah", vertical_staggering = "CharneyPhilips")
+if (parcomm_global%myid==0) then
+    print *, "uv2w_hor_colocated_sbp21"
     print "(A,4E25.16)", "Err: ", errs%values
 end if
 
@@ -380,7 +412,7 @@ errs =  test_uv2w_interp(Nh = 32, Nz = 8, &
                          uv2w_interpolator_name = "uv2w_staggered_C_sbp42_v_sbp21", &
                          horizontal_staggering = "C", vertical_staggering = "CharneyPhilips")
 if (parcomm_global%myid==0) then
-    print *, "uv2w_staggered_C_sbp42_v_sbp42"
+    print *, "uv2w_staggered_C_sbp42_v_sbp21"
     print "(A,4E25.16)", "Err: ", errs%values
 end if
 
@@ -388,7 +420,7 @@ errs =  test_uv2w_interp(Nh = 32, Nz = 8, &
                          uv2w_interpolator_name = "uv2w_staggered_C_sbp42_v_sbp42", &
                          horizontal_staggering = "C", vertical_staggering = "CharneyPhilips")
 if (parcomm_global%myid==0) then
-    print *, "uv2w_staggered_C_sbp42_v_sbp21"
+    print *, "uv2w_staggered_C_sbp42_v_sbp42"
     print "(A,4E25.16)", "Err: ", errs%values
 end if
 
