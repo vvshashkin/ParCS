@@ -118,6 +118,13 @@ $(DEXE)TEST_HORDIFF_MAIN: $(MKDIRS) $(DOBJ)test_hordiff_main.o \
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_HORDIFF_MAIN
+$(DEXE)TEST_DIFFOPS_3D: $(MKDIRS) $(DOBJ)test_diffops_3d.o \
+	$(DOBJ)avost.o \
+	$(DOBJ)auxhs.o
+	@rm -f $(filter-out $(DOBJ)test_diffops_3d.o,$(EXESOBJ))
+	@echo $(LITEXT)
+	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
+EXES := $(EXES) TEST_DIFFOPS_3D
 $(DEXE)TEST_DIFFOPS_ALL: $(MKDIRS) $(DOBJ)test_diffops_all.o \
 	$(DOBJ)avost.o \
 	$(DOBJ)auxhs.o
@@ -2477,6 +2484,13 @@ $(DOBJ)test_hordiff_scalar_mod.o: src/test/test_hordiff/test_hordiff_scalar_mod.
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)test_diffops_3d.o: src/test/test_diff_ops/test_diffops_3d.f90 \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)test_diffops_3d_mod.o \
+	$(DOBJ)key_value_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)test_diffops_all.o: src/test/test_diff_ops/test_diffops_all.f90 \
 	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)test_diffops_mod.o \
@@ -2487,6 +2501,25 @@ $(DOBJ)test_diffops_all.o: src/test/test_diff_ops/test_diffops_all.f90 \
 $(DOBJ)test_diffops_conv.o: src/test/test_diff_ops/test_diffops_conv.f90 \
 	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)test_diffops_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)test_diffops_3d_mod.o: src/test/test_diff_ops/test_diffops_3d_mod.f90 \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)domain_factory_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)grid_field_factory_mod.o \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)vec_math_mod.o \
+	$(DOBJ)key_value_mod.o \
+	$(DOBJ)const_mod.o \
+	$(DOBJ)abstract_scalar_advection3d_mod.o \
+	$(DOBJ)scalar_advection_factory_mod.o \
+	$(DOBJ)config_domain_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)test_fieds_3d_mod.o \
+	$(DOBJ)grad3d_test_field_mod.o \
+	$(DOBJ)solid_rotation_wind_field_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
