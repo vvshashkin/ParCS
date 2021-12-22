@@ -88,7 +88,7 @@ function test_w2uv_interp(Nh, Nz, w2uv_interpolator_name, w2uv_hor_part_name, w2
 
 end function test_w2uv_interp
 
-function test_uv2w_interp(Nh, Nz, uv2w_interpolator_name, &
+function test_uv2w_interp(Nh, Nz, uv2w_interpolator_name, uv2w_hor_part_name, uv2w_vert_part_name, &
                                   horizontal_staggering, vertical_staggering) result(errs)
 
     use interpolator_uv2w_factory_mod,  only : create_uv2w_interpolator
@@ -100,7 +100,8 @@ function test_uv2w_interp(Nh, Nz, uv2w_interpolator_name, &
     real(kind=8), parameter :: h_top = 30e3_8
 
     integer(kind=4),  intent(in) :: Nh, Nz
-    character(len=*), intent(in) :: uv2w_interpolator_name
+    character(len=*), intent(in) :: uv2w_interpolator_name, uv2w_hor_part_name, &
+                                    uv2w_vert_part_name
     character(len=*), intent(in) :: horizontal_staggering, vertical_staggering
 
     type(key_value_r8_t) :: errs
@@ -128,7 +129,8 @@ function test_uv2w_interp(Nh, Nz, uv2w_interpolator_name, &
 
     call create_domain(domain, config_domain)
 
-    call create_uv2w_interpolator(uv2w_operator,uv2w_interpolator_name,domain)
+    call create_uv2w_interpolator(uv2w_operator,uv2w_interpolator_name, &
+                                  uv2w_hor_part_name, uv2w_vert_part_name, domain)
 
     call create_grid_field(u, halo_width, 0, domain%mesh_u)
     call create_grid_field(v, halo_width, 0, domain%mesh_v)
