@@ -63,7 +63,8 @@ subroutine create_Ptheta_linear_nh_operator(nh_operator,config,domain)
 
     operator%co2contra_op = create_co2contra_operator(domain, config%co2contra_operator_name)
 
-    call create_w2uv_interpolator(operator%w2uv_op,config%w2uv_operator_name,domain)
+    call create_w2uv_interpolator(operator%w2uv_op,config%w2uv_operator_name, &
+                                  config%w2uv_hor_part_name, config%w2uv_vert_part_name, domain)
 
     call create_vertical_operator(operator%w2p_op, config%w2p_operator_name)
 
@@ -189,7 +190,9 @@ subroutine create_nonlin_nh_operator(nh_operator,config,domain)
 
     operator%co2contra_op = create_co2contra_operator(domain, config%co2contra_operator_name)
 
-    call create_w2uv_interpolator(operator%theta2uv_op,config%theta2uv_operator_name,domain)
+    call create_w2uv_interpolator(operator%theta2uv_op,config%theta2uv_operator_name,&
+                                  config%theta2uv_hor_part_name, config%theta2uv_vert_part_name, &
+                                  domain)
 
     call create_scalar_advection3d_operator(operator%p_adv_oper,config%p_advection_oper_name, &
                                             config%p_hor_advection_oper_name,                 &

@@ -2512,13 +2512,16 @@ $(DOBJ)test_diffops_3d_mod.o: src/test/test_diff_ops/test_diffops_3d_mod.f90 \
 	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)vec_math_mod.o \
 	$(DOBJ)key_value_mod.o \
+	$(DOBJ)interpolator_w2uv_factory_mod.o \
+	$(DOBJ)abstract_interpolators3d_mod.o \
+	$(DOBJ)config_domain_mod.o \
+	$(DOBJ)grad3d_test_field_mod.o \
+	$(DOBJ)interpolator_uv2w_factory_mod.o \
 	$(DOBJ)const_mod.o \
 	$(DOBJ)abstract_scalar_advection3d_mod.o \
 	$(DOBJ)scalar_advection_factory_mod.o \
-	$(DOBJ)config_domain_mod.o \
 	$(DOBJ)mesh_mod.o \
 	$(DOBJ)test_fieds_3d_mod.o \
-	$(DOBJ)grad3d_test_field_mod.o \
 	$(DOBJ)solid_rotation_wind_field_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -2569,9 +2572,6 @@ $(DOBJ)test_diffops_mod.o: src/test/test_diff_ops/test_diffops_mod.f90 \
 	$(DOBJ)div_3d_factory_mod.o \
 	$(DOBJ)abstract_div_3d_mod.o \
 	$(DOBJ)div3d_test_field_mod.o \
-	$(DOBJ)interpolator_w2uv_factory_mod.o \
-	$(DOBJ)abstract_interpolators3d_mod.o \
-	$(DOBJ)interpolator_uv2w_factory_mod.o \
 	$(DOBJ)exchange_abstract_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
 	$(DOBJ)quadrature_factory_mod.o \

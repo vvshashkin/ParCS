@@ -12,7 +12,8 @@ type, extends(config_t) :: config_Ptheta_linear_t
                                  grad_hor_part_name, grad_vert_part_name, &
                                  div_hor_part_name,  div_vert_part_name, &
                                  co2contra_operator_name, &
-                                 w2uv_operator_name, w2p_operator_name
+                                 w2uv_operator_name, w2uv_hor_part_name, &
+                                 w2uv_vert_part_name, w2p_operator_name
     contains
     procedure :: parse => parse_Ptheta_linear_config
 end type config_Ptheta_linear_t
@@ -33,7 +34,8 @@ type, extends(config_t) :: config_nonlin_nh_operator_t
     character(:), allocatable :: grad_hor_part_name, grad_vert_part_name, &
                                  div_hor_part_name,  div_vert_part_name,  &
                                  co2contra_operator_name,                 &
-                                 theta2uv_operator_name
+                                 theta2uv_operator_name, theta2uv_hor_part_name, &
+                                 theta2uv_vert_part_name
     character(:), allocatable :: p_advection_oper_name
     character(:), allocatable :: p_hor_advection_oper_name
     character(:), allocatable :: p_z_advection_oper_name
@@ -76,11 +78,13 @@ subroutine parse_Ptheta_linear_config(this,config_string)
                                          grad_hor_part_name, grad_vert_part_name, &
                                          div_hor_part_name,  div_vert_part_name, &
                                          co2contra_operator_name, &
-                                         w2uv_operator_name, w2p_operator_name
+                                         w2uv_operator_name, w2uv_hor_part_name,&
+                                         w2uv_vert_part_name, w2p_operator_name
 
     character(len=256) :: background_type, grad_hor_part_name, grad_vert_part_name, &
                           div_hor_part_name, div_vert_part_name, &
-                          co2contra_operator_name, w2uv_operator_name, w2p_operator_name
+                          co2contra_operator_name, w2uv_operator_name, w2uv_hor_part_name, &
+                          w2uv_vert_part_name, w2p_operator_name
     real(kind=8) :: Nb=0.01, T0=300.0
 
     read(config_string,Ptheta_linear_nh_operator)
@@ -95,6 +99,8 @@ subroutine parse_Ptheta_linear_config(this,config_string)
     this%div_vert_part_name       = trim(div_vert_part_name)
     this%co2contra_operator_name  = trim(co2contra_operator_name)
     this%w2uv_operator_name       = trim(w2uv_operator_name)
+    this%w2uv_hor_part_name       = trim(w2uv_hor_part_name)
+    this%w2uv_vert_part_name      = trim(w2uv_vert_part_name)
     this%w2p_operator_name        = trim(w2p_operator_name)
 
 end subroutine parse_Ptheta_linear_config
@@ -139,6 +145,8 @@ subroutine parse_nonlinear_nh_operator_config(this,config_string)
                                   div_hor_part_name,  div_vert_part_name,  &
                                   co2contra_operator_name,                 &
                                   theta2uv_operator_name,                  &
+                                  theta2uv_hor_part_name,                  &
+                                  theta2uv_vert_part_name,                 &
                                   p_advection_oper_name,                   &
                                   p_hor_advection_oper_name,               &
                                   p_z_advection_oper_name,                 &
@@ -157,6 +165,8 @@ subroutine parse_nonlinear_nh_operator_config(this,config_string)
                           div_hor_part_name, div_vert_part_name,   &
                           co2contra_operator_name,                 &
                           theta2uv_operator_name,                  &
+                          theta2uv_hor_part_name,                  &
+                          theta2uv_vert_part_name,                 &
                           p_advection_oper_name,                   &
                           p_hor_advection_oper_name,               &
                           p_z_advection_oper_name,                 &
@@ -179,6 +189,8 @@ subroutine parse_nonlinear_nh_operator_config(this,config_string)
     this%div_vert_part_name            = trim(div_vert_part_name)
     this%co2contra_operator_name       = trim(co2contra_operator_name)
     this%theta2uv_operator_name        = trim(theta2uv_operator_name)
+    this%theta2uv_hor_part_name        = trim(theta2uv_hor_part_name)
+    this%theta2uv_vert_part_name       = trim(theta2uv_vert_part_name)
     this%p_advection_oper_name         = trim(p_advection_oper_name)
     this%p_hor_advection_oper_name     = trim(p_hor_advection_oper_name)
     this%p_z_advection_oper_name       = trim(p_z_advection_oper_name)
