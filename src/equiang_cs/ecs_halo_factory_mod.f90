@@ -21,10 +21,10 @@ public   :: create_ecs_o_scalar_halo, init_ecs_tile_halo
 contains
 
 subroutine create_ecs_o_scalar_halo(halo_out,domain,halo_width,is_z_interfaces)
-    use halo_mod,           only : halo_t
-    use domain_mod,         only : domain_t
-    use exchange_factory_mod,   only : create_symm_halo_exchange_A, &
-                                       create_symm_halo_exchange_Az
+    use halo_mod,             only : halo_t
+    use domain_mod,           only : domain_t
+    use exchange_factory_mod, only : create_o_points_halo_exchange, &
+                                     create_z_points_halo_exchange
 
     class(halo_t), allocatable, intent(out) :: halo_out
     class(domain_t),            intent(in)  :: domain
@@ -40,13 +40,12 @@ subroutine create_ecs_o_scalar_halo(halo_out,domain,halo_width,is_z_interfaces)
     allocate(halo)
     ex_halo_width = 8
     if(.not. is_z_interfaces) then
-        halo%exch_halo = create_symm_halo_exchange_A(domain%partition, domain%parcomm, domain%topology, &
-                                                     ex_halo_width, 'full')
+        halo%exch_halo = create_o_points_halo_exchange( &
+                domain%partition, domain%parcomm, domain%topology, ex_halo_width, 'full')
     else
-        halo%exch_halo = create_symm_halo_exchange_Az(domain%partition, domain%parcomm, domain%topology, &
-                                                     ex_halo_width, 'full')
+        halo%exch_halo = create_z_points_halo_exchange( &
+                domain%partition, domain%parcomm, domain%topology, ex_halo_width, 'full')
     end if
-
     ts = domain%partition%ts
     te = domain%partition%te
     nh = domain%partition%nh

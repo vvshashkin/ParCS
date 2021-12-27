@@ -56,22 +56,21 @@ end function create_grad_c2_ecs_operator
 function create_grad_c_sbp21_operator(domain) result(grad)
 
     use grad_c2_ecs_mod,      only : grad_c_sbp21_t
-    use exchange_factory_mod, only : create_symm_halo_exchange_A
+    use exchange_factory_mod, only : create_o_points_halo_exchange
 
     type(domain_t),   intent(in) :: domain
     type(grad_c_sbp21_t)         :: grad
 
     integer(kind=4), parameter :: halo_width=2
 
-    grad%exch_halo = create_symm_halo_exchange_A( &
+    grad%exch_halo = create_o_points_halo_exchange( &
                     domain%partition, domain%parcomm, domain%topology,  halo_width, 'full')
 end function create_grad_c_sbp21_operator
 
 function create_grad_c_sbp42_operator(domain) result(grad)
 
     use grad_c_sbp42_mod,        only : grad_c_sbp42_t
-    use exchange_factory_mod,    only : create_symm_halo_exchange_A, &
-                                        create_symmetric_halo_vec_exchange_C
+    use exchange_factory_mod,    only : create_o_points_halo_exchange
     use grid_field_factory_mod,  only : create_grid_field
 
     type(domain_t),   intent(in)      :: domain
@@ -79,7 +78,7 @@ function create_grad_c_sbp42_operator(domain) result(grad)
 
     integer(kind=4), parameter :: halo_width=3
 
-    grad%exch_f = create_symm_halo_exchange_A( &
+    grad%exch_f = create_o_points_halo_exchange( &
                     domain%partition, domain%parcomm, domain%topology,  halo_width, 'cross')
 
 end function create_grad_c_sbp42_operator
