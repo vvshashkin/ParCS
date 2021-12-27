@@ -51,7 +51,7 @@ end subroutine create_hor_colocated_w2uv
 subroutine create_staggered_w2uv(w2uv_interpolator, w2uv_interpolator_name, &
                                  w2uv_hor_part_name, w2uv_vert_part_name, domain)
 
-    use interpolator_h2v_factory_mod, only : create_h2v_interpolator
+    use interpolator2d_factory_mod,   only : create_scalar2vec_interpolator2d
     use grid_field_factory_mod,       only : create_grid_field
 
     class(interpolator_w2uv_t), allocatable, intent(out) :: w2uv_interpolator
@@ -61,23 +61,13 @@ subroutine create_staggered_w2uv(w2uv_interpolator, w2uv_interpolator_name, &
 
     type(w2uv_staggered_t), allocatable :: w2uv_staggered
 
-    integer(kind=4) :: halo_width
+    !WORKAROUND
+    integer(kind=4) :: halo_width = 3
 
     allocate(w2uv_staggered)
 
-    select case(w2uv_hor_part_name)
-    case ("hor_interp_p2uv_sbp21")
-        halo_width  = 1
-        call create_h2v_interpolator(w2uv_staggered%h2v_oper,  &
-                                     "W21_stagered_interp_c2i", domain)
-    case ("hor_interp_p2uv_sbp42")
-        halo_width  = 3
-        call create_h2v_interpolator(w2uv_staggered%h2v_oper,  &
-                                     "W42_stagered_interp_c2i", domain)
-    case default
-        call parcomm_global%abort("create_staggered_w2uv, unknown w2uv_hor_part_name: "//&
-                                  w2uv_hor_part_name)
-    end select
+    call create_scalar2vec_interpolator2d(w2uv_staggered%h2v_oper,  &
+                                          w2uv_hor_part_name, domain)
 
     call create_vertical_operator(w2uv_staggered%w2p_oper,w2uv_vert_part_name)
 

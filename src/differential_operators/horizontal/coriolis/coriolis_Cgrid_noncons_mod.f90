@@ -1,20 +1,20 @@
 module coriolis_Cgrid_noncons_mod
 
-use grid_field_mod,        only : grid_field_t, tile_field_t
-use domain_mod,            only : domain_t
-use abstract_coriolis_mod, only : coriolis_operator_t
-use mesh_mod,              only : tile_mesh_t
-use interpolator_v2h_mod,  only : interpolator_v2h_t
-use interpolator_h2v_mod,  only : interpolator_h2v_t
-use abstract_co2contra_mod,only : co2contra_operator_t
+use grid_field_mod,                only : grid_field_t, tile_field_t
+use domain_mod,                    only : domain_t
+use abstract_coriolis_mod,         only : coriolis_operator_t
+use mesh_mod,                      only : tile_mesh_t
+use interpolator_v2h_mod,          only : interpolator_v2h_t
+use abstract_interpolators2d_mod,  only : interpolator2d_vec2vec_t
+use abstract_co2contra_mod,        only : co2contra_operator_t
 
 implicit none
 
 type, public, extends(coriolis_operator_t) :: coriolis_Cgrid_noncons_t
     type(grid_field_t) :: f, u, v, uh, vh !coriolis parameter
-    class(co2contra_operator_t), allocatable :: co2contra
-    type(interpolator_v2h_t) :: interp_v2h_op
-    type(interpolator_h2v_t) :: interp_h2v_op
+    class(co2contra_operator_t), allocatable     :: co2contra
+    type(interpolator_v2h_t)                     :: interp_v2h_op
+    class(interpolator2d_vec2vec_t), allocatable :: interp_h2v_op
 
 contains
     procedure, public :: calc_coriolis
@@ -40,7 +40,7 @@ subroutine calc_coriolis_contra(this, cor_ut, cor_vt, ut, vt, domain)
                                           domain%mesh_p%tile(t))
     end do
 
-    call this%interp_h2v_op%interp_h2v(cor_ut, cor_vt, this%uh, this%vh, domain)
+    call this%interp_h2v_op%interp2d_vec2vec(cor_ut, cor_vt, this%uh, this%vh, domain)
 
     do t = domain%partition%ts, domain%partition%te
         call divide_by_G(cor_ut%tile(t), domain%mesh_u%tile(t))

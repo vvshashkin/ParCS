@@ -1,12 +1,12 @@
 module coriolis_Cgrid_mod
 
-use grid_field_mod,        only : grid_field_t, tile_field_t
-use domain_mod,            only : domain_t
-use abstract_coriolis_mod, only : coriolis_operator_t
-use mesh_mod,              only : tile_mesh_t
-use interpolator_v2h_mod,  only : interpolator_v2h_t
-use interpolator_w2h_mod,  only : interpolator_w2h_t
-use interpolator_h2v_mod,  only : interpolator_h2v_t
+use grid_field_mod,                only : grid_field_t, tile_field_t
+use domain_mod,                    only : domain_t
+use abstract_coriolis_mod,         only : coriolis_operator_t
+use mesh_mod,                      only : tile_mesh_t
+use interpolator_v2h_mod,          only : interpolator_v2h_t
+use interpolator_w2h_mod,          only : interpolator_w2h_t
+use abstract_interpolators2d_mod,  only : interpolator2d_vec2vec_t
 
 implicit none
 
@@ -14,9 +14,9 @@ type, public, extends(coriolis_operator_t) :: coriolis_Cgrid_t
     type(grid_field_t) :: f !coriolis parameter
     type(grid_field_t) :: Ghu, Ghv, Ghu_p, Ghv_p, curl_p, cor_u_p, cor_v_p
 
-    type(interpolator_v2h_t) :: interp_v2h_op
-    type(interpolator_w2h_t) :: interp_w2h_op
-    type(interpolator_h2v_t) :: interp_h2v_op
+    type(interpolator_v2h_t)                     :: interp_v2h_op
+    type(interpolator_w2h_t)                     :: interp_w2h_op
+    class(interpolator2d_vec2vec_t), allocatable :: interp_h2v_op
 
 contains
     procedure, public :: calc_coriolis
@@ -61,7 +61,7 @@ subroutine calc_coriolis_vec_inv(this, cor_u, cor_v, hu, hv, h, curl, domain)
                                           domain%mesh_p%tile(t))
     end do
 
-    call this%interp_h2v_op%interp_h2v(cor_u, cor_v, this%cor_u_p, this%cor_v_p, domain)
+    call this%interp_h2v_op%interp2d_vec2vec(cor_u, cor_v, this%cor_u_p, this%cor_v_p, domain)
 
 end subroutine calc_coriolis_vec_inv
 subroutine calc_Ghuv_tile(Ghuv, uv, mesh)

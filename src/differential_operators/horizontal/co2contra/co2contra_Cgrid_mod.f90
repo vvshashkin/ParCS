@@ -1,15 +1,15 @@
 module co2contra_Cgrid_mod
 
-use abstract_co2contra_mod, only : co2contra_operator_t
-use grid_field_mod,         only : grid_field_t, tile_field_t
-use mesh_mod,               only : tile_mesh_t
-use domain_mod,             only : domain_t
-use exchange_abstract_mod,  only : exchange_t
-use parcomm_mod,            only : parcomm_global
-use halo_mod,               only : halo_vec_t
-use sbp_operator_mod,       only : sbp_operator_t
-use interpolator_h2v_mod,   only : interpolator_h2v_t
-use interpolator_v2h_mod,   only : interpolator_v2h_t
+use abstract_co2contra_mod,          only : co2contra_operator_t
+use grid_field_mod,                  only : grid_field_t, tile_field_t
+use mesh_mod,                        only : tile_mesh_t
+use domain_mod,                      only : domain_t
+use exchange_abstract_mod,           only : exchange_t
+use parcomm_mod,                     only : parcomm_global
+use halo_mod,                        only : halo_vec_t
+use sbp_operator_mod,                only : sbp_operator_t
+use abstract_interpolators2d_mod,    only : interpolator2d_vec2vec_t
+use interpolator_v2h_mod,            only : interpolator_v2h_t
 
 implicit none
 
@@ -23,9 +23,9 @@ end type co2contra_c_sbp_t
 
 type, extends(co2contra_operator_t), public :: co2contra_c_sbp_new_t
     character(len=:), allocatable :: operator_name
-    type(interpolator_h2v_t) :: interp_h2v_op
-    type(interpolator_v2h_t) :: interp_v2h_op
-    type(grid_field_t) :: uh, vh
+    class(interpolator2d_vec2vec_t), allocatable  :: interp_h2v_op
+    type(interpolator_v2h_t)                      :: interp_v2h_op
+    type(grid_field_t)                            :: uh, vh
     contains
         procedure :: transform    => transform_co2contra_c_sbp_new
         procedure :: transform2co => transform_contra2co_c_sbp_new
@@ -82,7 +82,7 @@ subroutine transform_co2contra_c_sbp_new(this, u_contra, v_contra, u_cov, v_cov,
     end do
 
     !u_contra contains v part at u, v_contra contains u part at v
-    call this%interp_h2v_op%interp_h2v(u_contra, v_contra, this%uh, this%vh, domain)
+    call this%interp_h2v_op%interp2d_vec2vec(u_contra, v_contra, this%uh, this%vh, domain)
 
     do t = domain%partition%ts, domain%partition%te
         call finalize_co2contra_transform_at_uv_tile(u_contra%tile(t), v_contra%tile(t), &
@@ -151,7 +151,7 @@ subroutine transform_contra2co_c_sbp_new(this, u_cov, v_cov, u_contra, v_contra,
     end do
 
     !u_cov contains v part at u, v_cov contains u part at v
-    call this%interp_h2v_op%interp_h2v(u_cov, v_cov, this%uh, this%vh, domain)
+    call this%interp_h2v_op%interp2d_vec2vec(u_cov, v_cov, this%uh, this%vh, domain)
 
     do t = domain%partition%ts, domain%partition%te
         call finalize_contra2co_transform_at_uv_tile(u_cov%tile(t), v_cov%tile(t), &

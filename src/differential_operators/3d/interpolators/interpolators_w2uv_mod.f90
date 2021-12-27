@@ -4,7 +4,7 @@ use abstract_interpolators3d_mod,   only : interpolator_w2uv_t
 use grid_field_mod,                 only : grid_field_t
 use domain_mod,                     only : domain_t
 use abstract_vertical_operator_mod, only : vertical_operator_t
-use interpolator_h2v_mod,           only : interpolator_h2v_t
+use abstract_interpolators2d_mod,   only : interpolator2d_scalar2vec_t
 
 implicit none
 
@@ -20,9 +20,9 @@ contains
 end type w2uv_hor_colocated_t
 
 type, extends(interpolator_w2uv_t) :: w2uv_staggered_t
-    class(vertical_operator_t), allocatable :: w2p_oper
-    type(grid_field_t)                      :: wp
-    type(interpolator_h2v_t)                :: h2v_oper
+    class(vertical_operator_t), allocatable         :: w2p_oper
+    type(grid_field_t)                              :: wp
+    class(interpolator2d_scalar2vec_t), allocatable :: h2v_oper
 contains
     procedure :: interp_w2uv => interp_w2uv_staggered
 end type w2uv_staggered_t
@@ -59,7 +59,7 @@ subroutine interp_w2uv_staggered(this, wu, wv, w, domain)
     type(grid_field_t),           intent(inout) :: wu, wv
 
     call this%w2p_oper%apply(this%wp,w,domain)
-    call this%h2v_oper%interp_h2v(wu,wv,this%wp,this%wp,domain)
+    call this%h2v_oper%interp2d_scalar2vec(wu,wv,this%wp,domain)
 end subroutine interp_w2uv_staggered
 
 end module interpolators_w2uv_mod

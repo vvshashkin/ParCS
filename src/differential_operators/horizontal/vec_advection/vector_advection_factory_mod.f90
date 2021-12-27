@@ -34,23 +34,23 @@ subroutine create_vector_advection_operator(vec_advection_op, vec_advection_op_n
         call create_vector_advection_Ah_covariant(vec_advection_op, "d63", 5, domain)
     case("vector_advection_C_up4")
         call create_vector_advection_C(vec_advection_op, v_nabla_up4_operator_t(), &
-                                       "W42_stagered_interp_i2c", "W42_stagered_interp_c2i", &
+                                       "W42_stagered_interp_i2c", "interp2d_pvec2uv_C_sbp42", &
                                                                                      3,domain)
     case("vector_advection_C_up3")
         call create_vector_advection_C(vec_advection_op, v_nabla_up3_operator_t(), &
-                                       "W42_stagered_interp_i2c", "W42_stagered_interp_c2i", &
+                                       "W42_stagered_interp_i2c", "interp2d_pvec2uv_C_sbp42", &
                                                                                      3,domain)
     case("vector_advection_C_up1")
         call create_vector_advection_C(vec_advection_op, v_nabla_up1_operator_t(), &
-                                       "W42_stagered_interp_i2c", "W42_stagered_interp_c2i", &
+                                       "W42_stagered_interp_i2c", "interp2d_pvec2uv_C_sbp42", &
                                                                                      3,domain)
     case("vector_advection_C_c2")
         call create_vector_advection_C(vec_advection_op, v_nabla_c2_operator_t(), &
-                                       "W42_stagered_interp_i2c", "W42_stagered_interp_c2i", &
+                                       "W42_stagered_interp_i2c", "interp2d_pvec2uv_C_sbp42", &
                                                                                      3,domain)
     case("vector_advection_C_c4")
         call create_vector_advection_C(vec_advection_op, v_nabla_c4_operator_t(), &
-                                       "W42_stagered_interp_i2c", "W42_stagered_interp_c2i", &
+                                       "W42_stagered_interp_i2c", "interp2d_pvec2uv_C_sbp42", &
                                                                                      3,domain)
     case default
         call parcomm_global%abort("Unknown vector advection operator: "//vec_advection_op_name)
@@ -94,7 +94,7 @@ subroutine create_vector_advection_C(vec_advection_op, v_nabla_op, sbp_i2c_inter
 
     use vector_advection_C_mod,       only : vector_advection_C_t
     use grid_field_factory_mod,       only : create_grid_field
-    use interpolator_h2v_factory_mod, only : create_h2v_interpolator
+    use interpolator2d_factory_mod,   only : create_vec2vec_interpolator2d
     use interpolator_v2h_factory_mod, only : create_v2h_interpolator
     use halo_factory_mod,             only : create_vector_halo_procedure
     use abstract_v_nabla_mod,         only : v_nabla_operator_t
@@ -118,7 +118,7 @@ subroutine create_vector_advection_C(vec_advection_op, v_nabla_op, sbp_i2c_inter
     call create_grid_field(vec_advection_C_op%vh,halo_width+1, 0, domain%mesh_p)
 
     call create_v2h_interpolator(vec_advection_C_op%interp_v2h_op, sbp_i2c_interp_name, domain)
-    call create_h2v_interpolator(vec_advection_C_op%interp_h2v_op, sbp_c2i_interp_name, domain)
+    call create_vec2vec_interpolator2d(vec_advection_C_op%interp_h2v_op, sbp_c2i_interp_name, domain)
 
     call create_vector_halo_procedure(vec_advection_C_op%halo_uv, domain,max(halo_width,2),"ecs_C_vec")
     call create_vector_halo_procedure(vec_advection_C_op%tendency_edge_sync, domain, &

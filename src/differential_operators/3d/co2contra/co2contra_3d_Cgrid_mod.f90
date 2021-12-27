@@ -5,16 +5,16 @@ use grid_field_mod,                 only : grid_field_t, tile_field_t
 use mesh_mod,                       only : tile_mesh_t
 use domain_mod,                     only : domain_t
 use abstract_vertical_operator_mod, only : vertical_operator_t
-use interpolator_h2v_mod,           only : interpolator_h2v_t
+use abstract_interpolators2d_mod,   only : interpolator2d_vec2vec_t
 use interpolator_v2h_mod,           only : interpolator_v2h_t
 
 implicit none
 
 type, extends(co2contra_3d_operator_t), public :: co2contra_3d_Cgrid_t
-    type(interpolator_h2v_t) :: interp_h2v
-    type(interpolator_v2h_t) :: interp_v2h
-    class(vertical_operator_t), allocatable :: interp_w2p, interp_p2w
-    type(grid_field_t) :: up, vp, wp
+    class(interpolator2d_vec2vec_t), allocatable :: interp_h2v
+    type(interpolator_v2h_t)                     :: interp_v2h
+    class(vertical_operator_t), allocatable      :: interp_w2p, interp_p2w
+    type(grid_field_t)                           :: up, vp, wp
 contains
     procedure :: transform    => transform_co2contra_3d_Cgrid
     ! procedure :: transform2co => transform_contra2co_3d_Cgrid
@@ -42,7 +42,7 @@ subroutine transform_co2contra_3d_Cgrid(this, u_contra, v_contra, w_contra, &
     end do
 
     !u_contra contains v part at u, v_contra contains u part at v
-    call this%interp_h2v%interp_h2v(u_contra, v_contra, this%up, this%vp, domain)
+    call this%interp_h2v%interp2d_vec2vec(u_contra, v_contra, this%up, this%vp, domain)
     call this%interp_p2w%apply(w_contra, this%wp, domain)
 
     do t = domain%partition%ts, domain%partition%te
