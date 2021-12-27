@@ -15,13 +15,13 @@ subroutine test_A_halo_exchange()
     use domain_factory_mod,     only : create_domain
     use exchange_abstract_mod,  only : exchange_t
     use exchange_halo_mod,      only : exchange_2D_halo_t
-    use exchange_factory_mod,   only : create_symm_halo_exchange_A
+    use exchange_factory_mod,   only : create_o_points_halo_exchange
 
     type(domain_t) :: domain
 
     class(exchange_t), allocatable     :: exch_halo
     type(grid_field_t)                 :: f, u, v
-    integer(kind=4)                    :: nh=100, nz=10, halo_width=50
+    integer(kind=4)                    :: nh=50, nz=5, halo_width=25
     integer(kind=4)                    :: ierr, code
 
     integer(kind=4) :: ts, te
@@ -61,7 +61,7 @@ subroutine test_A_halo_exchange()
     end do
 
     !Init exchange
-    exch_halo = create_symm_halo_exchange_A( &
+    exch_halo = create_o_points_halo_exchange( &
                 domain%partition, domain%parcomm, domain%topology,  halo_width, 'full')
 
     !Perform exchange
@@ -183,7 +183,7 @@ subroutine test_Ah_halo_exchange()
 
     class(exchange_t), allocatable     :: exch_halo
     type(grid_field_t)                 :: f, u, v
-    integer(kind=4)                    :: nh=100, nz=10, halo_width=50
+    integer(kind=4)                    :: nh=50, nz=5, halo_width=25
     integer(kind=4)                    :: ierr, code
 
     call create_domain(domain, "cube", 'Ah', nh, nz)
@@ -216,7 +216,7 @@ subroutine test_halo_vec_C_exchange()
 
     class(exchange_t), allocatable :: exch_halo
     type(grid_field_t)             :: f, u, v
-    integer(kind=4)                :: nh=50, nz=10, halo_width=20
+    integer(kind=4)                :: nh=50, nz=5, halo_width=20
     integer(kind=4)                :: ierr
 
     integer(kind=4) :: ts, te
@@ -354,7 +354,7 @@ subroutine test_halo_vec_Ch_exchange()
 
     class(exchange_t), allocatable :: exch_halo
     type(grid_field_t)             :: f, u, v
-    integer(kind=4)                :: nh=50, nz=10, halo_width=20
+    integer(kind=4)                :: nh=50, nz=5, halo_width=20
     integer(kind=4)                :: ierr
 
     integer(kind=4) :: ts, te
@@ -496,7 +496,7 @@ subroutine test_halo_u_exchange()
 
     class(exchange_t), allocatable :: exch_halo
     type(grid_field_t)             :: f, u, v
-    integer(kind=4)                :: nh=100, nz=10, halo_width=50
+    integer(kind=4)                :: nh=50, nz=5, halo_width=25
     integer(kind=4)                :: ierr
 
     integer(kind=4) :: ts, te
@@ -605,7 +605,7 @@ subroutine test_halo_v_exchange()
 
     class(exchange_t), allocatable :: exch_halo
     type(grid_field_t)             :: f, u, v
-    integer(kind=4)                :: nh=100, nz=10, halo_width=50
+    integer(kind=4)                :: nh=50, nz=5, halo_width=25
     integer(kind=4)                :: ierr
 
     integer(kind=4) :: ts, te
@@ -710,7 +710,7 @@ subroutine test_gather_exchange()
     class(exchange_t), allocatable :: exch_gather
     type(grid_field_t)             :: f
 
-    integer(kind=4) :: nh=100, nz=10, halo_width=10
+    integer(kind=4) :: nh=50, nz=5, halo_width=10
     integer(kind=4) :: ierr, code
     integer(kind=4) :: master_id = 0
 

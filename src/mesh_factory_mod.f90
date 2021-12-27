@@ -8,7 +8,7 @@ implicit none
 
 contains
 
-subroutine create_mesh(mesh, partition, metric, halo_width, h_top, points_type, points_type_ver)
+subroutine create_mesh(mesh, partition, metric, halo_width, h_top, points_type, vertical_staggering)
 
     use partition_mod, only : partition_t
     use metric_mod,    only : metric_t
@@ -19,69 +19,82 @@ subroutine create_mesh(mesh, partition, metric, halo_width, h_top, points_type, 
 
     integer(kind=4),  intent(in)   :: halo_width
     real(kind=8),     intent(in)   :: h_top
-    character(len=*), intent(in)   :: points_type, points_type_ver
+    character(len=*), intent(in)   :: points_type, vertical_staggering
 
     integer(kind=4) :: t, pind, i, j, k, ts, te, is, ie, js, je, ks, ke, nh, nx, ny, nz
     real(kind=8) :: alpha, beta, eta, hz, vec(3)
 
     type(tile_t), pointer :: tile(:), tile_c_vert(:), tile_xy_vert(:)
 
-    real(kind=8) :: shift_i, shift_j, shift_k, alpha_0, beta_0
-
-    alpha_0 = metric%alpha0
-    beta_0  = metric%beta0
+    real(kind=8) :: shift_i, shift_j, shift_k
 
     shift_i = 0.5_8
     shift_j = 0.5_8
 
-    select case(points_type_ver)
-    case("0")
-        tile_c_vert  => partition%tile
-        tile_xy_vert => partition%tile_xy
-        nz = partition%Nz
-        hz = 1.0_8 / max(1.0_8, real(nz-1,8))
-        shift_k = 0.0_8
-    case("c")
-        tile_c_vert  => partition%tile
-        tile_xy_vert => partition%tile_xy
-        nz = partition%Nz
-        hz = 1.0_8 / real(nz,8)
-        shift_k = 0.5_8
-    case("z")
-        tile_c_vert  => partition%tile_z
-        tile_xy_vert => partition%tile_xyz
-        nz = partition%Nz+1
-        hz = 1.0_8 / real(nz-1,8)
-        shift_k = 0.0_8
-    case default
-        call parcomm_global%abort("unknown vertical points type in mesh factory: "//&
-                                   points_type_ver)
-    end select
-
+    ! define horizontal grid parameters
     select case(points_type)
-    case('c')
-        tile => tile_c_vert
+    case('o')
+        tile => partition%tile_o
         nx = partition%nh
         ny = partition%nh
     case('x')
-        shift_i = 0.0_8
         tile => partition%tile_x
+        shift_i = 0.0_8
         nx = partition%nh+1
         ny = partition%nh
     case('y')
-        shift_j = 0.0_8
         tile => partition%tile_y
+        shift_j = 0.0_8
         nx = partition%nh
         ny = partition%nh+1
     case('xy')
+        tile => partition%tile_xy
         shift_i = 0.0_8
         shift_j = 0.0_8
-        tile => tile_xy_vert
+        nx = partition%nh+1
+        ny = partition%nh+1
+    case('z')
+        tile => partition%tile_z
+        nx = partition%nh
+        ny = partition%nh
+    case('xyz')
+        tile => partition%tile_xyz
+        shift_i = 0.0_8
+        shift_j = 0.0_8
         nx = partition%nh+1
         ny = partition%nh+1
     case default
         call parcomm_global%abort("mesh factory error - unknown points type: "//&
                                   points_type)
+    end select
+
+    ! define vertical grid parameters
+    select case(vertical_staggering)
+    case("None")
+        nz = partition%Nz
+        if (partition%Nz == 1) then
+            call parcomm_global%print("Single layer model. Setting hz = 1")
+            hz = 1.0_8
+        else
+            hz = 1.0_8/(partition%Nz-1)
+        end if
+        select case(points_type)
+        case("o", "x", "y", "xy")
+            shift_k = 0.0_8
+        case("z, xyz")
+            call parcomm_global%abort( &
+            "Wrong combination of points_type and veritcal staggering in mesh factory "//&
+                                      points_type//" "//vertical_staggering)
+        end select
+    case("CharneyPhilips")
+        nz = partition%Nz+1
+        hz = 1.0_8/partition%Nz
+        select case(points_type)
+        case("o", "x", "y", "xy")
+            shift_k = 0.5_8
+        case("z, xyz")
+            shift_k = 0.0_8
+        end select
     end select
 
     ts = partition%ts
@@ -120,8 +133,8 @@ subroutine create_mesh(mesh, partition, metric, halo_width, h_top, points_type, 
         mesh%tile(t)%shift_j = shift_j
         mesh%tile(t)%shift_k = shift_k
 
-        mesh%tile(t)%alpha_0 = alpha_0
-        mesh%tile(t)%beta_0  = beta_0
+        mesh%tile(t)%alpha_0 = metric%alpha0
+        mesh%tile(t)%beta_0  = metric%beta0
 
         do k=ks, ke
             eta = mesh%tile(t)%get_eta(k)
