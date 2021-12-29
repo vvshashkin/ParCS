@@ -4,6 +4,7 @@ use parcomm_mod,   only : parcomm_t
 use partition_mod, only : partition_t
 use topology_mod,  only : topology_t
 use tile_mod,      only : tile_t
+use tiles_mod,     only : tiles_t
 
 implicit none
 
@@ -13,7 +14,7 @@ function create_o_points_halo_exchange(partition, parcomm, topology, halo_width,
 
     use exchange_halo_mod, only : exchange_2D_halo_t
 
-    type(partition_t), target, intent(in)    :: partition
+    type(partition_t), intent(in)    :: partition
     class(topology_t), intent(in) :: topology
     integer(kind=4),   intent(in) :: halo_width
     character(*),      intent(in) :: halo_type
@@ -21,7 +22,7 @@ function create_o_points_halo_exchange(partition, parcomm, topology, halo_width,
 
     type(exchange_2D_halo_t) :: exchange
 
-    exchange = create_o_z_points_halo_exchange(partition%tile_o, partition, parcomm, topology, &
+    exchange = create_o_z_points_halo_exchange(partition%tiles_o, partition, parcomm, topology, &
                                              halo_width, halo_type)
 end function create_o_points_halo_exchange
 
@@ -29,7 +30,7 @@ function create_z_points_halo_exchange(partition, parcomm, topology, halo_width,
 
     use exchange_halo_mod, only : exchange_2D_halo_t
 
-    type(partition_t), target, intent(in)    :: partition
+    type(partition_t), intent(in)    :: partition
     class(topology_t), intent(in) :: topology
     integer(kind=4),   intent(in) :: halo_width
     character(*),      intent(in) :: halo_type
@@ -37,17 +38,17 @@ function create_z_points_halo_exchange(partition, parcomm, topology, halo_width,
 
     type(exchange_2D_halo_t) :: exchange
 
-    exchange = create_o_z_points_halo_exchange(partition%tile_z, partition, parcomm, topology, &
+    exchange = create_o_z_points_halo_exchange(partition%tiles_z, partition, parcomm, topology, &
                                              halo_width, halo_type)
 end function create_z_points_halo_exchange
 
-function create_o_z_points_halo_exchange(tile, partition, parcomm, topology, halo_width, &
+function create_o_z_points_halo_exchange(tiles, partition, parcomm, topology, halo_width, &
                                        halo_type) result(exchange)
 
     use exchange_halo_mod, only : exchange_2D_halo_t
 
     type(partition_t), intent(in) :: partition
-    type(tile_t),      target, intent(in) :: tile(partition%Nt)
+    type(tiles_t), target, intent(in) :: tiles
     class(topology_t), intent(in) :: topology
     integer(kind=4),   intent(in) :: halo_width
     character(*),      intent(in) :: halo_type
@@ -57,19 +58,13 @@ function create_o_z_points_halo_exchange(tile, partition, parcomm, topology, hal
 
     type(tile_t), pointer :: local_tile, remote_tile
 
-    type(tile_t),     dimension(partition%Nt**2) :: &
-                      send_tile, recv_tile
-    integer(kind=4),  dimension(partition%Nt**2) :: &
-                      send_to_proc_id, recv_from_proc_id   , &
-                      recv_to_tile_ind , &
-                      send_from_tile_ind, &
-                      send_tag, recv_tag
-    integer(kind=4),  dimension(partition%Nt**2) :: &
-                      send_pts_num, recv_pts_num
-    integer(kind=4),  dimension(partition%Nt**2) :: &
-                      send_i_step, send_j_step
-    character(len=1), dimension(partition%Nt**2) :: &
-                      first_dim_index
+    type(tile_t),     dimension(partition%Nt**2) :: send_tile, recv_tile
+    integer(kind=4),  dimension(partition%Nt**2) :: send_to_proc_id, recv_from_proc_id,   &
+                                                    recv_to_tile_ind, send_from_tile_ind, &
+                                                    send_tag, recv_tag
+    integer(kind=4),  dimension(partition%Nt**2) :: send_pts_num, recv_pts_num
+    integer(kind=4),  dimension(partition%Nt**2) :: send_i_step, send_j_step
+    character(len=1), dimension(partition%Nt**2) :: first_dim_index
 
     type(tile_t) :: temp_tile, halo_tile
 
@@ -87,19 +82,19 @@ function create_o_z_points_halo_exchange(tile, partition, parcomm, topology, hal
 
     do local_ind = partition%ts, partition%te
 
-        local_tile => tile(local_ind)
+        local_tile => tiles%tile(local_ind)
         local_panel = partition%panel_map(local_ind)
 
         do remote_ind = 1, partition%Nt
 
             if (remote_ind == local_ind) cycle
 
-            remote_tile => tile(remote_ind)
+            remote_tile => tiles%tile(remote_ind)
             remote_panel = partition%panel_map(remote_ind)
 
             call topology%transform_tile_coords(remote_panel, remote_tile, &
                                                 local_panel,  temp_tile,   &
-                                                partition%nh, partition%nh)
+                                                tiles%Nx, tiles%Ny)
 
             !recv exchange
             call find_tiles_halo_intersection(local_tile, halo_width, halo_width, &
@@ -174,19 +169,13 @@ function create_symm_halo_exchange_Ah(partition, parcomm, topology, halo_width, 
 
     type(tile_t), pointer :: local_tile, remote_tile
 
-    type(tile_t),     dimension(partition%Nt**2) :: &
-                      send_tile, recv_tile
-    integer(kind=4),  dimension(partition%Nt**2) :: &
-                      send_to_proc_id, recv_from_proc_id   , &
-                      recv_to_tile_ind , &
-                      send_from_tile_ind, &
-                      send_tag, recv_tag
-    integer(kind=4),  dimension(partition%Nt**2) :: &
-                      send_pts_num, recv_pts_num
-    integer(kind=4),  dimension(partition%Nt**2) :: &
-                      send_i_step, send_j_step
-    character(len=1), dimension(partition%Nt**2) :: &
-                      first_dim_index
+    type(tile_t),     dimension(partition%Nt**2) :: send_tile, recv_tile
+    integer(kind=4),  dimension(partition%Nt**2) :: send_to_proc_id, recv_from_proc_id,   &
+                                                    recv_to_tile_ind, send_from_tile_ind, &
+                                                    send_tag, recv_tag
+    integer(kind=4),  dimension(partition%Nt**2) :: send_pts_num, recv_pts_num
+    integer(kind=4),  dimension(partition%Nt**2) :: send_i_step, send_j_step
+    character(len=1), dimension(partition%Nt**2) :: first_dim_index
 
     type(tile_t) :: temp_tile, halo_tile
 
@@ -202,23 +191,21 @@ function create_symm_halo_exchange_Ah(partition, parcomm, topology, halo_width, 
     rnum = 0
     snum = 0
 
-    do local_ind = 1, partition%Nt
+    do local_ind = partition%ts, partition%te
 
-        if (partition%proc_map(local_ind) /= parcomm%myid) cycle
-
-        local_tile => partition%tile_xy(local_ind)
+        local_tile => partition%tiles_xy%tile(local_ind)
         local_panel = partition%panel_map(local_ind)
 
         do remote_ind = 1, partition%Nt
 
             if (remote_ind == local_ind) cycle
 
-            remote_tile => partition%tile_xy(remote_ind)
+            remote_tile => partition%tiles_xy%tile(remote_ind)
             remote_panel = partition%panel_map(remote_ind)
 
             call topology%transform_tile_coords(remote_panel, remote_tile, &
                                                 local_panel,  temp_tile,   &
-                                                partition%nh+1, partition%nh+1)
+                                                partition%tiles_xy%Nx, partition%tiles_xy%Ny)
 
             !recv exchange
             call find_tiles_halo_intersection(local_tile, halo_width, halo_width, &
@@ -349,9 +336,7 @@ function create_symm_halo_vec_exchange_U_points(partition, parcomm, topology, ha
     rnum = 0
     snum = 0
 
-    do local_ind = 1, partition%Nt
-
-        if (partition%proc_map(local_ind) /= parcomm%myid) cycle
+    do local_ind = partition%ts, partition%te
 
         local_panel = partition%panel_map(local_ind)
 
@@ -363,7 +348,7 @@ function create_symm_halo_vec_exchange_U_points(partition, parcomm, topology, ha
             halo_width_y = halo_width
 
             !recv part
-            local_tile => partition%tile_x(local_ind)
+            local_tile => partition%tiles_x%tile(local_ind)
 
             remote_panel = partition%panel_map(remote_ind)
 
@@ -373,10 +358,10 @@ function create_symm_halo_vec_exchange_U_points(partition, parcomm, topology, ha
 
             if (first_dim_index(snum+1) == 'i') then
             !recv from u points to u points
-                remote_tile => partition%tile_x(remote_ind)
+                remote_tile => partition%tiles_x%tile(remote_ind)
             else if (first_dim_index(snum+1) == 'j') then
             !recv from v points to u points
-                remote_tile => partition%tile_y(remote_ind)
+                remote_tile => partition%tiles_y%tile(remote_ind)
             end if
 
             call topology%transform_tile_coords(remote_panel, remote_tile,     &
@@ -409,8 +394,8 @@ function create_symm_halo_vec_exchange_U_points(partition, parcomm, topology, ha
                               local_tile, halo_type, send_tile(snum+1), is_intersection)
             else if (first_dim_index(snum+1) == 'j') then
                 !send from v points to u points
-                local_tile  => partition%tile_y(local_ind)
-                remote_tile => partition%tile_x(remote_ind)
+                local_tile  => partition%tiles_y%tile(local_ind)
+                remote_tile => partition%tiles_x%tile(remote_ind)
                 call topology%transform_tile_coords(remote_panel, remote_tile, &
                                                     local_panel, temp_tile,     &
                                                     partition%tiles_y%Nx, partition%tiles_y%Ny)
@@ -493,9 +478,7 @@ function create_symm_halo_vec_exchange_V_points(partition, parcomm, topology, ha
     rnum = 0
     snum = 0
 
-    do local_ind = 1, partition%Nt
-
-        if (partition%proc_map(local_ind) /= parcomm%myid) cycle
+    do local_ind = partition%ts, partition%te
 
         local_panel = partition%panel_map(local_ind)
 
@@ -507,7 +490,7 @@ function create_symm_halo_vec_exchange_V_points(partition, parcomm, topology, ha
             halo_width_y = halo_width
 
             !recv part
-            local_tile => partition%tile_y(local_ind)
+            local_tile => partition%tiles_y%tile(local_ind)
 
             remote_panel = partition%panel_map(remote_ind)
 
@@ -517,10 +500,10 @@ function create_symm_halo_vec_exchange_V_points(partition, parcomm, topology, ha
 
             if (first_dim_index(snum+1) == 'i') then
             !recv from v points to v points
-                remote_tile => partition%tile_y(remote_ind)
+                remote_tile => partition%tiles_y%tile(remote_ind)
             else if (first_dim_index(snum+1) == 'j') then
             !recv from u points to v points
-                remote_tile => partition%tile_x(remote_ind)
+                remote_tile => partition%tiles_x%tile(remote_ind)
             end if
 
             call topology%transform_tile_coords(remote_panel, remote_tile,     &
@@ -553,8 +536,8 @@ function create_symm_halo_vec_exchange_V_points(partition, parcomm, topology, ha
                               local_tile, halo_type, send_tile(snum+1), is_intersection)
             else if (first_dim_index(snum+1) == 'j') then
                 !send from u points to v points
-                local_tile  => partition%tile_x(local_ind)
-                remote_tile => partition%tile_y(remote_ind)
+                local_tile  => partition%tiles_x%tile(local_ind)
+                remote_tile => partition%tiles_y%tile(remote_ind)
                 call topology%transform_tile_coords(remote_panel, remote_tile,   &
                                                     local_panel, temp_tile,     &
                                                     partition%tiles_x%Nx, partition%tiles_x%Ny)
@@ -667,7 +650,7 @@ subroutine create_gather_exchange(exchange, points_type, parcomm, partition, mas
 
     type(exchange_gather_t), allocatable :: gather_exchange
 
-    type(tile_t) :: tile(partition%Nt)
+    type(tiles_t) :: tiles
 
     integer(kind=4),  dimension(partition%Nt) :: &
                       recv_is, recv_ie, recv_js, recv_je, recv_ks, recv_ke, &
@@ -680,73 +663,65 @@ subroutine create_gather_exchange(exchange, points_type, parcomm, partition, mas
     integer(kind=4),  dimension(partition%Nt) :: &
                       send_pts_num, recv_pts_num
 
-    integer(kind=4) :: ind, send_exch_num, recv_exch_num, ts, te
+    integer(kind=4) :: t, send_exch_num, recv_exch_num, ts, te
     integer(kind=4) :: master_id_loc
 
     master_id_loc = 0
     if (present(master_id)) master_id_loc = master_id
 
-    ts = partition%ts
-    te = partition%te
-
     recv_exch_num = 0
     send_exch_num = 0
 
-    call partition%get_points_type_tile(points_type, tile)
+    call partition%get_tiles(points_type, tiles)
 
     if (parcomm%myid == master_id_loc) then
 
-        do ind = 1, partition%Nt
+        do t = 1, partition%Nt
 
-            if (partition%proc_map(ind) == parcomm%myid) cycle
+            if (partition%proc_map(t) == parcomm%myid) cycle
 
             recv_exch_num = recv_exch_num + 1
 
-            recv_is(recv_exch_num) = tile(ind)%is
-            recv_ie(recv_exch_num) = tile(ind)%ie
+            recv_is(recv_exch_num) = tiles%tile(t)%is
+            recv_ie(recv_exch_num) = tiles%tile(t)%ie
 
-            recv_js(recv_exch_num) = tile(ind)%js
-            recv_je(recv_exch_num) = tile(ind)%je
+            recv_js(recv_exch_num) = tiles%tile(t)%js
+            recv_je(recv_exch_num) = tiles%tile(t)%je
 
-            recv_ks(recv_exch_num) = tile(ind)%ks
-            recv_ke(recv_exch_num) = tile(ind)%ke
+            recv_ks(recv_exch_num) = tiles%tile(t)%ks
+            recv_ke(recv_exch_num) = tiles%tile(t)%ke
 
             recv_pts_num(recv_exch_num) = (recv_ie(recv_exch_num) - recv_is(recv_exch_num) + 1)* &
                                           (recv_je(recv_exch_num) - recv_js(recv_exch_num) + 1)* &
                                           (recv_ke(recv_exch_num) - recv_ks(recv_exch_num) + 1)
 
-            recv_to_tile_ind  (recv_exch_num) = ind
-
-            recv_from_proc_id(recv_exch_num)  = partition%proc_map(ind)
-
-            recv_tag(recv_exch_num) = ind
+            recv_to_tile_ind  (recv_exch_num) = t
+            recv_from_proc_id(recv_exch_num)  = partition%proc_map(t)
+            recv_tag(recv_exch_num) = t
 
         end do
 
     else
 
-        do ind = 1, partition%Nt
-
-            if (partition%proc_map(ind) /= parcomm%myid) cycle
+        do t = partition%ts, partition%te
 
             send_exch_num = send_exch_num + 1
 
-            send_is(send_exch_num) = tile(ind)%is
-            send_ie(send_exch_num) = tile(ind)%ie
+            send_is(send_exch_num) = tiles%tile(t)%is
+            send_ie(send_exch_num) = tiles%tile(t)%ie
 
-            send_js(send_exch_num) = tile(ind)%js
-            send_je(send_exch_num) = tile(ind)%je
+            send_js(send_exch_num) = tiles%tile(t)%js
+            send_je(send_exch_num) = tiles%tile(t)%je
 
-            send_ks(send_exch_num) = tile(ind)%ks
-            send_ke(send_exch_num) = tile(ind)%ke
+            send_ks(send_exch_num) = tiles%tile(t)%ks
+            send_ke(send_exch_num) = tiles%tile(t)%ke
 
             send_pts_num(send_exch_num) = (send_ie(send_exch_num) - send_is(send_exch_num) + 1)* &
                                           (send_je(send_exch_num) - send_js(send_exch_num) + 1)* &
                                           (send_ke(send_exch_num) - send_ks(send_exch_num) + 1)
 
-            send_from_tile_ind(send_exch_num) = ind
-
-            send_tag(send_exch_num) = ind
+            send_from_tile_ind(send_exch_num) = t
+            send_tag(send_exch_num) = t
 
         end do
     end if
@@ -773,17 +748,15 @@ subroutine create_gather_exchange(exchange, points_type, parcomm, partition, mas
             recv_tag           = recv_tag(1:recv_exch_num),           &
             send_number        = send_exch_num,                       &
             recv_number        = recv_exch_num,                       &
-            master_id = master_id,                                    &
-            ts = ts,                                                  &
-            te = te ))
+            master_id          = master_id))
 
     allocate(gather_exchange%send_buff(1:send_exch_num)   , gather_exchange%recv_buff(1:recv_exch_num)   )
     allocate(gather_exchange%mpi_send_req(1:send_exch_num), gather_exchange%mpi_recv_req(1:recv_exch_num))
-    do ind = 1, recv_exch_num
-        call gather_exchange%recv_buff(ind)%init(recv_pts_num(ind))
+    do t = 1, recv_exch_num
+        call gather_exchange%recv_buff(t)%init(recv_pts_num(t))
     end do
-    do ind = 1, send_exch_num
-        call gather_exchange%send_buff(ind)%init(send_pts_num(ind))
+    do t = 1, send_exch_num
+        call gather_exchange%send_buff(t)%init(send_pts_num(t))
     end do
 
     call move_alloc(gather_exchange, exchange)

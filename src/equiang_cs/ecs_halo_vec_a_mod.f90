@@ -60,7 +60,7 @@ subroutine get_ecs_a_vector_halo(this,u,v,domain,halo_width)
     call this%exch_halo%do_vec(u,v, domain%parcomm)
 
     do t=this%ts,this%te
-        call this%tile(t)%interpv(u%tile(t),v%tile(t),domain%partition%tile(t),halo_width)
+        call this%tile(t)%interpv(u%tile(t),v%tile(t),domain%partition%tiles_o%tile(t),halo_width)
     end do
 end subroutine get_ecs_a_vector_halo
 

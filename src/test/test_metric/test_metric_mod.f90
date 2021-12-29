@@ -55,11 +55,11 @@ end if
 
 do ind = 1,1!domain%partition%ts, domain%partition%te
     lsymm_check = lsymm_check .and. &
-        symmetricity_check_h(domain%topology, domain%mesh_p, domain%partition%tile(ind), &
+        symmetricity_check_h(domain%topology, domain%mesh_p, domain%partition%tiles_p%tile(ind), &
                          ind, domain%partition%panel_map(ind)) .and. &
-        symmetricity_check_h(domain%topology, domain%mesh_u, domain%partition%tile_u(ind), &
+        symmetricity_check_h(domain%topology, domain%mesh_u, domain%partition%tiles_u%tile(ind), &
                          ind, domain%partition%panel_map(ind)) .and. &
-        symmetricity_check_h(domain%topology, domain%mesh_v, domain%partition%tile_v(ind), &
+        symmetricity_check_h(domain%topology, domain%mesh_v, domain%partition%tiles_v%tile(ind), &
                          ind, domain%partition%panel_map(ind))
 end do
 

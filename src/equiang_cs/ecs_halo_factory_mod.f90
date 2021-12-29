@@ -55,7 +55,7 @@ subroutine create_ecs_o_scalar_halo(halo_out,domain,halo_width,is_z_interfaces)
 
     do t=ts,te
         hx = domain%mesh_p%tile(t)%hx
-        call domain%partition%tile(t)%getind(is,ie,js,je)
+        call domain%partition%tiles_o%tile(t)%getind(is,ie,js,je)
         call init_ecs_tile_halo(halo%tile(t),is,ie,js,je,nh,halo_width,hx)
     end do
 

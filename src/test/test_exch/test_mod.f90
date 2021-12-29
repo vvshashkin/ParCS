@@ -1,7 +1,7 @@
 module test_mod
 
 use grid_field_mod,         only : grid_field_t
-use grid_field_factory_mod, only : create_grid_field
+use grid_field_factory_mod, only : create_grid_field, create_grid_field_global
 
 implicit none
 
@@ -716,6 +716,7 @@ subroutine test_gather_exchange()
 
     integer(kind=4) :: ts, te
     integer(kind=4) :: i, j, k, t, N_tiles, pn
+    integer(kind=4) :: is, ie, js, je, ks, ke
 
     real(kind=8) :: err_sum
 
@@ -736,12 +737,9 @@ subroutine test_gather_exchange()
     N_tiles = domain%partition%num_tiles*domain%partition%num_panels
 
     if (domain%parcomm%myid == master_id) then
-        allocate(f%tile(N_tiles))
-        do i = 1, N_tiles
-            call f%tile(i)%init(domain%partition%tile_p(i)%is, domain%partition%tile_p(i)%ie, &
-                                domain%partition%tile_p(i)%js, domain%partition%tile_p(i)%je, &
-                                domain%partition%tile_p(i)%ks, domain%partition%tile_p(i)%ke)
-            f%tile(i)%p = huge(1.0_8)
+        call create_grid_field_global(f, 0, 0, domain%partition%tiles_p)
+        do t = 1, domain%partition%Nt
+            f%tile(t)%p = huge(1.0_8)
         end do
     else
         call create_grid_field(f, halo_width, 0, domain%mesh_p)
@@ -770,11 +768,12 @@ subroutine test_gather_exchange()
 
         err_sum = 0
 
-        do t = 1, N_tiles
+        do t = 1, domain%partition%Nt
             pn = domain%partition%panel_map(t)
-            do k = domain%partition%tile_p(t)%ks, domain%partition%tile_p(t)%ke
-                do j = domain%partition%tile_p(t)%js, domain%partition%tile_p(t)%je
-                    do i = domain%partition%tile_p(t)%is, domain%partition%tile_p(t)%ie
+            call domain%partition%tiles_p%tile(t)%getind(is, ie, js, je, ks, ke)
+            do k = ks, ke
+                do j = js, je
+                    do i = is, ie
                         err_sum = err_sum + abs(f%tile(t)%p(i,j,k) - __fun(i,j,k,pn))
                     end do
                 end do

@@ -45,7 +45,7 @@ subroutine create_ecs_A_vec_halo_procedure(halo_out,domain,halo_width)
                                                  ex_halo_width, 'full')
     do t=ts,te
         hx = domain%mesh_p%tile(t)%hx
-        call domain%partition%tile(t)%getind(is,ie,js,je)
+        call domain%partition%tiles_o%tile(t)%getind(is,ie,js,je)
         call init_ecs_tile_halo_vect(halo%tile(t),domain%partition%panel_map(t), &
                                      is,ie,js,je,nh,halo_width,hx)
     end do

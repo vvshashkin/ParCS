@@ -8,20 +8,18 @@ type, public :: partition_t
     type(tiles_t)     :: tiles_o, tiles_x,  tiles_y,  tiles_xy, &
                          tiles_z, tiles_xyz, &
                          tiles_u, tiles_v, tiles_p
-    type(tile_t),    allocatable :: tile_o(:), tile_x(:), tile_y(:), tile_xy(:)
-    type(tile_t),    allocatable :: tile_z(:), tile_xyz(:)
-    type(tile_t),    allocatable :: tile(:), tile_u(:), tile_v(:), tile_p(:)!array of partition tiles
+    type(tile_t),    allocatable :: tile(:)!, tile_o(:), tile_x(:), tile_y(:), tile_xy(:)
+    !type(tile_t),    allocatable :: tile_z(:), tile_xyz(:)
     integer(kind=4), allocatable :: proc_map(:) !determine belonging of the tile to the specific processor
     integer(kind=4), allocatable :: panel_map(:)!determine belonging of the tile to the specific panel
     integer(kind=4)              :: Nh, Nz      !number of grid points in x/y, z direction for the one panel
-    integer(kind=4)              :: nx_u, ny_u, nx_v, ny_v
     integer(kind=4)              :: num_tiles   !number of tiles at each panel in the partition
     integer(kind=4)              :: num_panels  !
     integer(kind=4)              :: Nt          ! total number of tiles
     integer(kind=4)              :: ts, te      ! start and end index of the tiles belonging to the specific processor
 contains
     procedure, public :: init
-    procedure, public :: get_points_type_tile
+    ! procedure, public :: get_points_type_tile
     procedure, public :: get_tiles
     ! procedure, public :: write_to_txt
     ! procedure, public :: write_to_txt_3d
@@ -112,70 +110,28 @@ subroutine init(this, Nh, Nz, num_tiles, myid, Np, staggering_type, strategy)
         call parcomm_global%abort('Unknown staggering_type in partition initialization!')
     end if
 
-    this%tile_o  = this%tile
-    this%tile_x  = this%tile
-    this%tile_y  = this%tile
-    this%tile_xy = this%tile
-
-    do t=1, this%num_panels*this%num_tiles
-        if(this%tile_x(t)%ie == nh) this%tile_x(t)%ie = this%nh+1
-
-        if(this%tile_y(t)%je == nh) this%tile_y(t)%je = this%nh+1
-
-        if(this%tile_xy(t)%ie == nh) this%tile_xy(t)%ie = this%nh+1
-        if(this%tile_xy(t)%je == nh) this%tile_xy(t)%je = this%nh+1
-
-    end do
-
-    this%tile_z = this%tile_o
-    this%tile_xyz = this%tile_xy
-
-    do t=1, this%num_panels*this%num_tiles
-        if(this%tile_z(t)%ke == this%Nz) this%tile_z(t)%ke = this%Nz+1
-        if(this%tile_xyz(t)%ke == this%Nz) this%tile_xyz(t)%ke = this%Nz+1
-    end do
-
-    if (staggering_type == 'A') then
-        this%nx_u = this%nh
-        this%ny_u = this%nh
-        this%nx_v = this%nh
-        this%ny_v = this%nh
-
-        this%tile_u = this%tile_o
-        this%tile_v = this%tile_o
-        this%tile_p = this%tile_o
-
-    else if (staggering_type == 'Ah') then
-        this%nx_u = this%nh+1
-        this%ny_u = this%nh+1
-        this%nx_v = this%nh+1
-        this%ny_v = this%nh+1
-
-        this%tile_u = this%tile_xy
-        this%tile_v = this%tile_xy
-        this%tile_p = this%tile_xy
-
-    else if (staggering_type == 'C') then
-        this%nx_u = this%nh+1
-        this%ny_u = this%nh
-        this%nx_v = this%nh
-        this%ny_v = this%nh+1
-
-        this%tile_u = this%tile_x
-        this%tile_v = this%tile_y
-        this%tile_p = this%tile_o
-    else if (staggering_type == 'Ch') then
-        this%nx_u = this%nh
-        this%ny_u = this%nh+1
-        this%nx_v = this%nh+1
-        this%ny_v = this%nh
-
-        this%tile_u = this%tile_y
-        this%tile_v = this%tile_x
-        this%tile_p = this%tile_xy
-    else
-        call parcomm_global%abort('Unknown staggering_type in partition initialization!')
-    end if
+    ! this%tile_o  = this%tile
+    ! this%tile_x  = this%tile
+    ! this%tile_y  = this%tile
+    ! this%tile_xy = this%tile
+    !
+    ! do t=1, this%num_panels*this%num_tiles
+    !     if(this%tile_x(t)%ie == nh) this%tile_x(t)%ie = this%nh+1
+    !
+    !     if(this%tile_y(t)%je == nh) this%tile_y(t)%je = this%nh+1
+    !
+    !     if(this%tile_xy(t)%ie == nh) this%tile_xy(t)%ie = this%nh+1
+    !     if(this%tile_xy(t)%je == nh) this%tile_xy(t)%je = this%nh+1
+    !
+    ! end do
+    !
+    ! this%tile_z = this%tile_o
+    ! this%tile_xyz = this%tile_xy
+    !
+    ! do t=1, this%num_panels*this%num_tiles
+    !     if(this%tile_z(t)%ke   == this%Nz) this%tile_z(t)%ke   = this%Nz+1
+    !     if(this%tile_xyz(t)%ke == this%Nz) this%tile_xyz(t)%ke = this%Nz+1
+    ! end do
 
     ! if(myid == 0) call this%write_to_txt('partition.txt')
 
@@ -310,38 +266,32 @@ function get_factors(n) result(factors)
 
 end function get_factors
 
-subroutine get_points_type_tile(this, points_type, tile)
-
-    use parcomm_mod, only : parcomm_global
-
-    class(partition_t),        intent(in)  :: this
-    character(len=*),          intent(in)  :: points_type
-    type(tile_t),              intent(out) :: tile(this%num_panels*this%num_tiles)
-
-    select case(points_type)
-    case('o')
-        tile = this%tile_o
-    case('x')
-        tile = this%tile_x
-    case('y')
-        tile = this%tile_y
-    case('z')
-        tile = this%tile_z
-    case('xy')
-        tile = this%tile_xy
-    case('xyz')
-        tile = this%tile_xyz
-    case('p')
-        tile = this%tile_p
-    case('u')
-        tile = this%tile_u
-    case('v')
-        tile = this%tile_v
-    case default
-        call parcomm_global%abort("Wrong points_type in get_points_type_tile "//points_type)
-    end select
-
-end subroutine
+! subroutine get_points_type_tile(this, points_type, tile)
+!
+!     use parcomm_mod, only : parcomm_global
+!
+!     class(partition_t),        intent(in)  :: this
+!     character(len=*),          intent(in)  :: points_type
+!     type(tile_t),              intent(out) :: tile(this%num_panels*this%num_tiles)
+!
+!     select case(points_type)
+!     case('o')
+!         tile = this%tile_o
+!     case('x')
+!         tile = this%tile_x
+!     case('y')
+!         tile = this%tile_y
+!     case('z')
+!         tile = this%tile_z
+!     case('xy')
+!         tile = this%tile_xy
+!     case('xyz')
+!         tile = this%tile_xyz
+!     case default
+!         call parcomm_global%abort("Wrong points_type in get_points_type_tile "//points_type)
+!     end select
+!
+! end subroutine
 subroutine get_tiles(this, points_type, tiles)
 
     use parcomm_mod, only : parcomm_global
