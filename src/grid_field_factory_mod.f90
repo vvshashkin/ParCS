@@ -35,9 +35,10 @@ subroutine create_grid_field_global(grid_field, halo_width_xy, halo_width_z, til
 
     type(grid_field_t), intent(out) :: grid_field
     integer(kind=4),    intent(in)  :: halo_width_xy, halo_width_z
-    type(tiles_t),      intent(in) :: tiles
+    type(tiles_t),      intent(in)  :: tiles
 
     integer(kind=4) :: t, ts, te
+    integer(kind=4) :: is, ie, js, je, ks, ke
 
     allocate(grid_field%tile(1:tiles%Nt))
 
@@ -45,9 +46,10 @@ subroutine create_grid_field_global(grid_field, halo_width_xy, halo_width_z, til
     grid_field%te = tiles%Nt
 
     do t = 1, tiles%Nt
-        call grid_field%tile(t)%init(tiles%is(t)-halo_width_xy, tiles%ie(t)+halo_width_xy, &
-                                     tiles%js(t)-halo_width_xy, tiles%je(t)+halo_width_xy, &
-                                     tiles%ks(t)-halo_width_z,  tiles%ke(t)+halo_width_z)
+        call tiles%tile(t)%getind(is, ie, js, je, ks, ke)
+        call grid_field%tile(t)%init(is-halo_width_xy, ie+halo_width_xy, &
+                                     js-halo_width_xy, je+halo_width_xy, &
+                                     ks-halo_width_z,  ke+halo_width_z)
     end do
 
 end subroutine create_grid_field_global
