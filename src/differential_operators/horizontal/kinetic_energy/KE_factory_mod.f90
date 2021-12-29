@@ -21,9 +21,9 @@ subroutine create_KE_operator(ke_operator, ke_operator_name, domain)
     case("KE_colocated")
         ke_operator = ke_colocated_t()
     case("KE_Cgrid_sbp42")
-        call create_KE_Cgrid_sbp(ke_operator, "W42_stagered_interp_i2c", domain)
+        call create_KE_Cgrid_sbp(ke_operator, "interp2d_uv2pvec_C_sbp42", domain)
     case("KE_Cgrid_sbp21")
-        call create_KE_Cgrid_sbp(ke_operator, "W21_stagered_interp_i2c", domain)
+        call create_KE_Cgrid_sbp(ke_operator, "interp2d_uv2pvec_C_sbp21", domain)
     case default
         call parcomm_global%abort("Unknown KE operator: "//ke_operator_name)
     end select
@@ -34,7 +34,7 @@ subroutine create_KE_Cgrid_sbp(ke_operator, sbp_i2c_interp_name, domain)
 
     use grid_field_factory_mod,       only : create_grid_field
     use ke_Cgrid_mod,                 only : ke_Cgrid_t
-    use interpolator_v2h_factory_mod, only : create_v2h_interpolator
+    use interpolator2d_factory_mod,   only : create_vec2vec_interpolator2d
 
     class(KE_operator_t), allocatable, intent(out) :: ke_operator
     character(len=*),                  intent(in)  :: sbp_i2c_interp_name
@@ -55,7 +55,7 @@ subroutine create_KE_Cgrid_sbp(ke_operator, sbp_i2c_interp_name, domain)
     call create_grid_field(ke_cgrid_op%KE_vh, 0, 0, domain%mesh_v)
 
     !WORKAROUND
-    call create_v2h_interpolator(ke_cgrid_op%interp_op, sbp_i2c_interp_name , domain)
+    call create_vec2vec_interpolator2d(ke_cgrid_op%interp_op, sbp_i2c_interp_name , domain)
 
     call move_alloc(ke_cgrid_op, ke_operator)
 

@@ -5,7 +5,8 @@ use domain_mod,                   only : domain_t
 use sbp_factory_mod,              only : create_sbp_operator
 use exchange_factory_mod,         only : create_symm_halo_exchange_Ah
 use grid_field_factory_mod,       only : create_grid_field
-use interpolator_v2h_factory_mod, only : create_v2h_interpolator
+use interpolator2d_factory_mod,   only : create_vec2vec_interpolator2d
+use parcomm_mod,                  only : parcomm_global
 
 implicit none
 
@@ -33,7 +34,15 @@ subroutine create_w2h_interpolator(interpolator_w2h, sbp_i2c_interp_name, domain
     call create_grid_field(interpolator_w2h%fuh,           0, 0, domain%mesh_p)
     call create_grid_field(interpolator_w2h%fvh,           0, 0, domain%mesh_p)
 
-    call create_v2h_interpolator(interpolator_w2h%interp_v2h_op, sbp_i2c_interp_name, domain)
+    select case(sbp_i2c_interp_name)
+    case ("W21_stagered_interp_i2c")
+        call create_vec2vec_interpolator2d(interpolator_w2h%interp_v2h_op, "interp2d_uv2pvec_C_sbp21", domain)
+    case ("W42_stagered_interp_i2c")
+        call create_vec2vec_interpolator2d(interpolator_w2h%interp_v2h_op, "interp2d_uv2pvec_C_sbp42", domain)
+    case default
+        call parcomm_global%abort("create_w2h_interpolator, unknown sbp_i2c_interp_name:"//&
+                                 sbp_i2c_interp_name)
+    end select
 
 end subroutine create_w2h_interpolator
 

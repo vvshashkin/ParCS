@@ -31,7 +31,6 @@ subroutine create_co2contra_3d_Cgrid(co2contra_3d_op, domain, co2contra_3d_name)
     use co2contra_3d_Cgrid_mod,        only : co2contra_3d_Cgrid_t
     use vertical_operator_factory_mod, only : create_vertical_operator
     use interpolator2d_factory_mod,    only : create_vec2vec_interpolator2d
-    use interpolator_v2h_factory_mod,  only : create_v2h_interpolator
     use grid_field_factory_mod,        only : create_grid_field
 
 
@@ -48,11 +47,11 @@ subroutine create_co2contra_3d_Cgrid(co2contra_3d_op, domain, co2contra_3d_name)
     if (co2contra_3d_name(1:8) == "h_sbp21_") then
         halo_width = 4
         call create_vec2vec_interpolator2d(co2contra%interp_h2v, "interp2d_p2uv_C_sbp21", domain)
-        call create_v2h_interpolator(co2contra%interp_v2h, "W21_stagered_interp_i2c", domain)
+        call create_vec2vec_interpolator2d(co2contra%interp_v2h, "interp2d_uv2pvec_C_sbp21", domain)
     else if (co2contra_3d_name(1:8) == "h_sbp42_") then
         halo_width = 4
         call create_vec2vec_interpolator2d(co2contra%interp_h2v, "interp2d_p2uv_C_sbp42", domain)
-        call create_v2h_interpolator(co2contra%interp_v2h, "W42_stagered_interp_i2c", domain)
+        call create_vec2vec_interpolator2d(co2contra%interp_v2h, "interp2d_uv2pvec_C_sbp42", domain)
     else
         call parcomm_global%abort("unknown co2contra_3d_Cgrid operator: "//co2contra_3d_name)
     end if

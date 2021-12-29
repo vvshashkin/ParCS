@@ -5,7 +5,6 @@ use abstract_vector_advection_mod, only : vector_advection_operator_t
 use grid_field_mod,                only : grid_field_t, tile_field_t
 use domain_mod,                    only : domain_t
 use halo_mod,                      only : halo_vec_t
-use interpolator_v2h_mod,          only : interpolator_v2h_t
 use abstract_interpolators2d_mod,  only : interpolator2d_vec2vec_t
 use parcomm_mod,                   only : parcomm_global
 
@@ -14,7 +13,7 @@ implicit none
 type, public, extends(vector_advection_operator_t) :: vector_advection_C_t
     class(v_nabla_operator_t), allocatable       :: v_nabla_op
     type(grid_field_t)                           :: u_at_v, v_at_u, uh, vh
-    type(interpolator_v2h_t)                     :: interp_v2h_op
+    class(interpolator2d_vec2vec_t), allocatable :: interp_v2h_op
     class(interpolator2d_vec2vec_t), allocatable :: interp_h2v_op
     class(halo_vec_t), allocatable               :: halo_uv, tendency_edge_sync
 contains
@@ -43,7 +42,7 @@ subroutine calc_vec_advection_contra(this, u_tend, v_tend, ut, vt, domain)
 
     integer(kind=4) :: t
 
-    call this%interp_v2h_op%interp_v2h(this%uh, this%vh, ut, vt, domain)
+    call this%interp_v2h_op%interp2d_vec2vec(this%uh, this%vh, ut, vt, domain)
     call this%interp_h2v_op%interp2d_vec2vec(this%v_at_u, this%u_at_v, this%vh, this%uh, domain)
 
     call this%halo_uv%get_halo_vector(ut, vt, domain, 3)

@@ -9,7 +9,6 @@ use parcomm_mod,                     only : parcomm_global
 use halo_mod,                        only : halo_vec_t
 use sbp_operator_mod,                only : sbp_operator_t
 use abstract_interpolators2d_mod,    only : interpolator2d_vec2vec_t
-use interpolator_v2h_mod,            only : interpolator_v2h_t
 
 implicit none
 
@@ -23,8 +22,7 @@ end type co2contra_c_sbp_t
 
 type, extends(co2contra_operator_t), public :: co2contra_c_sbp_new_t
     character(len=:), allocatable :: operator_name
-    class(interpolator2d_vec2vec_t), allocatable  :: interp_h2v_op
-    type(interpolator_v2h_t)                      :: interp_v2h_op
+    class(interpolator2d_vec2vec_t), allocatable  :: interp_h2v_op, interp_v2h_op
     type(grid_field_t)                            :: uh, vh
     contains
         procedure :: transform    => transform_co2contra_c_sbp_new
@@ -74,7 +72,7 @@ subroutine transform_co2contra_c_sbp_new(this, u_contra, v_contra, u_cov, v_cov,
 
     integer(kind=4) :: t
 
-    call this%interp_v2h_op%interp_v2h(this%uh, this%vh, u_cov, v_cov, domain)
+    call this%interp_v2h_op%interp2d_vec2vec(this%uh, this%vh, u_cov, v_cov, domain)
 
     do t = domain%partition%ts, domain%partition%te
         call start_co2contra_transform_at_h_tile(this%uh%tile(t), this%vh%tile(t), &
@@ -143,7 +141,7 @@ subroutine transform_contra2co_c_sbp_new(this, u_cov, v_cov, u_contra, v_contra,
 
     integer(kind=4) :: t
 
-    call this%interp_v2h_op%interp_v2h(this%uh, this%vh, u_contra, v_contra, domain)
+    call this%interp_v2h_op%interp2d_vec2vec(this%uh, this%vh, u_contra, v_contra, domain)
 
     do t = domain%partition%ts, domain%partition%te
         call start_contra2co_transform_at_h_tile(this%uh%tile(t), this%vh%tile(t),&

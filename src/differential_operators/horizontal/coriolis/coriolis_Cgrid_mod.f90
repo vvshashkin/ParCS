@@ -4,7 +4,6 @@ use grid_field_mod,                only : grid_field_t, tile_field_t
 use domain_mod,                    only : domain_t
 use abstract_coriolis_mod,         only : coriolis_operator_t
 use mesh_mod,                      only : tile_mesh_t
-use interpolator_v2h_mod,          only : interpolator_v2h_t
 use interpolator_w2h_mod,          only : interpolator_w2h_t
 use abstract_interpolators2d_mod,  only : interpolator2d_vec2vec_t
 
@@ -14,7 +13,7 @@ type, public, extends(coriolis_operator_t) :: coriolis_Cgrid_t
     type(grid_field_t) :: f !coriolis parameter
     type(grid_field_t) :: Ghu, Ghv, Ghu_p, Ghv_p, curl_p, cor_u_p, cor_v_p
 
-    type(interpolator_v2h_t)                     :: interp_v2h_op
+    class(interpolator2d_vec2vec_t), allocatable :: interp_v2h_op
     type(interpolator_w2h_t)                     :: interp_w2h_op
     class(interpolator2d_vec2vec_t), allocatable :: interp_h2v_op
 
@@ -51,7 +50,7 @@ subroutine calc_coriolis_vec_inv(this, cor_u, cor_v, hu, hv, h, curl, domain)
         call calc_Ghuv_tile(this%Ghv%tile(t), hv%tile(t), domain%mesh_v%tile(t))
     end do
 
-    call this%interp_v2h_op%interp_v2h(this%Ghu_p, this%Ghv_p, this%Ghu, this%Ghv, domain)
+    call this%interp_v2h_op%interp2d_vec2vec(this%Ghu_p, this%Ghv_p, this%Ghu, this%Ghv, domain)
     call this%interp_w2h_op%interp_w2h(this%curl_p, curl, domain)
 
     do t = domain%partition%ts, domain%partition%te

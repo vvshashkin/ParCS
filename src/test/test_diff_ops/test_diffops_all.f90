@@ -1,8 +1,8 @@
 program test_diffops
 
-use parcomm_mod,         only : init_global_parallel_enviroment, &
-                                deinit_global_parallel_enviroment, &
-                                parcomm_global
+use parcomm_mod,      only : init_global_parallel_enviroment, &
+                             deinit_global_parallel_enviroment, &
+                             parcomm_global
 use test_diffops_mod, only: test_div, test_grad, test_conv, test_curl,      &
                             test_coriolis, test_KE, test_coriolis_vec_inv,  &
                             test_co2contra, test_grad_perp, test_contra2co, &

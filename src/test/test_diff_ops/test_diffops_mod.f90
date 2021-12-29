@@ -597,7 +597,7 @@ function test_curl_grad(N, curl_oper_name, grad_oper_name, staggering) result(er
 
 end function test_curl_grad
 
-function test_coriolis(N, coriolis_op_name, staggering) result(errs)
+function test_coriolis(N, coriolis_op_name, staggering, result_components) result(errs)
 
     use test_fields_mod,   only : set_vector_test_field, set_scalar_test_field, &
                                   solid_rotation_field_generator, &
@@ -610,14 +610,22 @@ function test_coriolis(N, coriolis_op_name, staggering) result(errs)
 
     integer(kind=4),  intent(in) :: N
     character(len=*), intent(in) :: coriolis_op_name, staggering
+    character(len=*), intent(in), optional :: result_components
+    !output
     type(key_value_r8_t)         :: errs
     !locals:
     integer(kind=4), parameter  :: nz = 3
     integer(kind=4), parameter  :: ex_halo_width = 8
+    character(len=:), allocatable :: result_components_loc
     class(vector_field_generator_t), allocatable :: exact_field, test_field
     type(grid_field_t)          :: u, v, cor_u, cor_v, cor_u_true, cor_v_true
     type(domain_t)              :: domain
     class(coriolis_operator_t), allocatable :: coriolis
+
+    result_components_loc = "covariant"
+    if(present(result_components)) then
+        result_components_loc = result_components
+    end if
 
     call create_domain(domain, "cube", staggering, N, nz)
 
@@ -641,12 +649,16 @@ function test_coriolis(N, coriolis_op_name, staggering) result(errs)
     call set_vector_test_field(u, v, test_field, domain%mesh_u, domain%mesh_v, &
                                0, "contravariant")
 
-    call coriolis%calc_coriolis(cor_u, cor_v, u, v, domain)
+    if(result_components_loc == "contravariant") then
+        call coriolis%calc_coriolis_contra(cor_u, cor_v, u, v, domain)
+    else
+        call coriolis%calc_coriolis(cor_u, cor_v, u, v, domain)
+    end if
 
     exact_field = coriolis_force_field_generator_t(input_field = test_field)
 
     call set_vector_test_field(cor_u_true, cor_v_true, exact_field, domain%mesh_u, domain%mesh_v, &
-                               0, "covariant")
+                               0, result_components_loc)
 
     call cor_u%update(-1.0_8, cor_u_true, domain%mesh_u)
     call cor_v%update(-1.0_8, cor_v_true, domain%mesh_v)

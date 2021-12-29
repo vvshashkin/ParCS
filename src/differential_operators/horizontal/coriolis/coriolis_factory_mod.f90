@@ -25,33 +25,35 @@ subroutine create_coriolis(coriolis_op, coriolis_op_name, domain)
         call create_coriolis_colocated(coriolis_op, domain)
     case("coriolis_Cgrid_sbp42")
         call create_coriolis_Cgrid_sbp(coriolis_op, "W42_stagered_interp_i2c", &
-                                          "interp2d_pvec2uv_C_sbp42", domain)
+                                       "interp2d_uv2pvec_C_sbp42", &
+                                       "interp2d_pvec2uv_C_sbp42", domain)
     case("coriolis_Cgrid_sbp21")
         call create_coriolis_Cgrid_sbp(coriolis_op, "W21_stagered_interp_i2c", &
+                                          "interp2d_uv2pvec_C_sbp21", &
                                           "interp2d_pvec2uv_C_sbp21", domain)
     case("coriolis_Cgrid_noncons_sbp21")
-        call create_coriolis_Cgrid_noncons_sbp(coriolis_op, "W21_stagered_interp_i2c", &
+        call create_coriolis_Cgrid_noncons_sbp(coriolis_op, "interp2d_uv2pvec_C_sbp21", &
                                           "interp2d_pvec2uv_C_sbp21", "co2contra_c_sbp21_new", domain)
     case("coriolis_Cgrid_noncons_sbp42")
-        call create_coriolis_Cgrid_noncons_sbp(coriolis_op, "W42_stagered_interp_i2c", &
+        call create_coriolis_Cgrid_noncons_sbp(coriolis_op, "interp2d_uv2pvec_C_sbp42", &
                                           "interp2d_pvec2uv_C_sbp42", "co2contra_c_sbp42_new", domain)
     case default
         call parcomm_global%abort("Unknown coriolis operator: "//coriolis_op_name)
     end select
 
 end subroutine create_coriolis
-subroutine create_coriolis_Cgrid_sbp(coriolis_op, sbp_i2c_interp_name, sbp_c2i_interp_name, domain)
+subroutine create_coriolis_Cgrid_sbp(coriolis_op,sbp_i2c_interp_name, v2h_interp_name, &
+                                     h2v_interp_name, domain)
 
     use coriolis_Cgrid_mod,     only : coriolis_Cgrid_t
     use grid_field_factory_mod, only : create_grid_field
 
     use interpolator2d_factory_mod,   only : create_vec2vec_interpolator2d
-    use interpolator_v2h_factory_mod, only : create_v2h_interpolator
     use interpolator_w2h_factory_mod, only : create_w2h_interpolator
 
     class(coriolis_operator_t), allocatable, intent(out) :: coriolis_op
     character(len=*),                        intent(in)  :: sbp_i2c_interp_name, &
-                                                            sbp_c2i_interp_name
+                                                            h2v_interp_name, v2h_interp_name
     type(domain_t),                          intent(in)  :: domain
 
     type(coriolis_Cgrid_t), allocatable :: cor_Cgrid
@@ -78,8 +80,8 @@ subroutine create_coriolis_Cgrid_sbp(coriolis_op, sbp_i2c_interp_name, sbp_c2i_i
     call create_grid_field(cor_Cgrid%cor_v_p, halo_width+1, 0, domain%mesh_p)
 
 
-    call create_v2h_interpolator(cor_Cgrid%interp_v2h_op, sbp_i2c_interp_name, domain)
-    call create_vec2vec_interpolator2d(cor_Cgrid%interp_h2v_op, sbp_c2i_interp_name, domain)
+    call create_vec2vec_interpolator2d(cor_Cgrid%interp_v2h_op, v2h_interp_name, domain)
+    call create_vec2vec_interpolator2d(cor_Cgrid%interp_h2v_op, h2v_interp_name, domain)
     call create_w2h_interpolator(cor_Cgrid%interp_w2h_op, sbp_i2c_interp_name, domain)
 
     call move_alloc(cor_Cgrid, coriolis_op)
@@ -94,7 +96,6 @@ subroutine create_coriolis_Cgrid_noncons_sbp(coriolis_op, sbp_i2c_interp_name, &
     use grid_field_factory_mod,       only : create_grid_field
     use co2contra_factory_mod,        only : create_co2contra_operator
     use interpolator2d_factory_mod,   only : create_vec2vec_interpolator2d
-    use interpolator_v2h_factory_mod, only : create_v2h_interpolator
 
     class(coriolis_operator_t), allocatable, intent(out) :: coriolis_op
     character(len=*),                        intent(in)  :: sbp_i2c_interp_name, &
@@ -119,7 +120,8 @@ subroutine create_coriolis_Cgrid_noncons_sbp(coriolis_op, sbp_i2c_interp_name, &
     call create_grid_field(cor_Cgrid%vh,halo_width+1, 0, domain%mesh_p)
     cor_Cgrid%co2contra = create_co2contra_operator(domain, co2contra_op_name)
 
-    call create_v2h_interpolator(cor_Cgrid%interp_v2h_op, sbp_i2c_interp_name, domain)
+    ! call create_v2h_interpolator(cor_Cgrid%interp_v2h_op, sbp_i2c_interp_name, domain)
+    call create_vec2vec_interpolator2d(cor_Cgrid%interp_v2h_op, sbp_i2c_interp_name, domain)
     call create_vec2vec_interpolator2d(cor_Cgrid%interp_h2v_op, sbp_c2i_interp_name, domain)
 
     call move_alloc(cor_Cgrid, coriolis_op)

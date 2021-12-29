@@ -1,17 +1,17 @@
 module ke_Cgrid_mod
 
-use abstract_KE_mod,      only : KE_operator_t
-use grid_field_mod,       only : grid_field_t, tile_field_t
-use domain_mod,           only : domain_t
-use mesh_mod,             only : tile_mesh_t
-use interpolator_v2h_mod, only : interpolator_v2h_t
+use abstract_KE_mod,              only : KE_operator_t
+use grid_field_mod,               only : grid_field_t, tile_field_t
+use domain_mod,                   only : domain_t
+use mesh_mod,                     only : tile_mesh_t
+use abstract_interpolators2d_mod, only : interpolator2d_vec2vec_t
 
 implicit none
 
 type, public, extends(KE_operator_t) :: ke_Cgrid_t
-    type(grid_field_t)       :: KE_u,  KE_v
-    type(grid_field_t)       :: KE_uh, KE_vh
-    type(interpolator_v2h_t) :: interp_op
+    type(grid_field_t)                           :: KE_u,  KE_v
+    type(grid_field_t)                           :: KE_uh, KE_vh
+    class(interpolator2d_vec2vec_t), allocatable :: interp_op
 contains
     procedure, public :: calc_KE
 end type ke_Cgrid_t
@@ -31,7 +31,7 @@ subroutine calc_KE(this, KE, u, v, ut, vt, domain)
         call calc_KE_detG_uv_on_tile(this%KE_v%tile(t), v%tile(t), vt%tile(t), domain%mesh_v%tile(t))
     end do
 
-    call this%interp_op%interp_v2h(this%KE_uh, this%KE_vh, this%KE_u, this%KE_v, domain)
+    call this%interp_op%interp2d_vec2vec(this%KE_uh, this%KE_vh, this%KE_u, this%KE_v, domain)
 
     do t = domain%partition%ts, domain%partition%te
         call calc_KE_on_tile(KE%tile(t), this%KE_uh%tile(t), this%KE_vh%tile(t), domain%mesh_p%tile(t))

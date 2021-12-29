@@ -4,7 +4,6 @@ use grid_field_mod,                only : grid_field_t, tile_field_t
 use domain_mod,                    only : domain_t
 use abstract_coriolis_mod,         only : coriolis_operator_t
 use mesh_mod,                      only : tile_mesh_t
-use interpolator_v2h_mod,          only : interpolator_v2h_t
 use abstract_interpolators2d_mod,  only : interpolator2d_vec2vec_t
 use abstract_co2contra_mod,        only : co2contra_operator_t
 
@@ -13,7 +12,7 @@ implicit none
 type, public, extends(coriolis_operator_t) :: coriolis_Cgrid_noncons_t
     type(grid_field_t) :: f, u, v, uh, vh !coriolis parameter
     class(co2contra_operator_t), allocatable     :: co2contra
-    type(interpolator_v2h_t)                     :: interp_v2h_op
+    class(interpolator2d_vec2vec_t), allocatable :: interp_v2h_op
     class(interpolator2d_vec2vec_t), allocatable :: interp_h2v_op
 
 contains
@@ -33,7 +32,7 @@ subroutine calc_coriolis_contra(this, cor_ut, cor_vt, ut, vt, domain)
     integer(kind=4) :: t
 
     call this%co2contra%transform2co(this%u,this%v, ut, vt, domain)
-    call this%interp_v2h_op%interp_v2h(this%uh, this%vh, this%u, this%v, domain)
+    call this%interp_v2h_op%interp2d_vec2vec(this%uh, this%vh, this%u, this%v, domain)
 
     do t = domain%partition%ts, domain%partition%te
         call calc_coriolis_contra_on_tile(this%uh%tile(t), this%vh%tile(t), this%f%tile(t), &

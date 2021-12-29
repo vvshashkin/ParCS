@@ -5,7 +5,8 @@ program test_diffops
 use parcomm_mod,         only : init_global_parallel_enviroment, &
                                 deinit_global_parallel_enviroment, parcomm_global
 use test_diffops_mod, only: test_div, test_grad, test_conv, test_curl, test_grad_perp, &
-                            test_coriolis, test_curl_grad, test_co2contra, test_compatibility, &
+                            test_coriolis, test_coriolis_vec_inv, test_curl_grad,      &
+                            test_co2contra, test_compatibility, test_KE, &
                             test_vec_advection, test_grad_3d, test_div_3d, test_co2contra_3d
 use key_value_mod,    only : key_value_r8_t
 
@@ -180,12 +181,51 @@ call init_global_parallel_enviroment()
 !     print "(A,4E15.7)", "Err: ", errs%values
 ! end if
 !
-! errs = test_coriolis(N=16, coriolis_op_name="coriolis_A_Ah", staggering="A")
+! errs = test_coriolis(N=32, coriolis_op_name="coriolis_colocated", staggering="A")
 ! if (parcomm_global%myid==0) then
-!     print *, "coriolis_A_Ah"
-!     print "(A,4E15.7)", "Err: ", errs%valuelaplacians
+!     print *, "coriolis_colocated"
+!     print "(A,4E15.7)", "Err: ", errs%values
 ! end if
 !
+! errs = test_coriolis_vec_inv(N=32, coriolis_op_name="coriolis_Cgrid_sbp21", staggering="C")
+! if (parcomm_global%myid==0) then
+!     print *, "coriolis_Cgrid_sbp21"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+!
+! errs = test_coriolis_vec_inv(N=32, coriolis_op_name="coriolis_Cgrid_sbp42", staggering="C")
+! if (parcomm_global%myid==0) then
+!     print *, "coriolis_Cgrid_sbp42"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+!
+
+! errs = test_KE(N=32, KE_oper_name="KE_Cgrid_sbp42", staggering="C")
+! if (parcomm_global%myid==0) then
+!     print *, "KE_Cgrid_sbp42"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+!
+! errs = test_KE(N=32, KE_oper_name="KE_Cgrid_sbp21", staggering="C")
+! if (parcomm_global%myid==0) then
+!     print *, "KE_Cgrid_sbp21"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+
+! errs = test_coriolis(N=32, coriolis_op_name="coriolis_Cgrid_noncons_sbp21", &
+!                      staggering="C", result_components = "contravariant")
+! if (parcomm_global%myid==0) then
+!     print *, "coriolis_Cgrid_noncons_sbp21"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+!
+! errs = test_coriolis(N=32, coriolis_op_name="coriolis_Cgrid_noncons_sbp42", &
+!                      staggering="C", result_components = "contravariant")
+! if (parcomm_global%myid==0) then
+!     print *, "coriolis_Cgrid_noncons_sbp42"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+
 !
 ! errs = test_co2contra(N=32,co2contra_oper_name="co2contra_colocated",staggering="A")
 ! if(parcomm_global%myid == 0) then
@@ -199,29 +239,29 @@ call init_global_parallel_enviroment()
 !     print "(A,4E15.7)", "Err: ", errs%values
 ! end if
 
-errs = test_co2contra(N=32,co2contra_oper_name="co2contra_c_sbp21",staggering="C")
-if(parcomm_global%myid == 0) then
-    print *, "co2contra c sbp21, C-grid"
-    print "(A,4E15.7)", "Err: ", errs%values
-end if
+! errs = test_co2contra(N=32,co2contra_oper_name="co2contra_c_sbp21_new",staggering="C")
+! if(parcomm_global%myid == 0) then
+!     print *, "co2contra c sbp21, C-grid"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+!
+! errs = test_co2contra(N=32,co2contra_oper_name="co2contra_c_sbp42_new",staggering="C")
+! if(parcomm_global%myid == 0) then
+!     print *, "co2contra c sbp42, C-grid"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
 
-errs = test_co2contra(N=32,co2contra_oper_name="co2contra_c_sbp42",staggering="C")
-if(parcomm_global%myid == 0) then
-    print *, "co2contra c sbp42, C-grid"
-    print "(A,4E15.7)", "Err: ", errs%values
-end if
-
-errs = test_co2contra(N=32,co2contra_oper_name="co2contra_ch_sbp21", staggering="Ch")
-if (parcomm_global%myid==0) then
-    print *, "co2contra_ch_sbp21"
-    print "(A,4E15.7)", "Err: ", errs%values
-end if
-
-errs = test_co2contra(N=32,co2contra_oper_name="co2contra_ch_sbp42", staggering="Ch")
-if (parcomm_global%myid==0) then
-    print *, "co2contra_ch_sbp42"
-    print "(A,4E15.7)", "Err: ", errs%values
-end if
+! errs = test_co2contra(N=32,co2contra_oper_name="co2contra_ch_sbp21", staggering="Ch")
+! if (parcomm_global%myid==0) then
+!     print *, "co2contra_ch_sbp21"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+!
+! errs = test_co2contra(N=32,co2contra_oper_name="co2contra_ch_sbp42", staggering="Ch")
+! if (parcomm_global%myid==0) then
+!     print *, "co2contra_ch_sbp42"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
 
 ! call test_conv(operator_name="gradient_c_sbp21",staggering="C",Ns=Ns)
 ! call test_conv(operator_name="divergence_c_sbp21",staggering="C",Ns=Ns)
@@ -337,49 +377,49 @@ end if
 ! end if
 
 !
-! errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_C_up4", staggering="C")
-! if (parcomm_global%myid==0) then
-!     print *, "vector_advection_C_up4"
-!     print "(A,4E25.16)", "Err: ", errs%values
-! end if
-! errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_C_up3", staggering="C")
-! if (parcomm_global%myid==0) then
-!     print *, "vector_advection_C_up3"
-!     print "(A,4E25.16)", "Err: ", errs%values
-! end if
-! errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_C_up1", staggering="C")
-! if (parcomm_global%myid==0) then
-!     print *, "vector_advection_C_up1"
-!     print "(A,4E25.16)", "Err: ", errs%values
-! end if
-! errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_C_c2", staggering="C")
-! if (parcomm_global%myid==0) then
-!     print *, "vector_advection_C_c2"
-!     print "(A,4E25.16)", "Err: ", errs%values
-! end if
-! errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_C_c4", staggering="C")
-! if (parcomm_global%myid==0) then
-!     print *, "vector_advection_C_c4"
-!     print "(A,4E25.16)", "Err: ", errs%values
-! end if
-!
-! errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_Ah21", staggering="Ah")
-! if (parcomm_global%myid==0) then
-!     print *, "vector_advection_Ah21"
-!     print "(A,4E25.16)", "Err: ", errs%values
-! end if
-!
-! errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_Ah42", staggering="Ah")
-! if (parcomm_global%myid==0) then
-!     print *, "vector_advection_Ah42"
-!     print "(A,4E25.16)", "Err: ", errs%values
-! end if
-!
-! errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_Ah63", staggering="Ah")
-! if (parcomm_global%myid==0) then
-!     print *, "vector_advection_Ah63"
-!     print "(A,4E25.16)", "Err: ", errs%values
-! end if
+errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_C_up4", staggering="C")
+if (parcomm_global%myid==0) then
+    print *, "vector_advection_C_up4"
+    print "(A,4E25.16)", "Err: ", errs%values
+end if
+errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_C_up3", staggering="C")
+if (parcomm_global%myid==0) then
+    print *, "vector_advection_C_up3"
+    print "(A,4E25.16)", "Err: ", errs%values
+end if
+errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_C_up1", staggering="C")
+if (parcomm_global%myid==0) then
+    print *, "vector_advection_C_up1"
+    print "(A,4E25.16)", "Err: ", errs%values
+end if
+errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_C_c2", staggering="C")
+if (parcomm_global%myid==0) then
+    print *, "vector_advection_C_c2"
+    print "(A,4E25.16)", "Err: ", errs%values
+end if
+errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_C_c4", staggering="C")
+if (parcomm_global%myid==0) then
+    print *, "vector_advection_C_c4"
+    print "(A,4E25.16)", "Err: ", errs%values
+end if
+
+errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_Ah21", staggering="Ah")
+if (parcomm_global%myid==0) then
+    print *, "vector_advection_Ah21"
+    print "(A,4E25.16)", "Err: ", errs%values
+end if
+
+errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_Ah42", staggering="Ah")
+if (parcomm_global%myid==0) then
+    print *, "vector_advection_Ah42"
+    print "(A,4E25.16)", "Err: ", errs%values
+end if
+
+errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_Ah63", staggering="Ah")
+if (parcomm_global%myid==0) then
+    print *, "vector_advection_Ah63"
+    print "(A,4E25.16)", "Err: ", errs%values
+end if
 
 call deinit_global_parallel_enviroment()
 

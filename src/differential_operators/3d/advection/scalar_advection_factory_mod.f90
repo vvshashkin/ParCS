@@ -33,7 +33,7 @@ subroutine create_p_3d_advection(adv_op, hor_adv_op_name, z_adv_op_name, domain)
     use halo_factory_mod,    only : create_halo_procedure
     use advection_p_3d_mod,  only : advection_p_C3d_t
 
-    use interpolator_v2h_factory_mod,  only : create_v2h_interpolator
+    use interpolator2d_factory_mod,    only : create_vec2vec_interpolator2d
     use vertical_operator_factory_mod, only : create_vertical_operator
     use grid_field_factory_mod,        only : create_grid_field
 
@@ -46,7 +46,7 @@ subroutine create_p_3d_advection(adv_op, hor_adv_op_name, z_adv_op_name, domain)
 
     allocate(adv_p3d)
 
-    call create_v2h_interpolator(adv_p3d%interp_uv2p_op, "W42_stagered_interp_i2c", domain)
+    call create_vec2vec_interpolator2d(adv_p3d%interp_uv2p_op, "interp2d_uv2pvec_C_sbp42", domain)
     call create_vertical_operator(adv_p3d%interp_w2p_op, "vertical_interp_w2p_sbp42")
 
     call create_v_nabla_hor_operator(adv_p3d%v_nabla_op,halo_width,hor_adv_op_name)
@@ -84,7 +84,7 @@ subroutine create_w_3d_advection(adv_op, hor_adv_op_name, z_adv_op_name, domain)
     allocate(adv_w3d)
 
     call create_uv2w_interpolator(adv_w3d%interp_uv2w_op, "uv2w_staggered", &
-                                  "hor_interp_uv2p_sbp42", "vertical_interp_p2w_sbp42", &
+                                  "interp2d_uv2pvec_C_sbp42", "vertical_interp_p2w_sbp42", &
                                   domain)
 
     call create_v_nabla_hor_operator(adv_w3d%v_nabla_op,halo_width,hor_adv_op_name)

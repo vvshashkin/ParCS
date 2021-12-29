@@ -5,19 +5,19 @@ use grid_field_mod,                  only : grid_field_t, tile_field_t
 use domain_mod,                      only : domain_t
 use mesh_mod,                        only : tile_mesh_t
 use halo_mod,                        only : halo_t
-use interpolator_v2h_mod,            only : interpolator_v2h_t
+use abstract_interpolators2d_mod,    only : interpolator2d_vec2vec_t
 use abstract_vertical_operator_mod,  only : vertical_operator_t
 use abstract_v_nabla_mod,            only : v_nabla_operator_t
 use abstract_adv_z_mod,              only : adv_z_t
 
 type, extends(scalar_advection3d_t) :: advection_p_C3d_t
-    type(interpolator_v2h_t)                :: interp_uv2p_op
-    class(vertical_operator_t), allocatable :: interp_w2p_op
-    class(halo_t), allocatable              :: halo_f
-    integer(kind=4)                         :: halo_width
-    class(v_nabla_operator_t), allocatable  :: v_nabla_op
-    class(adv_z_t), allocatable             :: adv_z
-    type(grid_field_t)                      :: up, vp, eta_dot_p, f_tend_z
+    class(interpolator2d_vec2vec_t), allocatable :: interp_uv2p_op
+    class(vertical_operator_t), allocatable      :: interp_w2p_op
+    class(halo_t), allocatable                   :: halo_f
+    integer(kind=4)                              :: halo_width
+    class(v_nabla_operator_t), allocatable       :: v_nabla_op
+    class(adv_z_t), allocatable                  :: adv_z
+    type(grid_field_t)                           :: up, vp, eta_dot_p, f_tend_z
     contains
     procedure calc_adv3d => calc_adv3d_C
 end type advection_p_C3d_t
@@ -31,7 +31,7 @@ subroutine calc_adv3d_C(this,f_tend,f,u,v,eta_dot,domain)
     !output
     type(grid_field_t),          intent(inout) :: f_tend
 
-    call this%interp_uv2p_op%interp_v2h(this%up,this%vp,u,v,domain)
+    call this%interp_uv2p_op%interp2d_vec2vec(this%up,this%vp,u,v,domain)
     call this%interp_w2p_op%apply(this%eta_dot_p, eta_dot, domain)
     call this%halo_f%get_halo_scalar(f, domain, this%halo_width)
 
