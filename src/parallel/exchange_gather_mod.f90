@@ -27,14 +27,9 @@ type, extends(exchange_t), public :: exchange_gather_t
 
     integer(kind=4), allocatable, dimension(:) :: send_is, send_ie, send_js, send_je, send_ks, send_ke
     integer(kind=4), allocatable, dimension(:) :: recv_is, recv_ie, recv_js, recv_je, recv_ks, recv_ke
-
-    integer(kind=4) :: ts, te
-
 contains
-
     procedure, public:: do     => do_gather_exchange
     procedure, public:: do_vec => do_gather_exchange_vec
-
 end type exchange_gather_t
 
 contains

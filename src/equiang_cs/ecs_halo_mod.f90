@@ -83,9 +83,9 @@ subroutine get_ecs_halo(this,f,domain,halo_width)
 
     do t=this%ts,this%te
         if(this%is_z_interfaces) then
-            call this%tile(t)%interp(f%tile(t),domain%partition%tile_z(t),halo_width)
+            call this%tile(t)%interp(f%tile(t),domain%partition%tiles_z%tile(t),halo_width)
         else
-            call this%tile(t)%interp(f%tile(t),domain%partition%tile(t),halo_width)
+            call this%tile(t)%interp(f%tile(t),domain%partition%tiles_o%tile(t),halo_width)
         end if
     end do
 end subroutine get_ecs_halo

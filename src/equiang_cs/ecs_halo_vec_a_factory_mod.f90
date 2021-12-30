@@ -21,7 +21,7 @@ contains
 subroutine create_ecs_A_vec_halo_procedure(halo_out,domain,halo_width)
     use halo_mod,               only : halo_vec_t
     use domain_mod,             only : domain_t
-    use exchange_factory_mod,   only : create_symm_halo_exchange_A
+    use exchange_factory_mod,   only : create_o_points_halo_exchange
 
     class(halo_vec_t), allocatable, intent(out) :: halo_out
     class(domain_t),                intent(in)  :: domain
@@ -41,11 +41,11 @@ subroutine create_ecs_A_vec_halo_procedure(halo_out,domain,halo_width)
     halo%te = te
     allocate(halo%tile(ts:te))
 
-    halo%exch_halo = create_symm_halo_exchange_A(domain%partition, domain%parcomm, domain%topology, &
+    halo%exch_halo = create_o_points_halo_exchange(domain%partition, domain%parcomm, domain%topology, &
                                                  ex_halo_width, 'full')
     do t=ts,te
         hx = domain%mesh_p%tile(t)%hx
-        call domain%partition%tile(t)%getind(is,ie,js,je)
+        call domain%partition%tiles_o%tile(t)%getind(is,ie,js,je)
         call init_ecs_tile_halo_vect(halo%tile(t),domain%partition%panel_map(t), &
                                      is,ie,js,je,nh,halo_width,hx)
     end do

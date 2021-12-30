@@ -10,8 +10,8 @@ use interpolator_q2uv_sbp_mod,       only : interpolator_q2uv_sbp_Ch_t
 use interpolator_uv2q_sbp_mod,       only : interpolator_uv2q_sbp_Ch_t
 use domain_mod,                      only : domain_t
 use sbp_factory_mod,                 only : create_sbp_operator
-use exchange_factory_mod,            only : create_symm_halo_exchange_A,  &
-                                            create_symm_halo_exchange_Ah, &
+use exchange_factory_mod,            only : create_o_points_halo_exchange,  &
+                                            create_xy_points_halo_exchange, &
                                             create_symmetric_halo_vec_exchange_C
 use parcomm_mod,                     only : parcomm_global
 
@@ -96,7 +96,7 @@ subroutine create_p2uv_sbp_interpolator(interpolator_p2uv, sbp_p2uv_interp_name,
     interpolator_p2uv_sbp%sbp_interp_p2uv = create_sbp_operator(sbp_p2uv_interp_name)
 
     interpolator_p2uv_sbp%exchange = &
-          create_symm_halo_exchange_A(domain%partition, domain%parcomm, &
+          create_o_points_halo_exchange(domain%partition, domain%parcomm, &
                                       domain%topology, halo_width, 'full')
 
     call move_alloc(interpolator_p2uv_sbp, interpolator_p2uv)
@@ -117,7 +117,7 @@ subroutine create_pvec2uv_sbp_interpolator(interpolator_p2uv, sbp_p2uv_interp_na
     interpolator_p2uv_sbp%sbp_interp_p2uv = create_sbp_operator(sbp_p2uv_interp_name)
 
     interpolator_p2uv_sbp%exchange = &
-          create_symm_halo_exchange_A(domain%partition, domain%parcomm, &
+          create_o_points_halo_exchange(domain%partition, domain%parcomm, &
                                       domain%topology, halo_width, 'full')
 
     call move_alloc(interpolator_p2uv_sbp, interpolator_p2uv)
@@ -159,7 +159,7 @@ subroutine create_pvec2uv_Ch_sbp_interpolator(interpolator_p2uv, sbp_p2uv_interp
     interpolator_p2uv_sbp%sbp_interp_p2uv = create_sbp_operator(sbp_p2uv_interp_name)
 
     interpolator_p2uv_sbp%exchange = &
-          create_symm_halo_exchange_Ah(domain%partition, domain%parcomm, &
+          create_xy_points_halo_exchange(domain%partition, domain%parcomm, &
                                        domain%topology, halo_width, 'full')
 
     call move_alloc(interpolator_p2uv_sbp, interpolator_p2uv)
@@ -180,7 +180,7 @@ subroutine create_qvec2uv_Ch_sbp_interpolator(interpolator_q2uv, sbp_q2uv_interp
     interpolator_q2uv_sbp%sbp_interp_q2uv = create_sbp_operator(sbp_q2uv_interp_name)
 
     interpolator_q2uv_sbp%exchange = &
-          create_symm_halo_exchange_A(domain%partition, domain%parcomm, &
+          create_o_points_halo_exchange(domain%partition, domain%parcomm, &
                                        domain%topology, halo_width, 'full')
 
     call move_alloc(interpolator_q2uv_sbp, interpolator_q2uv)

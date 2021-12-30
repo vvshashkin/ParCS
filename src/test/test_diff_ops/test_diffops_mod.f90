@@ -950,7 +950,7 @@ subroutine test_laplace_spectre(div_operator_name, grad_operator_name, &
     use co2contra_factory_mod,  only : create_co2contra_operator
     use abstract_co2contra_mod, only : co2contra_operator_t
     use exchange_abstract_mod,  only : exchange_t
-    use exchange_factory_mod,   only : create_symm_halo_exchange_Ah
+    use exchange_factory_mod,   only : create_xy_points_halo_exchange
     use mesh_mod,               only : mesh_t
 
 

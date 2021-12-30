@@ -87,8 +87,8 @@ subroutine get_ecs_c_vector_halo(this,u,v,domain,halo_width)
     call this%exch_halo%do_vec(u,v, domain%parcomm)
 
     do t=this%ts,this%te
-        call this%tile(t)%interpv(u%tile(t),v%tile(t),domain%partition%tile_x(t), &
-                                  domain%partition%tile_y(t),halo_width,this%exchange_width,t)
+        call this%tile(t)%interpv(u%tile(t),v%tile(t),domain%partition%tiles_x%tile(t), &
+                                  domain%partition%tiles_y%tile(t),halo_width,this%exchange_width,t)
     end do
 end subroutine get_ecs_c_vector_halo
 
@@ -106,8 +106,8 @@ subroutine get_ecs_c_vector_cov_halo(this,u,v,domain,halo_width)
     call this%exch_halo%do_vec(u,v, domain%parcomm)
 
     do t=this%ts,this%te
-        call this%tile(t)%interpv(u%tile(t),v%tile(t),domain%partition%tile_x(t), &
-                                  domain%partition%tile_y(t),halo_width,this%exchange_width,t)
+        call this%tile(t)%interpv(u%tile(t),v%tile(t),domain%partition%tiles_x%tile(t), &
+                                  domain%partition%tiles_y%tile(t),halo_width,this%exchange_width,t)
     end do
 end subroutine get_ecs_c_vector_cov_halo
 

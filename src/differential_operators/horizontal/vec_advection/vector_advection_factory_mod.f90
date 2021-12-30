@@ -62,7 +62,7 @@ subroutine create_vector_advection_Ah_covariant(vec_advection_op,sbp_operator_na
                                                 halo_width, domain)
 
     use vector_advection_Ah_mod,   only : vector_advection_Ah_t
-    use exchange_factory_mod,      only : create_symm_halo_exchange_Ah
+    use exchange_factory_mod,      only : create_xy_points_halo_exchange
     use halo_factory_mod,          only : create_vector_halo_procedure
     use v_nabla_sbp_factory_mod,   only : create_v_nabla_sbp_operator
 
@@ -82,7 +82,7 @@ subroutine create_vector_advection_Ah_covariant(vec_advection_op,sbp_operator_na
                                                     "ecs_Ah_vec_sync_contra")
 
     vec_advection_Ah_op%exch_uv_interior =  &
-                    create_symm_halo_exchange_Ah(domain%partition, domain%parcomm, &
+                    create_xy_points_halo_exchange(domain%partition, domain%parcomm, &
                                                  domain%topology,  halo_width, 'full')
 
     call move_alloc(vec_advection_Ah_op, vec_advection_op)

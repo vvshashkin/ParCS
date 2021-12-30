@@ -50,12 +50,12 @@ subroutine create_ecs_C_vec_halo_procedure(halo_out,domain,halo_width)
     tangential_comp_interp_type = "cubic_lag"
     normal_tang_interp_type = "cubic_lag"
     do t=ts,te
-        is = domain%partition%tile_x(t)%is
-        ie = domain%partition%tile_x(t)%ie
-        js = domain%partition%tile_x(t)%js
-        je = domain%partition%tile_x(t)%je
-        js1 = domain%partition%tile_y(t)%js
-        je1 = domain%partition%tile_y(t)%je
+        is = domain%partition%tiles_x%tile(t)%is
+        ie = domain%partition%tiles_x%tile(t)%ie
+        js = domain%partition%tiles_x%tile(t)%js
+        je = domain%partition%tiles_x%tile(t)%je
+        js1 = domain%partition%tiles_y%tile(t)%js
+        je1 = domain%partition%tiles_y%tile(t)%je
 
         halo%tile(t)%is_left_edge   = (is == 1)
         if(halo%tile(t)%is_left_edge) then
@@ -87,12 +87,12 @@ subroutine create_ecs_C_vec_halo_procedure(halo_out,domain,halo_width)
                                          normal_comp_interp_type,"y","y")
         end if
 
-        is = domain%partition%tile_y(t)%is
-        ie = domain%partition%tile_y(t)%ie
-        js = domain%partition%tile_y(t)%js
-        je = domain%partition%tile_y(t)%je
-        is1 = domain%partition%tile_x(t)%is
-        ie1 = domain%partition%tile_x(t)%ie
+        is = domain%partition%tiles_y%tile(t)%is
+        ie = domain%partition%tiles_y%tile(t)%ie
+        js = domain%partition%tiles_y%tile(t)%js
+        je = domain%partition%tiles_y%tile(t)%je
+        is1 = domain%partition%tiles_x%tile(t)%is
+        ie1 = domain%partition%tiles_x%tile(t)%ie
 
         halo%tile(t)%is_bottom_edge = (js == 1)
         if(halo%tile(t)%is_bottom_edge) then
@@ -169,12 +169,12 @@ subroutine create_ecs_C_vec_covariant_halo_procedure(halo_out,domain,halo_width)
     normal_tang_interp_type = "cubic_lag"
 
     do t=ts,te
-        is = domain%partition%tile_x(t)%is
-        ie = domain%partition%tile_x(t)%ie
-        js = domain%partition%tile_x(t)%js
-        je = domain%partition%tile_x(t)%je
-        js1 = domain%partition%tile_y(t)%js
-        je1 = domain%partition%tile_y(t)%je
+        is = domain%partition%tiles_x%tile(t)%is
+        ie = domain%partition%tiles_x%tile(t)%ie
+        js = domain%partition%tiles_x%tile(t)%js
+        je = domain%partition%tiles_x%tile(t)%je
+        js1 = domain%partition%tiles_y%tile(t)%js
+        je1 = domain%partition%tiles_y%tile(t)%je
 
         halo%tile(t)%is_left_edge   = (is == 1)
         if(halo%tile(t)%is_left_edge) then
@@ -210,12 +210,12 @@ subroutine create_ecs_C_vec_covariant_halo_procedure(halo_out,domain,halo_width)
                                          normal_comp_interp_type,"y","y")
         end if
 
-        is = domain%partition%tile_y(t)%is
-        ie = domain%partition%tile_y(t)%ie
-        js = domain%partition%tile_y(t)%js
-        je = domain%partition%tile_y(t)%je
-        is1 = domain%partition%tile_x(t)%is
-        ie1 = domain%partition%tile_x(t)%ie
+        is = domain%partition%tiles_y%tile(t)%is
+        ie = domain%partition%tiles_y%tile(t)%ie
+        js = domain%partition%tiles_y%tile(t)%js
+        je = domain%partition%tiles_y%tile(t)%je
+        is1 = domain%partition%tiles_x%tile(t)%is
+        ie1 = domain%partition%tiles_x%tile(t)%ie
 
         halo%tile(t)%is_bottom_edge = (js == 1)
         if(halo%tile(t)%is_bottom_edge) then

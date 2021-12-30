@@ -1,7 +1,7 @@
 module test_mod
 
 use grid_field_mod,         only : grid_field_t
-use grid_field_factory_mod, only : create_grid_field
+use grid_field_factory_mod, only : create_grid_field, create_grid_field_global
 
 implicit none
 
@@ -15,13 +15,13 @@ subroutine test_A_halo_exchange()
     use domain_factory_mod,     only : create_domain
     use exchange_abstract_mod,  only : exchange_t
     use exchange_halo_mod,      only : exchange_2D_halo_t
-    use exchange_factory_mod,   only : create_symm_halo_exchange_A
+    use exchange_factory_mod,   only : create_o_points_halo_exchange
 
     type(domain_t) :: domain
 
     class(exchange_t), allocatable     :: exch_halo
     type(grid_field_t)                 :: f, u, v
-    integer(kind=4)                    :: nh=100, nz=10, halo_width=50
+    integer(kind=4)                    :: nh=50, nz=5, halo_width=25
     integer(kind=4)                    :: ierr, code
 
     integer(kind=4) :: ts, te
@@ -61,7 +61,7 @@ subroutine test_A_halo_exchange()
     end do
 
     !Init exchange
-    exch_halo = create_symm_halo_exchange_A( &
+    exch_halo = create_o_points_halo_exchange( &
                 domain%partition, domain%parcomm, domain%topology,  halo_width, 'full')
 
     !Perform exchange
@@ -175,7 +175,7 @@ subroutine test_Ah_halo_exchange()
     use domain_factory_mod,     only : create_domain
     use exchange_abstract_mod,  only : exchange_t
     use exchange_halo_mod,      only : exchange_2D_halo_t
-    use exchange_factory_mod,   only : create_symm_halo_exchange_Ah
+    use exchange_factory_mod,   only : create_xy_points_halo_exchange
     use test_fields_mod,        only : set_vector_test_field, set_scalar_test_field, &
                                        xyz_f => xyz_scalar_field_generator
 
@@ -183,12 +183,12 @@ subroutine test_Ah_halo_exchange()
 
     class(exchange_t), allocatable     :: exch_halo
     type(grid_field_t)                 :: f, u, v
-    integer(kind=4)                    :: nh=100, nz=10, halo_width=50
+    integer(kind=4)                    :: nh=50, nz=5, halo_width=25
     integer(kind=4)                    :: ierr, code
 
     call create_domain(domain, "cube", 'Ah', nh, nz)
     call domain%parcomm%print('Running Ah-grid halo exchange test!')
-    exch_halo = create_symm_halo_exchange_Ah( &
+    exch_halo = create_xy_points_halo_exchange( &
                     domain%partition, domain%parcomm, domain%topology,  halo_width, 'full')
 
     call create_grid_field(f, halo_width, 0, domain%mesh_xy)
@@ -216,7 +216,7 @@ subroutine test_halo_vec_C_exchange()
 
     class(exchange_t), allocatable :: exch_halo
     type(grid_field_t)             :: f, u, v
-    integer(kind=4)                :: nh=50, nz=10, halo_width=20
+    integer(kind=4)                :: nh=50, nz=5, halo_width=20
     integer(kind=4)                :: ierr
 
     integer(kind=4) :: ts, te
@@ -354,7 +354,7 @@ subroutine test_halo_vec_Ch_exchange()
 
     class(exchange_t), allocatable :: exch_halo
     type(grid_field_t)             :: f, u, v
-    integer(kind=4)                :: nh=50, nz=10, halo_width=20
+    integer(kind=4)                :: nh=50, nz=5, halo_width=20
     integer(kind=4)                :: ierr
 
     integer(kind=4) :: ts, te
@@ -496,7 +496,7 @@ subroutine test_halo_u_exchange()
 
     class(exchange_t), allocatable :: exch_halo
     type(grid_field_t)             :: f, u, v
-    integer(kind=4)                :: nh=100, nz=10, halo_width=50
+    integer(kind=4)                :: nh=50, nz=5, halo_width=25
     integer(kind=4)                :: ierr
 
     integer(kind=4) :: ts, te
@@ -605,7 +605,7 @@ subroutine test_halo_v_exchange()
 
     class(exchange_t), allocatable :: exch_halo
     type(grid_field_t)             :: f, u, v
-    integer(kind=4)                :: nh=100, nz=10, halo_width=50
+    integer(kind=4)                :: nh=50, nz=5, halo_width=25
     integer(kind=4)                :: ierr
 
     integer(kind=4) :: ts, te
@@ -710,12 +710,13 @@ subroutine test_gather_exchange()
     class(exchange_t), allocatable :: exch_gather
     type(grid_field_t)             :: f
 
-    integer(kind=4) :: nh=100, nz=10, halo_width=10
+    integer(kind=4) :: nh=50, nz=5, halo_width=10
     integer(kind=4) :: ierr, code
     integer(kind=4) :: master_id = 0
 
     integer(kind=4) :: ts, te
     integer(kind=4) :: i, j, k, t, N_tiles, pn
+    integer(kind=4) :: is, ie, js, je, ks, ke
 
     real(kind=8) :: err_sum
 
@@ -736,12 +737,9 @@ subroutine test_gather_exchange()
     N_tiles = domain%partition%num_tiles*domain%partition%num_panels
 
     if (domain%parcomm%myid == master_id) then
-        allocate(f%tile(N_tiles))
-        do i = 1, N_tiles
-            call f%tile(i)%init(domain%partition%tile_p(i)%is, domain%partition%tile_p(i)%ie, &
-                                domain%partition%tile_p(i)%js, domain%partition%tile_p(i)%je, &
-                                domain%partition%tile_p(i)%ks, domain%partition%tile_p(i)%ke)
-            f%tile(i)%p = huge(1.0_8)
+        call create_grid_field_global(f, 0, 0, domain%partition%tiles_p)
+        do t = 1, domain%partition%Nt
+            f%tile(t)%p = huge(1.0_8)
         end do
     else
         call create_grid_field(f, halo_width, 0, domain%mesh_p)
@@ -770,11 +768,12 @@ subroutine test_gather_exchange()
 
         err_sum = 0
 
-        do t = 1, N_tiles
+        do t = 1, domain%partition%Nt
             pn = domain%partition%panel_map(t)
-            do k = domain%partition%tile_p(t)%ks, domain%partition%tile_p(t)%ke
-                do j = domain%partition%tile_p(t)%js, domain%partition%tile_p(t)%je
-                    do i = domain%partition%tile_p(t)%is, domain%partition%tile_p(t)%ie
+            call domain%partition%tiles_p%tile(t)%getind(is, ie, js, je, ks, ke)
+            do k = ks, ke
+                do j = js, je
+                    do i = is, ie
                         err_sum = err_sum + abs(f%tile(t)%p(i,j,k) - __fun(i,j,k,pn))
                     end do
                 end do

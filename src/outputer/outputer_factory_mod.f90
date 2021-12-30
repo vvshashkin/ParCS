@@ -13,7 +13,6 @@ subroutine create_master_paneled_outputer(outputer, points_type, domain, master_
     use master_paneled_outputer_mod, only : master_paneled_outputer_t
     use grid_field_factory_mod,      only : create_grid_field_global
     use exchange_factory_mod,        only : create_gather_exchange
-    use tile_mod,                    only : tile_t
 
     class(outputer_t), allocatable, intent(out) :: outputer
     character(len=*),               intent(in)  :: points_type
@@ -29,7 +28,7 @@ subroutine create_master_paneled_outputer(outputer, points_type, domain, master_
     allocate(master_outputer)
 
     if (domain%parcomm%myid == master_id_loc) then
-        call domain%partition%get_points_type_tiles(points_type, master_outputer%tiles)
+        call domain%partition%get_tiles(points_type, master_outputer%tiles)
         call create_grid_field_global(master_outputer%buf, 0, 0, master_outputer%tiles)
 
     end if
@@ -50,7 +49,6 @@ subroutine create_latlon_outputer(outputer, Nlat, Nlon, scalar_grid_type, domain
     use grid_field_factory_mod,      only : create_grid_field_global, &
                                             create_grid_field
     use exchange_factory_mod,        only : create_gather_exchange
-    use tile_mod,                    only : tile_t
     use domain_factory_mod,          only : create_domain
     use parcomm_mod,                 only : parcomm_t
     use parcomm_factory_mod,         only : create_group_parcomm
@@ -144,7 +142,6 @@ subroutine create_latlon_vec_outputer(outputer, Nlat, Nlon, staggering, &
     use grid_field_factory_mod,      only : create_grid_field_global, &
                                             create_grid_field
     use exchange_factory_mod,        only : create_gather_exchange
-    use tile_mod,                    only : tile_t
     use domain_factory_mod,          only : create_domain
     use parcomm_mod,                 only : parcomm_t
     use parcomm_factory_mod,         only : create_group_parcomm

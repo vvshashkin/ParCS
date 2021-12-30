@@ -11,7 +11,7 @@ subroutine test_master_paneled_output()
     use outputer_factory_mod,  only : create_master_paneled_outputer
     use partition_mod,         only : partition_t
     use domain_mod,            only : domain_t
-    use domain_factory_mod,     only : create_domain
+    use domain_factory_mod,    only : create_domain
 
     type(domain_t) :: domain
 
@@ -96,9 +96,9 @@ subroutine test_case_1(outputer, domain, mesh, tiles, class_name)
     ts = domain%partition%ts
     te = domain%partition%te
 
-    nz = tiles%Nk
-    ny = tiles%Nj
-    nx = tiles%Ni
+    nz = tiles%Nz
+    ny = tiles%Ny
+    nx = tiles%Nx
 
     !Init arrays
 
@@ -123,10 +123,10 @@ subroutine test_case_1(outputer, domain, mesh, tiles, class_name)
         allocate(   bufin(nx,ny,6,nz))
 
 
-        do k = 1, tiles%Nk
+        do k = 1, tiles%Nz
             do pn = 1, 6
-                do j = 1, tiles%Nj
-                    do i = 1, tiles%Ni
+                do j = 1, tiles%Ny
+                    do i = 1, tiles%Nx
                         bufcheck(i,j,pn,k) = __fun(i,j,k,pn)
                     end do
                 end do

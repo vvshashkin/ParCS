@@ -247,7 +247,7 @@ $(DOBJ)const_mod.o: src/const_mod.f90
 
 $(DOBJ)mesh_factory_mod.o: src/mesh_factory_mod.f90 \
 	$(DOBJ)mesh_mod.o \
-	$(DOBJ)tile_mod.o \
+	$(DOBJ)tiles_mod.o \
 	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)partition_mod.o \
 	$(DOBJ)metric_mod.o
@@ -267,7 +267,8 @@ $(DOBJ)mesh_mod.o: src/mesh_mod.f90
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)tiles_mod.o: src/tiles_mod.f90 \
-	$(DOBJ)parcomm_mod.o
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)tile_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -313,7 +314,6 @@ $(DOBJ)exchange_abstract_mod.o: src/parallel/exchange_abstract_mod.f90 \
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)partition_mod.o: src/parallel/partition_mod.f90 \
-	$(DOBJ)tile_mod.o \
 	$(DOBJ)tiles_mod.o \
 	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
@@ -339,6 +339,7 @@ $(DOBJ)exchange_factory_mod.o: src/parallel/exchange_factory_mod.f90 \
 	$(DOBJ)partition_mod.o \
 	$(DOBJ)topology_mod.o \
 	$(DOBJ)tile_mod.o \
+	$(DOBJ)tiles_mod.o \
 	$(DOBJ)exchange_halo_mod.o \
 	$(DOBJ)exchange_halo_ch_mod.o \
 	$(DOBJ)exchange_halo_c_mod.o \
@@ -438,7 +439,6 @@ $(DOBJ)outputer_factory_mod.o: src/outputer/outputer_factory_mod.f90 \
 	$(DOBJ)master_paneled_outputer_mod.o \
 	$(DOBJ)grid_field_factory_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
-	$(DOBJ)tile_mod.o \
 	$(DOBJ)latlon_outputer_mod.o \
 	$(DOBJ)domain_factory_mod.o \
 	$(DOBJ)parcomm_factory_mod.o \
@@ -471,7 +471,6 @@ $(DOBJ)master_paneled_outputer_mod.o: src/outputer/master_paneled_outputer_mod.f
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)exchange_abstract_mod.o \
 	$(DOBJ)domain_mod.o \
-	$(DOBJ)tile_mod.o \
 	$(DOBJ)tiles_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@

@@ -54,9 +54,10 @@ subroutine latlon_write(this, f, domain, file_name, rec_num)
 
     if (domain%parcomm%myid == this%master_id) then
         do t = domain%partition%ts, domain%partition%te
-            do k = this%tiles%ks(t), this%tiles%ke(t)
-                do j = this%tiles%js(t), this%tiles%je(t)
-                    do i = this%tiles%is(t), this%tiles%ie(t)
+            call this%tiles%tile(t)%getind(is, ie, js, je, ks, ke)
+            do k = ks, ke
+                do j = js, je
+                    do i = is, ie
                         this%exchange_buf%tile(t)%p(i,j,k) = f%tile(t)%p(i,j,k)
                     end do
                 end do
@@ -112,9 +113,10 @@ subroutine latlon_vec_write(this, u, v, domain, file_name_u, file_name_v, rec_nu
 
      if (domain%parcomm%myid == this%master_id) then
          do t = domain%partition%ts, domain%partition%te
-             do k = this%tiles_u%ks(t), this%tiles_u%ke(t)
-                 do j = this%tiles_u%js(t), this%tiles_u%je(t)
-                     do i = this%tiles_u%is(t), this%tiles_u%ie(t)
+             call this%tiles_u%tile(t)%getind(is, ie, js, je, ks, ke)
+             do k = ks, ke
+                 do j = js, je
+                     do i = is, ie
                          this%exchange_buf_u%tile(t)%p(i,j,k) = u%tile(t)%p(i,j,k)
                      end do
                  end do
@@ -127,9 +129,10 @@ subroutine latlon_vec_write(this, u, v, domain, file_name_u, file_name_v, rec_nu
 
      if (domain%parcomm%myid == this%master_id) then
          do t = domain%partition%ts, domain%partition%te
-             do k = this%tiles_v%ks(t), this%tiles_v%ke(t)
-                 do j = this%tiles_v%js(t), this%tiles_v%je(t)
-                     do i = this%tiles_v%is(t), this%tiles_v%ie(t)
+             call this%tiles_v%tile(t)%getind(is, ie, js, je, ks, ke)
+             do k = ks, ke
+                 do j = js, je
+                     do i = is, ie
                          this%exchange_buf_v%tile(t)%p(i,j,k) = v%tile(t)%p(i,j,k)
                      end do
                  end do
