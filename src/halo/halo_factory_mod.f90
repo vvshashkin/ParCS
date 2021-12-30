@@ -83,7 +83,7 @@ subroutine create_Ah_scalar_sync_halo_procedure(halo,domain,halo_width)
     use halo_mod,                only : halo_t
     use domain_mod,              only : domain_t
     use halo_Ah_scalar_sync_mod, only : halo_Ah_scalar_sync_t
-    use exchange_factory_mod,    only : create_symm_halo_exchange_Ah
+    use exchange_factory_mod,    only : create_xy_points_halo_exchange
 
     class(halo_t), allocatable, intent(out) :: halo
     class(domain_t),            intent(in)  :: domain
@@ -92,7 +92,7 @@ subroutine create_Ah_scalar_sync_halo_procedure(halo,domain,halo_width)
     allocate(halo_Ah_scalar_sync_t :: halo)
     select type(halo)
     type is (halo_Ah_scalar_sync_t)
-        halo%exch_halo = create_symm_halo_exchange_Ah( &
+        halo%exch_halo = create_xy_points_halo_exchange( &
                    domain%partition, domain%parcomm, domain%topology, 1, 'full')
     end select
 end

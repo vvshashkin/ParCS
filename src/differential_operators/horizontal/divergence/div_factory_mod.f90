@@ -116,14 +116,14 @@ end function create_div_a2_operator
 function create_div_ah2_operator(domain) result(div)
 
     use div_ah2_mod,          only : div_ah2_t
-    use exchange_factory_mod, only : create_symm_halo_exchange_Ah
+    use exchange_factory_mod, only : create_xy_points_halo_exchange
 
     type(domain_t),   intent(in)  :: domain
     type(div_ah2_t)               :: div
 
     integer(kind=4), parameter :: halo_width=2
 
-    div%exch_halo = create_symm_halo_exchange_Ah(domain%partition, domain%parcomm, &
+    div%exch_halo = create_xy_points_halo_exchange(domain%partition, domain%parcomm, &
                                                  domain%topology,  halo_width, 'full')
 
 end function create_div_ah2_operator
@@ -131,7 +131,7 @@ end function create_div_ah2_operator
 function create_div_ah_sbp_operator(domain, div_operator_name) result(div)
 
     use div_ah_sbp_mod,       only : div_ah_sbp_t
-    use exchange_factory_mod, only : create_symm_halo_exchange_Ah
+    use exchange_factory_mod, only : create_xy_points_halo_exchange
     use halo_factory_mod,     only : create_halo_procedure
     use sbp_factory_mod,      only : create_sbp_operator
 
@@ -158,7 +158,7 @@ function create_div_ah_sbp_operator(domain, div_operator_name) result(div)
     end select
 
     div%exch_uv_interior =  &
-                    create_symm_halo_exchange_Ah(domain%partition, domain%parcomm, &
+                    create_xy_points_halo_exchange(domain%partition, domain%parcomm, &
                                                  domain%topology,  halo_width_interior, 'full')
     call create_halo_procedure(div%sync_edges,domain,1,"Ah_scalar_sync")
 

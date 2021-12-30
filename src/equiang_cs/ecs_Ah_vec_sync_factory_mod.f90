@@ -10,7 +10,7 @@ module ecs_halo_Ah_vec_sync_factory_mod
 use halo_mod,                 only : halo_vec_t
 use ecs_halo_Ah_vec_sync_mod, only : ecs_halo_Ah_vec_sync_t
 use domain_mod,               only : domain_t
-use exchange_factory_mod,     only : create_symm_halo_exchange_Ah
+use exchange_factory_mod,     only : create_xy_points_halo_exchange
 use ecs_metric_mod,           only : ecs_b1_proto, ecs_b2_proto, ecs_a1_proto, ecs_a2_proto
 use parcomm_mod,              only : parcomm_global
 
@@ -34,7 +34,7 @@ subroutine create_ecs_Ah_vec_sync(halo_out,domain,halo_width,components_type)
 
     allocate(halo)
     halo%exch_edges =  &
-              create_symm_halo_exchange_Ah(domain%partition, domain%parcomm, &
+              create_xy_points_halo_exchange(domain%partition, domain%parcomm, &
                                            domain%topology,  halo_width_edges, 'cross')
     halo%ts = domain%mesh_xy%ts
     halo%te = domain%mesh_xy%te

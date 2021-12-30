@@ -175,7 +175,7 @@ subroutine test_Ah_halo_exchange()
     use domain_factory_mod,     only : create_domain
     use exchange_abstract_mod,  only : exchange_t
     use exchange_halo_mod,      only : exchange_2D_halo_t
-    use exchange_factory_mod,   only : create_symm_halo_exchange_Ah
+    use exchange_factory_mod,   only : create_xy_points_halo_exchange
     use test_fields_mod,        only : set_vector_test_field, set_scalar_test_field, &
                                        xyz_f => xyz_scalar_field_generator
 
@@ -188,7 +188,7 @@ subroutine test_Ah_halo_exchange()
 
     call create_domain(domain, "cube", 'Ah', nh, nz)
     call domain%parcomm%print('Running Ah-grid halo exchange test!')
-    exch_halo = create_symm_halo_exchange_Ah( &
+    exch_halo = create_xy_points_halo_exchange( &
                     domain%partition, domain%parcomm, domain%topology,  halo_width, 'full')
 
     call create_grid_field(f, halo_width, 0, domain%mesh_xy)

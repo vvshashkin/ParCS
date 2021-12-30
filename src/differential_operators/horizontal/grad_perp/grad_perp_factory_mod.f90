@@ -26,7 +26,7 @@ subroutine create_grad_perp_operator_c_sbp(grad_perp, grad_perp_operator_name, d
 
     use grad_perp_c_sbp_mod,  only : grad_perp_c_sbp_t
     use sbp_factory_mod,      only : create_sbp_operator
-    use exchange_factory_mod, only : create_symm_halo_exchange_Ah
+    use exchange_factory_mod, only : create_xy_points_halo_exchange
     use halo_factory_mod,     only : create_halo_procedure
 
     class(grad_perp_operator_t), allocatable, intent(out) :: grad_perp
@@ -48,7 +48,7 @@ subroutine create_grad_perp_operator_c_sbp(grad_perp, grad_perp_operator_name, d
     case default
         call parcomm_global%abort("unknown sbp grad_perp operator: "//grad_perp_operator_name)
     end select
-    grad_perp_sbp%exchange = create_symm_halo_exchange_Ah(domain%partition, domain%parcomm, &
+    grad_perp_sbp%exchange = create_xy_points_halo_exchange(domain%partition, domain%parcomm, &
                                                           domain%topology, halo_width, 'full')
 
     call move_alloc(grad_perp_sbp, grad_perp)

@@ -125,7 +125,7 @@ end function create_grad_a2_operator
 function create_grad_ah_sbp_operator(domain, grad_operator_name) result(grad)
 
     use grad_ah_sbp_mod,           only : grad_ah_sbp_t
-    use exchange_factory_mod,      only : create_symm_halo_exchange_Ah
+    use exchange_factory_mod,      only : create_xy_points_halo_exchange
     use halo_factory_mod,          only : create_vector_halo_procedure
     use sbp_factory_mod,           only : create_sbp_operator
 
@@ -155,7 +155,7 @@ function create_grad_ah_sbp_operator(domain, grad_operator_name) result(grad)
     end select
 
     grad%exch_scalar_interior =  &
-              create_symm_halo_exchange_Ah(domain%partition, domain%parcomm, &
+              create_xy_points_halo_exchange(domain%partition, domain%parcomm, &
                                          domain%topology,  halo_width_interior, 'full')
 
     call create_vector_halo_procedure(grad%sync_edges,domain,0,"ecs_Ah_vec_sync_covariant")
@@ -165,7 +165,7 @@ end function create_grad_ah_sbp_operator
 function create_grad_ch_sbp_operator(domain, grad_operator_name) result(grad)
 
     use grad_ch_sbp_mod,      only : grad_ch_sbp_t
-    use exchange_factory_mod, only : create_symm_halo_exchange_Ah
+    use exchange_factory_mod, only : create_xy_points_halo_exchange
     use sbp_factory_mod,      only : create_sbp_operator
 
     type(domain_t),   intent(in)  :: domain
@@ -187,7 +187,7 @@ function create_grad_ch_sbp_operator(domain, grad_operator_name) result(grad)
     end select
 
     grad%exch_scalar_interior =  &
-              create_symm_halo_exchange_Ah(domain%partition, domain%parcomm, &
+              create_xy_points_halo_exchange(domain%partition, domain%parcomm, &
                                          domain%topology,  halo_width_interior, 'full')
 
 end function create_grad_ch_sbp_operator

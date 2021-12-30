@@ -154,16 +154,48 @@ function create_o_z_points_halo_exchange(tiles, partition, parcomm, topology, ha
     end do
 
 end function create_o_z_points_halo_exchange
-
-function create_symm_halo_exchange_Ah(partition, parcomm, topology, halo_width, halo_type) result(exchange)
+function create_xy_points_halo_exchange(partition, parcomm, topology, halo_width, halo_type) result(exchange)
 
     use exchange_halo_mod, only : exchange_2D_halo_t
 
-    type(partition_t), target, intent(in)    :: partition
+    type(partition_t), intent(in)    :: partition
     class(topology_t), intent(in) :: topology
     integer(kind=4),   intent(in) :: halo_width
     character(*),      intent(in) :: halo_type
     type(parcomm_t),   intent(in) :: parcomm
+
+    type(exchange_2D_halo_t) :: exchange
+
+    exchange = create_xy_xyz_points_halo_exchange(partition%tiles_xy, partition, parcomm, topology, &
+                                             halo_width, halo_type)
+end function create_xy_points_halo_exchange
+
+function create_xyz_points_halo_exchange(partition, parcomm, topology, halo_width, halo_type) result(exchange)
+
+    use exchange_halo_mod, only : exchange_2D_halo_t
+
+    type(partition_t), intent(in)    :: partition
+    class(topology_t), intent(in) :: topology
+    integer(kind=4),   intent(in) :: halo_width
+    character(*),      intent(in) :: halo_type
+    type(parcomm_t),   intent(in) :: parcomm
+
+    type(exchange_2D_halo_t) :: exchange
+
+    exchange = create_xy_xyz_points_halo_exchange(partition%tiles_xyz, partition, parcomm, topology, &
+                                             halo_width, halo_type)
+end function create_xyz_points_halo_exchange
+function create_xy_xyz_points_halo_exchange(tiles, partition, parcomm, topology, &
+                                            halo_width, halo_type) result(exchange)
+
+    use exchange_halo_mod, only : exchange_2D_halo_t
+
+    type(tiles_t), target, intent(in) :: tiles
+    type(partition_t),     intent(in) :: partition
+    class(topology_t),     intent(in) :: topology
+    integer(kind=4),       intent(in) :: halo_width
+    character(*),          intent(in) :: halo_type
+    type(parcomm_t),       intent(in) :: parcomm
 
     type(exchange_2D_halo_t) :: exchange
 
@@ -193,19 +225,19 @@ function create_symm_halo_exchange_Ah(partition, parcomm, topology, halo_width, 
 
     do local_ind = partition%ts, partition%te
 
-        local_tile => partition%tiles_xy%tile(local_ind)
+        local_tile => tiles%tile(local_ind)
         local_panel = partition%panel_map(local_ind)
 
         do remote_ind = 1, partition%Nt
 
             if (remote_ind == local_ind) cycle
 
-            remote_tile => partition%tiles_xy%tile(remote_ind)
+            remote_tile => tiles%tile(remote_ind)
             remote_panel = partition%panel_map(remote_ind)
 
             call topology%transform_tile_coords(remote_panel, remote_tile, &
                                                 local_panel,  temp_tile,   &
-                                                partition%tiles_xy%Nx, partition%tiles_xy%Ny)
+                                                tiles%Nx, tiles%Ny)
 
             !recv exchange
             call find_tiles_halo_intersection(local_tile, halo_width, halo_width, &
@@ -264,8 +296,7 @@ function create_symm_halo_exchange_Ah(partition, parcomm, topology, halo_width, 
         call exchange%send_buff(ind)%init(2*send_pts_num(ind))
     end do
 
-end function create_symm_halo_exchange_Ah
-
+end function create_xy_xyz_points_halo_exchange
 function create_symmetric_halo_vec_exchange_Ch(partition, parcomm, topology, halo_width, halo_type) result(exchange)
 
     use exchange_halo_Ch_mod, only : exchange_2D_halo_Ch_t

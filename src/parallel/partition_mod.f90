@@ -254,6 +254,10 @@ subroutine get_tiles(this, points_type, tiles)
         tiles = this%tiles_y
     case('xy')
         tiles = this%tiles_xy
+    case('z')
+        tiles = this%tiles_z
+    case('xyz')
+        tiles = this%tiles_xyz
     case('p')
         tiles = this%tiles_p
     case('u')
