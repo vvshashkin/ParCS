@@ -98,8 +98,8 @@ end function create_co2contra_c_sbp_new_operator
 
 function create_co2contra_ch_sbp_operator(domain, co2contra_operator_name) result(co2contra)
 
-    use interpolator_w2v_factory_mod, only : create_w2v_interpolator
     use interpolator_v2w_factory_mod, only : create_v2w_interpolator
+    use interpolator2d_factory_mod,   only : create_vec2vec_interpolator2d
     use grid_field_factory_mod,       only : create_grid_field
 
     type(domain_t),             intent(in) :: domain
@@ -115,10 +115,14 @@ function create_co2contra_ch_sbp_operator(domain, co2contra_operator_name) resul
 
     select case(co2contra_operator_name)
     case("co2contra_ch_sbp21")
-        call create_w2v_interpolator(co2contra%interp_w2v_op, "W21_stagered_interp_c2i", domain)
+        call create_vec2vec_interpolator2d(co2contra%interp_q2uv_op, &
+                                           "interp2d_qvec2uv_Ch_sbp21", domain)
+        ! call create_w2v_interpolator(co2contra%interp_w2v_op, "W21_stagered_interp_c2i", domain)
         call create_v2w_interpolator(co2contra%interp_v2w_op, "W21_stagered_interp_i2c", domain)
     case("co2contra_ch_sbp42")
-        call create_w2v_interpolator(co2contra%interp_w2v_op, "W42_stagered_interp_c2i", domain)
+        call create_vec2vec_interpolator2d(co2contra%interp_q2uv_op, &
+                                           "interp2d_qvec2uv_Ch_sbp42", domain)
+        ! call create_w2v_interpolator(co2contra%interp_w2v_op, "W42_stagered_interp_c2i", domain)
         call create_v2w_interpolator(co2contra%interp_v2w_op, "W42_stagered_interp_i2c", domain)
     case default
         call parcomm_global%abort("unknown co2contra_c_sbp operator "// co2contra_operator_name)
