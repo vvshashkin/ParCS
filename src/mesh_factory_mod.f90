@@ -52,7 +52,7 @@ subroutine create_mesh(mesh, partition, metric, halo_width, h_top, points_type, 
     select case(vertical_staggering)
     case("None")
         if (partition%Nz == 1) then
-            call parcomm_global%print("Single layer model. Setting hz = 1")
+            !call parcomm_global%print("Single layer model. Setting hz = 1")
             hz = 1.0_8
         else
             hz = 1.0_8/(partition%Nz-1)

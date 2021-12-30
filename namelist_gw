@@ -37,7 +37,7 @@
     div_vert_part_name            = "eta_diff_w2p_sbp42",
     co2contra_operator_name       = "co2contra_c_sbp42_new",
     theta2uv_operator_name        = "w2uv_staggered",
-    theta2uv_hor_part_name        = "hor_interp_p2uv_sbp42",
+    theta2uv_hor_part_name        = "interp2d_p2uv_C_sbp42",
     theta2uv_vert_part_name       = "vertical_interp_w2p_sbp42",
     p_advection_oper_name         = "advection_p_staggered",
     p_hor_advection_oper_name     = "up4",

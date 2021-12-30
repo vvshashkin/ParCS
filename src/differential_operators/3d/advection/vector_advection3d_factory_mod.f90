@@ -57,7 +57,7 @@ subroutine create_staggered_shallow_atm_vector_advection3d(vec_adv_op, &
     call create_vector_advection_operator(operator%uv_hor_advection_op, uv_hor_adv_op_name, domain)
     call create_adv_z_operator(operator%uv_z_advec_op,uv_ver_adv_op_name)
     call create_w2uv_interpolator(operator%interp_w2uv, "w2uv_staggered", &
-                                  "hor_interp_p2uv_sbp42", "vertical_interp_w2p_sbp42" ,domain)
+                                  "interp2d_p2uv_C_sbp42", "vertical_interp_w2p_sbp42" ,domain)
     call create_scalar_advection3d_operator(operator%w_advection3d_op, w_adv_op_name, &
                                             w_adv_hor_part_name, w_adv_ver_part_name, domain)
 
