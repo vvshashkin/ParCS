@@ -8,8 +8,6 @@ use exchange_abstract_mod,        only : exchange_t
 use parcomm_mod,                  only : parcomm_global
 use halo_mod,                     only : halo_vec_t
 use sbp_operator_mod,             only : sbp_operator_t
-!use interpolator_w2v_mod,         only : interpolator_w2v_t
-use interpolator_v2w_mod,         only : interpolator_v2w_t
 use abstract_interpolators2d_mod, only : interpolator2d_vec2vec_t
 
 implicit none
@@ -17,8 +15,8 @@ implicit none
 type, extends(co2contra_operator_t), public :: co2contra_ch_sbp_t
     character(len=:), allocatable :: operator_name
     class(interpolator2d_vec2vec_t), allocatable :: interp_q2uv_op
-    type(interpolator_v2w_t)                     :: interp_v2w_op
-    type(grid_field_t)                           :: uw, vw
+    class(interpolator2d_vec2vec_t), allocatable :: interp_uv2q_op
+    type(grid_field_t)                           :: uq, vq
     contains
         procedure :: transform    => transform_co2contra_ch_sbp
 !        procedure :: transform2co => transform_contra2co_ah_c_sbp
@@ -35,18 +33,14 @@ subroutine transform_co2contra_ch_sbp(this, u_contra, v_contra, u_cov, v_cov, do
 
     integer(kind=4) :: t
 
-    !WORKAROUND
-    call this%interp_v2w_op%interp_v2w_Ah_C(this%uw, this%vw, u_cov, v_cov, domain)
+    call this%interp_uv2q_op%interp2d_vec2vec(this%uq, this%vq, u_cov, v_cov, domain)
 
     do t = domain%partition%ts, domain%partition%te
-        call start_co2contra_transform_at_w_tile(this%uw%tile(t), this%vw%tile(t), &
+        call start_co2contra_transform_at_w_tile(this%uq%tile(t), this%vq%tile(t), &
                                                  domain%mesh_o%tile(t))
     end do
 
-    !u_contra contains v part at u, v_contra contains u part at v
-    !WORKAROUND
-    !call this%interp_w2v_op%interp_w2v_Ah_C(u_contra, v_contra, this%uw, this%vw, domain)
-    call this%interp_q2uv_op%interp2d_vec2vec(u_contra, v_contra, this%uw, this%vw, domain)
+    call this%interp_q2uv_op%interp2d_vec2vec(u_contra, v_contra, this%uq, this%vq, domain)
 
     do t = domain%partition%ts, domain%partition%te
         call finalize_co2contra_transform_at_uv_tile(u_contra%tile(t), v_contra%tile(t), &

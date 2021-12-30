@@ -1115,7 +1115,6 @@ $(DOBJ)co2contra_ch_mod.o: src/differential_operators/horizontal/co2contra/co2co
 	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)halo_mod.o \
 	$(DOBJ)sbp_operator_mod.o \
-	$(DOBJ)interpolator_v2w_mod.o \
 	$(DOBJ)abstract_interpolators2d_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -1138,8 +1137,7 @@ $(DOBJ)co2contra_factory_mod.o: src/differential_operators/horizontal/co2contra/
 	$(DOBJ)exchange_factory_mod.o \
 	$(DOBJ)sbp_factory_mod.o \
 	$(DOBJ)interpolator2d_factory_mod.o \
-	$(DOBJ)grid_field_factory_mod.o \
-	$(DOBJ)interpolator_v2w_factory_mod.o
+	$(DOBJ)grid_field_factory_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -1377,19 +1375,20 @@ $(DOBJ)abstract_vector_advection_mod.o: src/differential_operators/horizontal/ve
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
-$(DOBJ)interpolator_v2w_mod.o: src/differential_operators/horizontal/interpolator_2d/interpolator_v2w_mod.f90 \
+$(DOBJ)abstract_interpolators2d_mod.o: src/differential_operators/horizontal/interpolator_2d/abstract_interpolators2d_mod.f90 \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)grid_field_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)interpolator_uv2q_mod.o: src/differential_operators/horizontal/interpolator_2d/interpolator_uv2q_mod.f90 \
+	$(DOBJ)abstract_interpolators2d_mod.o \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)exchange_abstract_mod.o \
 	$(DOBJ)mesh_mod.o \
 	$(DOBJ)sbp_operator_mod.o \
 	$(DOBJ)tile_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
-$(DOBJ)abstract_interpolators2d_mod.o: src/differential_operators/horizontal/interpolator_2d/abstract_interpolators2d_mod.f90 \
-	$(DOBJ)domain_mod.o \
-	$(DOBJ)grid_field_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -1442,18 +1441,11 @@ $(DOBJ)interpolator2d_factory_mod.o: src/differential_operators/horizontal/inter
 	$(DOBJ)interpolator_p2uv_mod.o \
 	$(DOBJ)interpolator_uv2p_mod.o \
 	$(DOBJ)interpolator_q2uv_mod.o \
+	$(DOBJ)interpolator_uv2q_mod.o \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)sbp_factory_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
 	$(DOBJ)parcomm_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
-$(DOBJ)interpolator_v2w_factory_mod.o: src/differential_operators/horizontal/interpolator_2d/interpolator_v2w_factory_mod.f90 \
-	$(DOBJ)interpolator_v2w_mod.o \
-	$(DOBJ)domain_mod.o \
-	$(DOBJ)sbp_factory_mod.o \
-	$(DOBJ)exchange_factory_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

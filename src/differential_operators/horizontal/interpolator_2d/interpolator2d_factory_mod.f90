@@ -7,6 +7,7 @@ use interpolator_p2uv_sbp_C_mod,     only : interpolator_p2uv_sbp_C_t,   &
                                             interpolator_pvec2uv_sbp_Ch_t
 use interpolator_uv2p_mod,           only : interpolator2d_uv2p_sbp_C_t
 use interpolator_q2uv_sbp_mod,       only : interpolator_q2uv_sbp_Ch_t
+use interpolator_uv2q_sbp_mod,       only : interpolator_uv2q_sbp_Ch_t
 use domain_mod,                      only : domain_t
 use sbp_factory_mod,                 only : create_sbp_operator
 use exchange_factory_mod,            only : create_symm_halo_exchange_A,  &
@@ -66,6 +67,12 @@ subroutine create_vec2vec_interpolator2d(interpolator2d, interp2d_name, domain)
                                                 domain,halo_width=1)
     case("interp2d_qvec2uv_Ch_sbp42")
         call create_qvec2uv_Ch_sbp_interpolator(interpolator2d,"W42_stagered_interp_c2i",&
+                                                domain,halo_width=3)
+    case("interp2d_uv2qvec_Ch_sbp21")
+        call create_uv2qvec_Ch_sbp_interpolator(interpolator2d,"W21_stagered_interp_i2c",&
+                                                domain,halo_width=1)
+    case("interp2d_uv2qvec_Ch_sbp42")
+        call create_uv2qvec_Ch_sbp_interpolator(interpolator2d,"W42_stagered_interp_i2c",&
                                                 domain,halo_width=3)
     case default
         call parcomm_global%abort("create_vec2vec_interpolator2d, unknown interpolator name: "//&
@@ -173,10 +180,31 @@ subroutine create_qvec2uv_Ch_sbp_interpolator(interpolator_q2uv, sbp_q2uv_interp
     interpolator_q2uv_sbp%sbp_interp_q2uv = create_sbp_operator(sbp_q2uv_interp_name)
 
     interpolator_q2uv_sbp%exchange = &
-          create_symm_halo_exchange_Ah(domain%partition, domain%parcomm, &
+          create_symm_halo_exchange_A(domain%partition, domain%parcomm, &
                                        domain%topology, halo_width, 'full')
 
     call move_alloc(interpolator_q2uv_sbp, interpolator_q2uv)
 end subroutine create_qvec2uv_Ch_sbp_interpolator
+
+subroutine create_uv2qvec_Ch_sbp_interpolator(interpolator_uv2q, sbp_uv2q_interp_name, &
+                                                             domain, halo_width)
+
+    class(interpolator2d_vec2vec_t), allocatable, intent(out) :: interpolator_uv2q
+    character(len=*),                             intent(in)  :: sbp_uv2q_interp_name
+    type(domain_t),                               intent(in)  :: domain
+    integer(kind=4),                              intent(in)  :: halo_width
+
+    type(interpolator_uv2q_sbp_Ch_t), allocatable :: interpolator_uv2q_sbp
+
+    allocate(interpolator_uv2q_sbp)
+
+    interpolator_uv2q_sbp%sbp_interp_uv2q = create_sbp_operator(sbp_uv2q_interp_name)
+
+    interpolator_uv2q_sbp%exchange = &
+          create_symmetric_halo_vec_exchange_C(domain%partition, domain%parcomm, &
+                                              domain%topology, halo_width, 'full')
+
+    call move_alloc(interpolator_uv2q_sbp, interpolator_uv2q)
+end subroutine create_uv2qvec_Ch_sbp_interpolator
 
 end module interpolator2d_factory_mod
