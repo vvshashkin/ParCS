@@ -29,6 +29,8 @@ public :: ts2_height_generator_t
 public :: rh4_wave_height_generator_t, rh4_wave_wind_generator_t
 public :: barotropic_instability_wind_generator_t
 public :: barotropic_instability_height_generator_t
+public :: Eldred_test_height_generator_t, Eldred_test_height_generator
+public :: Eldred_test_wind_generator_t, Eldred_test_wind_generator
 
 public :: KE_scalar_field_t
 
@@ -175,6 +177,21 @@ contains
     procedure :: get_vector_field => generate_barotropic_instability_wind
 end type barotropic_instability_wind_generator_t
 
+type, extends(scalar_field_generator_t) :: Eldred_test_height_generator_t
+    real(kind=8) :: h_mean  = 1e3_8
+    real(kind=8) :: delta_h = 8e3_8 / 9.80616_8
+contains
+    procedure :: get_scalar_field => generate_Eldred_test_height
+end type Eldred_test_height_generator_t
+
+type, extends(vector_field_generator_t) :: Eldred_test_wind_generator_t
+    real(kind=8)    :: u0 = 120.0_8
+    integer(kind=4) :: m  = 12 !number of periods pole to pole
+contains
+    procedure :: get_vector_field => generate_Eldred_test_wind
+end type Eldred_test_wind_generator_t
+
+
 !!!field generator instances
 type(xyz_scalar_field_generator_t)     :: xyz_scalar_field_generator
 type(solid_rotation_field_generator_t) :: solid_rotation_field_generator
@@ -188,6 +205,8 @@ type(random_scalar_field_generator_t)  :: random_scalar_field_generator
 type(VSH_curl_free_10_generator_t)     :: VSH_curl_free_10_generator
 type(zero_scalar_field_generator_t)    :: zero_scalar_field_generator
 type(gaussian_hill_scalar_field_generator_t) :: gaussian_hill_scalar_field_generator
+type(Eldred_test_height_generator_t)   :: Eldred_test_height_generator
+type(Eldred_test_wind_generator_t)     :: Eldred_test_wind_generator
 ! type(coriolis_force_field_generator_t) :: coriolis_force_field_generator = &
 
 
@@ -979,4 +998,47 @@ subroutine generate_random_scalar_field(this, f, npts, nlev, x, y, z)
     call random_number(f)
 
 end subroutine generate_random_scalar_field
+
+subroutine generate_Eldred_test_height(this, f, npts, nlev, x, y, z)
+
+    class(Eldred_test_height_generator_t), intent(in)   :: this
+    integer(kind=4),                       intent(in)   :: npts, nlev
+    real(kind=8),                          intent(in)   :: x(npts), y(npts), z(npts)
+    real(kind=8),                          intent(out)  :: f(npts,nlev)
+
+    integer(kind=4) :: i, k
+
+    do k = 1, nlev
+        do i=1, npts
+            f(i,k) = this%h_mean+this%delta_h*(1.0_8/3.0_8 - z(i)**2)
+        end do
+    end do
+
+end subroutine generate_Eldred_test_height
+
+subroutine generate_Eldred_test_wind(this, vx, vy, vz, npts, nlev, x, y, z)
+
+    use const_mod, only : pi
+
+    class(Eldred_test_wind_generator_t),      intent(in)  :: this
+    integer(kind=4),                          intent(in)  :: npts, nlev
+    real(kind=8),       dimension(npts),      intent(in)  :: x, y, z
+    real(kind=8),       dimension(npts,nlev), intent(out) :: vx, vy, vz
+
+    integer(kind=4) :: i, k
+    real(kind=8)    :: phi, u_div_cos
+    ! real(kind=8), parameter :: phi0 = pi/7d0, phi1 = .5d0*pi-phi0
+    !
+    do k = 1, nlev
+        do i=1, npts
+            phi = asin(z(i) / sqrt(x(i)**2+y(i)**2+z(i)**2))
+            !u / cos(phi):
+            u_div_cos = 4.0_8*this%u0*sin(phi)**2*cos(phi)*(sin(this%m*phi)**2-0.5_8)
+            vx(i,k) =-u_div_cos*y(i)
+            vy(i,k) = u_div_cos*x(i)
+            vz(i,k) = 0.0_8
+        end do
+    end do
+end subroutine generate_Eldred_test_wind
+
 end module test_fields_mod

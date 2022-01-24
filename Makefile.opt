@@ -41,6 +41,13 @@ $(DEXE)BAROTROPIC_INST_MAIN: $(MKDIRS) $(DOBJ)barotropic_inst_main.o \
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) BAROTROPIC_INST_MAIN
+$(DEXE)SWHS_MAIN: $(MKDIRS) $(DOBJ)swhs_main.o \
+	$(DOBJ)avost.o \
+	$(DOBJ)auxhs.o
+	@rm -f $(filter-out $(DOBJ)swhs_main.o,$(EXESOBJ))
+	@echo $(LITEXT)
+	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
+EXES := $(EXES) SWHS_MAIN
 $(DEXE)TS2_MAIN: $(MKDIRS) $(DOBJ)ts2_main.o \
 	$(DOBJ)avost.o \
 	$(DOBJ)auxhs.o
@@ -2253,6 +2260,36 @@ $(DOBJ)config_barotropic_inst_mod.o: src/models/shallow_water/test/barotropic_in
 	$(DOBJ)config_mod.o \
 	$(DOBJ)const_mod.o \
 	$(DOBJ)parcomm_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)swhs_main.o: src/models/shallow_water/test/HeldSuarez/SWHS_main.f90 \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)swhs_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)swhs_mod.o: src/models/shallow_water/test/HeldSuarez/SWHS_mod.f90 \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)domain_factory_mod.o \
+	$(DOBJ)stvec_mod.o \
+	$(DOBJ)stvec_swm_mod.o \
+	$(DOBJ)stvec_swm_factory_mod.o \
+	$(DOBJ)operator_mod.o \
+	$(DOBJ)operator_swm_factory_mod.o \
+	$(DOBJ)timescheme_mod.o \
+	$(DOBJ)timescheme_factory_mod.o \
+	$(DOBJ)outputer_abstract_mod.o \
+	$(DOBJ)outputer_factory_mod.o \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)config_swm_mod.o \
+	$(DOBJ)operator_swm_diff_mod.o \
+	$(DOBJ)operator_swm_diff_factory_mod.o \
+	$(DOBJ)const_mod.o \
+	$(DOBJ)test_fields_mod.o \
+	$(DOBJ)key_value_mod.o \
+	$(DOBJ)vec_math_mod.o \
+	$(DOBJ)namelist_read_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
