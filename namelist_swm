@@ -2,12 +2,12 @@
     N = 128,
     Nz = 1,
     topology_type    = 'cube',
-    staggering_type  = 'Ah',
+    staggering_type  = 'C',
     metric_type      = 'ecs'
 /
 &metric
 /
-&shallow_water_model
+&shallow_water_model_Ah_vi
     swm_op_type       = 'vector_invariant'
     v_components_type = 'covariant'
     div_op_name       = 'divergence_ah42_sbp',
@@ -26,7 +26,7 @@
     dt=150.0,
     tau_write = 21600.0,
     tau_diagnostics = 3600.0
-    simulation_time_days  = 10.0,
+    simulation_time_days  = 30.0,
     simulation_time_hours = 0.0,
     simulation_time_min   = 0.0,
     simulation_time_sec   = 0.0,
@@ -47,10 +47,10 @@
     hordiff_uv_name   = 'hordiff_vec_xyz_Ah',
     h_diff_coeff      =  0.00,
     hordiff_h_name    = 'hordiff_scalar_Ah',
-    dt=450.0,
+    dt=200.0,
     tau_write = 21600.0,
     tau_diagnostics = 3600.0
-    simulation_time_days  = 10.0,
+    simulation_time_days  = 30.0,
     simulation_time_hours = 0.0,
     simulation_time_min   = 0.0,
     simulation_time_sec   = 0.0,
@@ -73,7 +73,7 @@
     dt=150.0,
     tau_write = 21600.0,
     tau_diagnostics = 3600.0
-    simulation_time_days  = 10.0,
+    simulation_time_days  = 120.0,
     simulation_time_hours = 0.0,
     simulation_time_min   = 0.0,
     simulation_time_sec   = 0.0,
