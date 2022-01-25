@@ -55,6 +55,13 @@ $(DEXE)ELDRED_TEST_MAIN: $(MKDIRS) $(DOBJ)eldred_test_main.o \
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) ELDRED_TEST_MAIN
+$(DEXE)FORCING_TEST_MAIN: $(MKDIRS) $(DOBJ)forcing_test_main.o \
+	$(DOBJ)avost.o \
+	$(DOBJ)auxhs.o
+	@rm -f $(filter-out $(DOBJ)forcing_test_main.o,$(EXESOBJ))
+	@echo $(LITEXT)
+	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
+EXES := $(EXES) FORCING_TEST_MAIN
 $(DEXE)TS2_MAIN: $(MKDIRS) $(DOBJ)ts2_main.o \
 	$(DOBJ)avost.o \
 	$(DOBJ)auxhs.o
@@ -2190,7 +2197,6 @@ $(DOBJ)operator_swm_diff_mod.o: src/models/shallow_water/operator/operator_swm_d
 $(DOBJ)config_swm_mod.o: src/models/shallow_water/config/config_swm_mod.f90 \
 	$(DOBJ)config_mod.o \
 	$(DOBJ)config_domain_mod.o \
-	$(DOBJ)test_fields_mod.o \
 	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -2312,13 +2318,13 @@ $(DOBJ)ts5_mod.o: src/models/shallow_water/test/ts5/ts5_mod.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
-$(DOBJ)eldred_test_main.o: src/models/shallow_water/test/HeldSuarez/Eldred_test_main.f90 \
+$(DOBJ)eldred_test_main.o: src/models/shallow_water/test/Eldred_test/Eldred_test_main.f90 \
 	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)elsred_test_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
-$(DOBJ)elsred_test_mod.o: src/models/shallow_water/test/HeldSuarez/Elsred_test_mod.f90 \
+$(DOBJ)elsred_test_mod.o: src/models/shallow_water/test/Eldred_test/Elsred_test_mod.f90 \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)domain_factory_mod.o \
 	$(DOBJ)stvec_mod.o \
@@ -2336,6 +2342,35 @@ $(DOBJ)elsred_test_mod.o: src/models/shallow_water/test/HeldSuarez/Elsred_test_m
 	$(DOBJ)operator_swm_diff_factory_mod.o \
 	$(DOBJ)const_mod.o \
 	$(DOBJ)test_fields_mod.o \
+	$(DOBJ)key_value_mod.o \
+	$(DOBJ)vec_math_mod.o \
+	$(DOBJ)namelist_read_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)forcing_test_main.o: src/models/shallow_water/test/forcing_test/forcing_test_main.f90 \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)forcing_test_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)forcing_test_mod.o: src/models/shallow_water/test/forcing_test/forcing_test_mod.f90 \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)domain_factory_mod.o \
+	$(DOBJ)stvec_mod.o \
+	$(DOBJ)stvec_swm_mod.o \
+	$(DOBJ)stvec_swm_factory_mod.o \
+	$(DOBJ)operator_mod.o \
+	$(DOBJ)operator_swm_factory_mod.o \
+	$(DOBJ)timescheme_mod.o \
+	$(DOBJ)timescheme_factory_mod.o \
+	$(DOBJ)outputer_abstract_mod.o \
+	$(DOBJ)outputer_factory_mod.o \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)config_swm_mod.o \
+	$(DOBJ)operator_swm_diff_mod.o \
+	$(DOBJ)operator_swm_diff_factory_mod.o \
+	$(DOBJ)const_mod.o \
 	$(DOBJ)key_value_mod.o \
 	$(DOBJ)vec_math_mod.o \
 	$(DOBJ)namelist_read_mod.o
