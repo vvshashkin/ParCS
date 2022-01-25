@@ -35,6 +35,7 @@ type, public, extends(operator_t) :: operator_adv_swm_t
 
     !work fields for operator
     type(grid_field_t) :: h_surf !orography
+    type(grid_field_t) :: h_total !h+h_surf
     type(grid_field_t) :: div, grad_x, grad_y, curl
     type(grid_field_t) :: cor_u, cor_v
     type(grid_field_t) :: KE !kinetic energy
@@ -74,6 +75,8 @@ subroutine apply(this, vout, vin, domain)
         select type (vin)
         class is (stvec_swm_t)
 
+        call this%h_total%assign(1.0_8,vin%h,1.0_8,this%h_surf,domain%mesh_p)
+
         select case(this%v_components_type)
         case('covariant')
 
@@ -82,7 +85,7 @@ subroutine apply(this, vout, vin, domain)
                                                 vin%h, this%ut, this%vt, domain)
             call this%div_op%calc_div(this%div, this%hu, this%hv, domain)
 
-            call this%grad_op%calc_grad(this%grad_x, this%grad_y, vin%h, domain)
+            call this%grad_op%calc_grad(this%grad_x, this%grad_y, this%h_total, domain)
             call this%coriolis_op%calc_coriolis(this%cor_u, this%cor_v, &
                                                 this%ut, this%vt, domain)
 
@@ -93,7 +96,7 @@ subroutine apply(this, vout, vin, domain)
             call vout%h%assign(-1.0_8, this%div, domain%mesh_p)
         case('contravariant')
 
-            call this%grad_op%calc_grad(this%grad_x, this%grad_y, vin%h, domain)
+            call this%grad_op%calc_grad(this%grad_x, this%grad_y, this%h_total, domain)
             call this%co2contra_op%transform(this%ut, this%vt, this%grad_x, this%grad_y, domain)
 
             call this%coriolis_op%calc_coriolis_contra(this%cor_u, this%cor_v, &

@@ -41,13 +41,20 @@ $(DEXE)BAROTROPIC_INST_MAIN: $(MKDIRS) $(DOBJ)barotropic_inst_main.o \
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) BAROTROPIC_INST_MAIN
-$(DEXE)SWHS_MAIN: $(MKDIRS) $(DOBJ)swhs_main.o \
+$(DEXE)TS5_MAIN: $(MKDIRS) $(DOBJ)ts5_main.o \
 	$(DOBJ)avost.o \
 	$(DOBJ)auxhs.o
-	@rm -f $(filter-out $(DOBJ)swhs_main.o,$(EXESOBJ))
+	@rm -f $(filter-out $(DOBJ)ts5_main.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
-EXES := $(EXES) SWHS_MAIN
+EXES := $(EXES) TS5_MAIN
+$(DEXE)ELDRED_TEST_MAIN: $(MKDIRS) $(DOBJ)eldred_test_main.o \
+	$(DOBJ)avost.o \
+	$(DOBJ)auxhs.o
+	@rm -f $(filter-out $(DOBJ)eldred_test_main.o,$(EXESOBJ))
+	@echo $(LITEXT)
+	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
+EXES := $(EXES) ELDRED_TEST_MAIN
 $(DEXE)TS2_MAIN: $(MKDIRS) $(DOBJ)ts2_main.o \
 	$(DOBJ)avost.o \
 	$(DOBJ)auxhs.o
@@ -2144,6 +2151,7 @@ $(DOBJ)operator_swm_factory_mod.o: src/models/shallow_water/operator/operator_sw
 	$(DOBJ)operator_mod.o \
 	$(DOBJ)config_swm_mod.o \
 	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)test_fields_mod.o \
 	$(DOBJ)operator_swm_mod.o \
 	$(DOBJ)div_factory_mod.o \
 	$(DOBJ)grad_factory_mod.o \
@@ -2182,6 +2190,7 @@ $(DOBJ)operator_swm_diff_mod.o: src/models/shallow_water/operator/operator_swm_d
 $(DOBJ)config_swm_mod.o: src/models/shallow_water/config/config_swm_mod.f90 \
 	$(DOBJ)config_mod.o \
 	$(DOBJ)config_domain_mod.o \
+	$(DOBJ)test_fields_mod.o \
 	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -2263,13 +2272,53 @@ $(DOBJ)config_barotropic_inst_mod.o: src/models/shallow_water/test/barotropic_in
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
-$(DOBJ)swhs_main.o: src/models/shallow_water/test/HeldSuarez/SWHS_main.f90 \
+$(DOBJ)ts5_main.o: src/models/shallow_water/test/ts5/ts5_main.f90 \
 	$(DOBJ)parcomm_mod.o \
-	$(DOBJ)swhs_mod.o
+	$(DOBJ)ts5_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
-$(DOBJ)swhs_mod.o: src/models/shallow_water/test/HeldSuarez/SWHS_mod.f90 \
+$(DOBJ)config_ts5_mod.o: src/models/shallow_water/test/ts5/config_ts5_mod.f90 \
+	$(DOBJ)config_mod.o \
+	$(DOBJ)const_mod.o \
+	$(DOBJ)parcomm_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)ts5_mod.o: src/models/shallow_water/test/ts5/ts5_mod.f90 \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)domain_factory_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)grid_field_factory_mod.o \
+	$(DOBJ)stvec_mod.o \
+	$(DOBJ)stvec_swm_mod.o \
+	$(DOBJ)stvec_swm_factory_mod.o \
+	$(DOBJ)operator_mod.o \
+	$(DOBJ)operator_swm_factory_mod.o \
+	$(DOBJ)timescheme_mod.o \
+	$(DOBJ)timescheme_factory_mod.o \
+	$(DOBJ)outputer_abstract_mod.o \
+	$(DOBJ)outputer_factory_mod.o \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)config_swm_mod.o \
+	$(DOBJ)operator_swm_diff_mod.o \
+	$(DOBJ)operator_swm_diff_factory_mod.o \
+	$(DOBJ)config_ts5_mod.o \
+	$(DOBJ)test_fields_mod.o \
+	$(DOBJ)key_value_mod.o \
+	$(DOBJ)const_mod.o \
+	$(DOBJ)vec_math_mod.o \
+	$(DOBJ)namelist_read_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)eldred_test_main.o: src/models/shallow_water/test/HeldSuarez/Eldred_test_main.f90 \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)elsred_test_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)elsred_test_mod.o: src/models/shallow_water/test/HeldSuarez/Elsred_test_mod.f90 \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)domain_factory_mod.o \
 	$(DOBJ)stvec_mod.o \

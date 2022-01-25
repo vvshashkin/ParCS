@@ -31,6 +31,7 @@ public :: barotropic_instability_wind_generator_t
 public :: barotropic_instability_height_generator_t
 public :: Eldred_test_height_generator_t, Eldred_test_height_generator
 public :: Eldred_test_wind_generator_t, Eldred_test_wind_generator
+public :: ts5_orography_generator_t
 
 public :: KE_scalar_field_t
 
@@ -191,6 +192,15 @@ contains
     procedure :: get_vector_field => generate_Eldred_test_wind
 end type Eldred_test_wind_generator_t
 
+type, extends(scalar_field_generator_t) :: ts5_orography_generator_t
+    real(kind=8) :: r_mount = 1.0
+    real(kind=8) :: h_mount = 0.0_8
+    real(kind=8) :: x_mount = 0.0_8
+    real(kind=8) :: y_mount = 0.5_8*sqrt(3.0_8)
+    real(kind=8) :: z_mount = 0.5_8
+contains
+    procedure :: get_scalar_field => generate_ts5_orography_field
+end type ts5_orography_generator_t
 
 !!!field generator instances
 type(xyz_scalar_field_generator_t)     :: xyz_scalar_field_generator
@@ -1040,5 +1050,25 @@ subroutine generate_Eldred_test_wind(this, vx, vy, vz, npts, nlev, x, y, z)
         end do
     end do
 end subroutine generate_Eldred_test_wind
+
+subroutine generate_ts5_orography_field(this, f, npts, nlev, x, y, z)
+
+
+    class(ts5_orography_generator_t), intent(in)  :: this
+    integer(kind=4),                  intent(in)  :: npts, nlev
+    real(kind=8),                     intent(in)  :: x(npts), y(npts), z(npts)
+    real(kind=8),                     intent(out) :: f(npts,nlev)
+
+    integer(kind=4) :: i, k
+    real(kind=8)    :: dist
+
+    do k = 1, nlev
+        do i=1, npts
+            dist = acos(x(i)*this%x_mount+y(i)*this%y_mount+z(i)*this%z_mount)
+            f(i,k) = this%h_mount*max(0.0_8,1.0-dist/this%r_mount)
+        end do
+    end do
+
+end subroutine generate_ts5_orography_field
 
 end module test_fields_mod
