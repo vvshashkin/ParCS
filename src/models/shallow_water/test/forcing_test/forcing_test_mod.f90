@@ -15,13 +15,14 @@ use outputer_factory_mod,     only : create_master_paneled_outputer,&
 use parcomm_mod,              only : parcomm_global
 use config_swm_mod,           only : config_swm_t
 
+use operator_swm_mod,              only : operator_swm_t
 use operator_swm_diff_mod,         only : operator_swm_diff_t
 use operator_swm_diff_factory_mod, only : create_swm_diff_operator
 
 use const_mod,  only : Earth_grav, Earth_omega, Earth_radii, pi, Earth_sidereal_T
 
-! use test_fields_mod, only : forcing_test_height_generator, forcing_test_wind_generator, &
-!                             set_scalar_test_field, set_vector_test_field
+use random_friction_mod, only : random_friction_t, initialize_random_friction, &
+                                random_scalar_t,   initialize_random_scalar
 use key_value_mod,   only : key_value_r8_t
 
 implicit none
@@ -29,8 +30,9 @@ implicit none
 real(kind=8) :: grav    = Earth_grav
 real(kind=8) :: omega   = Earth_omega
 real(kind=8) :: a       = Earth_radii
-real(kind=8) :: h_mean  = 5e3_8
-real(kind=8) :: tau_forcing = 86400._8*100._8
+real(kind=8) :: h_mean  = 2e3_8
+real(kind=8) :: tau_forcing_h = 86400._8*100._8
+! real(kind=8) :: tau_fric_decorrel = 1e4_8
 
 contains
 
@@ -52,6 +54,8 @@ subroutine run_forcing_test()
 
     type(operator_swm_diff_t),   allocatable :: operator_diff
     class(timescheme_t),         allocatable :: timescheme_diff
+    type(random_friction_t) :: random_friction
+    type(random_scalar_t)   :: random_scalar
 
     integer(kind=4) :: halo_width = 8
 
@@ -92,6 +96,12 @@ subroutine run_forcing_test()
     call create_swm_diff_operator(operator_diff, config, domain)
     call create_timescheme(timescheme_diff, state, config%diff_time_scheme)
 
+    ! call initialize_random_friction(random_friction, l=6, tau=1e4_8, &
+    !                                 sigma_amp=3e-5_8, domain=domain)
+
+    call initialize_random_scalar(random_scalar, l=6, tau=1e4_8, &
+                                  amp=250._8, domain=domain)
+
     print*, 4*domain%partition%Nh, 2*domain%partition%Nh+1
 
     if(config%config_domain%staggering_type == "Ah") then
@@ -129,10 +139,30 @@ subroutine run_forcing_test()
 
     do it = 1, int(config%simulation_time/dt)
 
+        select type(operator)
+        type is (operator_swm_t)
+            call random_scalar%apply_update_forcing(operator%h_surf,domain,dt)
+            call outputer%write(operator%h_surf, domain, 'h_surf.dat', it)
+        end select
+
         call timescheme%step(state, operator, domain, dt)
         call timescheme_diff%step(state, operator_diff, domain, dt)
 
-        call state%update(dt/tau_forcing, state_eq, -dt/tau_forcing, state, domain)
+        ! call state%update(dt/tau_forcing, state_eq, -dt/tau_forcing, state, domain)
+        select type(state_eq)
+        class is (stvec_swm_t)
+        select type(state)
+        class is(stvec_swm_t)
+            ! call random_friction%apply_update_forcing(state_eq%u,state_eq%v, &
+            !                                           state%u,state%v,domain,dt)
+            ! call state%u%update(dt,state_eq%u,domain%mesh_u)
+            ! call state%v%update(dt,state_eq%v,domain%mesh_v)
+            call state%h%update(dt/tau_forcing_h, state_eq%h, &
+                               -dt/tau_forcing_h, state%h, domain%mesh_p)
+            ! call outputer_vec%write(state%u,state%v,domain,"ru.dat","rv.dat",it)
+
+        end select
+        end select
 
         time = it*dt
 
@@ -156,6 +186,9 @@ subroutine run_forcing_test()
 end subroutine run_forcing_test
 
 subroutine init_equilibrium(state,domain)
+
+    use const_mod, only : pi
+
     type(stvec_swm_t), intent(inout) :: state
     type(domain_t),    intent(in)    :: domain
 
@@ -168,10 +201,10 @@ subroutine init_equilibrium(state,domain)
         do k = domain%mesh_p%tile(t)%ks, domain%mesh_p%tile(t)%ke
             do j = domain%mesh_p%tile(t)%js, domain%mesh_p%tile(t)%je
                 do i = domain%mesh_p%tile(t)%is, domain%mesh_p%tile(t)%ie
-                    if(abs(domain%mesh_p%tile(t)%rz(i,j,k))<sqrt(0.5_8)) then
-                        state%h%tile(t)%p(i,j,k) = 5000._8
+                    if(abs(domain%mesh_p%tile(t)%rz(i,j,k))<sin(0.2_8*pi)) then
+                        state%h%tile(t)%p(i,j,k) = 1800._8
                     else
-                        state%h%tile(t)%p(i,j,k) = 2000._8
+                        state%h%tile(t)%p(i,j,k) = 1000._8
                     end if
                 end do
             end do

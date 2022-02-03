@@ -2354,6 +2354,15 @@ $(DOBJ)forcing_test_main.o: src/models/shallow_water/test/forcing_test/forcing_t
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)random_friction_mod.o: src/models/shallow_water/test/forcing_test/random_friction_mod.f90 \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)grid_field_factory_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)const_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)forcing_test_mod.o: src/models/shallow_water/test/forcing_test/forcing_test_mod.f90 \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)domain_factory_mod.o \
@@ -2371,6 +2380,7 @@ $(DOBJ)forcing_test_mod.o: src/models/shallow_water/test/forcing_test/forcing_te
 	$(DOBJ)operator_swm_diff_mod.o \
 	$(DOBJ)operator_swm_diff_factory_mod.o \
 	$(DOBJ)const_mod.o \
+	$(DOBJ)random_friction_mod.o \
 	$(DOBJ)key_value_mod.o \
 	$(DOBJ)vec_math_mod.o \
 	$(DOBJ)namelist_read_mod.o
