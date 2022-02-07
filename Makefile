@@ -2377,6 +2377,7 @@ $(DOBJ)forcing_test_mod.o: src/models/shallow_water/test/forcing_test/forcing_te
 	$(DOBJ)outputer_factory_mod.o \
 	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)config_swm_mod.o \
+	$(DOBJ)operator_swm_mod.o \
 	$(DOBJ)operator_swm_diff_mod.o \
 	$(DOBJ)operator_swm_diff_factory_mod.o \
 	$(DOBJ)const_mod.o \
@@ -2701,11 +2702,23 @@ $(DOBJ)test_laplace_spectre.o: src/test/test_diff_ops/test_laplace_spectre.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)test_generic_halo_mod.o: src/test/test_halo/test_generic_halo_mod.f90 \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)domain_factory_mod.o \
+	$(DOBJ)grid_field_factory_mod.o \
+	$(DOBJ)halo_mod.o \
+	$(DOBJ)halo_factory_mod.o \
+	$(DOBJ)test_fields_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)test_halo_main.o: src/test/test_halo/test_halo_main.f90 \
 	$(DOBJ)test_ecs_halo_mod.o \
 	$(DOBJ)test_ecs_halo_c_mod.o \
 	$(DOBJ)test_halo_mod.o \
-	$(DOBJ)parcomm_mod.o
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)test_generic_halo_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
