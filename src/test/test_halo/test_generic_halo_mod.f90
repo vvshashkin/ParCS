@@ -81,7 +81,6 @@ subroutine test_scalar_halo(nh,halo_width,staggering,halo_procedure_name, check_
       end if
     end if
 
-
 end subroutine test_scalar_halo
 
 subroutine halo_err(gl_inface_err, gl_inface_err_max, gl_cross_edge_err, gl_cross_edge_err_max, &
@@ -108,7 +107,7 @@ real(kind=8)      inface_corner_err, inface_corner_err_max
 real(kind=8)      inedge_corner_err, inedge_corner_err_max
 real(kind=8)      halo_corner_err, halo_corner_err_max
 integer(kind=4)   num_inedge_corners, gl_num_inedge_corners
-integer(kind=4)   is, ie, js, je, ks, ke, klev, ind, ierr
+integer(kind=4)   is, ie, js, je, ks, ke, klev, ind, ierr, nx, ny
 
 inface_err = 0._8;          inface_err_max = 0._8
 cross_edge_err = 0._8;      cross_edge_err_max = 0._8
@@ -123,6 +122,7 @@ do ind = mesh%ts, mesh%te
     js = mesh%tile(ind)%js; je = mesh%tile(ind)%je
     ks = mesh%tile(ind)%ks; ke = mesh%tile(ind)%ke
     klev = ke-ks+1
+    nx = mesh%tile(ind)%nx; ny = mesh%tile(ind)%ny
 
     !tile edge errors
     err     = sum(abs(f1%tile(ind)%p(is-halo_width:is-1,js:je,ks:ke)-f2%tile(ind)%p(is-halo_width:is-1,js:je,ks:ke)))/nh
@@ -137,7 +137,7 @@ do ind = mesh%ts, mesh%te
 
     err     =    sum(abs(f1%tile(ind)%p(ie+1:ie+halo_width,js:je,ks:ke)-f2%tile(ind)%p(ie+1:ie+halo_width,js:je,ks:ke)))/nh
     err_max = maxval(abs(f1%tile(ind)%p(ie+1:ie+halo_width,js:je,ks:ke)-f2%tile(ind)%p(ie+1:ie+halo_width,js:je,ks:ke)))
-    if(ie == nh) then
+    if(ie == nx) then
         cross_edge_err     = cross_edge_err+err
         cross_edge_err_max = max(cross_edge_err_max,err_max)
     else
@@ -157,7 +157,7 @@ do ind = mesh%ts, mesh%te
 
     err     =    sum(abs(f1%tile(ind)%p(is:ie,je+1:je+halo_width,ks:ke)-f2%tile(ind)%p(is:ie,je+1:je+halo_width,ks:ke)))/nh
     err_max = maxval(abs(f1%tile(ind)%p(is:ie,je+1:je+halo_width,ks:ke)-f2%tile(ind)%p(is:ie,je+1:je+halo_width,ks:ke)))
-    if(je == nh) then
+    if(je == ny) then
         cross_edge_err     = cross_edge_err+err
         cross_edge_err_max = max(cross_edge_err_max,err_max)
     else

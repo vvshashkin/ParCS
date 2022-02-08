@@ -1726,6 +1726,16 @@ $(DOBJ)topology_factory_mod.o: src/topology/topology_factory_mod.f90 \
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)ecs_halo_xy_mod.o: src/equiang_cs/ecs_halo_xy_mod.f90 \
+	$(DOBJ)halo_mod.o \
+	$(DOBJ)exchange_halo_mod.o \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)tile_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)ecs_metric_mod.o: src/equiang_cs/ecs_metric_mod.f90 \
 	$(DOBJ)metric_mod.o \
 	$(DOBJ)cubed_sphere_topology_mod.o \
@@ -1783,6 +1793,7 @@ $(DOBJ)ecs_halo_vec_c_factory_mod.o: src/equiang_cs/ecs_halo_vec_c_factory_mod.f
 
 $(DOBJ)ecs_halo_factory_mod.o: src/equiang_cs/ecs_halo_factory_mod.f90 \
 	$(DOBJ)ecs_halo_mod.o \
+	$(DOBJ)ecs_halo_xy_mod.o \
 	$(DOBJ)halo_mod.o \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
@@ -2709,7 +2720,8 @@ $(DOBJ)test_generic_halo_mod.o: src/test/test_halo/test_generic_halo_mod.f90 \
 	$(DOBJ)grid_field_factory_mod.o \
 	$(DOBJ)halo_mod.o \
 	$(DOBJ)halo_factory_mod.o \
-	$(DOBJ)test_fields_mod.o
+	$(DOBJ)test_fields_mod.o \
+	$(DOBJ)mesh_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

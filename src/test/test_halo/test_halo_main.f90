@@ -12,10 +12,10 @@ program test_halo_main
 
     ! call test_halo()
     ! call test_ecs_halo
-    call test_scalar_halo(nh=32,halo_width=3,staggering="A",halo_procedure_name="ECS_O", &
+    call test_scalar_halo(nh=32,halo_width=2,staggering="A",halo_procedure_name="ECS_O", &
                           check_corners=.true.)
-    ! call test_scalar_halo(nh=32,halo_width=2,staggering="Ah",halo_procedure_name="ECS_xy", &
-    !                       check_corners=.false.)
+    call test_scalar_halo(nh=32,halo_width=2,staggering="Ah",halo_procedure_name="ECS_xy", &
+                          check_corners=.false.)
     ! call test_ecs_cvec_halo("ecs_C_vec", "contravariant")
     ! call test_ecs_cvec_halo("ecs_C_vec_covariant", "covariant")
 
