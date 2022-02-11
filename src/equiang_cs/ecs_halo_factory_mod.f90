@@ -168,20 +168,20 @@ halo%lhalo(1) = js == 1                             !| edge2    |
 halo%lhalo(2) = je == nx                            !|e        e|
 halo%lhalo(3) = is == 1                             !|d        d|
 halo%lhalo(4) = ie == nx                            !|g        g|
-! halo%lcorn(1) = halo%lhalo(1) .and. halo%lhalo(3)   !|3        4|
-! halo%lcorn(2) = halo%lhalo(1) .and. halo%lhalo(4)   !1----------2
-! halo%lcorn(3) = halo%lhalo(4) .and. halo%lhalo(2)   !   edge1
-! halo%lcorn(4) = halo%lhalo(2) .and. halo%lhalo(3)
+halo%lcorn(1) = halo%lhalo(1) .and. halo%lhalo(3)   !|3        4|
+halo%lcorn(2) = halo%lhalo(1) .and. halo%lhalo(4)   !1----------2
+halo%lcorn(3) = halo%lhalo(4) .and. halo%lhalo(2)   !   edge1
+halo%lcorn(4) = halo%lhalo(2) .and. halo%lhalo(3)
 
 !initialize interpolation weights
 if(halo%lhalo(1) .or. halo%lhalo(2)) then
-    halo%wsx = max(is-halo_width,-1)
-    halo%wex = min(ie+halo_width,nx+2)
+    halo%wsx = is-halo_width
+    halo%wex = ie+halo_width
     call init_halo_xy_interp(halo%wx, halo%indx, nx, hx, halo%wsx, halo%wex, halo_width)
 end if
 if(halo%lhalo(3) .or. halo%lhalo(4)) then
-    halo%wsy = max(js-halo_width,-1)
-    halo%wey = min(je+halo_width,nx+2)
+    halo%wsy = js-halo_width
+    halo%wey = je+halo_width
     call init_halo_xy_interp(halo%wy, halo%indy, nx, hx, halo%wsy, halo%wey, halo_width)
 end if
 

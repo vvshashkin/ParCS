@@ -182,10 +182,10 @@ do ind = mesh%ts, mesh%te
 
         err     = sum(abs(f1%tile(ind)%p(ie+1:ie+halo_width,js-halo_width:js-1,ks:ke)-f2%tile(ind)%p(ie+1:ie+halo_width,js-halo_width:js-1,ks:ke))) / halo_width**2
         err_max = maxval(abs(f1%tile(ind)%p(ie+1:ie+halo_width,js-halo_width:js-1,ks:ke)-f2%tile(ind)%p(ie+1:ie+halo_width,js-halo_width:js-1,ks:ke)))
-        if(ie == nh .and. js == 1) then
+        if(ie == mesh%tile(ind)%nx .and. js == 1) then
             halo_corner_err = halo_corner_err+err
             halo_corner_err_max = max(halo_corner_err_max,err_max)
-        else if(ie == nh .or. js == 1) then
+        else if(ie == mesh%tile(ind)%nx .or. js == 1) then
             inedge_corner_err = inedge_corner_err+err
             inedge_corner_err_max = max(inedge_corner_err_max,err_max)
             num_inedge_corners = num_inedge_corners+1
@@ -196,10 +196,10 @@ do ind = mesh%ts, mesh%te
 
         err     = sum(abs(f1%tile(ind)%p(ie+1:ie+halo_width,je+1:je+halo_width,ks:ke)-f2%tile(ind)%p(ie+1:ie+halo_width,je+1:je+halo_width,ks:ke))) / halo_width**2
         err_max = maxval(abs(f1%tile(ind)%p(ie+1:ie+halo_width,je+1:je+halo_width,ks:ke)-f2%tile(ind)%p(ie+1:ie+halo_width,je+1:je+halo_width,ks:ke)))
-        if(ie == nh .and. je == nh) then
+        if(ie == mesh%tile(ind)%nx .and. je == mesh%tile(ind)%ny) then
             halo_corner_err = halo_corner_err+err
             halo_corner_err_max = max(halo_corner_err_max,err_max)
-        else if(ie == nh .or. je == nh) then
+        else if(ie == mesh%tile(ind)%nx .or. je == mesh%tile(ind)%ny) then
             inedge_corner_err = inedge_corner_err+err
             inedge_corner_err_max = max(inedge_corner_err_max,err_max)
             num_inedge_corners = num_inedge_corners+1
@@ -210,10 +210,10 @@ do ind = mesh%ts, mesh%te
 
         err     = sum(abs(f1%tile(ind)%p(is-halo_width:is-1,je+1:je+halo_width,ks:ke)-f2%tile(ind)%p(is-halo_width:is-1,je+1:je+halo_width,ks:ke))) / halo_width**2
         err_max = maxval(abs(f1%tile(ind)%p(is-halo_width:is-1,je+1:je+halo_width,ks:ke)-f2%tile(ind)%p(is-halo_width:is-1,je+1:je+halo_width,ks:ke)))
-        if(is == 1 .and. je == nh) then
+        if(is == 1 .and. je == mesh%tile(ind)%ny) then
             halo_corner_err = halo_corner_err+err
             halo_corner_err_max = max(halo_corner_err_max,err_max)
-        else if(is == 1 .or. je == nh) then
+        else if(is == 1 .or. je == mesh%tile(ind)%ny) then
             inedge_corner_err = inedge_corner_err+err
             inedge_corner_err_max = max(inedge_corner_err_max,err_max)
             num_inedge_corners = num_inedge_corners+1

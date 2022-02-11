@@ -96,203 +96,141 @@ type(tile_t),              intent(in)    :: tile
 integer(kind=4),           intent(in)    :: halo_width
 
 !local
-integer(kind=4) n, thw, ihw
-integer(kind=4) is, ie, js, je
-integer(kind=4) nvi, nvj, nvk
-integer(kind=4) isv, iev, jsv,jev, ksv, kev
-integer(kind=4) klev
-integer(kind=4) i,j,k
-logical lhalo(4) !halo-procedure at edge
+integer(kind=4) :: i, j, k, n, i1, i2
+real(kind=8)    :: zbufx(f%is:f%ie)
+real(kind=8)    :: zbufy(f%js:f%je)
 
-!short names for needed params
+!set corner diagonals & remove discontinuity between adjacent edges
 n = this%n
-thw = this%halo_width !dimensions of initialized weights, theoretically max hw
-ihw = halo_width      !width of user-requested halo-interpolations
-
-if(thw < ihw) call parcomm_global%abort("requested halo width is greater than " // &
-                                          "initialized maximum halo_width")
-
-is = tile%is;      ie = tile%ie
-js = tile%js;      je = tile%je
-nvi = tile%is-f%is;    nvj = tile%js-f%js; nvk = tile%ks-f%ks
-
-isv = is-nvi;   iev = ie+nvi
-jsv = js-nvj;   jev = je+nvj
-ksv = tile%ks-nvk; kev = tile%ke+nvk
-
-klev = kev-ksv+1
-
-lhalo = this%lhalo
-
-if(lhalo(1).or.lhalo(2)) then
-    call ecs_halo_edges_x(f%p,is,ie,js,je,isv,iev,jsv,jev,klev,nvi,nvj, & !function values array and its bounds
-                          this%wx,this%wsx,this%wex,thw,this%indx,      & !weight array and its bounds
-                          lhalo,n,ihw)                                  !operating parameters
+if(this%lcorn(1)) then
+    do k=tile%ks, tile%ke
+        f%p(1,1,k) = (f%p(1,1,k)+f%p(1,0,k)+f%p(0,1,k)) / 3.0_8
+        do j=1, halo_width
+            f%p(1-j,1-j,k) = 0.5_8*(f%p(-j,1,k)+f%p(1,-j,k))
+            f%p(-j,1,k) = f%p(1-j,1-j,k)
+            f%p(1,-j,k) = f%p(1-j,1-j,k)
+        end do
+    end do
 end if
-if(lhalo(3).or.lhalo(4)) then
-    call ecs_halo_edges_y(f%p,is,ie,js,je,isv,iev,jsv,jev,klev,nvi,nvj, & !function values array and its bounds
-                          this%wy,this%wsy,this%wey,thw,this%indy,      & !weight array and its bounds
-                          lhalo,n,ihw)                                  !operating parameters
+if(this%lcorn(2)) then
+    do k=tile%ks, tile%ke
+        f%p(n,1,k) = (f%p(n,1,k)+f%p(n,0,k)+f%p(n+1,1,k)) / 3.0_8
+        do j=1, halo_width
+            f%p(n+j,1-j,k) = 0.5_8*(f%p(n+j+1,1,k)+f%p(n,-j,k))
+            f%p(n+j+1,1,k) = f%p(n+j,1-j,k)
+            f%p(n,-j,k)    = f%p(n+j,1-j,k)
+        end do
+    end do
 end if
-
+if(this%lcorn(3)) then
+    do k=tile%ks, tile%ke
+        f%p(n,n,k) = (f%p(n,n,k)+f%p(n,n+1,k)+f%p(n+1,n,k)) / 3.0_8
+        do j=1, halo_width
+            f%p(n+j,n+j,k) = 0.5_8*(f%p(n+j+1,n,k)+f%p(n,n+j+1,k))
+            f%p(n+j+1,n,k) = f%p(n+j,n+j,k)
+            f%p(n,n+j+1,k) = f%p(n+j,n+j,k)
+        end do
+    end do
+end if
+if(this%lcorn(4)) then
+    do k=tile%ks, tile%ke
+        f%p(1,n,k) = (f%p(1,n,k)+f%p(0,n,k)+f%p(1,n+1,k)) / 3.0_8
+        do j=1, halo_width
+            f%p(1-j,n+j,k) = 0.5_8*(f%p(1,n+j+1,k)+f%p(-j,n,k))
+            f%p(1,n+j+1,k) = f%p(1-j,n+j,k)
+            f%p(-j,n,k)    = f%p(1-j,n+j,k)
+        end do
+    end do
+end if
+!Edges
+if(this%lhalo(1)) then
+    do k=tile%ks,tile%ke
+        do i = max(tile%is-halo_width,2),min(tile%ie+halo_width,n-1)
+            f%p(i,1,k) = 0.5_8*(f%p(i,1,k)+f%p(i,0,k))
+        end do
+        do j=1, halo_width
+            zbufx(f%is:f%ie) = f%p(f%is:f%ie,-j,k)
+            i1 = max(tile%is-halo_width,2-j)
+            i2 = min(tile%ie+halo_width,n+j-1)
+            call ecs_ext_halo_1e(zbufx,f%is,f%ie, i1, i2,this%wx(-1:2,this%wsx:this%wex,j),&
+                                 this%wsx,this%wex,this%indx(this%wsx:this%wex,j))
+            f%p(i1:i2,1-j,k) = zbufx(i1:i2)
+        end do
+    end do
+end if
+if(this%lhalo(2)) then
+    do k=tile%ks,tile%ke
+        do i = max(tile%is-halo_width,2),min(tile%ie+halo_width,n-1)
+            f%p(i,n,k) = 0.5_8*(f%p(i,n,k)+f%p(i,n+1,k))
+        end do
+        do j=1, halo_width
+            zbufx(f%is:f%ie) = f%p(f%is:f%ie,n+j+1,k)
+            i1 = max(tile%is-halo_width,2-j)
+            i2 = min(tile%ie+halo_width,n+j-1)
+            call ecs_ext_halo_1e(zbufx,f%is,f%ie, i1, i2,this%wx(-1:2,this%wsx:this%wex,j),&
+                                 this%wsx,this%wex,this%indx(this%wsx:this%wex,j))
+            f%p(i1:i2,n+j,k) = zbufx(i1:i2)
+        end do
+    end do
+end if
+if(this%lhalo(3)) then
+    do k=tile%ks,tile%ke
+        do j = max(tile%js-halo_width,2),min(tile%je+halo_width,n-1)
+            f%p(1,j,k) = 0.5_8*(f%p(1,j,k)+f%p(0,j,k))
+        end do
+        do i=1, halo_width
+            do j=f%js,f%je
+                zbufy(j) = f%p(-i,j,k)
+            end do
+            i1 = max(tile%js-halo_width,2-i)
+            i2 = min(tile%je+halo_width,n+i-1)
+            call ecs_ext_halo_1e(zbufy,f%js,f%je, i1, i2,this%wy(-1:2,this%wsy:this%wey,i),&
+                                 this%wsy,this%wey,this%indy(this%wsy:this%wey,i))
+            do j=i1,i2
+                f%p(1-i,j,k) = zbufy(j)
+            end do
+        end do
+    end do
+end if
+if(this%lhalo(4)) then
+    do k=tile%ks,tile%ke
+        do j = max(tile%js-halo_width,2),min(tile%je+halo_width,n-1)
+            f%p(n,j,k) = 0.5_8*(f%p(n,j,k)+f%p(n+1,j,k))
+        end do
+        do i=1, halo_width
+            do j=f%js,f%je
+                zbufy(j) = f%p(n+i+1,j,k)
+            end do
+            i1 = max(tile%js-halo_width,2-i)
+            i2 = min(tile%je+halo_width,n+i-1)
+            call ecs_ext_halo_1e(zbufy,f%js,f%je, i1, i2,this%wy(-1:2,this%wsy:this%wey,i),&
+                                 this%wsy,this%wey,this%indy(this%wsy:this%wey,i))
+            do j=i1,i2
+                f%p(n+i,j,k) = zbufy(j)
+            end do
+        end do
+    end do
+end if
 end subroutine ext_ecs_tile_halo
 
-subroutine ecs_halo_edges_x(pf,is,ie,js,je,isv,iev,jsv,jev,klev,nvi,nvj, & !function values array and its bounds
-                            wx,wsx,wex,whw,indx,                         & !weights and indices  arrays and their bounds
-                            lhalo,n,hw)                                    !global operating parameters
-
-!in-output
-real(kind=8), intent(inout) :: pf(isv:iev,jsv:jev,klev)
+subroutine ecs_ext_halo_1e(zf,i1v,i2v,i1,i2,w,ws,we,ind)
 !input
-integer(kind=4), intent(in) :: is,ie,js,je,isv,iev,jsv,jev,klev,nvi,nvj
-!interpolation weights
-integer(kind=4), intent(in) :: wsx,wex,whw
-real(kind=8),    intent(in) :: wx(-1:2,wsx:wex,whw) !interpolation weights
-integer(kind=4), intent(in) :: indx(wsx:wex,whw)
-!operting parameters
-logical,         intent(in) :: lhalo(4)
-integer(kind=4), intent(in) :: n, hw
-!local
-integer(kind=4) k, j, i
-integer(kind=4) ish, ieh, jsh, jeh
-logical lfail_hw
-logical lfail_halo_long
-real(kind=8) zbufx(isv:iev, hw, klev)
-
-!Internal checks to avoid (at least some part of) out-of-array errors
-!check if we have enough data for edge halo-procedure
-lfail_hw = nvj< hw
-if(lfail_hw) call parcomm_global%abort("cubed sphere halo_width > grid_function_t halo width, can't continue")
-!check if we have enough data along edges to perform interpolations
-ish = max(1,is-hw); ieh = min(n,ie+hw)
-lfail_halo_long = .false.
-lfail_halo_long = (minval(indx(ish,1:hw))-1<isv .or. maxval(indx(ieh,1:hw))+2>iev)
-if(lfail_halo_long) call parcomm_global%abort("not enough points along cub.sph edge to perform halo-interpolations (nvi=5 needed)")
-
-!calculate values at corner special points
-!store them in sepparate arrays to not to spoil original f%p
-
-!Halo-procedures along edges
-if(lhalo(1)) then
-    do k = 1,klev
-        if(is==1) pf(1,1,k) = (pf(1,1,k)+pf(1,0,k)+pf(0,1,k)) / 3.0_8
-        do i = max(is,2),min(ie,n-1)
-            pf(i,1,k) = 0.5_8*(pf(i,1,k)+pf(i,0,k))
-        end do
-        if(ie==n) pf(n,1,k) = (pf(n,1,k)+pf(n,0,k)+pf(n+1,1,k)) / 3.0_8
-    end do
-    zbufx(isv:iev,1:hw,1:klev) = pf(isv:iev, -1:0-hw:-1,1:klev)
-    call ecs_ext_halo_1e(zbufx,isv,iev,is,ie,hw,klev,wx,wsx,wex,whw,indx,n)
-    pf(is:ie,1-hw:0,1:klev) = zbufx(is:ie,hw:1:-1,1:klev)
-end if
-if(lhalo(2)) then
-    do k = 1,klev
-        if(is == 1) pf(1,n,k) = (pf(1,n,k)+pf(1,n+1,k)+pf(0,n,k)) / 3.0_8
-        do i = max(2,is),min(ie,n-1)
-            pf(i,n,k) = 0.5_8*(pf(i,n,k)+pf(i,n+1,k))
-        end do
-        if(ie == n) pf(n,n,k) = (pf(n,n,k)+pf(n,n+1,k)+pf(n+1,n,k)) / 3.0_8
-    end do
-    zbufx(isv:iev,1:hw,1:klev) = pf(isv:iev, n+2:n+hw+1, 1:klev)
-    call ecs_ext_halo_1e(zbufx,isv,iev,is,ie,hw,klev,wx,wsx,wex,whw,indx,n)
-    pf(isv:iev, n+1:n+hw, 1:klev) = zbufx(isv:iev,1:hw,1:klev)
-end if
-
-end subroutine ecs_halo_edges_x
-
-subroutine ecs_halo_edges_y(pf,is,ie,js,je,isv,iev,jsv,jev,klev,nvi,nvj, & !function values array and its bounds
-                            wy,wsy,wey,whw,indy,                         & !weights and indices  arrays and their bounds
-                            lhalo,n,hw)                                    !global operating parameters
-
-!in-output
-real(kind=8), intent(inout) :: pf(isv:iev,jsv:jev,klev)
-!input
-integer(kind=4), intent(in) :: is,ie,js,je,isv,iev,jsv,jev,klev,nvi,nvj
-!interpolation weights
-integer(kind=4), intent(in) :: wsy,wey,whw
-real(kind=8),    intent(in) :: wy(-1:2,wsy:wey,whw) !interpolation weights
-integer(kind=4), intent(in) :: indy(wsy:wey,whw)
-!operting parameters
-logical,         intent(in) :: lhalo(4)
-integer(kind=4), intent(in) :: n, hw
-!local
-integer(kind=4) k, j, i
-integer(kind=4) jsh, jeh
-logical lfail_hw
-logical lfail_halo_long
-real(kind=8) zbufy(jsv:jev, hw, klev)
-
-!Internal checks to avoid (at least some part of) out-of-array errors
-!check if we have enough data for edge halo-procedure
-lfail_hw = nvj< hw
-if(lfail_hw) call parcomm_global%abort("cubed sphere halo_width > grid_function_t halo width, can't continue")
-!check if we have enough data along edges to perform interpolations
-jsh = max(1,js-hw); jeh = min(n,je+hw)
-lfail_halo_long = (minval(indy(jsh,1:hw))-1<jsv .or. maxval(indy(jeh,1:hw))+2>jev)
-if(lfail_halo_long) call parcomm_global%abort("not enough points along cub.sph edge to perform halo-interpolations (nvi=5 needed)")
-
-!calculate values at corner special points
-!store them in sepparate arrays to not to spoil original f%p
-
-!Halo-procedures along edges
-if(lhalo(3)) then
-    do k=1,klev
-        do j=max(2,js),min(n-1,je)
-            pf(1,j,k) = 0.5_8*(pf(1,j,k)+pf(0,j,k))
-        end do
-        do j=jsv, jev
-            zbufy(j,1:hw,k) = pf(-1:0-hw:-1,j,k)
-        end do
-    end do
-    call ecs_ext_halo_1e(zbufy,jsv,jev,js,je,hw,klev,wy,wsy,wey,whw,indy,n)
-    do k=1,klev
-        do j=1,hw
-            pf(1-j,jsv:jev,k) = zbufy(jsv:jev,j,k)
-        end do
-    end do
-end if
-if(lhalo(4)) then
-    do k=1, klev
-        do j=max(2,js),min(je,n-1)
-            pf(n,j,k) = 0.5_8*(pf(n,j,k)+pf(n+1,j,k))
-        end do
-        do j=jsv,jev
-            zbufy(j,1:hw,k) = pf(n+2:n+hw+1,j,k)
-        end do
-    end do
-    call ecs_ext_halo_1e(zbufy,jsv,jev,js,je,hw,klev,wy,wsy,wey,whw,indy,n)
-    do k=1,klev
-        do j=1,hw
-            pf(n+j,jsv:jev,k) = zbufy(jsv:jev,j,k)
-        end do
-    end do
-end if
-
-end subroutine ecs_halo_edges_y
-
-subroutine ecs_ext_halo_1e(zf,i1v,i2v,i1,i2,hw,klev,w,ws,we,whw,ind,n)
-!input
-integer(kind=4), intent(in) :: i1v,i2v,i1,i2,hw,klev
+integer(kind=4), intent(in) :: i1v,i2v,i1,i2
 !in-output:
-real(kind=8), intent(inout) :: zf(i1v:i2v,hw,klev)!input: source face values, output: interpolated target face values
+real(kind=8), intent(inout) :: zf(i1v:i2v)!input: source face values, output: interpolated target face values
 !input
-integer(kind=4), intent(in) :: ws,we,whw
-real(kind=8),    intent(in) :: w(-1:2,ws:we,whw)
-integer(kind=4), intent(in) :: ind(ws:we,whw)
-integer(kind=4), intent(in) :: n
+integer(kind=4), intent(in) :: ws,we
+real(kind=8),    intent(in) :: w(-1:2,ws:we)
+integer(kind=4), intent(in) :: ind(ws:we)
 !locals
-real(kind=8) zh(i1-hw:i2+hw)!buffer for interpolated values
-integer i, j, k, ii
+real(kind=8) zh(i1:i2)!buffer for interpolated values
+integer i, ii
 
-do k=1, klev
-    do j=1, hw
-        do i = i1,i2
-            ii = ind(i,j)
-            zh(i) = sum(w(:,i,j)*zf(ii-1:ii+2,j,k))
-        end do
-        zf(i1:i2,j,k) = zh(i1:i2)
-    end do
+do i = i1,i2
+    ii = ind(i)
+    zh(i) = sum(w(:,i)*zf(ii-1:ii+2))
 end do
+zf(i1:i2) = zh(i1:i2)
 
 end subroutine ecs_ext_halo_1e
 
