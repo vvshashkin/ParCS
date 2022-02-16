@@ -16,6 +16,9 @@ subroutine create_laplace_operator(laplace_operator,laplace_operator_name,domain
 
     if(laplace_operator_name(1:15) == "divgrad_laplace") then
         call create_divgrad_laplace(laplace_operator,laplace_operator_name, domain)
+    else if(laplace_operator_name == "laplace_ch_halo2" .or. &
+            laplace_operator_name == "laplace_ch_halo4") then
+        call create_laplace_ch_halo(laplace_operator,laplace_operator_name, domain)
     else
         call parcomm_global%abort("create laplace_operator, unknown laplace_operator_name:"//&
                                    laplace_operator_name)
@@ -75,6 +78,39 @@ subroutine create_divgrad_laplace(laplace_operator,laplace_operator_name, domain
 
     call move_alloc(laplace, laplace_operator)
 
+end subroutine create_divgrad_laplace
+
+subroutine create_laplace_ch_halo(laplace_operator,laplace_operator_name, domain)
+
+    use laplace_ch_halo_mod, only : laplace_ch_halo_t
+    use halo_factory_mod,    only : create_halo_procedure
+
+    character(len=*), intent(in) :: laplace_operator_name
+    type(domain_t),   intent(in) :: domain
+    !output:
+    class(laplace_operator_t), allocatable, intent(out) :: laplace_operator
+    !local
+    type(laplace_ch_halo_t), allocatable :: laplace
+
+    allocate(laplace)
+    select case(laplace_operator_name)
+    case("laplace_ch_halo2")
+        laplace%halo_width = 1
+        laplace%order      = 2
+    case("laplace_ch_halo4")
+        laplace%halo_width = 3
+        laplace%order      = 4
+    case default
+        call parcomm_global%abort("create_laplace_ch_halo, incorrect laplace_operator_name:"//&
+                                  laplace_operator_name)
+    end select
+
+
+    call create_halo_procedure(laplace%halo_f,   domain,laplace%halo_width,"ECS_xy")
+    call create_halo_procedure(laplace%edge_sync,domain,1,"Ah_scalar_sync")
+
+    call move_alloc(laplace, laplace_operator)
+
     contains
     function find_position_in_str(char,str) result(pos)
         character(len=1), intent(in) :: char
@@ -89,6 +125,6 @@ subroutine create_divgrad_laplace(laplace_operator,laplace_operator_name, domain
             end if
         end do
         end
-end subroutine create_divgrad_laplace
+end subroutine create_laplace_ch_halo
 
 end module laplace_factory_mod

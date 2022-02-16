@@ -210,10 +210,10 @@ type(key_value_r8_t) function test_laplace(N,laplace_oper_name,staggering) resul
     errs%keys(1)%str = "Ylm2 linf"
     errs%keys(2)%str = "Ylm2 l2"
 
-    errs%values(1) = 0.5_8*lap_f%maxabs(domain%mesh_p,domain%parcomm) / &
-                               f%maxabs(domain%mesh_p,domain%parcomm)
-    errs%values(2) = 0.5_8*l2norm(lap_f, domain%mesh_p,domain%parcomm) / &
-                           l2norm(    f, domain%mesh_p,domain%parcomm)
+    errs%values(1) = lap_f%maxabs(domain%mesh_p,domain%parcomm) / &
+                     (6.0_8*f%maxabs(domain%mesh_p,domain%parcomm))
+    errs%values(2) = l2norm(lap_f, domain%mesh_p,domain%parcomm) / &
+                     (6.0_8*l2norm(    f, domain%mesh_p,domain%parcomm))
 
 end function test_laplace
 

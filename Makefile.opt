@@ -1602,13 +1602,24 @@ $(DOBJ)ke_cgrid_mod.o: src/differential_operators/horizontal/kinetic_energy/KE_C
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)laplace_ch_halo_mod.o: src/differential_operators/horizontal/laplace/laplace_ch_halo_mod.f90 \
+	$(DOBJ)abstract_laplace_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)halo_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)laplace_factory_mod.o: src/differential_operators/horizontal/laplace/laplace_factory_mod.f90 \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)abstract_laplace_mod.o \
+	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)divgrad_laplace_mod.o \
 	$(DOBJ)grad_factory_mod.o \
 	$(DOBJ)div_factory_mod.o \
-	$(DOBJ)co2contra_factory_mod.o
+	$(DOBJ)co2contra_factory_mod.o \
+	$(DOBJ)grid_field_factory_mod.o \
+	$(DOBJ)laplace_ch_halo_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

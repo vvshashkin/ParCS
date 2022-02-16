@@ -7,6 +7,8 @@ use abstract_grad_mod,      only : grad_operator_t
 use abstract_div_mod,       only : div_operator_t
 use abstract_co2contra_mod, only : co2contra_operator_t
 
+implicit none
+
 type, extends(laplace_operator_t) :: divgrad_laplace_t
     class(grad_operator_t),      allocatable :: grad_operator
     class(co2contra_operator_t), allocatable :: co2contra_operator
