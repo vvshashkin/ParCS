@@ -12,7 +12,7 @@ use key_value_mod,          only : key_value_r8_t
 implicit none
 
 private
-public :: test_div, test_grad, test_conv, &
+public :: test_div, test_grad, test_conv, test_laplace,    &
           test_laplace_spectre, test_curl, test_coriolis,  &
           test_curl_grad, test_co2contra, test_KE, test_coriolis_vec_inv, &
           test_compatibility, test_grad_perp, test_contra2co, test_vec_advection, &
@@ -176,6 +176,46 @@ type(key_value_r8_t) function test_grad(N,grad_oper_name,staggering) result(errs
     !print *, "grad",gy%tile(1)%p(16,27:33,1)
 
 end function test_grad
+
+type(key_value_r8_t) function test_laplace(N,laplace_oper_name,staggering) result(errs)
+
+    use test_fields_mod,      only : set_scalar_test_field, Ylm2_field_generator_t
+    use laplace_factory_mod,  only : create_laplace_operator
+    use abstract_laplace_mod, only : laplace_operator_t
+    use mesh_mod,             only : mesh_t
+
+    integer(kind=4),  intent(in) :: N
+    character(len=*), intent(in) :: laplace_oper_name, staggering
+    !locals:
+    integer(kind=4), parameter  :: nz = 3
+    integer(kind=4), parameter  :: ex_halo_width = 8
+    type(grid_field_t)          :: f, lap_f
+    type(domain_t), target      :: domain
+    class(laplace_operator_t), allocatable :: laplace_op
+
+    call create_domain(domain, "cube", staggering, N, nz)
+
+    call create_grid_field(f,     ex_halo_width, 0, domain%mesh_p)
+    call create_grid_field(lap_f, ex_halo_width, 0, domain%mesh_p)
+
+    call set_scalar_test_field(f,Ylm2_field_generator_t(), domain%mesh_p,0)
+
+    call create_laplace_operator(laplace_op, laplace_oper_name, domain)
+
+    call laplace_op%calc_laplace(lap_f, f, domain)
+
+    call lap_f%assign(domain%mesh_p%scale**2, lap_f, 6.0_8, f, domain%mesh_p)
+
+    allocate(errs%keys(2), errs%values(2))
+    errs%keys(1)%str = "Ylm2 linf"
+    errs%keys(2)%str = "Ylm2 l2"
+
+    errs%values(1) = 0.5_8*lap_f%maxabs(domain%mesh_p,domain%parcomm) / &
+                               f%maxabs(domain%mesh_p,domain%parcomm)
+    errs%values(2) = 0.5_8*l2norm(lap_f, domain%mesh_p,domain%parcomm) / &
+                           l2norm(    f, domain%mesh_p,domain%parcomm)
+
+end function test_laplace
 
 type(key_value_r8_t) function test_co2contra(N,co2contra_oper_name,staggering) result(errs)
 

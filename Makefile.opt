@@ -1495,6 +1495,18 @@ $(DOBJ)abstract_grad_mod.o: src/differential_operators/horizontal/gradient/abstr
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)grad_ch_halo_mod.o: src/differential_operators/horizontal/gradient/grad_ch_halo_mod.f90 \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)abstract_grad_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)halo_mod.o \
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)tile_mod.o \
+	$(DOBJ)sbp_operator_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)grad_ah_sbp_mod.o: src/differential_operators/horizontal/gradient/grad_ah_sbp_mod.f90 \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)abstract_grad_mod.o \
@@ -1539,7 +1551,8 @@ $(DOBJ)grad_factory_mod.o: src/differential_operators/horizontal/gradient/grad_f
 	$(DOBJ)grad_a2_mod.o \
 	$(DOBJ)grad_ah_sbp_mod.o \
 	$(DOBJ)sbp_factory_mod.o \
-	$(DOBJ)grad_ch_sbp_mod.o
+	$(DOBJ)grad_ch_sbp_mod.o \
+	$(DOBJ)grad_ch_halo_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -1586,6 +1599,32 @@ $(DOBJ)ke_cgrid_mod.o: src/differential_operators/horizontal/kinetic_energy/KE_C
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)mesh_mod.o \
 	$(DOBJ)abstract_interpolators2d_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)laplace_factory_mod.o: src/differential_operators/horizontal/laplace/laplace_factory_mod.f90 \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)abstract_laplace_mod.o \
+	$(DOBJ)divgrad_laplace_mod.o \
+	$(DOBJ)grad_factory_mod.o \
+	$(DOBJ)div_factory_mod.o \
+	$(DOBJ)co2contra_factory_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)divgrad_laplace_mod.o: src/differential_operators/horizontal/laplace/divgrad_laplace_mod.f90 \
+	$(DOBJ)abstract_laplace_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)abstract_grad_mod.o \
+	$(DOBJ)abstract_div_mod.o \
+	$(DOBJ)abstract_co2contra_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)abstract_laplace_mod.o: src/differential_operators/horizontal/laplace/abstract_laplace_mod.f90 \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)domain_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -2674,6 +2713,8 @@ $(DOBJ)test_diffops_mod.o: src/test/test_diff_ops/test_diffops_mod.f90 \
 	$(DOBJ)mesh_mod.o \
 	$(DOBJ)grad_factory_mod.o \
 	$(DOBJ)abstract_grad_mod.o \
+	$(DOBJ)laplace_factory_mod.o \
+	$(DOBJ)abstract_laplace_mod.o \
 	$(DOBJ)abstract_co2contra_mod.o \
 	$(DOBJ)co2contra_factory_mod.o \
 	$(DOBJ)abstract_co2contra_3d_mod.o \
