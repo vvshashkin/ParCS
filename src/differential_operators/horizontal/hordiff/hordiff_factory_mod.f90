@@ -150,6 +150,7 @@ subroutine create_scalar_hordiff_operator(hordiff_op, hordiff_coeff, domain, &
     use grad_factory_mod,      only : create_grad_operator
     use co2contra_factory_mod, only : create_co2contra_operator
     use halo_factory_mod,      only : create_halo_procedure
+    use laplace_factory_mod,   only : create_laplace_operator
 
     class(hordiff_operator_t), allocatable, intent(out) :: hordiff_op
     real(kind=8),                           intent(in)  :: hordiff_coeff
@@ -165,32 +166,37 @@ subroutine create_scalar_hordiff_operator(hordiff_op, hordiff_coeff, domain, &
     allocate(hordiff_scalar)
 
     !WORKAROUND
-    halo_width = 4
+    halo_width = 5
 
     select case(staggering)
     case ("Ah")
-        call create_grid_field(hordiff_scalar%div, halo_width, 0, domain%mesh_xy)
-        call create_grid_field(hordiff_scalar%gx,  halo_width, 0, domain%mesh_y)
-        call create_grid_field(hordiff_scalar%gy,  halo_width, 0, domain%mesh_x)
-        call create_grid_field(hordiff_scalar%gxt, halo_width, 0, domain%mesh_y)
-        call create_grid_field(hordiff_scalar%gyt, halo_width, 0, domain%mesh_x)
-
-        hordiff_scalar%div_op = create_div_operator(domain, "divergence_ch_sbp21")
-        hordiff_scalar%grad_op = create_grad_operator(domain, "gradient_ch_sbp21")
-        hordiff_scalar%co2contra_op = create_co2contra_operator(domain, "co2contra_ch_sbp21")
-        if(isscalar) then
-            call create_halo_procedure(hordiff_scalar%edge_sync, domain, 1, "Ah_scalar_sync")
-        end if
+        ! call create_laplace_operator(hordiff_scalar%laplace_op,"divgrad_laplace_ch_sbp42",domain)
+        call create_laplace_operator(hordiff_scalar%laplace_op,"laplace_ch_halo2",domain)
+        call create_grid_field(hordiff_scalar%f_tend_inter, 8, 0, domain%mesh_xy)
+        ! call create_grid_field(hordiff_scalar%div, halo_width, 0, domain%mesh_xy)
+        ! call create_grid_field(hordiff_scalar%gx,  halo_width, 0, domain%mesh_y)
+        ! call create_grid_field(hordiff_scalar%gy,  halo_width, 0, domain%mesh_x)
+        ! call create_grid_field(hordiff_scalar%gxt, halo_width, 0, domain%mesh_y)
+        ! call create_grid_field(hordiff_scalar%gyt, halo_width, 0, domain%mesh_x)
+        !
+        ! hordiff_scalar%div_op = create_div_operator(domain, "divergence_ch_sbp21")
+        ! hordiff_scalar%grad_op = create_grad_operator(domain, "gradient_ch_sbp21")
+        ! hordiff_scalar%co2contra_op = create_co2contra_operator(domain, "co2contra_ch_sbp21")
+        ! if(isscalar) then
+        !     call create_halo_procedure(hordiff_scalar%edge_sync, domain, 1, "Ah_scalar_sync")
+        ! end if
     case ("C", "A")
-        call create_grid_field(hordiff_scalar%div, halo_width, 0, domain%mesh_o)
-        call create_grid_field(hordiff_scalar%gx,  halo_width, 0, domain%mesh_x)
-        call create_grid_field(hordiff_scalar%gy,  halo_width, 0, domain%mesh_y)
-        call create_grid_field(hordiff_scalar%gxt, halo_width, 0, domain%mesh_x)
-        call create_grid_field(hordiff_scalar%gyt, halo_width, 0, domain%mesh_y)
-
-        hordiff_scalar%div_op = create_div_operator(domain, "divergence_c_sbp21")
-        hordiff_scalar%grad_op = create_grad_operator(domain, "gradient_c_sbp21")
-        hordiff_scalar%co2contra_op = create_co2contra_operator(domain, "co2contra_c_sbp21")
+        call create_laplace_operator(hordiff_scalar%laplace_op,"divgrad_laplace_c_sbp21",domain)
+        call create_grid_field(hordiff_scalar%f_tend_inter, halo_width, 0, domain%mesh_o)
+        ! call create_grid_field(hordiff_scalar%div, halo_width, 0, domain%mesh_o)
+        ! call create_grid_field(hordiff_scalar%gx,  halo_width, 0, domain%mesh_x)
+        ! call create_grid_field(hordiff_scalar%gy,  halo_width, 0, domain%mesh_y)
+        ! call create_grid_field(hordiff_scalar%gxt, halo_width, 0, domain%mesh_x)
+        ! call create_grid_field(hordiff_scalar%gyt, halo_width, 0, domain%mesh_y)
+        !
+        ! hordiff_scalar%div_op = create_div_operator(domain, "divergence_c_sbp21")
+        ! hordiff_scalar%grad_op = create_grad_operator(domain, "gradient_c_sbp21")
+        ! hordiff_scalar%co2contra_op = create_co2contra_operator(domain, "co2contra_c_sbp21")
     case default
         call domain%parcomm%abort("This staggering: "//staggering//&
                                   "is not currently implemented in create_hordiff_scalar")

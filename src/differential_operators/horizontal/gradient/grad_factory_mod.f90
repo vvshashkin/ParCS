@@ -33,6 +33,9 @@ function create_grad_operator(domain, grad_operator_name) result(grad)
     else if (grad_operator_name == 'gradient_ch_sbp21' .or. &
              grad_operator_name == 'gradient_ch_sbp42') then
         grad = create_grad_ch_sbp_operator(domain, grad_operator_name)
+    else if(grad_operator_name == "gradient_ch_ecs_halo2" .or. &
+            grad_operator_name == "gradient_ch_ecs_halo4") then
+        grad = create_grad_ch_halo_operator(domain, grad_operator_name)
     else
         call parcomm_global%abort("unknown gradient operator: "//grad_operator_name)
     end if
@@ -191,5 +194,34 @@ function create_grad_ch_sbp_operator(domain, grad_operator_name) result(grad)
                                          domain%topology,  halo_width_interior, 'full')
 
 end function create_grad_ch_sbp_operator
+
+function create_grad_ch_halo_operator(domain, grad_operator_name) result(grad)
+
+    use grad_ch_halo_mod,     only : grad_ch_halo_t
+    use halo_factory_mod,     only : create_halo_procedure
+
+    type(domain_t),   intent(in)  :: domain
+    character(len=*), intent(in)  :: grad_operator_name
+    type(grad_ch_halo_t)          :: grad
+
+    integer(kind=4)               :: halo_width_interior
+
+    select case (grad_operator_name)
+    case("gradient_ch_ecs_halo2")
+        grad%order             = 2
+        grad%input_halo_width  = 0
+        grad%output_halo_width = 0
+        call create_halo_procedure(grad%halo,domain,grad%input_halo_width,"ECS_xy")
+    case("gradient_ch_ecs_halo4")
+        grad%order             = 4
+        grad%input_halo_width  = 1
+        grad%output_halo_width = 0
+        call create_halo_procedure(grad%halo,domain,grad%input_halo_width,"ECS_xy")
+    case default
+        call parcomm_global%abort("create_grad_ch_halo, unknown operator: "//&
+                                  grad_operator_name)
+    end select
+
+end function create_grad_ch_halo_operator
 
 end module grad_factory_mod

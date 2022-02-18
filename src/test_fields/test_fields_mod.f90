@@ -33,7 +33,7 @@ public :: Eldred_test_height_generator_t, Eldred_test_height_generator
 public :: Eldred_test_wind_generator_t, Eldred_test_wind_generator
 public :: ts5_orography_generator_t
 
-public :: KE_scalar_field_t
+public :: KE_scalar_field_t, Ylm2_field_generator_t
 
 !!!!!!!!!!!!!Abstract scalar and vector fields generators
 type, public, abstract :: scalar_field_generator_t
@@ -114,6 +114,11 @@ type, extends(scalar_field_generator_t) :: zero_scalar_field_generator_t
 contains
     procedure :: get_scalar_field => generate_zero_scalar_field
 end type zero_scalar_field_generator_t
+
+type, extends(scalar_field_generator_t) :: Ylm2_field_generator_t
+contains
+    procedure :: get_scalar_field => generate_Ylm2_scalar_field
+end type Ylm2_field_generator_t
 
 type, extends(vector_field_generator_t) :: solid_rotation_t
     real(kind=8) :: alpha = 0.0_8 !rotation axis angle
@@ -1070,5 +1075,33 @@ subroutine generate_ts5_orography_field(this, f, npts, nlev, x, y, z)
     end do
 
 end subroutine generate_ts5_orography_field
+
+subroutine generate_Ylm2_scalar_field(this, f, npts, nlev, x, y, z)
+
+    use sph_coords_mod, only : cart2sph
+
+    class(Ylm2_field_generator_t), intent(in)  :: this
+    integer(kind=4),               intent(in)  :: npts, nlev
+    real(kind=8),                  intent(in)  :: x(npts), y(npts), z(npts)
+    real(kind=8),                  intent(out) :: f(npts,nlev)
+
+    integer(kind=4) :: i, k
+    real(kind=8)    :: lam, phi
+
+    do k = 1, nlev
+        do i=1, npts
+            call cart2sph(x(i), y(i), z(i), lam, phi)
+            if(mod(k,3) == 1) then
+                f(i,k) = cos(2.0_8*lam)*cos(phi)**2
+            else if(mod(k,3) == 2) then
+                f(i,k) = cos(lam)*cos(phi)*sin(phi)
+            else
+                f(i,k) = 3.0_8*sin(phi)**2 -1.0_8
+            end if
+            ! f(i,k) = cos(phi)*cos(lam)
+        end do
+    end do
+
+end subroutine generate_Ylm2_scalar_field
 
 end module test_fields_mod
