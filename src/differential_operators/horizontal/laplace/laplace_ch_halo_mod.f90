@@ -41,7 +41,7 @@ subroutine calc_laplace(this, f1, f, domain)
         end select
     end do
 
-    call this%edge_sync%get_halo_scalar(f1,domain,1)
+    call this%edge_sync%get_halo_scalar(f1,domain,0)
 
 end subroutine calc_laplace
 

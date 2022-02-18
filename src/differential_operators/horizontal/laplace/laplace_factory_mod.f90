@@ -52,6 +52,14 @@ subroutine create_divgrad_laplace(laplace_operator,laplace_operator_name, domain
         div_name = "divergence_c_sbp42"
         co2contra_name = "co2contra_c_sbp42"
         grad_name = "gradient_c_sbp42"
+    case("divgrad_laplace_ch_sbp21")
+        div_name = "divergence_ch_sbp21"
+        co2contra_name = "co2contra_ch_sbp21"
+        grad_name = "gradient_ch_sbp21"
+    case("divgrad_laplace_ch_sbp42")
+        div_name = "divergence_ch_sbp42"
+        co2contra_name = "co2contra_ch_sbp42"
+        grad_name = "gradient_ch_sbp42"
     case("divgrad_laplace_ah_sbp21")
         div_name = "divergence_ah2"
         co2contra_name = "co2contra_colocated"

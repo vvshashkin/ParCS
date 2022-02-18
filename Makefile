@@ -1052,7 +1052,8 @@ $(DOBJ)hordiff_scalar_mod.o: src/differential_operators/horizontal/hordiff/hordi
 	$(DOBJ)abstract_hordiff_mod.o \
 	$(DOBJ)abstract_div_mod.o \
 	$(DOBJ)abstract_grad_mod.o \
-	$(DOBJ)abstract_co2contra_mod.o
+	$(DOBJ)abstract_co2contra_mod.o \
+	$(DOBJ)abstract_laplace_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -1068,6 +1069,7 @@ $(DOBJ)hordiff_factory_mod.o: src/differential_operators/horizontal/hordiff/hord
 	$(DOBJ)grad_perp_factory_mod.o \
 	$(DOBJ)hordiff_scalar_mod.o \
 	$(DOBJ)halo_factory_mod.o \
+	$(DOBJ)laplace_factory_mod.o \
 	$(DOBJ)hordiff_colocated_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -1605,6 +1607,7 @@ $(DOBJ)ke_cgrid_mod.o: src/differential_operators/horizontal/kinetic_energy/KE_C
 $(DOBJ)laplace_ch_halo_mod.o: src/differential_operators/horizontal/laplace/laplace_ch_halo_mod.f90 \
 	$(DOBJ)abstract_laplace_mod.o \
 	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)mesh_mod.o \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)halo_mod.o
 	@echo $(COTEXT)
@@ -1619,7 +1622,8 @@ $(DOBJ)laplace_factory_mod.o: src/differential_operators/horizontal/laplace/lapl
 	$(DOBJ)div_factory_mod.o \
 	$(DOBJ)co2contra_factory_mod.o \
 	$(DOBJ)grid_field_factory_mod.o \
-	$(DOBJ)laplace_ch_halo_mod.o
+	$(DOBJ)laplace_ch_halo_mod.o \
+	$(DOBJ)halo_factory_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
