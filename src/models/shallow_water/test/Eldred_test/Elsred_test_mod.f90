@@ -17,9 +17,12 @@ use config_swm_mod,           only : config_swm_t
 
 use operator_swm_diff_mod,         only : operator_swm_diff_t
 use operator_swm_diff_factory_mod, only : create_swm_diff_operator
+use operator_swm_mod,              only : operator_swm_t
 
 use const_mod,  only : Earth_grav, Earth_omega, Earth_radii, pi, Earth_sidereal_T
 
+use random_friction_mod, only : random_friction_t, initialize_random_friction, &
+                                random_scalar_t,   initialize_random_scalar
 use test_fields_mod, only : Eldred_test_height_generator, Eldred_test_wind_generator, &
                             set_scalar_test_field, set_vector_test_field
 use key_value_mod,   only : key_value_r8_t
@@ -50,6 +53,7 @@ subroutine run_Eldred_test()
     class(outputer_t),        allocatable :: outputer
     class(outputer_vector_t), allocatable :: outputer_vec
 
+    type(random_scalar_t)   :: random_scalar
     type(operator_swm_diff_t),   allocatable :: operator_diff
     class(timescheme_t),         allocatable :: timescheme_diff
 
@@ -92,6 +96,8 @@ subroutine run_Eldred_test()
     call create_swm_diff_operator(operator_diff, config, domain)
     call create_timescheme(timescheme_diff, state, config%diff_time_scheme)
 
+    call initialize_random_scalar(random_scalar, l=6, tau=1e4_8, &
+                                  amp=10._8, domain=domain)
     print*, 4*domain%partition%Nh, 2*domain%partition%Nh+1
 
     if(config%config_domain%staggering_type == "Ah") then
@@ -120,7 +126,9 @@ subroutine run_Eldred_test()
     class is (stvec_swm_t)
         call state%u%assign(0.0_8,domain%mesh_u)
         call state%v%assign(0.0_8,domain%mesh_v)
-        call state%h%assign(h_mean,domain%mesh_p)
+        !call state%h%assign(h_mean,domain%mesh_p)
+        call random_scalar%apply_update_forcing(state%h,domain,dt)
+        call state%h%update(h_mean,domain%mesh_p)
         ! call state%assign(1.0_8,state_eq,0.0_8,state_eq,domain)
 
         call outputer%write(state%h, domain, 'h.dat',1)
@@ -128,6 +136,14 @@ subroutine run_Eldred_test()
     end select
 
     do it = 1, int(config%simulation_time/dt)
+
+        select type(operator)
+        type is (operator_swm_t)
+            !call random_scalar%apply_update_forcing(operator%h_surf,domain,dt)
+            !if(mod(it,nstep_write) == 0) then
+            !	call outputer%write(operator%h_surf, domain, 'h_surf.dat', it/nstep_write)
+            !end if
+        end select
 
         call timescheme%step(state, operator, domain, dt)
         call timescheme_diff%step(state, operator_diff, domain, dt)

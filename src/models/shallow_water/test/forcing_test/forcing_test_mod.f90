@@ -30,7 +30,7 @@ implicit none
 real(kind=8) :: grav    = Earth_grav
 real(kind=8) :: omega   = Earth_omega
 real(kind=8) :: a       = Earth_radii
-real(kind=8) :: h_mean  = 2e3_8
+real(kind=8) :: h_mean  = 3.5e3_8
 real(kind=8) :: tau_forcing_h = 86400._8*100._8
 ! real(kind=8) :: tau_fric_decorrel = 1e4_8
 
@@ -46,7 +46,7 @@ subroutine run_forcing_test()
     type(config_swm_t) :: config
     type(domain_t)     :: domain
 
-    class(stvec_t),           allocatable :: state, state_eq
+    class(stvec_t),           allocatable :: state, state_eq, state_buff
     class(operator_t),        allocatable :: operator
     class(timescheme_t),      allocatable :: timescheme
     class(outputer_t),        allocatable :: outputer
@@ -89,6 +89,7 @@ subroutine run_forcing_test()
 
     call create_stvec_swm(state,     domain, halo_width, 0)
     call create_stvec_swm(state_eq,  domain, halo_width, 0)
+    call create_stvec_swm(state_buff,domain, halo_width, 0)
 
     call create_swm_operator(operator, grav, config, domain)
     call create_timescheme(timescheme, state, 'rk4')
@@ -99,8 +100,8 @@ subroutine run_forcing_test()
     ! call initialize_random_friction(random_friction, l=6, tau=1e4_8, &
     !                                 sigma_amp=3e-5_8, domain=domain)
 
-    call initialize_random_scalar(random_scalar, l=6, tau=1e4_8, &
-                                  amp=250._8, domain=domain)
+    call initialize_random_scalar(random_scalar, l=6, tau=1e5_8, &
+                                  amp=500._8, domain=domain)
 
     print*, 4*domain%partition%Nh, 2*domain%partition%Nh+1
 
@@ -136,13 +137,21 @@ subroutine run_forcing_test()
         call outputer%write(state%h, domain, 'h.dat',1)
         call outputer_vec%write(state%u,state%v,domain,"u.dat","v.dat",1)
     end select
+    select type(state_buff)
+    class is (stvec_swm_t)
+        call state_buff%u%assign(0.0_8,domain%mesh_u)
+        call state_buff%v%assign(0.0_8,domain%mesh_v)
+        call state_buff%h%assign(h_mean,domain%mesh_p)
+    end select
 
     do it = 1, int(config%simulation_time/dt)
 
         select type(operator)
         type is (operator_swm_t)
             call random_scalar%apply_update_forcing(operator%h_surf,domain,dt)
-            call outputer%write(operator%h_surf, domain, 'h_surf.dat', it)
+            if(mod(it,nstep_write) == 0) then
+            	call outputer%write(operator%h_surf, domain, 'h_surf.dat', it/nstep_write)
+            end if
         end select
 
         call timescheme%step(state, operator, domain, dt)
@@ -168,11 +177,23 @@ subroutine run_forcing_test()
 
         if(mod(it, nstep_diagnostics) == 0) then
             diagnostics = operator%get_diagnostics(state, domain)
-            call diagnostics%print()
+            if(domain%parcomm%myid==0) call diagnostics%print()
         end if
 
+        call state_buff%update(1.0_8/nstep_write,state,domain) 
+        !if(mod(it,nstep_write) == 0) then
+        !    select type(state_buff)
+        !    class is (stvec_swm_t)
+        !        call outputer%write(state_buff%h, domain, 'h.dat', int(it/nstep_write)+1)
+        !        call outputer_vec%write(state_buff%u,state_buff%v,domain,"u.dat","v.dat",int(it/nstep_write)+1)
+        !        if (parcomm_global%myid==0) print*, "Hours = ", real(time/3600 ,4), &
+        !                                            "rec=",int(it/nstep_write)+1
+        !        call state_buff%h%assign(0.0_8,domain%mesh_p)
+        !        call state_buff%u%assign(0.0_8,domain%mesh_u)
+        !        call state_buff%v%assign(0.0_8,domain%mesh_v)
+        !    end select
+        !end if
         if(mod(it,nstep_write) == 0) then
-
             select type(state)
             class is (stvec_swm_t)
                 call outputer%write(state%h, domain, 'h.dat', int(it/nstep_write)+1)
@@ -201,11 +222,12 @@ subroutine init_equilibrium(state,domain)
         do k = domain%mesh_p%tile(t)%ks, domain%mesh_p%tile(t)%ke
             do j = domain%mesh_p%tile(t)%js, domain%mesh_p%tile(t)%je
                 do i = domain%mesh_p%tile(t)%is, domain%mesh_p%tile(t)%ie
-                    if(abs(domain%mesh_p%tile(t)%rz(i,j,k))<sin(0.2_8*pi)) then
-                        state%h%tile(t)%p(i,j,k) = 1800._8
+                    if(abs(domain%mesh_p%tile(t)%rz(i,j,k))<sin(0.25_8*pi)) then
+                        state%h%tile(t)%p(i,j,k) = 4000._8
                     else
                         state%h%tile(t)%p(i,j,k) = 1000._8
                     end if
+                    !state%h%tile(t)%p(i,j,k) = 1000._8*(1._8+cos(asin(domain%mesh_p%tile(t)%rz(i,j,k)))**4)
                 end do
             end do
         end do

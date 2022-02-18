@@ -67,7 +67,8 @@ subroutine initialize_random_scalar(random_scalar, l, tau, amp, domain)
     random_scalar%amp = amp
 
     allocate(random_scalar%plm(-l:l))
-    random_scalar%plm(-l:l) = 0.0_8
+    call random_number(random_scalar%plm(-l:l))
+    random_scalar%plm(-l:l) = random_scalar%plm(-l:l)-0.5_8
     allocate(random_scalar%ylm(-l:l))
     do m=-l,l
         call create_grid_field(random_scalar%ylm(m),0,0,domain%mesh_p)
@@ -224,7 +225,7 @@ subroutine random_scalar_apply_update(this, h, domain, dt)
     type(domain_t),           intent(in)    :: domain
     real(kind=8),             intent(in)    :: dt
 
-    real(kind=8)    :: plm(-this%l:this%l)
+    real(kind=8)    :: plm(-this%l:this%l), a
     integer(kind=4) :: l, m, ierr
 
     l = this%l
@@ -232,21 +233,21 @@ subroutine random_scalar_apply_update(this, h, domain, dt)
         call random_number(plm(-l:l))
         plm(-l:l) = plm(-l:l)-0.5_8
 
-        this%plm(-l:l) = (1.0_8-dt/this%tau)*this%plm(-l:l)+&
-                                                     dt/this%tau*plm(-l:l)
-        this%plm(0) = sqrt(0.5_8)*this%plm(0)
-        this%plm(-l:l) = this%plm(-l:l) / sqrt(sum(this%plm(-l:l)**2))
-    else
-        this%plm = 0.0_8
+        !this%plm(-l:l) = (1.0_8-dt/this%tau)*this%plm(-l:l)+&
+        !                                             dt/this%tau*plm(-l:l)
+        !this%plm(0) = sqrt(0.5_8)*this%plm(0)
+        !this%plm(-l:l) = this%plm(-l:l) / sqrt(sum(this%plm(-l:l)**2))
+        a = 1.0_8-dt/this%tau
+        this%plm(-l:l) = a*this%plm(-l:l)+sqrt(1.0_8-a**2)*plm(-l:l)
     end if
     call mpi_bcast(this%plm,2*l+1,MPI_DOUBLE,0,domain%parcomm%comm_w,ierr)
 
-    call h%assign(0.0_8, domain%mesh_p)
-
-    do m=-l,l
-        call h%update(this%plm(m),this%ylm(m), domain%mesh_p)
+    call h%assign(sqrt(0.5_8)*this%plm(0), this%ylm(0), domain%mesh_p)
+    do m=1,l
+        call h%update(this%plm( m),this%ylm( m), domain%mesh_p)
+        call h%update(this%plm(-m),this%ylm(-m), domain%mesh_p)
     end do
-    call h%assign(this%amp,h,domain%mesh_p)
+    call h%assign(this%amp/sqrt(2*l+1.0_8),h,domain%mesh_p)
 
 end subroutine
 
