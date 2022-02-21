@@ -961,7 +961,7 @@ subroutine generate_barotropic_instability_height(this, f, npts, nlev, x, y, z)
     integer(kind=4) :: i, k, indy
     real(kind=8), parameter :: phi0 = pi/7d0, phi1 = .5d0*pi-phi0
     real(kind=8),  parameter :: lat_diam = 1.0_8/15.0_8, lon_diam = 1.0_8/3.0_8
-    real(kind=8) :: phi, lam, zdy
+    real(kind=8) :: phi, lam, zdy, w(-1:2)
 
 
     do k = 1, nlev
@@ -969,13 +969,18 @@ subroutine generate_barotropic_instability_height(this, f, npts, nlev, x, y, z)
             call cart2sph(x(i), y(i), z(i), lam, phi)
             if(phi<=phi0) then
                 f(i,k) = this%H0
-            else if(phi >phi1) then
+            else if(phi >= phi1) then
                 f(i,k) = this%H_north
             else
                 zdy = (phi-phi0) / this%dphi
                 indy = floor(zdy)
                 zdy = zdy - indy
-                f(i,k) = this%H_zonal(indy) + (this%H_zonal(indy+1)-this%H_zonal(indy))*zdy
+                w(-1) =-zdy*(zdy-1._8)*(zdy-2._8) / 6._8
+                w(0) = (zdy+1._8)*(zdy-1._8)*(zdy-2._8) / 2._8
+                w(1) =-(zdy+1._8)*zdy*(zdy-2._8) / 2._8
+                w(2) = (zdy+1._8)*zdy*(zdy-1._8) / 6._8
+                ! f(i,k) = this%H_zonal(indy) + (this%H_zonal(indy+1)-this%H_zonal(indy))*zdy
+                f(i,k) = sum(this%H_zonal(indy-1:indy+2)*w(-1:2))
             end if
             if(lam>pi) lam = lam -2.0_8*pi
             f(i,k) = f(i,k) + this%h_pert*cos(phi)* &
