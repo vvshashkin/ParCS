@@ -2330,6 +2330,7 @@ $(DOBJ)barotropic_inst_mod.o: src/models/shallow_water/test/barotropic_instabili
 	$(DOBJ)key_value_mod.o \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)grid_field_factory_mod.o \
+	$(DOBJ)master_paneled_outputer_mod.o \
 	$(DOBJ)vec_math_mod.o \
 	$(DOBJ)namelist_read_mod.o \
 	$(DOBJ)barotropic_instability_u_mod.o

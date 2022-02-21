@@ -79,6 +79,7 @@ subroutine run_barotropic_inst()
 
     call config%parse(namelist_string)
 
+
     test_config%Nq = 10*config%config_domain%N
 
     config%config_domain%config_metric%omega = test_config%omega
@@ -129,7 +130,7 @@ subroutine run_barotropic_inst()
     end if
 
     call get_exact_solution(state,    domain, config%v_components_type)
-    call get_exact_solution(state_ex, domain, config%v_components_type)
+    call state_ex%assign(1.0_8,state,0.0_8,state,domain)
 
     select type(state)
     class is (stvec_swm_t)
@@ -139,14 +140,20 @@ subroutine run_barotropic_inst()
 
     call create_grid_field(curl, halo_width, 0, domain%mesh_q)
 
-
     do it = 1, int(config%simulation_time/dt)
 
-        !print *, "tstep", it
         call timescheme%step(state, operator, domain, dt)
         call timescheme_diff%step(state, operator_diff, domain, dt)
 
         time = it*dt
+
+        call state_err%assign(1.0_8,state,-1.0_8,state_ex,domain)
+        select type(state_err)
+        type is (stvec_swm_t)
+            print *, "Errors:", state_err%u%maxabs(domain%mesh_u,domain%parcomm), &
+                                state_err%v%maxabs(domain%mesh_v,domain%parcomm), &
+                                state_err%h%maxabs(domain%mesh_p,domain%parcomm)
+        end select
 
         if(mod(it, nstep_diagnostics) == 0) then
             diagnostics = operator%get_diagnostics(state, domain)
@@ -222,12 +229,13 @@ function create_barotropic_instability_height_field_generator(H0, &
 
     height_gen%H0 = H0
     height_gen%Nq = Nq
-    allocate(height_gen%H_zonal(0:Nq))
+    allocate(height_gen%H_zonal(-1:Nq+1))
     dphi = (phi1 - phi0) / real(Nq,8)
     height_gen%dphi = dphi
     height_gen%h_pert = h_pert
 
-    height_gen%H_zonal(0) = H0!0.0_8
+    height_gen%H_zonal(-1) = H0!0.0_8
+    height_gen%H_zonal( 0) = H0!0.0_8
     do j=1, Nq
         dh = 0.0_8
         do iq=1, size(wq)
@@ -238,6 +246,7 @@ function create_barotropic_instability_height_field_generator(H0, &
         end do
         height_gen%H_zonal(j) = height_gen%H_zonal(j-1)+0.5_8*dh*dphi
     end do
+    height_gen%H_zonal(Nq+1) = height_gen%H_zonal(Nq)
 
     height_gen%H_north = height_gen%H_zonal(Nq)
 
