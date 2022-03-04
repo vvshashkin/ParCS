@@ -61,7 +61,9 @@ subroutine run_ts2()
     real(kind=8)     :: tau_write
     integer(kind=4)  :: nstep_write, nstep_diagnostics
 
-    real(kind=8)    :: time, l2err, l2_ex, l2u, l2v
+    real(kind=8)    :: time
+    real(kind=8)    :: l2_err_h, l2_ex_h, l2_err_u, l2_ex_u
+    real(kind=8)    :: linf_err_h, linf_ex_h, linf_err_u, linf_ex_u
     integer(kind=4) :: it
 
     call read_namelist_as_str(namelist_string, "namelist_swm", parcomm_global%myid)
@@ -123,7 +125,12 @@ subroutine run_ts2()
 
     select type(state_ex)
     class is (stvec_swm_t)
-        l2_ex = l2norm(state_ex%h,  domain%mesh_p, domain%parcomm)
+        l2_ex_h = l2norm(state_ex%h,  domain%mesh_p, domain%parcomm)
+        l2_ex_u = sqrt(l2norm(state_ex%u,  domain%mesh_u, domain%parcomm)**2+&
+                       l2norm(state_ex%v,  domain%mesh_v, domain%parcomm)**2)
+        linf_ex_h = state_ex%h%maxabs(domain%mesh_p, domain%parcomm)
+        linf_ex_u = max(state_ex%u%maxabs(domain%mesh_u, domain%parcomm), &
+                        state_ex%v%maxabs(domain%mesh_v, domain%parcomm))
     end select
 
     select type(state)
@@ -145,6 +152,23 @@ subroutine run_ts2()
         if(mod(it, nstep_diagnostics) == 0) then
             diagnostics = operator%get_diagnostics(state, domain)
             if(parcomm_global%myid == 0) call diagnostics%print()
+
+            select type(state_err)
+            class is (stvec_swm_t)
+                !call outputer%write(state_err%h, domain, 'h_err.dat', int(it/nstep_write))
+                !call outputer_vec%write(state_err%u, state_err%v, domain, 'u_err.dat', 'v_err.dat', int(it/nstep_write))
+
+                l2_err_h = l2norm(state_err%h,  domain%mesh_p, domain%parcomm) / l2_ex_h
+                l2_err_u = sqrt(l2norm(state_err%u,  domain%mesh_u, domain%parcomm)**2+&
+                                l2norm(state_err%v,  domain%mesh_v, domain%parcomm)**2) / l2_ex_u
+                linf_err_h = state_err%h%maxabs(domain%mesh_p, domain%parcomm) / linf_ex_h
+                linf_err_u = max(state_err%u%maxabs(domain%mesh_u, domain%parcomm), &
+                                 state_err%v%maxabs(domain%mesh_v, domain%parcomm)) / linf_ex_u
+                if (parcomm_global%myid==0) print '(A,F12.4,4(A,E15.7))', &
+                                                  "Hours = ", real(time/3600 ,4), &
+                                                  " l2_h =", real(l2_err_h,4), " linf_h = ", real(linf_err_h,4), &
+                                                  " l2_u =", real(l2_err_u,4), " linf_u = ", real(linf_err_u,4)
+            end select
         end if
 
         if(mod(it,nstep_write) == 0) then
@@ -153,19 +177,6 @@ subroutine run_ts2()
             class is (stvec_swm_t)
                 call outputer%write(state%h, domain, 'h.dat', int(it/nstep_write)+1)
                 call outputer_vec%write(state%u, state%v, domain, 'u.dat', 'v.dat', int(it/nstep_write)+1)
-            end select
-
-            select type(state_err)
-            class is (stvec_swm_t)
-                call outputer%write(state_err%h, domain, 'h_err.dat', int(it/nstep_write))
-                call outputer_vec%write(state_err%u, state_err%v, domain, 'u_err.dat', 'v_err.dat', int(it/nstep_write))
-
-                l2err = l2norm(state_err%h, domain%mesh_p, domain%parcomm)/l2_ex
-                !l2u = l2norm(state_err%u, domain%mesh_u, domain%parcomm)
-                !l2v = l2norm(state_err%v, domain%mesh_v, domain%parcomm)
-                if (parcomm_global%myid==0) print*, "Hours = ", real(time/3600 ,4), &
-                                                    "L2err =", real(l2err,4),&
-                                                    "irec=",int(it/nstep_write)+1
             end select
         end if
     end do

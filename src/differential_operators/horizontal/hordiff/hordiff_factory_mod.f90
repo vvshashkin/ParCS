@@ -170,8 +170,8 @@ subroutine create_scalar_hordiff_operator(hordiff_op, hordiff_coeff, domain, &
 
     select case(staggering)
     case ("Ah")
-        ! call create_laplace_operator(hordiff_scalar%laplace_op,"divgrad_laplace_ch_sbp42",domain)
-        call create_laplace_operator(hordiff_scalar%laplace_op,"laplace_ch_halo2",domain)
+        call create_laplace_operator(hordiff_scalar%laplace_op,"divgrad_laplace_ch_sbp21",domain)
+        !call create_laplace_operator(hordiff_scalar%laplace_op,"laplace_ch_halo4",domain)
         call create_grid_field(hordiff_scalar%f_tend_inter, 8, 0, domain%mesh_xy)
         ! call create_grid_field(hordiff_scalar%div, halo_width, 0, domain%mesh_xy)
         ! call create_grid_field(hordiff_scalar%gx,  halo_width, 0, domain%mesh_y)
