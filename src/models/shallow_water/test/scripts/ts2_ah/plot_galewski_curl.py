@@ -4,11 +4,12 @@ import Ngl
 from sys import argv
 
 path = argv[1]
-
+wktype = "pdf"
 schemes = ["Ah21","Ah42","Ah43","Ah63"]
 cn_res = Ngl.Resources()
 cn_res.cnFillOn = True
 #cn_res.cnLinesOn = False
+cn_res.cnLineThicknessF = 0.5
 cn_res.cnLineLabelsOn = False
 cn_res.mpCenterLonF = 180.0
 cn_res.lbLabelBarOn = False
@@ -29,13 +30,18 @@ wkres = Ngl.Resources()
 wkres.nglMaximize = True
 wkres.wkColorMap = "BlueDarkRed18"
 
-for N in [32, 64, 128, 256]:#[20,40,80,160]:
+scheme_conv = "Ah42"
+wks_conv = Ngl.open_wks(wktype, "curl_"+scheme_conv,wkres)
+plots_conv = []
+
+#for N in [32, 64, 128, 256]:#[20,40,80,160]:
+for N in [96, 128, 192, 256]:#[20,40,80,160]:
     print "N=",N
     Nlon = 4*N
     Nlat = 2*N+1
     cn_res.sfXArray = np.linspace(0.0,360.0,Nlon,endpoint=False)
     cn_res.sfYArray = np.linspace(-90.0,90.0,Nlat)
-    wks = Ngl.open_wks("png", "curl_N{:03d}".format(N),wkres)
+    wks = Ngl.open_wks(wktype, "curl_N{:03d}".format(N),wkres)
 
     plots = []
     for scheme in schemes:
@@ -47,11 +53,13 @@ for N in [32, 64, 128, 256]:#[20,40,80,160]:
         cn_res.tiMainString = scheme
         print "plot"
         plots.append(Ngl.contour_map(wks,z*1e5,cn_res))
+        if scheme == scheme_conv:
+            cn_res.tiMainString = scheme+" N~B~c~N~="+str(N)
+            plots_conv.append(Ngl.contour_map(wks_conv,z*1e5,cn_res))
 
-    textres = Ngl.Resources()
-    textres.txFontHeightF = 0.015
     pres = Ngl.Resources()
     pres.nglPanelLabelBar = True
     Ngl.panel(wks,plots,(4,1),pres)
     Ngl.delete_wks(wks)
-
+Ngl.panel(wks_conv,plots_conv,(4,1),pres)
+Ngl.delete_wks(wks_conv)

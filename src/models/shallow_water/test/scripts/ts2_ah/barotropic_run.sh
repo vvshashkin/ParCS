@@ -62,8 +62,8 @@ gen_namelist(){
         curl="curl_"$div
         quad='SBP_Ah63_quadrature'
 	fi
-	echo -e $NAMELIST_TEMPLATE | 
-             sed "s/%%%divergence/$div/" | 
+	echo -e $NAMELIST_TEMPLATE |
+             sed "s/%%%divergence/$div/" |
              sed "s/%%%gradient/$grad/"  |
              sed "s/%%%curl/$curl/"      |
              sed "s/%%%quadrature/$quad/" |
@@ -71,26 +71,25 @@ gen_namelist(){
              sed "s/%%%dt/$DT/"
 }
 
-run_ts2(){
+run_barotropic(){
 	gen_namelist $1 $2 $3  > namelist_swm
 	mpirun -n $Nprocs $EXE &> swm_N$1_dt$2_Ah$3.out
     mv curl.dat curl_N$1_Ah$3.dat
-    grep "l2_h" swm_N$1_dt$2_Ah$3.out > errors_N$1_dt$2_Ah$3.txt
+    #grep "l2_h" swm_N$1_dt$2_Ah$3.out > errors_N$1_dt$2_Ah$3.txt
 }
-run_ts2 032 600 21
-run_ts2 064 300 21
-run_ts2 128 150 21
-run_ts2 256 075 21
-run_ts2 032 600 42
-run_ts2 064 300 42
-run_ts2 128 150 42
-run_ts2 256 075 42
-run_ts2 032 600 43
-run_ts2 064 300 43
-run_ts2 128 150 43
-run_ts2 256 075 43
-run_ts2 032 600 63
-run_ts2 064 300 63
-run_ts2 128 150 63
-run_ts2 256 075 63
-
+run_barotropic 096 200 21
+run_barotropic 128 150 21
+run_barotropic 192 100 21
+run_barotropic 256 075 21
+run_barotropic 096 200 42
+run_barotropic 128 150 42
+run_barotropic 192 100 42
+run_barotropic 256 075 42
+run_barotropic 096 200 43
+run_barotropic 128 150 43
+run_barotropic 192 100 43
+run_barotropic 256 075 43
+run_barotropic 096 200 63
+run_barotropic 128 150 63
+run_barotropic 192 100 63
+run_barotropic 256 075 63
