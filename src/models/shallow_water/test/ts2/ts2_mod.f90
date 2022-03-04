@@ -73,9 +73,10 @@ subroutine run_ts2()
 
     height_field = ts2_height_generator_t(h_mean = config_ts2%h_mean, &
                 u0 = config_ts2%u0, omega = config_ts2%omega, a = config_ts2%a, &
-                grav = config_ts2%grav)
+                grav = config_ts2%grav, axis = config%config_domain%config_metric%rotation_axis)
 
-    velocity_field = solid_rotation_t(u0 = config_ts2%u0)
+    velocity_field = solid_rotation_t(u0 = config_ts2%u0, &
+                                      axis = config%config_domain%config_metric%rotation_axis)
 
     dt = config%dt
     tau_write = config%tau_write

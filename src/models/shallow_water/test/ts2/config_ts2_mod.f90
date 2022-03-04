@@ -46,7 +46,6 @@ subroutine parse(this, config_string)
     this%a      = a
     this%u0     = u0
 
-
 end subroutine parse
 
 end module config_ts2_mod

@@ -56,7 +56,7 @@ subroutine parse(this, config_string)
     this%scale = scale
     this%omega = omega
     this%rotation_matrix = rotation_matrix
-    this%rotation_axis = rotation_axis
+    this%rotation_axis(1:3) = rotation_axis(1:3) / sqrt(sum(rotation_axis(1:3)**2))
     this%metric_2d_type = trim(metric_2d_type)
     this%vertical_transform_name = trim(vertical_transform_name)
 

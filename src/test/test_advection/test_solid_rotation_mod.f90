@@ -107,7 +107,8 @@ subroutine init_field_generators(period, rotation_axis_angle)
 
     class(scalar_field_generator_t), allocatable :: tmp
 
-    velocity_field = solid_rotation_t(alpha = rotation_axis_angle, u0 = 2*pi/period)
+    velocity_field = solid_rotation_t(alpha = rotation_axis_angle, u0 = 2*pi/period, &
+                                      axis = [-sin(rotation_axis_angle), 0.0_8, cos(rotation_axis_angle)])
 
     tmp = gaussian_hill_scalar_field_generator_t()
 

@@ -122,6 +122,7 @@ end type Ylm2_field_generator_t
 
 type, extends(vector_field_generator_t) :: solid_rotation_t
     real(kind=8) :: alpha = 0.0_8 !rotation axis angle
+    real(kind=8) :: axis(3) = [0.0_8,0.0_8,1.0_8]
     real(kind=8) :: u0 = 1.0_8    ! equator speed
 contains
     procedure :: get_vector_field => gen_solid_rotation_vec_field
@@ -141,12 +142,13 @@ contains
 end type KE_scalar_field_t
 
 type, extends(scalar_field_generator_t) :: ts2_height_generator_t
-    real(kind=8) :: h_mean = 1.0_8
-    real(kind=8) :: alpha  = 0.0_8 !rotation axis angle
-    real(kind=8) :: u0     = 1.0_8 !equator speed
-    real(kind=8) :: omega  = 1.0_8 !angular velocity of the sphere
-    real(kind=8) :: a      = 1.0_8 !radii of the sphere
-    real(kind=8) :: grav   = 1.0_8 !gravity acceleration
+    real(kind=8) :: h_mean  = 1.0_8
+    real(kind=8) :: alpha   = 0.0_8 !rotation axis angle
+    real(kind=8) :: axis(3) = [0.0_8, 0.0_8, 1.0_8]
+    real(kind=8) :: u0      = 1.0_8 !equator speed
+    real(kind=8) :: omega   = 1.0_8 !angular velocity of the sphere
+    real(kind=8) :: a       = 1.0_8 !radii of the sphere
+    real(kind=8) :: grav    = 1.0_8 !gravity acceleration
 contains
     procedure :: get_scalar_field => generate_ts2_height_field
 end type ts2_height_generator_t
@@ -559,18 +561,30 @@ subroutine gen_solid_rotation_vec_field(this, vx, vy, vz, npts, nlev, x, y, z)
 
     integer(kind=4) :: i, k
     real(kind=8) :: lam, phi, v_lam, v_phi, xn, yn, zn, vxn, vyn, vzn
+    real(kind=8) :: ax, ay, az, amod
+
+    amod = sqrt(sum(this%axis(1:3)**2))
+    ax = this%axis(1) / amod
+    ay = this%axis(2) / amod
+    az = this%axis(3) / amod
 
     do k = 1, nlev
         do i=1, npts
-            !translate north pole from [0, pi/2] to [0, pi/2-alpha]
-            call rotate_3D_y(x(i), y(i), z(i), -this%alpha, xn, yn, zn)
-            call cart2sph(xn, yn, zn, lam, phi)
-
-            v_lam = this%u0*cos(phi)
-            v_phi = 0.0_8
-
-            call sph2cart_vec(lam, phi, v_lam, v_phi, vxn, vyn, vzn)
-            call rotate_3D_y(vxn, vyn, vzn, this%alpha, vx(i,k), vy(i,k), vz(i,k))
+            xn = x(i) / sqrt(x(i)**2+y(i)**2+z(i)**2)
+            yn = y(i) / sqrt(x(i)**2+y(i)**2+z(i)**2)
+            zn = z(i) / sqrt(x(i)**2+y(i)**2+z(i)**2)
+            vx(i,k) = this%u0*(ay*zn-az*yn)
+            vy(i,k) =-this%u0*(ax*zn-az*xn)
+            vz(i,k) = this%u0*(ax*yn-ay*xn)
+            ! !translate north pole from [0, pi/2] to [0, pi/2-alpha]
+            ! call rotate_3D_y(x(i), y(i), z(i), -this%alpha, xn, yn, zn)
+            ! call cart2sph(xn, yn, zn, lam, phi)
+            !
+            ! v_lam = this%u0*cos(phi)
+            ! v_phi = 0.0_8
+            !
+            ! call sph2cart_vec(lam, phi, v_lam, v_phi, vxn, vyn, vzn)
+            ! call rotate_3D_y(vxn, vyn, vzn, this%alpha, vx(i,k), vy(i,k), vz(i,k))
         end do
     end do
 end subroutine gen_solid_rotation_vec_field
@@ -820,19 +834,24 @@ subroutine generate_ts2_height_field(this, f, npts, nlev, x, y, z)
 
     integer(kind=4) :: i, k
     real(kind=8) :: lam, phi, v_lam, v_phi, xn(npts), yn(npts), zn(npts)
-    real(kind=8) :: alpha, u0, h_mean, a, omega, grav
+    real(kind=8) :: alpha, u0, h_mean, a, omega, grav, axis(3)
 
-    alpha  = this%alpha
-    u0     = this%u0
-    h_mean = this%h_mean
-    omega  = this%omega
-    a      = this%a
-    grav   = this%grav
+    alpha     = this%alpha
+    axis(1:3) = this%axis(1:3) / sqrt(sum(this%axis(1:3)**2))
+    u0        = this%u0
+    h_mean    = this%h_mean
+    omega     = this%omega
+    a         = this%a
+    grav      = this%grav
     do k = 1, nlev
         do i=1, npts
-            !translate north pole from [0, pi/2] to [0, pi/2-alpha]
-            call rotate_3D_y(x(i), y(i), z(i), -alpha, xn(i), yn(i), zn(i))
-            call cart2sph(xn(i), yn(i), zn(i), lam, phi)
+            ! !translate north pole from [0, pi/2] to [0, pi/2-alpha]
+            ! call rotate_3D_y(x(i), y(i), z(i), -alpha, xn(i), yn(i), zn(i))
+            ! call cart2sph(xn(i), yn(i), zn(i), lam, phi)
+            xn(1) = x(i) / sqrt(x(i)**2+y(i)**2+z(i)**2)
+            yn(1) = y(i) / sqrt(x(i)**2+y(i)**2+z(i)**2)
+            zn(1) = z(i) / sqrt(x(i)**2+y(i)**2+z(i)**2)
+            phi = asin(xn(1)*axis(1)+yn(1)*axis(2)+zn(1)*axis(3))
             f(i,k) = h_mean - (a*omega*u0+0.5_8*u0**2)/grav*sin(phi)**2
         end do
     end do
