@@ -2,6 +2,8 @@ module Eldred_test_mod
 
 use domain_mod,               only : domain_t
 use domain_factory_mod,       only : create_domain
+use grid_field_mod,           only : grid_field_t
+use grid_field_factory_mod,   only : create_grid_field
 use stvec_mod,                only : stvec_t
 use stvec_swm_mod,            only : stvec_swm_t
 use stvec_swm_factory_mod,    only : create_stvec_swm
@@ -50,7 +52,7 @@ subroutine run_Eldred_test()
     class(stvec_t),           allocatable :: state, state_eq
     class(operator_t),        allocatable :: operator
     class(timescheme_t),      allocatable :: timescheme
-    class(outputer_t),        allocatable :: outputer
+    class(outputer_t),        allocatable :: outputer, outputer_curl
     class(outputer_vector_t), allocatable :: outputer_vec
 
     type(random_scalar_t)   :: random_scalar
@@ -68,6 +70,8 @@ subroutine run_Eldred_test()
 
     real(kind=8)    :: time, l2err, l2_ex
     integer(kind=4) :: it
+
+    type(grid_field_t) :: curl, ut, vt, div
 
     call read_namelist_as_str(namelist_string, "namelist_swm", parcomm_global%myid)
 
@@ -102,10 +106,12 @@ subroutine run_Eldred_test()
 
     if(config%config_domain%staggering_type == "Ah") then
         call create_latlon_outputer(outputer, 2*domain%partition%Nh+1, 4*domain%partition%Nh, "Ah", domain)
+        call create_latlon_outputer(outputer_curl, 2*domain%partition%Nh+1, 4*domain%partition%Nh, "Ah", domain)
         call create_latlon_vec_outputer(outputer_vec,  2*domain%partition%Nh+1, 4*domain%partition%Nh, "Ah", &
                                    config%v_components_type, domain)
     else if(config%config_domain%staggering_type == "C") then
         call create_latlon_outputer(outputer, 2*domain%partition%Nh+1, 4*domain%partition%Nh, "A", domain)
+        call create_latlon_outputer(outputer_curl, 2*domain%partition%Nh+1, 4*domain%partition%Nh, "Ah", domain)
         call create_latlon_vec_outputer(outputer_vec,  2*domain%partition%Nh+1, 4*domain%partition%Nh, "C", &
                                        config%v_components_type, domain)
     else
@@ -135,6 +141,11 @@ subroutine run_Eldred_test()
         call outputer_vec%write(state%u,state%v,domain,"u.dat","v.dat",1)
     end select
 
+    call create_grid_field(curl, halo_width, 0, domain%mesh_q)
+    call create_grid_field(ut, halo_width, 0, domain%mesh_u)
+    call create_grid_field(vt, halo_width, 0, domain%mesh_v)
+    call create_grid_field(div, halo_width, 0, domain%mesh_p)
+
     do it = 1, int(config%simulation_time/dt)
 
         select type(operator)
@@ -159,10 +170,21 @@ subroutine run_Eldred_test()
 
         if(mod(it,nstep_write) == 0) then
 
+
             select type(state)
             class is (stvec_swm_t)
                 call outputer%write(state%h, domain, 'h.dat', int(it/nstep_write)+1)
                 call outputer_vec%write(state%u,state%v,domain,"u.dat","v.dat",int(it/nstep_write)+1)
+
+                select type(operator)
+                class is (operator_swm_t)
+                    call operator%curl_op%calc_curl(curl, state%u, state%v, domain)
+                    call outputer_curl%write(curl, domain, 'curl.dat', int(it/nstep_write)+1)
+                    call operator%co2contra_op%transform(ut,vt,state%u,state%v,domain)
+                    call operator%div_op%calc_div(div,ut,vt,domain)
+                    call outputer%write(div, domain, 'div.dat', int(it/nstep_write)+1)
+                end select
+
                 if (parcomm_global%myid==0) print*, "Hours = ", real(time/3600 ,4), &
                                                     "rec=",int(it/nstep_write)+1
             end select
