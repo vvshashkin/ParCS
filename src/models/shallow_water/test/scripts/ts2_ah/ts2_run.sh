@@ -12,6 +12,9 @@ NAMELIST_TEMPLATE="
     metric_type      = 'ecs'\n
 /\n
 &metric\n
+    rotation_axis(1) = 1.0,
+    rotation_axis(2) = 0.0,
+    rotation_axis(3) = 1.0,
 /\n
 &shallow_water_model\n
     swm_op_type       = 'vector_invariant'\n
@@ -62,8 +65,8 @@ gen_namelist(){
         curl="curl_"$div
         quad='SBP_Ah63_quadrature'
 	fi
-	echo -e $NAMELIST_TEMPLATE | 
-             sed "s/%%%divergence/$div/" | 
+	echo -e $NAMELIST_TEMPLATE |
+             sed "s/%%%divergence/$div/" |
              sed "s/%%%gradient/$grad/"  |
              sed "s/%%%curl/$curl/"      |
              sed "s/%%%quadrature/$quad/" |
@@ -93,4 +96,3 @@ run_ts2 020 800 63
 run_ts2 040 400 63
 run_ts2 080 200 63
 run_ts2 160 100 63
-
