@@ -146,7 +146,7 @@ subroutine run_RH4_wave()
 
             select type(state)
             class is (stvec_swm_t)
-                call outputer%write(state%h, domain, 'h.dat', int(it/nstep_write))
+                call outputer%write(state%h, domain, 'h.dat', int(it/nstep_write)+1)
                 l2err = l2norm(state%h, domain%mesh_p, domain%parcomm)
                 if (parcomm_global%myid==0) print*, "Hours = ", real(time/3600 ,4), &
                                                     "L2err =", real(l2err,4)
