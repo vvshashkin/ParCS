@@ -4,6 +4,13 @@ implicit none
 
 !Colocated grid differentiation
 
+!Ah 2-1 scheme second derivative
+real(kind=8), parameter :: D2_21_in(3) = [1, -2, 1]
+real(kind=8), parameter :: D2_21_shift = -1
+
+real(kind=8),    parameter :: D2_21_edge(3,1) = reshape([1, -2, 1], [3,1])
+integer(kind=4), parameter :: lastnonzeroD2_21_edge(1) = [3]
+real(kind=8),    parameter :: D2_21_boundary_proj(3) = [3.0/2,-2.0, 1.0/2]
 !Ah 2-1 scheme written as SBP
 real(kind=8), parameter :: Q21(2,1) = reshape( [-1._8, 1._8],  [2,1])
 integer(kind=4), parameter :: lastnonzeroQ21(1) =[2]

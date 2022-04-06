@@ -16,6 +16,7 @@ use outputer_factory_mod,  only : create_master_paneled_outputer,&
                                            create_latlon_outputer
 use halo_mod,               only : halo_t
 use halo_factory_mod,       only : create_halo_procedure
+
 implicit none
 
 contains
@@ -43,7 +44,7 @@ subroutine hordiff_scalar_test()
     call create_grid_field(h,      5, 0, domain%mesh_p)
     call create_grid_field(h_tend, 5, 0, domain%mesh_p)
 
-    call create_hordiff_operator(diff_op, "hordiff_scalar_Ah", diff_coeff, domain)
+    call create_hordiff_operator(diff_op, "hordiff_Ah_no_metric", diff_coeff, domain)
 
     call set_scalar_test_field(h, field, domain%mesh_p, 0)
 
@@ -56,7 +57,7 @@ subroutine hordiff_scalar_test()
 
     call create_master_paneled_outputer(outputer_mp, "p", domain)
 
-    do it = 1,200
+    do it = 1, 600
 
         call outputer%write(h, domain, 'h_diff.dat', it)
 

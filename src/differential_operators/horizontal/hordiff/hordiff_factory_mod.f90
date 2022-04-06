@@ -24,6 +24,8 @@ subroutine create_hordiff_operator(hordiff_op, hordiff_op_name, hordiff_coeff, d
         call create_Cgrid_hordiff_curl_div_operator(hordiff_op, hordiff_coeff, domain)
 !    case("hordiff_colocated")
 !        hordiff_op = hordiff_colocated_t()
+    case("hordiff_Ah_no_metric")
+        call create_Ah_no_metric_hordiff(hordiff_op, hordiff_coeff, domain)
     case("hordiff_scalar_Ah")
         call create_scalar_hordiff_operator(hordiff_op, hordiff_coeff, domain, "Ah", isscalar=.true.)
     case("hordiff_scalar_C")
@@ -210,6 +212,43 @@ subroutine create_scalar_hordiff_operator(hordiff_op, hordiff_coeff, domain, &
     call move_alloc(hordiff_scalar, hordiff_op)
 
 end subroutine create_scalar_hordiff_operator
+
+subroutine create_Ah_no_metric_hordiff(hordiff_op, hordiff_coeff, domain)
+
+    use hordiff_scalar_mod,    only : hordiff_scalar_t
+    use div_factory_mod,       only : create_div_operator
+    use grad_factory_mod,      only : create_grad_operator
+    use co2contra_factory_mod, only : create_co2contra_operator
+    use halo_factory_mod,      only : create_halo_procedure
+    use laplace_factory_mod,   only : create_laplace_operator
+    use hordiff_no_metric_mod, only : hordiff_no_metric_t
+
+    class(hordiff_operator_t), allocatable, intent(out) :: hordiff_op
+    real(kind=8),                           intent(in)  :: hordiff_coeff
+    type(domain_t),                         intent(in)  :: domain
+
+    type(hordiff_no_metric_t), allocatable :: hordiff_no_metric
+
+    integer(kind=4) :: halo_width
+    real(kind=8)    :: hx
+
+    allocate(hordiff_no_metric)
+
+    !WORKAROUND
+    halo_width = 5
+
+    call create_laplace_operator(hordiff_no_metric%laplace_op,"laplace_no_metric",domain)
+    call create_grid_field(hordiff_no_metric%f_tend_inter, 8, 0, domain%mesh_xy)
+
+
+    hx = domain%mesh_xy%tile(domain%mesh_o%ts)%hx
+
+    hordiff_no_metric%diff_coeff = hordiff_coeff*domain%mesh_xy%scale*hx
+    hordiff_no_metric%diff_order = 2
+
+    call move_alloc(hordiff_no_metric, hordiff_op)
+
+end subroutine create_Ah_no_metric_hordiff
 
 subroutine create_colocated_hordiff_operator(hordiff_op, hordiff_coeff, domain, staggering)
 

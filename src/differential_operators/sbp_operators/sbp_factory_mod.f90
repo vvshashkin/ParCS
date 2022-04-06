@@ -27,7 +27,9 @@ use sbp_operators_collection_mod, only : Q21, lastnonzeroQ21, Da2_in, Da2_inshif
                                          D21_staggered_in, D21_staggered_c2i_in_shift, &
                                          D21_boundary_proj, D21_A_centers, D21_A_interfaces, &
                                          D21_staggered_i2c, D21_staggered_i2c_last_nonzero, &
-                                         D21_staggered_i2c_in_shift
+                                         D21_staggered_i2c_in_shift, &
+                                         D2_21_in, D2_21_shift, D2_21_edge, lastnonzeroD2_21_edge, &
+                                         D2_21_boundary_proj, Q21_A
 
 implicit none
 
@@ -54,6 +56,16 @@ function create_sbp_operator(sbp_operator_name) result(sbp_op)
         sbp_op%in_shift    = Da2_inshift
         sbp_op%dnx = 0
         right_side_sign = -1.0_8
+    else if(sbp_operator_name == "d2_21") then
+            sbp_op%W_edge_l    = D2_21_edge
+            sbp_op%edge_last_l = lastnonzeroD2_21_edge
+            sbp_op%W_in        = D2_21_in
+            sbp_op%in_shift    = D2_21_shift
+            sbp_op%dnx = 0
+            right_side_sign = 1
+            sbp_op%proj_operator_l = D2_21_boundary_proj
+            sbp_op%Al_in = Q21_A
+            sbp_op%Al_out = Q21_A
     else if(sbp_operator_name == "d42") then
         sbp_op%W_edge_l    = Q42
         sbp_op%edge_last_l = lastnonzeroQ42
