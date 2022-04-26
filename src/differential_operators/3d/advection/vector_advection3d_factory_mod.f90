@@ -42,6 +42,7 @@ subroutine create_staggered_shallow_atm_vector_advection3d(vec_adv_op, &
     use interpolator_w2uv_factory_mod, only : create_w2uv_interpolator
     use scalar_advection_factory_mod,  only : create_scalar_advection3d_operator
     use grid_field_factory_mod,        only : create_grid_field
+    use config_advection_3d_mod,       only : config_w_advection_t
 
     class(vector_advection3d_t), allocatable, intent(out) :: vec_adv_op
     !Input:
@@ -51,6 +52,7 @@ subroutine create_staggered_shallow_atm_vector_advection3d(vec_adv_op, &
     type(domain_t),   intent(in) :: domain
 
     type(shallow_atm_staggered_vecadv_t), allocatable :: operator
+    type(config_w_advection_t) :: config_w_advection
 
     allocate(operator)
 
@@ -58,8 +60,15 @@ subroutine create_staggered_shallow_atm_vector_advection3d(vec_adv_op, &
     call create_adv_z_operator(operator%uv_z_advec_op,uv_ver_adv_op_name)
     call create_w2uv_interpolator(operator%interp_w2uv, "w2uv_staggered", &
                                   "interp2d_p2uv_C_sbp42", "vertical_interp_w2p_sbp42" ,domain)
+
+    config_w_advection%hor_advection_oper_name = w_adv_hor_part_name
+    config_w_advection%z_advection_oper_name   = w_adv_ver_part_name
+    config_w_advection%uv2w_operator_name      = 'uv2w_staggered'
+    config_w_advection%uv2w_hor_part_name      = 'interp2d_uv2pvec_C_sbp42'
+    config_w_advection%uv2w_vert_part_name     = 'vertical_interp_p2w_sbp42'
+    config_w_advection%w_halo                  = 'ECS_Oz'
     call create_scalar_advection3d_operator(operator%w_advection3d_op, w_adv_op_name, &
-                                            w_adv_hor_part_name, w_adv_ver_part_name, domain)
+                                            config_w_advection, domain)
 
     call create_grid_field(operator%eta_dot_u,0,0,domain%mesh_u)
     call create_grid_field(operator%eta_dot_v,0,0,domain%mesh_v)

@@ -28,21 +28,21 @@ end type
 
 contains
 
-function get_advection_3d_config(advection_3d_operator_name) result(config)
+subroutine get_advection_3d_config(config, advection_3d_operator_name)
     character(len=*), intent(in) :: advection_3d_operator_name
-    class(config_t), allocatable :: config
+    class(config_t), allocatable, intent(out) :: config
 
     select case(advection_3d_operator_name)
     case("advection_p_staggered")
-        config = config_p_advection_t()
+        allocate(config_p_advection_t :: config)
     case("advection_w_staggered")
-        config = config_w_advection_t()
+        allocate(config_w_advection_t :: config)
     case default
         call parcomm_global%abort("get_advection_3d_config error: "     // &
                                   "unknown advection_3d_operator name " // &
                                    advection_3d_operator_name)
     end select
-end function
+end subroutine get_advection_3d_config
 
 subroutine parse_p_advection_config(this, config_string)
 

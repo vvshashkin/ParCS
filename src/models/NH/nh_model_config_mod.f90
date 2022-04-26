@@ -67,7 +67,7 @@ subroutine parse(this, config_string)
 
     call this%config_postprocessing%parse(config_string)
 
-    this%config_operator = get_nh_operator_config(this%operator_type)
+    call get_nh_operator_config(this%config_operator,this%operator_type)
     call this%config_operator%parse(config_string)
 end subroutine parse
 

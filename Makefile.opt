@@ -783,7 +783,8 @@ $(DOBJ)vector_advection3d_factory_mod.o: src/differential_operators/3d/advection
 	$(DOBJ)adv_z_factory_mod.o \
 	$(DOBJ)interpolator_w2uv_factory_mod.o \
 	$(DOBJ)scalar_advection_factory_mod.o \
-	$(DOBJ)grid_field_factory_mod.o
+	$(DOBJ)grid_field_factory_mod.o \
+	$(DOBJ)config_advection_3d_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -2000,6 +2001,7 @@ $(DOBJ)advection3d_oper_mod.o: src/models/NH/operators/advection3d_oper_mod.f90 
 
 $(DOBJ)config_nh_operator_mod.o: src/models/NH/operators/config_nh_operator_mod.f90 \
 	$(DOBJ)config_mod.o \
+	$(DOBJ)config_advection_3d_mod.o \
 	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
