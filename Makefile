@@ -740,7 +740,8 @@ $(DOBJ)config_domain_mod.o: src/domain/config_domain_mod.f90 \
 	@$(FC) $(OPTSC)  $< -o $@
 
 $(DOBJ)config_advection_3d_mod.o: src/differential_operators/3d/advection/config_advection_3d_mod.f90 \
-	$(DOBJ)config_mod.o
+	$(DOBJ)config_mod.o \
+	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -790,15 +791,17 @@ $(DOBJ)scalar_advection_factory_mod.o: src/differential_operators/3d/advection/s
 	$(DOBJ)abstract_scalar_advection3d_mod.o \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)config_mod.o \
 	$(DOBJ)v_nabla_factory_mod.o \
 	$(DOBJ)adv_z_factory_mod.o \
 	$(DOBJ)halo_factory_mod.o \
-	$(DOBJ)advection_p3d_mod.o \
+	$(DOBJ)grid_field_factory_mod.o \
+	$(DOBJ)interpolator_uv2w_factory_mod.o \
 	$(DOBJ)interpolator2d_factory_mod.o \
 	$(DOBJ)vertical_operator_factory_mod.o \
-	$(DOBJ)grid_field_factory_mod.o \
-	$(DOBJ)advection_w3d_mod.o \
-	$(DOBJ)interpolator_uv2w_factory_mod.o
+	$(DOBJ)advection_p3d_mod.o \
+	$(DOBJ)config_advection_3d_mod.o \
+	$(DOBJ)advection_w3d_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -2495,6 +2498,7 @@ $(DOBJ)test_diffops_3d_mod.o: src/test/test_diff_ops/test_diffops_3d_mod.f90 \
 	$(DOBJ)grid_field_factory_mod.o \
 	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)vec_math_mod.o \
+	$(DOBJ)config_mod.o \
 	$(DOBJ)key_value_mod.o \
 	$(DOBJ)interpolator_w2uv_factory_mod.o \
 	$(DOBJ)abstract_interpolators3d_mod.o \
@@ -2504,6 +2508,7 @@ $(DOBJ)test_diffops_3d_mod.o: src/test/test_diff_ops/test_diffops_3d_mod.f90 \
 	$(DOBJ)const_mod.o \
 	$(DOBJ)abstract_scalar_advection3d_mod.o \
 	$(DOBJ)scalar_advection_factory_mod.o \
+	$(DOBJ)config_advection_3d_mod.o \
 	$(DOBJ)mesh_mod.o \
 	$(DOBJ)test_fieds_3d_mod.o \
 	$(DOBJ)solid_rotation_wind_field_mod.o

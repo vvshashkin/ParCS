@@ -6,6 +6,7 @@ use grid_field_mod,         only : grid_field_t
 use grid_field_factory_mod, only : create_grid_field
 use parcomm_mod,            only : parcomm_global
 use vec_math_mod,           only : l2norm
+use config_mod,             only : config_t
 
 use key_value_mod,          only : key_value_r8_t
 
@@ -163,13 +164,13 @@ function test_uv2w_interp(Nh, Nz, uv2w_interpolator_name, uv2w_hor_part_name, uv
 
 end function test_uv2w_interp
 
-function test_scalar_advection_3d(Nh, Nz, advection_oper_name, hor_advection_oper_name, &
-                                          vert_advection_oper_name, points_type, &
+function test_scalar_advection_3d(Nh, Nz, advection_oper_name, config_str, points_type, &
                                           horizontal_staggering, vertical_staggering) result(errs)
     use const_mod, only : Earth_radii
 
     use abstract_scalar_advection3d_mod, only : scalar_advection3d_t
     use scalar_advection_factory_mod,    only : create_scalar_advection3d_operator
+    use config_advection_3d_mod,         only : get_advection_3d_config
     use config_domain_mod,               only : config_domain_t
 
     use mesh_mod,                        only : mesh_t
@@ -180,12 +181,12 @@ function test_scalar_advection_3d(Nh, Nz, advection_oper_name, hor_advection_ope
     use solid_rotation_wind_field_mod,   only : solid_rotation_wind_field_t
 
     integer(kind=4),  intent(in) :: Nh, Nz
-    character(len=*), intent(in) :: advection_oper_name, hor_advection_oper_name, &
-                                    vert_advection_oper_name, points_type, &
+    character(len=*), intent(in) :: advection_oper_name, config_str, points_type, &
                                     horizontal_staggering, vertical_staggering
 
     type(key_value_r8_t) :: errs
 
+    class(config_t), allocatable             :: config
     class(scalar_advection3d_t), allocatable :: advection_op
     type(config_domain_t)                    :: config_domain
     type(domain_t), target                   :: domain
@@ -201,6 +202,9 @@ function test_scalar_advection_3d(Nh, Nz, advection_oper_name, hor_advection_ope
 
     integer(kind=4) :: halo_width = 8
     real(kind=8), parameter :: h_top = 30e3, T0 = 300._8
+
+    config = get_advection_3d_config(advection_oper_name)
+    call config%parse(config_str)
 
     config_domain%N  = nh
     config_domain%Nz = nz
@@ -251,10 +255,8 @@ function test_scalar_advection_3d(Nh, Nz, advection_oper_name, hor_advection_ope
     call wind_generator%get_vector_field(u_p,v_p,eta_dot_p, mesh, mesh, mesh, &
                                                        0, "contravariant")
 
-    !call grad_3d%calc_grad(fx, fy, fz, f, domain)
     call create_scalar_advection3d_operator(advection_op,advection_oper_name, &
-                                            hor_advection_oper_name,          &
-                                            vert_advection_oper_name,domain)
+                                                                  config,domain)
     call advection_op%calc_adv3d(v_nabla_f,f,u,v,eta_dot,domain)
 
     allocate(errs%keys(2), errs%values(2))
