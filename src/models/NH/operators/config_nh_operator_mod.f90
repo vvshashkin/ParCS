@@ -40,6 +40,7 @@ type, extends(config_t) :: config_nonlin_nh_operator_t
     character(:),    allocatable :: vec_adv_op_name
     character(:),    allocatable :: uv_hor_adv_op_name, uv_ver_adv_op_name
     character(:),    allocatable :: w_adv_op_name, w_adv_hor_part_name, w_adv_ver_part_name
+    class(config_t), allocatable :: config_momentum_advection_operator
     character(:),    allocatable :: coriolis_op_name
 
     contains
@@ -142,11 +143,7 @@ subroutine parse_nonlinear_nh_operator_config(this,config_string)
                                   theta_advection_oper_name,               &
                                   theta_advection_config_str,              &
                                   vec_adv_op_name,                         &
-                                  uv_hor_adv_op_name,                      &
-                                  uv_ver_adv_op_name,                      &
-                                  w_adv_op_name,                           &
-                                  w_adv_hor_part_name,                     &
-                                  w_adv_ver_part_name,                     &
+                                  vec_adv_oper_config_str,                 &
                                   coriolis_op_name
 
     character(len=512) :: grad_hor_part_name, grad_vert_part_name, &
@@ -160,12 +157,8 @@ subroutine parse_nonlinear_nh_operator_config(this,config_string)
                           theta_advection_oper_name,               &
                           theta_advection_config_str,              &
                           vec_adv_op_name,                         &
-                          uv_hor_adv_op_name,                      &
-                          uv_ver_adv_op_name,                      &
-                          w_adv_op_name,                           &
-                          w_adv_hor_part_name,                     &
-                          w_adv_ver_part_name,                     &
                           coriolis_op_name
+    character(len=1024) :: vec_adv_oper_config_str
 
     read(config_string,nonlin_nh_operator)
 
@@ -184,11 +177,8 @@ subroutine parse_nonlinear_nh_operator_config(this,config_string)
     call get_advection_3d_config(this%config_theta_advec, this%theta_advection_oper_name)
     call this%config_theta_advec%parse(trim(theta_advection_config_str))
     this%vec_adv_op_name               = trim(vec_adv_op_name)
-    this%uv_hor_adv_op_name            = trim(uv_hor_adv_op_name)
-    this%uv_ver_adv_op_name            = trim(uv_ver_adv_op_name)
-    this%w_adv_op_name                 = trim(w_adv_op_name)
-    this%w_adv_hor_part_name           = trim(w_adv_hor_part_name)
-    this%w_adv_ver_part_name           = trim(w_adv_ver_part_name)
+    call get_advection_3d_config(this%config_momentum_advection_operator, this%vec_adv_op_name)
+    call this%config_momentum_advection_operator%parse(trim(vec_adv_oper_config_str))
     this%coriolis_op_name              = trim(coriolis_op_name)
 
 end subroutine parse_nonlinear_nh_operator_config

@@ -778,6 +778,7 @@ $(DOBJ)vector_advection3d_factory_mod.o: src/differential_operators/3d/advection
 	$(DOBJ)abstract_vector_advection3d_mod.o \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)config_mod.o \
 	$(DOBJ)shallow_atm_vecadv_mod.o \
 	$(DOBJ)vector_advection_factory_mod.o \
 	$(DOBJ)adv_z_factory_mod.o \

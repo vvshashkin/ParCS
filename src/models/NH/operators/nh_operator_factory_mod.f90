@@ -198,9 +198,7 @@ subroutine create_nonlin_nh_operator(nh_operator,config,domain)
                                             config%theta_advection_oper_name,     &
                                             config%config_theta_advec,domain)
     call create_vector_advection3d_operator(operator%momentum_adv_op, config%vec_adv_op_name,    &
-                                            config%uv_hor_adv_op_name, config%uv_ver_adv_op_name,&
-                                            config%w_adv_op_name, config%w_adv_hor_part_name,    &
-                                            config%w_adv_ver_part_name, domain)
+                                            config%config_momentum_advection_operator, domain)
 
     call create_coriolis(operator%coriolis_op, config%coriolis_op_name, domain)
 
