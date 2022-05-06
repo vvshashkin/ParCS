@@ -7,7 +7,7 @@ use parcomm_mod,         only : init_global_parallel_enviroment, &
 use test_diffops_mod, only: test_div, test_grad, test_conv, test_curl, test_grad_perp, &
                             test_coriolis, test_coriolis_vec_inv, test_curl_grad,      &
                             test_co2contra, test_compatibility, test_KE, &
-                            test_vec_advection, test_grad_3d, test_div_3d, test_co2contra_3d
+                            test_vec_advection
 use key_value_mod,    only : key_value_r8_t
 
 implicit none
@@ -239,29 +239,29 @@ call init_global_parallel_enviroment()
 !     print "(A,4E15.7)", "Err: ", errs%values
 ! end if
 
-errs = test_co2contra(N=32,co2contra_oper_name="co2contra_c_sbp21_new",staggering="C")
-if(parcomm_global%myid == 0) then
-    print *, "co2contra c sbp21, C-grid"
-    print "(A,4E15.7)", "Err: ", errs%values
-end if
-
-errs = test_co2contra(N=32,co2contra_oper_name="co2contra_c_sbp42_new",staggering="C")
-if(parcomm_global%myid == 0) then
-    print *, "co2contra c sbp42, C-grid"
-    print "(A,4E15.7)", "Err: ", errs%values
-end if
-
-errs = test_co2contra(N=32,co2contra_oper_name="co2contra_ch_sbp21", staggering="Ch")
-if (parcomm_global%myid==0) then
-    print *, "co2contra_ch_sbp21"
-    print "(A,4E15.7)", "Err: ", errs%values
-end if
-
-errs = test_co2contra(N=32,co2contra_oper_name="co2contra_ch_sbp42", staggering="Ch")
-if (parcomm_global%myid==0) then
-    print *, "co2contra_ch_sbp42"
-    print "(A,4E15.7)", "Err: ", errs%values
-end if
+! errs = test_co2contra(N=32,co2contra_oper_name="co2contra_c_sbp21_new",staggering="C")
+! if(parcomm_global%myid == 0) then
+!     print *, "co2contra c sbp21, C-grid"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+!
+! errs = test_co2contra(N=32,co2contra_oper_name="co2contra_c_sbp42_new",staggering="C")
+! if(parcomm_global%myid == 0) then
+!     print *, "co2contra c sbp42, C-grid"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+!
+! errs = test_co2contra(N=32,co2contra_oper_name="co2contra_ch_sbp21", staggering="Ch")
+! if (parcomm_global%myid==0) then
+!     print *, "co2contra_ch_sbp21"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+!
+! errs = test_co2contra(N=32,co2contra_oper_name="co2contra_ch_sbp42", staggering="Ch")
+! if (parcomm_global%myid==0) then
+!     print *, "co2contra_ch_sbp42"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
 
 ! call test_conv(operator_name="gradient_c_sbp21",staggering="C",Ns=Ns)
 ! call test_conv(operator_name="divergence_c_sbp21",staggering="C",Ns=Ns)
@@ -335,45 +335,6 @@ end if
 ! if (parcomm_global%myid==0) then
 !     print *, "grad_perp_c_sbp42"
 !     print "(A,4E15.7)", "Err: ", errs%values
-! end if
-
-! errs =  test_div_3d(Nh = 32, Nz = 20, &
-!                     hor_div_name = "divergence_c_sbp42", &
-!                     diff_eta_name = "eta_diff_w2p_sbp42", &
-!                     horizontal_staggering = "C", vertical_staggering = "CharneyPhilips")
-! if (parcomm_global%myid==0) then
-!     print *, "div_3d_c_sbp42"
-!     print "(A,4E25.16)", "Err: ", errs%values
-! end if
-!
-! errs =  test_grad_3d(Nh = 32, Nz = 8, &
-!                     hor_grad_name = "gradient_c_sbp42", &
-!                     diff_eta_name = "eta_diff_p2w_sbp42", &
-!                     horizontal_staggering = "C", vertical_staggering = "CharneyPhilips")
-! if (parcomm_global%myid==0) then
-!     print *, "grad_3d_c_sbp42"
-!     print "(A,4E25.16)", "Err: ", errs%values
-! end if
-! errs =  test_co2contra_3d(Nh = 32, Nz = 8, &
-!                     co2contra_3d_oper_name = "co2contra_3d_colocated", &
-!                     horizontal_staggering = "Ah", vertical_staggering = "None")
-! if (parcomm_global%myid==0) then
-!     print *, "co2contra_3d_colocated"
-!     print "(A,4E25.16)", "Err: ", errs%values
-! end if
-! errs =  test_co2contra_3d(Nh = 32, Nz = 8, &
-!                     co2contra_3d_oper_name = "co2contra_3d_Cgrid_h_sbp42_v_sbp42", &
-!                     horizontal_staggering = "C", vertical_staggering = "CharneyPhilips")
-! if (parcomm_global%myid==0) then
-!     print *, "co2contra_3d_C_CharneyPhilips"
-!     print "(A,4E25.16)", "Err: ", errs%values
-! end if
-! errs =  test_co2contra_3d(Nh = 32, Nz = 8, &
-!                     co2contra_3d_oper_name = "co2contra_3d_h_colocated_v_sbp42", &
-!                     horizontal_staggering = "Ah", vertical_staggering = "CharneyPhilips")
-! if (parcomm_global%myid==0) then
-!     print *, "co2contra_3d_h_colocated_v_sbp42"
-!     print "(A,4E25.16)", "Err: ", errs%values
 ! end if
 
 !

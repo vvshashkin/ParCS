@@ -47,7 +47,7 @@ subroutine get_scalar_field_tile(this,f,mesh,halo_width)
             do i=is,ie
                 call cart2sph(mesh%rx(i,j,k), mesh%ry(i,j,k), mesh%rz(i,j,k), lam, phi)
                 ps = 1.0_8 + ps_amp*(sin(phi)+cos(phi)*sin(lam))
-                f%p(i,j,k) = ps**kappa * exp(-mesh%h(i,j,k)*grav*kappa / (Rd*this%T0))
+                f%p(i,j,k) = ps * exp(-mesh%h(i,j,k)*grav*kappa / (Rd*this%T0))
             end do
         end do
     end do
@@ -81,9 +81,9 @@ subroutine get_vector_component_tile(this,v,mesh,halo_width, &
                 call cart2sph(mesh%rx(i,j,k), mesh%ry(i,j,k), mesh%rz(i,j,k), lam, phi)
                 P_exp = exp(-mesh%h(i,j,k)*grav*kappa / (Rd*this%T0))
                 ps    = 1.0_8 + ps_amp*(sin(phi)+cos(phi)*sin(lam))
-                dp_dx = (kappa-1.0_8)*ps*ps_amp*cos(lam)*P_exp / Earth_radii
-                dp_dy = (kappa-1.0_8)*ps*ps_amp*(cos(phi)-sin(phi)*sin(lam))*P_exp / Earth_radii
-                dp_dz =-ps**kappa*P_exp*grav*kappa / (Rd*this%T0)
+                dp_dx = ps_amp*cos(lam)*P_exp / Earth_radii
+                dp_dy = ps_amp*(cos(phi)-sin(phi)*sin(lam))*P_exp / Earth_radii
+                dp_dz =-ps*P_exp*grav*kappa / (Rd*this%T0)
                 call sph2cart_vec(lam, phi, dp_dx, dp_dy, grad(1), grad(2), grad(3))
                 grad(4) = dp_dz
                 v%p(i,j,k) = sum(grad(1:n_comp)*base_vec(1:n_comp,i,j,k))

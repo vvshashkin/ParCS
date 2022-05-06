@@ -45,7 +45,7 @@ subroutine get_advection_3d_config(config, advection_3d_operator_name)
     class(config_t), allocatable, intent(out) :: config
 
     select case(advection_3d_operator_name)
-    case("advection_p_staggered")
+    case("advection_p_staggered", "advection_p_Ah")
         allocate(config_p_advection_t :: config)
     case("advection_w_staggered")
         allocate(config_w_advection_t :: config)
