@@ -476,7 +476,7 @@ function test_scalar_advection_3d(Nh, Nz, advection_oper_name, config_str, point
 
 
     call create_grid_field(f,  halo_width, 0, mesh)
-    call create_grid_field(v_nabla_f,  0, 0, mesh)
+    call create_grid_field(v_nabla_f,  1, 0, mesh)
 
     call create_grid_field(fx, 0, 0, mesh)
     call create_grid_field(fy, 0, 0, mesh)

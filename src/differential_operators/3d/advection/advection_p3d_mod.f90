@@ -69,6 +69,7 @@ subroutine calc_adv3d_Ah(this,f_tend,f,u,v,eta_dot,domain)
     call this%adv_z%calc_z_adv(this%f_tend_z,f,this%eta_dot_p,domain%mesh_p)
 
     call f_tend%update(1.0_8,this%f_tend_z,domain%mesh_p)
+    call this%p_edge_sync%get_halo_scalar(f_tend,domain,1)
 end subroutine calc_adv3d_Ah
 
 end module advection_p_3d_mod
