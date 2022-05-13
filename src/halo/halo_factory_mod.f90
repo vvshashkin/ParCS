@@ -21,7 +21,9 @@ subroutine create_halo_procedure(halo,domain,halo_width,halo_type)
     else if(halo_type == "ECS_Oz") then
         call create_ecs_o_scalar_halo(halo,domain,halo_width,is_z_interfaces=.true.)
     else if(halo_type == "Ah_scalar_sync") then
-        call create_Ah_scalar_sync_halo_procedure(halo,domain,halo_width)
+        call create_Ah_scalar_sync_halo_procedure(halo,.false.,domain,halo_width)
+    else if(halo_type == "Ah_scalar_sync_z") then
+        call create_Ah_scalar_sync_halo_procedure(halo,.true.,domain,halo_width)
     else
         call domain%parcomm%abort("unknown halo_type in create_halo_procedure: "// &
                                    halo_type)
@@ -79,21 +81,29 @@ subroutine create_A_default_halo_procedure(halo,domain,halo_width)
     end select
 end
 
-subroutine create_Ah_scalar_sync_halo_procedure(halo,domain,halo_width)
+subroutine create_Ah_scalar_sync_halo_procedure(halo,is_z_interfaces,domain,halo_width)
     use halo_mod,                only : halo_t
     use domain_mod,              only : domain_t
     use halo_Ah_scalar_sync_mod, only : halo_Ah_scalar_sync_t
-    use exchange_factory_mod,    only : create_xy_points_halo_exchange
+    use exchange_factory_mod,    only : create_xy_points_halo_exchange, &
+                                        create_xyz_points_halo_exchange
 
     class(halo_t), allocatable, intent(out) :: halo
+    logical,                    intent(in)  :: is_z_interfaces
     class(domain_t),            intent(in)  :: domain
     integer(kind=4),            intent(in)  :: halo_width
 
     allocate(halo_Ah_scalar_sync_t :: halo)
     select type(halo)
     type is (halo_Ah_scalar_sync_t)
-        halo%exch_halo = create_xy_points_halo_exchange( &
+        halo%is_z_interfaces = is_z_interfaces
+        if(is_z_interfaces) then
+            halo%exch_halo = create_xyz_points_halo_exchange( &
                    domain%partition, domain%parcomm, domain%topology, 1, 'full')
+        else
+            halo%exch_halo = create_xy_points_halo_exchange( &
+                   domain%partition, domain%parcomm, domain%topology, 1, 'full')
+        end if
     end select
 end
 

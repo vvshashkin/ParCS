@@ -8,6 +8,7 @@ implicit none
 type, extends(halo_t) :: halo_Ah_scalar_sync_t
 
     class(exchange_t), allocatable  :: exch_halo
+    logical :: is_z_interfaces
 
     contains
 
@@ -31,7 +32,11 @@ subroutine make_Ah_scalar_sync(this,f,domain,halo_width)
     call this%exch_halo%do(f, domain%parcomm)
 
     do t = f%ts, f%te
-        call sync_Ah_scalar_tile(f%tile(t),domain%mesh_xy%tile(t))
+        if(this%is_z_interfaces) then
+            call sync_Ah_scalar_tile(f%tile(t),domain%mesh_xyz%tile(t))
+        else
+            call sync_Ah_scalar_tile(f%tile(t),domain%mesh_xy%tile(t))
+        end if
     end do
 end subroutine make_Ah_scalar_sync
 

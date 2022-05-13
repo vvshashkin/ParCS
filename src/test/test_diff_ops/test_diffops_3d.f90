@@ -170,20 +170,35 @@ call init_global_parallel_enviroment()
 ! end if
 
 errs =  test_scalar_advection_3d(Nh = 32, Nz = 10, &
-                                 advection_oper_name      = "advection_p_staggered", &
-                                 config_str               = "&p_advection_conf "          // &
-                                 "hor_advection_oper_name = 'up4',"                       // &
+                                 advection_oper_name      = "advection_w_Ah", &
+                                 config_str               = "&w_advection_conf "          // &
+                                 "hor_advection_oper_name = 'sbp_d42',"                   // &
                                  "z_advection_oper_name   = 'adv_z_c2',"                  // &
-                                 "w2p_operator_name       = 'vertical_interp_w2p_sbp42'," // &
-                                 "uv2p_operator_name      = 'interp2d_uv2pvec_C_sbp42'  " // &
-                                 "p_halo                  = 'ECS_O' /",                      &
-                                 points_type              = "p",                     &
-                                 horizontal_staggering    = "C",                     &
+                                 "uv2w_operator_name      = 'uv2w_hor_colocated',"       // &
+                                 "uv2w_vert_part_name     = 'vertical_interp_p2w_sbp42' /",                     &
+                                 points_type              = "w",                      &
+                                 horizontal_staggering    = "Ah",                     &
                                  vertical_staggering      = "CharneyPhilips")
 if (parcomm_global%myid==0) then
-    print *, "advection_p_staggered, up4, adv_z_c2"
+    print *, "advection_w_Ah, sbp_d42, adv_z_c2"
     print "(A,4E25.16)", "Err: ", errs%values
 end if
+
+! errs =  test_scalar_advection_3d(Nh = 32, Nz = 10, &
+!                                  advection_oper_name      = "advection_p_staggered", &
+!                                  config_str               = "&p_advection_conf "          // &
+!                                  "hor_advection_oper_name = 'up4',"                       // &
+!                                  "z_advection_oper_name   = 'adv_z_c2',"                  // &
+!                                  "w2p_operator_name       = 'vertical_interp_w2p_sbp42'," // &
+!                                  "uv2p_operator_name      = 'interp2d_uv2pvec_C_sbp42'  " // &
+!                                  "p_halo                  = 'ECS_O' /",                      &
+!                                  points_type              = "p",                     &
+!                                  horizontal_staggering    = "C",                     &
+!                                  vertical_staggering      = "CharneyPhilips")
+! if (parcomm_global%myid==0) then
+!     print *, "advection_p_staggered, up4, adv_z_c2"
+!     print "(A,4E25.16)", "Err: ", errs%values
+! end if
 
 errs =  test_scalar_advection_3d(Nh = 32, Nz = 10, &
                                  advection_oper_name      = "advection_p_Ah", &

@@ -30,6 +30,8 @@ subroutine create_scalar_advection3d_operator(adv_op, scalar_advection_op_name, 
         call create_p_3d_advection_Ah(adv_op, config, domain)
     case("advection_w_staggered")
         call create_w_3d_advection(adv_op, config, domain)
+    case("advection_w_Ah")
+        call create_w_3d_advection_Ah(adv_op, config, domain)
     case default
         call parcomm_global%abort("create_scalar_advection3d_operator, unknown "//&
                                   "scalar_advection_op_name: "// scalar_advection_op_name)
@@ -76,7 +78,7 @@ subroutine create_p_3d_advection_C(adv_op, config, domain)
 
 end subroutine create_p_3d_advection_C
 
-subroutine create_p_3d_advection_AH(adv_op, config, domain)
+subroutine create_p_3d_advection_Ah(adv_op, config, domain)
 
     use advection_p_3d_mod,      only : advection_p_Ah3d_t
     use config_advection_3d_mod, only : config_p_advection_t
@@ -156,5 +158,48 @@ subroutine create_w_3d_advection(adv_op, config, domain)
     call move_alloc(adv_w3d, adv_op)
 
 end subroutine create_w_3d_advection
+
+subroutine create_w_3d_advection_Ah(adv_op, config, domain)
+
+    use advection_w_3d_mod,      only : advection_w_Ah3d_t
+    use config_advection_3d_mod, only : config_w_advection_t
+    use exchange_factory_mod,    only : create_xyz_points_halo_exchange
+
+    class(scalar_advection3d_t), allocatable, intent(out) :: adv_op
+    class(config_t),  intent(in) :: config
+    type(domain_t),   intent(in) :: domain
+
+    type(advection_w_Ah3d_t), allocatable :: adv_w3d
+    integer(kind=4) :: halo_width
+
+    allocate(adv_w3d)
+
+    select type(config)
+    class is (config_w_advection_t)
+
+    call create_uv2w_interpolator(adv_w3d%interp_uv2w_op, config%uv2w_operator_name, &
+                                  config%uv2w_hor_part_name, config%uv2w_vert_part_name, &
+                                  domain)
+
+    call create_v_nabla_hor_operator(adv_w3d%v_nabla_op,halo_width,config%hor_advection_oper_name)
+
+    adv_w3d%halo_width = halo_width
+    adv_w3d%exchange_interior =  &
+              create_xyz_points_halo_exchange(domain%partition, domain%parcomm, &
+                                             domain%topology,  halo_width, 'full')
+    call create_halo_procedure(adv_w3d%edge_sync,domain,1,"Ah_scalar_sync_z")
+
+    call create_adv_z_operator(adv_w3d%adv_z, config%z_advection_oper_name)
+    call create_grid_field(adv_w3d%uw, 0, 0, domain%mesh_w)
+    call create_grid_field(adv_w3d%vw, 0, 0, domain%mesh_w)
+    call create_grid_field(adv_w3d%f_tend_z, 0, 0, domain%mesh_w)
+
+    class default
+        call parcomm_global%abort("create_w_3d_advection_Ah type error")
+    end select
+
+    call move_alloc(adv_w3d, adv_op)
+
+end subroutine create_w_3d_advection_Ah
 
 end module scalar_advection_factory_mod
