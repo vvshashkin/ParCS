@@ -1,0 +1,49 @@
+&domain
+    N = 32,
+    Nz = 20,
+    topology_type       = 'cube',
+    staggering_type     = 'Ah',
+    vertical_staggering = 'CharneyPhilips'
+    metric_type         = 'shallow_atmosphere_metric'
+    h_top               = 10e3
+/
+&metric
+  metric_2d_type = "ecs"
+  vertical_transform_name = "vertical_transform_default"
+  scale               = 0.6371229d7
+/
+&nh_model
+    timescheme_name  = "rk4"
+    operator_type    = "advection_3d"
+    testcase_name    = "advection3d_solid_rotation"
+    dt= 3600.0,
+    tau_write = 3600.0,
+    tau_diagnostics = 3600.0
+    simulation_time_days  = 12.0,
+    simulation_time_hours = 0.0,
+    simulation_time_min   = 0.0,
+    simulation_time_sec   = 0.0,
+/
+&advection3d_operator
+    p_advection_oper_name         = "advection_p_Ah",
+    p_advection_config_str        = "&p_advection_conf
+        hor_advection_oper_name = 'sbp_d42',
+        z_advection_oper_name   = 'adv_z_c2',
+        w2p_operator_name       = 'vertical_interp_w2p_sbp42'/",
+    theta_advection_oper_name     = "advection_w_Ah",
+    theta_advection_config_str  = "&w_advection_conf
+        hor_advection_oper_name = 'sbp_d42',
+        z_advection_oper_name   = 'adv_z_c2',
+        uv2w_operator_name      = 'uv2w_hor_colocated',
+        uv2w_vert_part_name     = 'vertical_interp_p2w_sbp42'/",
+    wind_field                    = "solid_rotation"
+/
+&nh_postprocessing
+    Nlon = 128
+    Nlat = 65
+    outputer_name = "latlon"
+/
+&comments
+  Earth_radii = 0.6371229d7
+  Earth_radii_gw_test = 50969.832
+/
