@@ -80,7 +80,7 @@ run_Eldred(){
     mv div.dat div_N$1_Ah$3.dat
     mv curl.dat curl_N$1_Ah$3.dat
 }
-#run_Eldred 096 300 21
+run_Eldred 096 300 21
 run_Eldred 096 300 42
-#run_Eldred 096 300 43
-#run_Eldred 096 300 63
+run_Eldred 096 300 43
+run_Eldred 096 300 63

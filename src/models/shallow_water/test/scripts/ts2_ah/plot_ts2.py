@@ -33,7 +33,7 @@ for N in [20,40,80]:#[20,40,80,160]:
     cn_res.sfYArray = np.linspace(-90.0,90.0,Nlat)
     overlay_res.sfXArray = np.linspace(0.0,360.0,Nlon,endpoint=False)
     overlay_res.sfYArray = np.linspace(-90.0,90.0,Nlat)
-    wks = Ngl.open_wks("eps", "ts2_h_error_N{:03d}".format(N))
+    wks = Ngl.open_wks("png", "ts2_h_error_N{:03d}".format(N))
     Ngl.define_colormap(wks,"GMT_polar")
     plots = []
     for scheme in schemes:
@@ -69,7 +69,7 @@ l242, linf = read_err(path+"/errors_N160_dt100_Ah42.txt")
 l263, linf = read_err(path+"/errors_N160_dt100_Ah63.txt")
 
 
-wks = Ngl.open_wks("eps", "l2_h_t")
+wks = Ngl.open_wks("png", "l2_h_t")
 
 res = Ngl.Resources()
 res.trYLog = True
@@ -105,7 +105,7 @@ linf = np.array(linf_conv).reshape((len(schemes),len(resolutions)))
 l2_ord = np.array(l2_order).reshape((3,len(resolutions)))
 linf_ord = np.array(linf_order).reshape((3,len(resolutions)))
 
-wks = Ngl.open_wks("eps", "ts2_conv")
+wks = Ngl.open_wks("png", "ts2_conv")
 res = Ngl.Resources()
 res.trXLog = True
 res.trYLog = True
