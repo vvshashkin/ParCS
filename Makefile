@@ -1865,6 +1865,20 @@ $(DOBJ)curl_factory_mod.o: src/differential_operators/horizontal/curl/curl_facto
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)hordiff_ah_sbp_narrow_mod.o: src/differential_operators/horizontal/hordiff/hordiff_ah_sbp_narrow_mod.f90 \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)halo_mod.o \
+	$(DOBJ)abstract_hordiff_mod.o \
+	$(DOBJ)abstract_div_mod.o \
+	$(DOBJ)abstract_grad_mod.o \
+	$(DOBJ)abstract_co2contra_mod.o \
+	$(DOBJ)abstract_laplace_mod.o \
+	$(DOBJ)vec_math_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)abstract_hordiff_mod.o: src/differential_operators/horizontal/hordiff/abstract_hordiff_mod.f90 \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)domain_mod.o \
@@ -1930,9 +1944,6 @@ $(DOBJ)hordiff_no_metric_mod.o: src/differential_operators/horizontal/hordiff/ho
 	$(DOBJ)mesh_mod.o \
 	$(DOBJ)halo_mod.o \
 	$(DOBJ)abstract_hordiff_mod.o \
-	$(DOBJ)abstract_div_mod.o \
-	$(DOBJ)abstract_grad_mod.o \
-	$(DOBJ)abstract_co2contra_mod.o \
 	$(DOBJ)abstract_laplace_mod.o \
 	$(DOBJ)vec_math_mod.o
 	@echo $(COTEXT)

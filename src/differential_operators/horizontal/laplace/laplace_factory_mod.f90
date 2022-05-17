@@ -159,7 +159,14 @@ subroutine create_laplace_no_metric(laplace_operator, laplace_operator_name, dom
     call create_grid_field(laplace%d2f_x, 0, 0, domain%mesh_xy)
     call create_grid_field(laplace%d2f_y, 0, 0, domain%mesh_xy)
 
+    call create_grid_field(laplace%d1f_x, 0, 0, domain%mesh_xy)
+    call create_grid_field(laplace%d1f_y, 0, 0, domain%mesh_xy)
+
+    call create_grid_field(laplace%d2f_xy, 0, 0, domain%mesh_xy)
+    call create_grid_field(laplace%d2f_yx, 0, 0, domain%mesh_xy)
+
     laplace%sbp_d2_op = create_sbp_operator("d2_21")
+    laplace%sbp_d1_op = create_sbp_operator("d21")
 
     call create_halo_procedure(laplace%edge_sync,domain,1,"Ah_scalar_sync")
 

@@ -6,9 +6,6 @@ use mesh_mod,       only : mesh_t
 use halo_mod,       only : halo_t
 
 use abstract_hordiff_mod,   only : hordiff_operator_t
-use abstract_div_mod,       only : div_operator_t
-use abstract_grad_mod,      only : grad_operator_t
-use abstract_co2contra_mod, only : co2contra_operator_t
 use abstract_laplace_mod,   only : laplace_operator_t
 
 implicit none
@@ -49,7 +46,7 @@ subroutine calc_diff(this, f_tend, f, mesh, domain)
     coeff = (-1.0_8)**(this%diff_order+1)*this%diff_coeff**(2*this%diff_order)
     call f_tend%assign(coeff, this%f_tend_inter, mesh)
 
-    call divide_by_J_self(f_tend, mesh)
+    ! call divide_by_J_self(f_tend, mesh)
 
 end subroutine calc_diff
 
