@@ -299,8 +299,9 @@ subroutine create_colocated_vec_xyz_hordiff_operator(hordiff_op, hordiff_coeff, 
 
     select case(staggering)
     case ("Ah")
-        call create_scalar_hordiff_operator(hordiff_uv%hordiff_1comp, hordiff_coeff, domain, &
-                                           "Ah", isscalar=.false.) !WORKAROUND
+        !call create_scalar_hordiff_operator(hordiff_uv%hordiff_1comp, hordiff_coeff, domain, &
+        !                                   "Ah", isscalar=.false.) !WORKAROUND
+        call create_Ah_no_metric_hordiff(hordiff_uv%hordiff_1comp, hordiff_coeff, domain)
         call create_vector_halo_procedure(hordiff_uv%edge_sync, domain, 1, "ecs_Ah_vec_sync_covariant")
 
         call create_grid_field(hordiff_uv%vx,      halo_width, 0, domain%mesh_p)
