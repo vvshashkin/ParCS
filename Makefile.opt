@@ -1865,17 +1865,6 @@ $(DOBJ)curl_factory_mod.o: src/differential_operators/horizontal/curl/curl_facto
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
-$(DOBJ)hordiff_ah_sbp_narrow_mod.o: src/differential_operators/horizontal/hordiff/hordiff_ah_sbp_narrow_mod.f90 \
-	$(DOBJ)grid_field_mod.o \
-	$(DOBJ)domain_mod.o \
-	$(DOBJ)mesh_mod.o \
-	$(DOBJ)halo_mod.o \
-	$(DOBJ)abstract_hordiff_mod.o \
-	$(DOBJ)sbp_operator_mod.o \
-	$(DOBJ)vec_math_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
 $(DOBJ)abstract_hordiff_mod.o: src/differential_operators/horizontal/hordiff/abstract_hordiff_mod.f90 \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)domain_mod.o \
@@ -2090,6 +2079,19 @@ $(DOBJ)abstract_laplace_mod.o: src/differential_operators/horizontal/laplace/abs
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)laplace_ah_sbp42_narrow.o: src/differential_operators/horizontal/laplace/laplace_Ah_sbp42_narrow.f90 \
+	$(DOBJ)abstract_laplace_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)sbp_operator_mod.o \
+	$(DOBJ)exchange_abstract_mod.o \
+	$(DOBJ)halo_mod.o \
+	$(DOBJ)vec_math_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)tile_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)divgrad_laplace_mod.o: src/differential_operators/horizontal/laplace/divgrad_laplace_mod.f90 \
 	$(DOBJ)abstract_laplace_mod.o \
 	$(DOBJ)grid_field_mod.o \
@@ -2135,7 +2137,8 @@ $(DOBJ)laplace_factory_mod.o: src/differential_operators/horizontal/laplace/lapl
 	$(DOBJ)halo_factory_mod.o \
 	$(DOBJ)laplace_ah_sbp21_narrow.o \
 	$(DOBJ)exchange_factory_mod.o \
-	$(DOBJ)sbp_factory_mod.o
+	$(DOBJ)sbp_factory_mod.o \
+	$(DOBJ)laplace_ah_sbp42_narrow.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -2966,6 +2969,8 @@ $(DOBJ)test_diffops_mod.o: src/test/test_diff_ops/test_diffops_mod.f90 \
 	$(DOBJ)abstract_grad_mod.o \
 	$(DOBJ)laplace_factory_mod.o \
 	$(DOBJ)abstract_laplace_mod.o \
+	$(DOBJ)outputer_abstract_mod.o \
+	$(DOBJ)outputer_factory_mod.o \
 	$(DOBJ)abstract_co2contra_mod.o \
 	$(DOBJ)co2contra_factory_mod.o \
 	$(DOBJ)abstract_co2contra_3d_mod.o \

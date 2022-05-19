@@ -179,10 +179,12 @@ end function test_grad
 
 type(key_value_r8_t) function test_laplace(N,laplace_oper_name,staggering) result(errs)
 
-    use test_fields_mod,      only : set_scalar_test_field, Ylm2_field_generator_t
-    use laplace_factory_mod,  only : create_laplace_operator
-    use abstract_laplace_mod, only : laplace_operator_t
-    use mesh_mod,             only : mesh_t
+    use test_fields_mod,       only : set_scalar_test_field, Ylm2_field_generator_t
+    use laplace_factory_mod,   only : create_laplace_operator
+    use abstract_laplace_mod,  only : laplace_operator_t
+    use mesh_mod,              only : mesh_t
+    use outputer_abstract_mod, only : outputer_t
+    use outputer_factory_mod,  only : create_master_paneled_outputer
 
     integer(kind=4),  intent(in) :: N
     character(len=*), intent(in) :: laplace_oper_name, staggering
@@ -192,6 +194,8 @@ type(key_value_r8_t) function test_laplace(N,laplace_oper_name,staggering) resul
     type(grid_field_t)          :: f, lap_f
     type(domain_t), target      :: domain
     class(laplace_operator_t), allocatable :: laplace_op
+
+    class(outputer_t),   allocatable :: outputer_mp
 
     call create_domain(domain, "cube", staggering, N, nz)
 
@@ -203,6 +207,9 @@ type(key_value_r8_t) function test_laplace(N,laplace_oper_name,staggering) resul
     call create_laplace_operator(laplace_op, laplace_oper_name, domain)
 
     call laplace_op%calc_laplace(lap_f, f, domain)
+
+    call create_master_paneled_outputer(outputer_mp, "p", domain)
+    call outputer_mp%write(lap_f, domain, 'lap.dat')
 
     call lap_f%assign(domain%mesh_p%scale**2, lap_f, 6.0_8, f, domain%mesh_p)
 
