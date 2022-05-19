@@ -26,6 +26,8 @@ subroutine create_hordiff_operator(hordiff_op, hordiff_op_name, hordiff_coeff, d
 !        hordiff_op = hordiff_colocated_t()
     case("hordiff_Ah_no_metric")
         call create_Ah_no_metric_hordiff(hordiff_op, hordiff_coeff, domain)
+    case("hordiff_scalar_Ah_sbp_21_narrow")
+        call create_laplace_based_hordiff_operator(hordiff_op, "laplace_ah_sbp21_narrow", hordiff_coeff, domain)
     case("hordiff_scalar_Ah")
         call create_scalar_hordiff_operator(hordiff_op, hordiff_coeff, domain, "Ah", isscalar=.true.)
     case("hordiff_scalar_C")
@@ -143,6 +145,39 @@ subroutine create_Cgrid_hordiff_curl_operator(hordiff_op, hordiff_coeff, domain)
     call move_alloc(hordiff_curl, hordiff_op)
 
 end subroutine create_Cgrid_hordiff_curl_operator
+
+subroutine create_laplace_based_hordiff_operator(hordiff_op, laplace_op_name, hordiff_coeff, domain)
+
+    use hordiff_scalar_mod,    only : hordiff_scalar_t
+    use halo_factory_mod,      only : create_halo_procedure
+    use laplace_factory_mod,   only : create_laplace_operator
+
+    class(hordiff_operator_t), allocatable, intent(out) :: hordiff_op
+    real(kind=8),                           intent(in)  :: hordiff_coeff
+    type(domain_t),                         intent(in)  :: domain
+    character(len=*),                       intent(in)  :: laplace_op_name
+
+    type(hordiff_scalar_t), allocatable :: hordiff_scalar
+
+    integer(kind=4) :: halo_width
+    real(kind=8)    :: hx
+
+    allocate(hordiff_scalar)
+
+    !WORKAROUND
+    halo_width = 5
+
+    call create_laplace_operator(hordiff_scalar%laplace_op, laplace_op_name, domain)
+    call create_grid_field(hordiff_scalar%f_tend_inter, 8, 0, domain%mesh_xy)
+
+    hx = domain%mesh_xy%tile(domain%mesh_o%ts)%hx
+
+    hordiff_scalar%diff_coeff = hordiff_coeff*domain%mesh_xy%scale*hx
+    hordiff_scalar%diff_order = 2
+
+    call move_alloc(hordiff_scalar, hordiff_op)
+
+end subroutine create_laplace_based_hordiff_operator
 
 subroutine create_scalar_hordiff_operator(hordiff_op, hordiff_coeff, domain, &
                                           staggering, isscalar)
@@ -299,9 +334,9 @@ subroutine create_colocated_vec_xyz_hordiff_operator(hordiff_op, hordiff_coeff, 
 
     select case(staggering)
     case ("Ah")
-        !call create_scalar_hordiff_operator(hordiff_uv%hordiff_1comp, hordiff_coeff, domain, &
-        !                                   "Ah", isscalar=.false.) !WORKAROUND
-        call create_Ah_no_metric_hordiff(hordiff_uv%hordiff_1comp, hordiff_coeff, domain)
+        call create_laplace_based_hordiff_operator(hordiff_uv%hordiff_1comp, "laplace_ah_sbp21_narrow", hordiff_coeff, domain)
+        ! call create_scalar_hordiff_operator(hordiff_uv%hordiff_1comp, hordiff_coeff, domain, &
+        !                                    "Ah", isscalar=.false.) !WORKAROUND
         call create_vector_halo_procedure(hordiff_uv%edge_sync, domain, 1, "ecs_Ah_vec_sync_covariant")
 
         call create_grid_field(hordiff_uv%vx,      halo_width, 0, domain%mesh_p)

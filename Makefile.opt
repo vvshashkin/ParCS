@@ -1871,10 +1871,7 @@ $(DOBJ)hordiff_ah_sbp_narrow_mod.o: src/differential_operators/horizontal/hordif
 	$(DOBJ)mesh_mod.o \
 	$(DOBJ)halo_mod.o \
 	$(DOBJ)abstract_hordiff_mod.o \
-	$(DOBJ)abstract_div_mod.o \
-	$(DOBJ)abstract_grad_mod.o \
-	$(DOBJ)abstract_co2contra_mod.o \
-	$(DOBJ)abstract_laplace_mod.o \
+	$(DOBJ)sbp_operator_mod.o \
 	$(DOBJ)vec_math_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -2112,7 +2109,7 @@ $(DOBJ)laplace_ch_halo_mod.o: src/differential_operators/horizontal/laplace/lapl
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
-$(DOBJ)laplace_no_metric_mod.o: src/differential_operators/horizontal/laplace/laplace_no_metric_mod.f90 \
+$(DOBJ)laplace_ah_sbp21_narrow.o: src/differential_operators/horizontal/laplace/laplace_Ah_sbp21_narrow.f90 \
 	$(DOBJ)abstract_laplace_mod.o \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)domain_mod.o \
@@ -2136,7 +2133,7 @@ $(DOBJ)laplace_factory_mod.o: src/differential_operators/horizontal/laplace/lapl
 	$(DOBJ)grid_field_factory_mod.o \
 	$(DOBJ)laplace_ch_halo_mod.o \
 	$(DOBJ)halo_factory_mod.o \
-	$(DOBJ)laplace_no_metric_mod.o \
+	$(DOBJ)laplace_ah_sbp21_narrow.o \
 	$(DOBJ)exchange_factory_mod.o \
 	$(DOBJ)sbp_factory_mod.o
 	@echo $(COTEXT)

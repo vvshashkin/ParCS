@@ -48,7 +48,7 @@ subroutine hordiff_scalar_test()
     call create_grid_field(h,      5, 0, domain%mesh_p)
     call create_grid_field(h_tend, 5, 0, domain%mesh_p)
 
-    call create_hordiff_operator(diff_op, "hordiff_Ah_no_metric", diff_coeff, domain)
+    call create_hordiff_operator(diff_op, "hordiff_scalar_Ah_sbp_21_narrow", diff_coeff, domain)
 
     call set_scalar_test_field(h, field, domain%mesh_p, 0)
 
