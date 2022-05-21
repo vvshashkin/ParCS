@@ -41,6 +41,7 @@ subroutine hordiff_scalar_test()
     character(len=2), parameter :: staggering = "Ah"
 
     integer(kind=4) :: it
+    real(kind=8) :: mass, l2_norm
 
 
     call create_domain(domain, "cube", trim(staggering), N, nz)
@@ -48,7 +49,7 @@ subroutine hordiff_scalar_test()
     call create_grid_field(h,      5, 0, domain%mesh_p)
     call create_grid_field(h_tend, 5, 0, domain%mesh_p)
 
-    call create_hordiff_operator(diff_op, "hordiff_scalar_Ah_sbp_21_narrow", diff_coeff, domain)
+    call create_hordiff_operator(diff_op, "hordiff_scalar_Ah_sbp_42_narrow", diff_coeff, domain)
 
     call set_scalar_test_field(h, field, domain%mesh_p, 0)
 
@@ -61,11 +62,11 @@ subroutine hordiff_scalar_test()
 
     call create_master_paneled_outputer(outputer_mp, "p", domain)
 
-    call create_quadrature(quadrature, "SBP_Ah21_quadrature", domain%mesh_p)
+    call create_quadrature(quadrature, "SBP_Ah42_quadrature", domain%mesh_p)
 
     do it = 1, 600
 
-        print*, it
+        if (domain%parcomm%myid==0) print*, it
 
         call outputer%write(h, domain, 'h_diff.dat', it)
 
@@ -74,7 +75,11 @@ subroutine hordiff_scalar_test()
         call diff_op%calc_diff(h_tend, h, domain%mesh_p, domain)
         call h%update(diff_coeff, h_tend, domain%mesh_p)
 
-        print*, "mass", quadrature%mass(h, domain%mesh_p, domain%parcomm)
+        mass = quadrature%mass(h, domain%mesh_p, domain%parcomm)
+        l2_norm = sqrt(quadrature%dot(h, h, domain%mesh_p, domain%parcomm))
+
+        if (domain%parcomm%myid==0) print*, "mass", mass
+        if (domain%parcomm%myid==0) print*, "l2 norm", l2_norm
 
     end do
 
