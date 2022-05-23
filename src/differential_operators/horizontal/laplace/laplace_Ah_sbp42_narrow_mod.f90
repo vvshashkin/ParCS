@@ -1,4 +1,4 @@
-module laplace_Ah_sbp42_narrow
+module laplace_Ah_sbp42_narrow_mod
 
 use abstract_laplace_mod,   only : laplace_operator_t
 use grid_field_mod,         only : grid_field_t
@@ -762,4 +762,4 @@ subroutine calc_laplace_tile(fout,d2f_x, d2f_y, d2f_xy, d2f_yx, d1f_x, d1f_y, f,
 
 end subroutine calc_laplace_tile
 
-end module laplace_Ah_sbp42_narrow
+end module laplace_Ah_sbp42_narrow_mod

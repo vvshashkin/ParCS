@@ -1,4 +1,4 @@
-module laplace_Ah_sbp21_narrow
+module laplace_Ah_sbp21_narrow_mod
 
 use abstract_laplace_mod,   only : laplace_operator_t
 use grid_field_mod,         only : grid_field_t
@@ -425,4 +425,4 @@ end subroutine calc_laplace_tile
 !
 ! end subroutine calc_laplace_tile
 
-end module laplace_Ah_sbp21_narrow
+end module laplace_Ah_sbp21_narrow_mod

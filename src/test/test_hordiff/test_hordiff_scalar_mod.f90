@@ -36,7 +36,7 @@ subroutine hordiff_scalar_test()
     type(random_scalar_field_generator_t) :: field
 
     integer(kind=4), parameter :: N = 32, nz = 1, halo_width = 10
-    real(kind=8),    parameter :: diff_coeff = 0.3_8
+    real(kind=8),    parameter :: diff_coeff = 0.25_8
 
     character(len=2), parameter :: staggering = "Ah"
 
@@ -46,10 +46,10 @@ subroutine hordiff_scalar_test()
 
     call create_domain(domain, "cube", trim(staggering), N, nz)
 
-    call create_grid_field(h,      5, 0, domain%mesh_p)
-    call create_grid_field(h_tend, 5, 0, domain%mesh_p)
+    call create_grid_field(h,      halo_width, 0, domain%mesh_p)
+    call create_grid_field(h_tend, halo_width, 0, domain%mesh_p)
 
-    call create_hordiff_operator(diff_op, "hordiff_scalar_Ah_sbp_42_narrow", diff_coeff, domain)
+    call create_hordiff_operator(diff_op, "hordiff_scalar_Ah_sbp_63_narrow", diff_coeff, domain)
 
     call set_scalar_test_field(h, field, domain%mesh_p, 0)
 
@@ -62,7 +62,7 @@ subroutine hordiff_scalar_test()
 
     call create_master_paneled_outputer(outputer_mp, "p", domain)
 
-    call create_quadrature(quadrature, "SBP_Ah42_quadrature", domain%mesh_p)
+    call create_quadrature(quadrature, "SBP_Ah63_quadrature", domain%mesh_p)
 
     do it = 1, 600
 

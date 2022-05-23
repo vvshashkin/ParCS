@@ -23,6 +23,8 @@ subroutine create_laplace_operator(laplace_operator,laplace_operator_name,domain
         call create_laplace_ah_sbp21_narrow(laplace_operator,laplace_operator_name, domain)
     else if(laplace_operator_name == "laplace_ah_sbp42_narrow") then
         call create_laplace_ah_sbp42_narrow(laplace_operator,laplace_operator_name, domain)
+    else if(laplace_operator_name == "laplace_ah_sbp63_narrow") then
+        call create_laplace_ah_sbp63_narrow(laplace_operator, laplace_operator_name, domain)
     else
         call parcomm_global%abort("create laplace_operator, unknown laplace_operator_name:"//&
                                    laplace_operator_name)
@@ -140,11 +142,11 @@ subroutine create_laplace_ch_halo(laplace_operator,laplace_operator_name, domain
 end subroutine create_laplace_ch_halo
 subroutine create_laplace_ah_sbp21_narrow(laplace_operator, laplace_operator_name, domain)
 
-    use laplace_Ah_sbp21_narrow, only : laplace_Ah_sbp21_narrow_t
-    use exchange_factory_mod,    only : create_xy_points_halo_exchange
-    use grid_field_factory_mod,  only : create_grid_field
-    use sbp_factory_mod,         only : create_sbp_operator
-    use halo_factory_mod,        only : create_halo_procedure
+    use laplace_Ah_sbp21_narrow_mod, only : laplace_Ah_sbp21_narrow_t
+    use exchange_factory_mod,        only : create_xy_points_halo_exchange
+    use grid_field_factory_mod,      only : create_grid_field
+    use sbp_factory_mod,             only : create_sbp_operator
+    use halo_factory_mod,            only : create_halo_procedure
 
     character(len=*), intent(in) :: laplace_operator_name
     type(domain_t),   intent(in) :: domain
@@ -176,11 +178,11 @@ subroutine create_laplace_ah_sbp21_narrow(laplace_operator, laplace_operator_nam
 end subroutine create_laplace_ah_sbp21_narrow
 subroutine create_laplace_ah_sbp42_narrow(laplace_operator, laplace_operator_name, domain)
 
-    use laplace_Ah_sbp42_narrow, only : laplace_Ah_sbp42_narrow_t
-    use exchange_factory_mod,    only : create_xy_points_halo_exchange
-    use grid_field_factory_mod,  only : create_grid_field
-    use sbp_factory_mod,         only : create_sbp_operator
-    use halo_factory_mod,        only : create_halo_procedure
+    use laplace_Ah_sbp42_narrow_mod, only : laplace_Ah_sbp42_narrow_t
+    use exchange_factory_mod,        only : create_xy_points_halo_exchange
+    use grid_field_factory_mod,      only : create_grid_field
+    use sbp_factory_mod,             only : create_sbp_operator
+    use halo_factory_mod,            only : create_halo_procedure
 
     character(len=*), intent(in) :: laplace_operator_name
     type(domain_t),   intent(in) :: domain
@@ -210,4 +212,40 @@ subroutine create_laplace_ah_sbp42_narrow(laplace_operator, laplace_operator_nam
     call move_alloc(laplace, laplace_operator)
 
 end subroutine create_laplace_ah_sbp42_narrow
+subroutine create_laplace_ah_sbp63_narrow(laplace_operator, laplace_operator_name, domain)
+
+    use laplace_Ah_sbp63_narrow_mod, only : laplace_Ah_sbp63_narrow_t
+    use exchange_factory_mod,        only : create_xy_points_halo_exchange
+    use grid_field_factory_mod,      only : create_grid_field
+    use sbp_factory_mod,             only : create_sbp_operator
+    use halo_factory_mod,            only : create_halo_procedure
+
+    character(len=*), intent(in) :: laplace_operator_name
+    type(domain_t),   intent(in) :: domain
+    !output:
+    class(laplace_operator_t), allocatable, intent(out) :: laplace_operator
+    !local
+    type(laplace_Ah_sbp63_narrow_t), allocatable :: laplace
+
+    allocate(laplace)
+
+    laplace%exchange = create_xy_points_halo_exchange(domain%partition, domain%parcomm, &
+                               domain%topology,  9, 'full')
+
+    call create_grid_field(laplace%d2f_x, 0, 0, domain%mesh_xy)
+    call create_grid_field(laplace%d2f_y, 0, 0, domain%mesh_xy)
+
+    call create_grid_field(laplace%d1f_x, 9, 0, domain%mesh_xy)
+    call create_grid_field(laplace%d1f_y, 9, 0, domain%mesh_xy)
+
+    call create_grid_field(laplace%d2f_xy, 0, 0, domain%mesh_xy)
+    call create_grid_field(laplace%d2f_yx, 0, 0, domain%mesh_xy)
+
+    laplace%sbp_d1_op = create_sbp_operator("d63")
+
+    call create_halo_procedure(laplace%edge_sync,domain,1,"Ah_scalar_sync")
+
+    call move_alloc(laplace, laplace_operator)
+
+end subroutine create_laplace_ah_sbp63_narrow
 end module laplace_factory_mod
