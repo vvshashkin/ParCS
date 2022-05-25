@@ -33,7 +33,7 @@ NAMELIST_TEMPLATE="
     dt=%%%dt,\n
     tau_write = 86400.0,\n
     tau_diagnostics = 3600.0\n
-    simulation_time_days  = 1400.0,\n
+    simulation_time_days  = 2400.0,\n
     simulation_time_hours = 0.0,\n
     simulation_time_min   = 0.0,\n
     simulation_time_sec   = 0.0,\n
@@ -48,6 +48,7 @@ run_Eldred(){
     mv div.dat div_N$1_Ah$3.dat
     mv curl.dat curl_N$1_Ah$3.dat
 }
+
 run_Eldred 096 300 21 "$NAMELIST_TEMPLATE"
 run_Eldred 096 300 42 "$NAMELIST_TEMPLATE"
 run_Eldred 096 300 43 "$NAMELIST_TEMPLATE"

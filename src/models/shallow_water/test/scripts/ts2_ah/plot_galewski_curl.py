@@ -4,12 +4,16 @@ import Ngl
 from sys import argv
 
 path = argv[1]
-wktype = "pdf"
+wktype = "eps"
 schemes = ["Ah21","Ah42","Ah43","Ah63"]
 cn_res = Ngl.Resources()
 cn_res.cnFillOn = True
-#cn_res.cnLinesOn = False
+cn_res.cnLinesOn = True
 cn_res.cnLineThicknessF = 0.5
+#cn_res.cnLineColor = "darkgray"
+cn_res.mpGridAndLimbOn = True
+cn_res.mpGridLineThicknessF=0.3
+cn_res.mpGridLineDashPattern = 1
 cn_res.cnLineLabelsOn = False
 cn_res.mpCenterLonF = 180.0
 cn_res.lbLabelBarOn = False
@@ -17,8 +21,8 @@ cn_res.lbOrientation="Horizontal"
 cn_res.lbLabelFontHeightF = 0.01
 cn_res.tiMainFontHeightF = 0.01
 cn_res.mpLimitMode = "LatLon"
-cn_res.mpMaxLatF = 90.0
-cn_res.mpMinLatF = 20.0
+cn_res.mpMaxLatF = 80.0
+cn_res.mpMinLatF = 10.0
 cn_res.cnLevelSelectionMode = "ExplicitLevels"
 cn_res.cnLevels = [-12,-10,-8,-6,-4,-2,-0.5,0.5,2,4,6,8,10,12]
 cn_res.cnFillColors = [2,4,6,7,8,9,10,0,12,13,14,15,17,18,19]

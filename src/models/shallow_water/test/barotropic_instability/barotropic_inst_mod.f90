@@ -136,6 +136,11 @@ subroutine run_barotropic_inst()
 
     select type(state)
     class is (stvec_swm_t)
+        select type(operator)
+        class is (operator_swm_t)
+            call operator%curl_op%calc_curl(curl, state%u, state%v, domain)
+            call outputer_curl%write(curl, domain, 'curl.dat', 1)
+        end select
         call outputer%write(state%h, domain, 'h.dat',1)
         call outputer_vec%write(state%u,state%v,domain,"u.dat","v.dat",1)
     end select
