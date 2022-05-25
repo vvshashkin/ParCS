@@ -2,6 +2,7 @@
 
 EXE=$1/BAROTROPIC_INST_MAIN
 Nprocs=$2
+source $(dirname "$0")"/gen_namelist.sh"
 
 NAMELIST_TEMPLATE="
 &domain\n
@@ -38,58 +39,25 @@ NAMELIST_TEMPLATE="
     simulation_time_sec   = 0.0,\n
 /"
 
-gen_namelist(){
-    N=$1
-    DT=$2
-    if [[ $3 -eq "21" ]]; then
-        div="divergence_ah2"
-        grad="gradient_ah21_sbp_ecs"
-        curl="curl_"$div
-        quad='SBP_Ah21_quadrature'
-    elif  [[ $3 -eq "42" ]]; then
-        div="divergence_ah42_sbp"
-        grad="gradient_ah42_sbp_ecs"
-        curl="curl_"$div
-        quad='SBP_Ah42_quadrature'
-    elif  [[ $3 -eq "43" ]]; then
-        div="divergence_ah43_sbp"
-        grad="gradient_ah43_sbp_ecs"
-        curl="curl_"$div
-        quad='SBP_Ah63_quadrature'
-    elif  [[ $3 -eq "63" ]]; then
-        div="divergence_ah63_sbp"
-        grad="gradient_ah63_sbp_ecs"
-        curl="curl_"$div
-        quad='SBP_Ah63_quadrature'
-	fi
-	echo -e $NAMELIST_TEMPLATE |
-             sed "s/%%%divergence/$div/" |
-             sed "s/%%%gradient/$grad/"  |
-             sed "s/%%%curl/$curl/"      |
-             sed "s/%%%quadrature/$quad/" |
-             sed "s/%%%N/$N/" |
-             sed "s/%%%dt/$DT/"
-}
-
 run_barotropic(){
-	gen_namelist $1 $2 $3  > namelist_swm
+	gen_namelist $1 $2 $3 "$4"  > namelist_swm
 	mpirun -n $Nprocs $EXE &> swm_N$1_dt$2_Ah$3.out
     mv curl.dat curl_N$1_Ah$3.dat
     #grep "l2_h" swm_N$1_dt$2_Ah$3.out > errors_N$1_dt$2_Ah$3.txt
 }
-run_barotropic 096 200 21
-run_barotropic 128 150 21
-run_barotropic 192 100 21
-run_barotropic 256 075 21
-run_barotropic 096 200 42
-run_barotropic 128 150 42
-run_barotropic 192 100 42
-run_barotropic 256 075 42
-run_barotropic 096 200 43
-run_barotropic 128 150 43
-run_barotropic 192 100 43
-run_barotropic 256 075 43
-run_barotropic 096 200 63
-run_barotropic 128 150 63
-run_barotropic 192 100 63
-run_barotropic 256 075 63
+run_barotropic 096 200 21 "$NAMELIST_TEMPLATE"
+run_barotropic 128 150 21 "$NAMELIST_TEMPLATE"
+run_barotropic 192 100 21 "$NAMELIST_TEMPLATE"
+run_barotropic 256 075 21 "$NAMELIST_TEMPLATE"
+run_barotropic 096 200 42 "$NAMELIST_TEMPLATE"
+run_barotropic 128 150 42 "$NAMELIST_TEMPLATE"
+run_barotropic 192 100 42 "$NAMELIST_TEMPLATE"
+run_barotropic 256 075 42 "$NAMELIST_TEMPLATE"
+run_barotropic 096 200 43 "$NAMELIST_TEMPLATE"
+run_barotropic 128 150 43 "$NAMELIST_TEMPLATE"
+run_barotropic 192 100 43 "$NAMELIST_TEMPLATE"
+run_barotropic 256 075 43 "$NAMELIST_TEMPLATE"
+run_barotropic 096 200 63 "$NAMELIST_TEMPLATE"
+run_barotropic 128 150 63 "$NAMELIST_TEMPLATE"
+run_barotropic 192 100 63 "$NAMELIST_TEMPLATE"
+run_barotropic 256 075 63 "$NAMELIST_TEMPLATE"

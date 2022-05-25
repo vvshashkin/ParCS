@@ -45,7 +45,7 @@ subroutine create_hordiff_operator(hordiff_op, hordiff_op_name, hordiff_coeff, d
     case("hordiff_vec_xyz_Ah_sbp_63_narrow")
         call create_Ah_lap_based_vec_xyz_hordiff_operator(hordiff_op, "laplace_ah_sbp63_narrow", hordiff_coeff, domain)
     case default
-        call domain%parcomm%abort("Unknown hordiff_op_name")
+        call domain%parcomm%abort("Unknown hordiff_op_name "//hordiff_op_name)
     end select
 
 end subroutine create_hordiff_operator

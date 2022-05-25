@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source $(dirname "$0")"/gen_namelist.sh"
+
 EXE=$1/TS2_MAIN
 Nprocs=$2
 
@@ -29,9 +31,9 @@ NAMELIST_TEMPLATE="
     quadrature_name   = '%%%quadrature',\n
     diff_time_scheme  = 'explicit_Eul1'\n
     uv_diff_coeff     =  0.03,\n
-    hordiff_uv_name   = 'hordiff_vec_xyz_Ah',\n
+    hordiff_uv_name   = '%%%uv_diff',\n
     h_diff_coeff      =  0.01,\n
-    hordiff_h_name    = 'hordiff_Ah_no_metric',\n
+    hordiff_h_name    = '%%%h_diff',\n
     dt=%%%dt,\n
     tau_write = 86400.0,\n
     tau_diagnostics = 3600.0\n
@@ -41,58 +43,26 @@ NAMELIST_TEMPLATE="
     simulation_time_sec   = 0.0,\n
 /"
 
-gen_namelist(){
-    N=$1
-    DT=$2
-    if [[ $3 -eq "21" ]]; then
-        div="divergence_ah2"
-        grad="gradient_ah21_sbp_ecs"
-        curl="curl_"$div
-        quad='SBP_Ah21_quadrature'
-    elif  [[ $3 -eq "42" ]]; then
-        div="divergence_ah42_sbp"
-        grad="gradient_ah42_sbp_ecs"
-        curl="curl_"$div
-        quad='SBP_Ah42_quadrature'
-    elif  [[ $3 -eq "43" ]]; then
-        div="divergence_ah43_sbp"
-        grad="gradient_ah43_sbp_ecs"
-        curl="curl_"$div
-        quad='SBP_Ah63_quadrature'
-    elif  [[ $3 -eq "63" ]]; then
-        div="divergence_ah63_sbp"
-        grad="gradient_ah63_sbp_ecs"
-        curl="curl_"$div
-        quad='SBP_Ah63_quadrature'
-	fi
-	echo -e $NAMELIST_TEMPLATE |
-             sed "s/%%%divergence/$div/" |
-             sed "s/%%%gradient/$grad/"  |
-             sed "s/%%%curl/$curl/"      |
-             sed "s/%%%quadrature/$quad/" |
-             sed "s/%%%N/$N/" |
-             sed "s/%%%dt/$DT/"
-}
-
 run_ts2(){
-	gen_namelist $1 $2 $3  > namelist_swm
+    echo $4
+	gen_namelist $1 $2 $3 "$4"  > namelist_swm
 	mpirun -n $Nprocs $EXE &> swm_N$1_dt$2_Ah$3.out
     grep "l2_h" swm_N$1_dt$2_Ah$3.out > errors_N$1_dt$2_Ah$3.txt
     mv h.dat h_N$1_Ah$3.dat
 }
-run_ts2 020 800 21
-run_ts2 040 400 21
-run_ts2 080 200 21
-run_ts2 160 100 21
-run_ts2 020 800 42
-run_ts2 040 400 42
-run_ts2 080 200 42
-run_ts2 160 100 42
-run_ts2 020 800 43
-run_ts2 040 400 43
-run_ts2 080 200 43
-run_ts2 160 100 43
-run_ts2 020 800 63
-run_ts2 040 400 63
-run_ts2 080 200 63
-run_ts2 160 100 63
+run_ts2 020 800 21 "$NAMELIST_TEMPLATE"
+run_ts2 040 400 21 "$NAMELIST_TEMPLATE"
+run_ts2 080 200 21 "$NAMELIST_TEMPLATE"
+run_ts2 160 100 21 "$NAMELIST_TEMPLATE"
+run_ts2 020 800 42 "$NAMELIST_TEMPLATE"
+run_ts2 040 400 42 "$NAMELIST_TEMPLATE"
+run_ts2 080 200 42 "$NAMELIST_TEMPLATE"
+run_ts2 160 100 42 "$NAMELIST_TEMPLATE"
+run_ts2 020 800 43 "$NAMELIST_TEMPLATE"
+run_ts2 040 400 43 "$NAMELIST_TEMPLATE"
+run_ts2 080 200 43 "$NAMELIST_TEMPLATE"
+run_ts2 160 100 43 "$NAMELIST_TEMPLATE"
+run_ts2 020 800 63 "$NAMELIST_TEMPLATE"
+run_ts2 040 400 63 "$NAMELIST_TEMPLATE"
+run_ts2 080 200 63 "$NAMELIST_TEMPLATE"
+run_ts2 160 100 63 "$NAMELIST_TEMPLATE"
