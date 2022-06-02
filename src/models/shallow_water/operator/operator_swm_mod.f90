@@ -132,7 +132,7 @@ function get_diagnostics(this, v, domain) result(diagnostics)
     type is (stvec_swm_t)
         diagnostics%keys(1)%str = "hmin"
         diagnostics%values(1) = v%h%minimum(domain%mesh_p, domain%parcomm)
-        diagnostics%keys(2)%str = "hmin"
+        diagnostics%keys(2)%str = "hmax"
         diagnostics%values(2) = v%h%maximum(domain%mesh_p, domain%parcomm)
         diagnostics%keys(3)%str = "mass"
 
@@ -236,7 +236,9 @@ end subroutine calc_energy
 
 subroutine calc_enstrophy(this, enstrophy, vin, domain)
 
-    !ATTENTION: This is not the potential enstrophy, which is the invariant of swe!
+    use coriolis_factory_mod, only : calc_coriolis_parameter
+
+    !ATTENTION: will not work correctly for C-grid
 
     class(operator_swm_t), intent(inout) :: this
     class(stvec_swm_t),    intent(inout) :: vin
@@ -247,7 +249,10 @@ subroutine calc_enstrophy(this, enstrophy, vin, domain)
     enstrophy = 0.0_8
 
     call this%curl_op%calc_curl(this%curl, vin%u, vin%v, domain)
+    call calc_coriolis_parameter(this%PE_diag,domain%mesh_q)
+    call this%curl%update(1.0_8,this%PE_diag,domain%mesh_q)
     call this%curl%assign_prod(0.5_8,this%curl, this%curl, domain%mesh_q)
+    call this%curl%assign_ratio(1.0_8,this%curl, vin%h, domain%mesh_q)
 
     enstrophy = this%quadrature_w%mass(this%curl, domain%mesh_q, domain%parcomm)
 

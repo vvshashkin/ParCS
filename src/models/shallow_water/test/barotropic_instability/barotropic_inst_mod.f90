@@ -134,6 +134,8 @@ subroutine run_barotropic_inst()
     call get_exact_solution(state,    domain, config%v_components_type)
     call state_ex%assign(1.0_8,state,0.0_8,state,domain)
 
+    call create_grid_field(curl, halo_width, 0, domain%mesh_q)
+
     select type(state)
     class is (stvec_swm_t)
         select type(operator)
@@ -144,8 +146,6 @@ subroutine run_barotropic_inst()
         call outputer%write(state%h, domain, 'h.dat',1)
         call outputer_vec%write(state%u,state%v,domain,"u.dat","v.dat",1)
     end select
-
-    call create_grid_field(curl, halo_width, 0, domain%mesh_q)
     
     select type(state_ex)
     class is (stvec_swm_t)

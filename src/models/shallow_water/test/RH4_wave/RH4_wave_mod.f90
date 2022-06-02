@@ -139,7 +139,7 @@ subroutine run_RH4_wave()
 
         if(mod(it, nstep_diagnostics) == 0) then
             diagnostics = operator%get_diagnostics(state, domain)
-            call diagnostics%print()
+            if(domain%parcomm%myid==0) call diagnostics%print()
         end if
 
         if(mod(it,nstep_write) == 0) then

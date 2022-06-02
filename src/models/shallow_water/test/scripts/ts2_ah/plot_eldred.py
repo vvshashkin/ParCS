@@ -9,7 +9,19 @@ schemes = ["Ah21","Ah42","Ah43","Ah63"]
 t1 = 401
 t2 = 2400
 Nc = 96
-wktype = "pdf"
+wktype = "eps"
+
+
+def add_cubed_sphere(wks,plot):
+    clat = 180.0*np.arcsin(1.0/np.sqrt(3))/np.pi
+    line_res = Ngl.Resources()
+    line_res.gsLineThicknessF = 1.0
+    line_res.gsLineDashPattern = 2
+    l1 = Ngl.add_polyline(wks,plot,(45,45,315,315,45),(clat,-clat,-clat,clat,clat),line_res)
+    l2 = Ngl.add_polyline(wks,plot,(135,135,45,45,135),(clat,-clat,-clat,clat,clat),line_res)
+    l3 = Ngl.add_polyline(wks,plot,(225,225,135,135,225),(clat,-clat,-clat,clat,clat),line_res)
+    l4 = Ngl.add_polyline(wks,plot,(315,315,225,225,315),(clat,-clat,-clat,clat,clat),line_res)
+    return (l1,l2,l3,l4)
 
 def plot_Eldred(scheme, N, path,t1,t2):
 
@@ -24,6 +36,8 @@ def plot_Eldred(scheme, N, path,t1,t2):
     cn_res.cnLineLabelsOn = False
     cn_res.mpCenterLonF = 180.0
     cn_res.mpGridAndLimbOn = False
+    cn_res.mpGeophysicalLineColor = "Transparent"
+    cn_res.mpGreatCircleLinesOn = True
     cn_res.lbLabelBarOn = True
     cn_res.lbBoxMinorExtentF = 0.12
     cn_res.lbOrientation="Horizontal"
@@ -32,6 +46,8 @@ def plot_Eldred(scheme, N, path,t1,t2):
     cn_res.sfXArray = np.linspace(0.0,360.0,Nlon,endpoint=False)
     cn_res.sfYArray = np.linspace(-90.0,90.0,Nlat)
     cn_res.tiMainFontHeightF = 0.02
+    cn_res.nglDraw = False
+    cn_res.nglFrame = False
    
    
     wkres = Ngl.Resources()
@@ -48,10 +64,11 @@ def plot_Eldred(scheme, N, path,t1,t2):
     z = np.fromfile(fd,count=Nlon*Nlat,dtype=np.float32).reshape((Nlat,Nlon))
     fd.close()
     plot = Ngl.contour_map(wks,z*1e5,cn_res)
+    cs = add_cubed_sphere(wks,plot)
+    Ngl.draw(plot)
+    Ngl.frame(wks)
     Ngl.delete_wks(wks)
 
-    cn_res.nglDraw = False
-    cn_res.nglFrame = False
 
     def get_mean_and_std(fname, t1, t2):
         Nt = t2-t1+1.0
@@ -80,35 +97,41 @@ def plot_Eldred(scheme, N, path,t1,t2):
 
     wks = Ngl.open_wks(wktype, "Eldred_N{:03d}_".format(N)+scheme,wkres)
    
-    cn_res.tiMainString="mean relative vorticity [1/s]" 
+    cn_res.tiMainString="mean relative vorticity 10~S~-5~N~ [1/s]" 
     cn_res.cnLevels = [-2,-1.75,-1.5,-1.25,-1.0,-0.75,-0.5,-0.25,0.25,0.5,0.75,1,1.25,1.5,1.75,2]
     cn_res.cnFillColors = [2,6,10,14,18,22,26,30,0,37,41,45,49,53,57,61,65]
     plot1 = Ngl.contour_map(wks,z_mean*1e5,cn_res)
+    cs1 = add_cubed_sphere(wks,plot1)
 
-    cn_res.tiMainString="relative vorticity std [1/s]" 
+    cn_res.tiMainString="relative vorticity std 10~S~-5~N~ [1/s]" 
     cn_res.cnLevels = [0.2,0.4,0.6,0.8,1.0,1.2,1.4,1.6,1.8,2.0]
     cn_res.cnFillColors = [2,8,14,20,26,32,38,45,52,59,65]
     plot2 = Ngl.contour_map(wks,z_std*1e5,cn_res)
+    cs2 = add_cubed_sphere(wks,plot2)
 
-    cn_res.tiMainString="mean divergence [1/s]" 
+    cn_res.tiMainString="mean divergence 10~S~-8~N~ [1/s]" 
     cn_res.cnLevels = [-2,-1.75,-1.5,-1.25,-1.0,-0.75,-0.5,-0.25,0.25,0.5,0.75,1,1.25,1.5,1.75,2]
     cn_res.cnFillColors = [2,6,10,14,18,22,26,30,0,37,41,45,49,53,57,61,65]
     plot3 = Ngl.contour_map(wks,div_mean*1e8,cn_res)
+    #cs3 = add_cubed_sphere(wks,plot3)
 
-    cn_res.tiMainString="divergence std [1/s]" 
+    cn_res.tiMainString="divergence std 10~S~-8~N~ [1/s]" 
     cn_res.cnLevels = [4,8,12,16,20,24,28,32,36,40,44]
     cn_res.cnFillColors = [2,8,14,20,26,32,38,44,50,56,62,65]
     plot4 = Ngl.contour_map(wks,div_std*1e8,cn_res)
+    cs4 = add_cubed_sphere(wks,plot4)
 
     cn_res.tiMainString="mean height [m]" 
     cn_res.cnLevels = [550,600,650,700,750,800,850,900,950,1000,1050,1100,1150]
     cn_res.cnFillColors = [2,7,12,17,22,27,32,37,42,47,52,56,61,65]
     plot5 = Ngl.contour_map(wks,h_mean,cn_res)
+    cs5 = add_cubed_sphere(wks,plot5)
 
     cn_res.tiMainString="height std [m]" 
     cn_res.cnLevels = [4,8,12,16,20,24,28,32,36,40,44]
     cn_res.cnFillColors = [2,8,14,20,26,32,38,44,50,56,62,65]
     plot6 = Ngl.contour_map(wks,h_std,cn_res)
+    cs6 = add_cubed_sphere(wks,plot6)
 
     pres = Ngl.Resources()
     Ngl.panel(wks,(plot5,plot6,plot1,plot2,plot3,plot4),(3,2),pres)

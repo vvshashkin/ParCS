@@ -2,6 +2,7 @@ import numpy as np
 import re
 import Ngl
 from sys import argv
+from add_cubed_sphere import add_cubed_sphere
 
 path = argv[1]
 
@@ -15,6 +16,8 @@ cn_res.mpGridAndLimbOn = False
 cn_res.lbOrientation="Horizontal"
 cn_res.lbLabelFontHeightF = 0.015
 cn_res.tiMainFontHeightF = 0.02
+cn_res.mpGeophysicalLineColor = "Transparent"
+cn_res.mpGreatCircleLinesOn = True
 
 cn_res.nglDraw = False
 cn_res.nglFrame = False
@@ -26,14 +29,14 @@ overlay_res.cnLineThicknessF = 2.0
 overlay_res.cnInfoLabelOn = False
 # overlay_res.cnGridA
 
-for N in [20,40,80]:#[20,40,80,160]:
+for N in [20,40]:#[20,40,80,160]:
     Nlon = 4*N
     Nlat = 2*N+1
     cn_res.sfXArray = np.linspace(0.0,360.0,Nlon,endpoint=False)
     cn_res.sfYArray = np.linspace(-90.0,90.0,Nlat)
     overlay_res.sfXArray = np.linspace(0.0,360.0,Nlon,endpoint=False)
     overlay_res.sfYArray = np.linspace(-90.0,90.0,Nlat)
-    wks = Ngl.open_wks("png", "ts2_h_error_N{:03d}".format(N))
+    wks = Ngl.open_wks("eps", "ts2_h_error_N{:03d}".format(N))
     Ngl.define_colormap(wks,"GMT_polar")
     plots = []
     for scheme in schemes:
@@ -46,6 +49,7 @@ for N in [20,40,80]:#[20,40,80,160]:
         plots.append(Ngl.contour_map(wks,h1-h0,cn_res))
         overlay_plot = Ngl.contour(wks, h0, overlay_res)
         Ngl.overlay(plots[-1], overlay_plot)
+        add_cubed_sphere(wks,plots[-1])
 
     textres = Ngl.Resources()
     textres.txFontHeightF = 0.020
@@ -69,7 +73,7 @@ l242, linf = read_err(path+"/errors_N160_dt100_Ah42.txt")
 l263, linf = read_err(path+"/errors_N160_dt100_Ah63.txt")
 
 
-wks = Ngl.open_wks("png", "l2_h_t")
+wks = Ngl.open_wks("eps", "l2_h_t")
 
 res = Ngl.Resources()
 res.trYLog = True
@@ -93,8 +97,8 @@ for scheme in schemes:
 l2_order = []
 linf_order=[]
 x = np.array([20,40,80,160])
-l2_0 = {2: 1e-3, 3: 2e-4, 4: 6e-5}
-linf_0 = {2: 3e-3, 3: 5e-4, 4: 2e-4}
+l2_0 = {2: 1e-3, 3: 2e-4, 4: 2e-5}
+linf_0 = {2: 3e-3, 3: 5e-4, 4: 0.7e-4}
 for order in [2,3,4]:
     for i in range(len(x)):
         l2_order.append(l2_0[order]*(1.0*x[0]/x[i])**order)
@@ -105,7 +109,7 @@ linf = np.array(linf_conv).reshape((len(schemes),len(resolutions)))
 l2_ord = np.array(l2_order).reshape((3,len(resolutions)))
 linf_ord = np.array(linf_order).reshape((3,len(resolutions)))
 
-wks = Ngl.open_wks("png", "ts2_conv")
+wks = Ngl.open_wks("eps", "ts2_conv")
 res = Ngl.Resources()
 res.trXLog = True
 res.trYLog = True

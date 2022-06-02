@@ -25,7 +25,7 @@ overlay_res.nglDraw = False
 overlay_res.nglFrame = False
 overlay_res.cnLineThicknessF = 2.0
 
-for N in [32,48,64,96]:
+for N in [20,40,80,160]:#[32,48,64,96]:
     Nlon = 4*N
     Nlat = 2*N+1
     cn_res.sfXArray = np.linspace(0.0,360.0,Nlon,endpoint=False)

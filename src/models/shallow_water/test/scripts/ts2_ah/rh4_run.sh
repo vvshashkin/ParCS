@@ -25,11 +25,11 @@ NAMELIST_TEMPLATE="
     co2contra_op_name = 'co2contra_colocated',\n
     massflux_op_name  = 'massflux_colocated',\n
     quadrature_name   = '%%%quadrature',\n
-    diff_time_scheme  = 'explicit_Eul1'\n
     uv_diff_coeff     =  0.03,\n
-    hordiff_uv_name   = 'hordiff_vec_xyz_Ah',\n
+    hordiff_uv_name   = '%%%uv_diff',\n
     h_diff_coeff      =  0.01,\n
-    hordiff_h_name    = 'hordiff_scalar_Ah',\n
+    hordiff_h_name    = '%%%h_diff',\n
+    diff_time_scheme  = 'explicit_Eul1'\n
     dt=%%%dt,\n
     tau_write = 86400.0,\n
     tau_diagnostics = 3600.0\n
@@ -44,19 +44,19 @@ run_ts2(){
 	mpirun -n $Nprocs $EXE &> swm_N$1_dt$2_Ah$3.out
     mv h.dat h_N$1_Ah$3.dat
 }
-run_ts2 032 600 21 "$NAMELIST_TEMPLATE"
-run_ts2 048 400 21 "$NAMELIST_TEMPLATE"
-run_ts2 064 300 21 "$NAMELIST_TEMPLATE"
-run_ts2 096 200 21 "$NAMELIST_TEMPLATE"
-run_ts2 032 600 42 "$NAMELIST_TEMPLATE"
-run_ts2 048 400 42 "$NAMELIST_TEMPLATE"
-run_ts2 064 300 42 "$NAMELIST_TEMPLATE"
-run_ts2 096 200 42 "$NAMELIST_TEMPLATE"
-run_ts2 032 600 43 "$NAMELIST_TEMPLATE"
-run_ts2 048 400 43 "$NAMELIST_TEMPLATE"
-run_ts2 064 300 43 "$NAMELIST_TEMPLATE"
-run_ts2 096 200 43 "$NAMELIST_TEMPLATE"
-run_ts2 032 600 63 "$NAMELIST_TEMPLATE"
-run_ts2 048 400 63 "$NAMELIST_TEMPLATE"
-run_ts2 064 300 63 "$NAMELIST_TEMPLATE"
-run_ts2 096 200 63 "$NAMELIST_TEMPLATE"
+run_ts2 020 800 21 "$NAMELIST_TEMPLATE"
+run_ts2 040 400 21 "$NAMELIST_TEMPLATE"
+run_ts2 080 200 21 "$NAMELIST_TEMPLATE"
+run_ts2 160 100 21 "$NAMELIST_TEMPLATE"
+run_ts2 020 800 42 "$NAMELIST_TEMPLATE"
+run_ts2 040 400 42 "$NAMELIST_TEMPLATE"
+run_ts2 080 200 42 "$NAMELIST_TEMPLATE"
+run_ts2 160 100 42 "$NAMELIST_TEMPLATE"
+run_ts2 020 800 43 "$NAMELIST_TEMPLATE"
+run_ts2 040 400 43 "$NAMELIST_TEMPLATE"
+run_ts2 080 200 43 "$NAMELIST_TEMPLATE"
+run_ts2 160 100 43 "$NAMELIST_TEMPLATE"
+run_ts2 020 800 63 "$NAMELIST_TEMPLATE"
+run_ts2 040 400 63 "$NAMELIST_TEMPLATE"
+run_ts2 080 200 63 "$NAMELIST_TEMPLATE"
+run_ts2 160 100 63 "$NAMELIST_TEMPLATE"

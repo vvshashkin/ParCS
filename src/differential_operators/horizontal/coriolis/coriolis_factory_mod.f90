@@ -9,7 +9,7 @@ implicit none
 
 private
 
-public :: create_coriolis
+public :: create_coriolis, calc_coriolis_parameter
 
 contains
 
