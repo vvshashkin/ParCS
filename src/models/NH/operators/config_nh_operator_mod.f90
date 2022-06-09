@@ -12,9 +12,7 @@ type, extends(config_t) :: config_Ptheta_linear_t
     character(:), allocatable :: background_type, &
                                  grad_hor_part_name, grad_vert_part_name, &
                                  div_hor_part_name,  div_vert_part_name, &
-                                 co2contra_operator_name, &
-                                 w2uv_operator_name, w2uv_hor_part_name, &
-                                 w2uv_vert_part_name, w2p_operator_name
+                                 co2contra_operator_name, w2p_operator_name
     contains
     procedure :: parse => parse_Ptheta_linear_config
 end type config_Ptheta_linear_t
@@ -72,14 +70,11 @@ subroutine parse_Ptheta_linear_config(this,config_string)
     namelist /Ptheta_linear_nh_operator/ background_type, Nb, T0,&
                                          grad_hor_part_name, grad_vert_part_name, &
                                          div_hor_part_name,  div_vert_part_name, &
-                                         co2contra_operator_name, &
-                                         w2uv_operator_name, w2uv_hor_part_name,&
-                                         w2uv_vert_part_name, w2p_operator_name
+                                         co2contra_operator_name, w2p_operator_name
 
     character(len=256) :: background_type, grad_hor_part_name, grad_vert_part_name, &
                           div_hor_part_name, div_vert_part_name, &
-                          co2contra_operator_name, w2uv_operator_name, w2uv_hor_part_name, &
-                          w2uv_vert_part_name, w2p_operator_name
+                          co2contra_operator_name, w2p_operator_name
     real(kind=8) :: Nb=0.01, T0=300.0
 
     read(config_string,Ptheta_linear_nh_operator)
@@ -93,9 +88,6 @@ subroutine parse_Ptheta_linear_config(this,config_string)
     this%div_hor_part_name        = trim(div_hor_part_name)
     this%div_vert_part_name       = trim(div_vert_part_name)
     this%co2contra_operator_name  = trim(co2contra_operator_name)
-    this%w2uv_operator_name       = trim(w2uv_operator_name)
-    this%w2uv_hor_part_name       = trim(w2uv_hor_part_name)
-    this%w2uv_vert_part_name      = trim(w2uv_vert_part_name)
     this%w2p_operator_name        = trim(w2p_operator_name)
 
 end subroutine parse_Ptheta_linear_config

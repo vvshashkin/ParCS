@@ -2,7 +2,7 @@
     N = 80,
     Nz = 10,
     topology_type       = 'cube',
-    staggering_type     = 'C',
+    staggering_type     = 'Ah',
     vertical_staggering = 'CharneyPhilips'
     metric_type         = 'shallow_atmosphere_metric'
     h_top               = 10e3
@@ -34,11 +34,11 @@
     Nb = 0.01,
     T0 = 288.0,
     background_type     ="Nb_const"
-    grad_hor_part_name  = "gradient_c_sbp42",
+    grad_hor_part_name  = "gradient_ah42_sbp_ecs",
     grad_vert_part_name = "eta_diff_p2w_sbp21",
-    div_hor_part_name   = "divergence_c_sbp42",
+    div_hor_part_name   = "divergence_ah42_sbp",
     div_vert_part_name  = "eta_diff_w2p_sbp21",
-    co2contra_operator_name = "co2contra_c_sbp42_new",
+    co2contra_operator_name = "co2contra_colocated",
     w2p_operator_name   = "vertical_interp_w2p_sbp21",
 /
 &comments

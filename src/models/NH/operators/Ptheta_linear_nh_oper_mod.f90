@@ -19,7 +19,6 @@ type, extends(operator_t) :: Ptheta_linear_nh_operator_t
     class(grad_3d_operator_t),   allocatable :: grad_op
     class(div_3d_operator_t),    allocatable :: div_op
     class(co2contra_operator_t), allocatable :: co2contra_op
-    class(interpolator_w2uv_t),  allocatable :: w2uv_op
     class(vertical_operator_t),  allocatable :: w2p_op
 
     type(grid_field_t) :: P0, dP0_dz, dP0_dz_w
@@ -27,7 +26,6 @@ type, extends(operator_t) :: Ptheta_linear_nh_operator_t
     type(grid_field_t) :: w, wp
     type(grid_field_t) :: grad_x, grad_y, grad_z
     type(grid_field_t) :: div3
-    !type(grid_field_t) :: grad_x_contra, grad_y_contra
 
     contains
     procedure, public :: apply
@@ -49,11 +47,6 @@ subroutine apply(this, vout, vin, domain)
     class is (stvec_nh_t)
     select type(vin)
     class is (stvec_nh_t)
-        ! call vout%u%assign(0.0_8, domain%mesh_u)
-        ! call vout%v%assign(0.0_8, domain%mesh_v)
-        ! call vout%eta_dot%assign(0.0_8, domain%mesh_w)
-        ! call vout%theta%assign(0.0_8, domain%mesh_w)
-        ! call vout%P%assign(0.0_8,domain%mesh_p)
 
         call this%grad_op%calc_grad(this%grad_x, this%grad_y, this%grad_z,vin%P,domain)
         call this%grad_x%assign_prod(-Cp,this%grad_x,this%theta0_u,domain%mesh_u)

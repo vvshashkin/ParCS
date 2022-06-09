@@ -1727,7 +1727,8 @@ $(DOBJ)advection_w3d_mod.o: src/differential_operators/3d/advection/advection_w3
 	$(DOBJ)halo_mod.o \
 	$(DOBJ)abstract_interpolators3d_mod.o \
 	$(DOBJ)abstract_v_nabla_mod.o \
-	$(DOBJ)abstract_adv_z_mod.o
+	$(DOBJ)abstract_adv_z_mod.o \
+	$(DOBJ)exchange_abstract_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

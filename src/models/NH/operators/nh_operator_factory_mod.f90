@@ -63,9 +63,6 @@ subroutine create_Ptheta_linear_nh_operator(nh_operator,config,domain)
 
     operator%co2contra_op = create_co2contra_operator(domain, config%co2contra_operator_name)
 
-    call create_w2uv_interpolator(operator%w2uv_op,config%w2uv_operator_name, &
-                                  config%w2uv_hor_part_name, config%w2uv_vert_part_name, domain)
-
     call create_vertical_operator(operator%w2p_op, config%w2p_operator_name)
 
     call create_grid_field(operator%P0, 0, 0, domain%mesh_p)
@@ -77,7 +74,7 @@ subroutine create_Ptheta_linear_nh_operator(nh_operator,config,domain)
     call create_grid_field(operator%dtheta0_dz, 0, 0, domain%mesh_w)
     call create_grid_field(operator%w, 0, 0, domain%mesh_w)
     call create_grid_field(operator%wp, 0, 0, domain%mesh_p)
-    call create_grid_field(operator%div3, 0, 0, domain%mesh_p)
+    call create_grid_field(operator%div3, halo_width_xy, 0, domain%mesh_p)
     call create_grid_field(operator%grad_x, halo_width_xy, 0, domain%mesh_u)
     call create_grid_field(operator%grad_y, halo_width_xy, 0, domain%mesh_v)
     call create_grid_field(operator%grad_z, 0, 0, domain%mesh_w)
