@@ -201,7 +201,7 @@ subroutine create_nonlin_nh_operator(nh_operator,config,domain)
 
     call create_grid_field(operator%theta_u, 0, 0, domain%mesh_u)
     call create_grid_field(operator%theta_v, 0, 0, domain%mesh_v)
-    call create_grid_field(operator%div3, 0, 0, domain%mesh_p)
+    call create_grid_field(operator%div3, halo_width_xy, 0, domain%mesh_p)
     call create_grid_field(operator%grad_x, halo_width_xy, 0, domain%mesh_u)
     call create_grid_field(operator%grad_y, halo_width_xy, 0, domain%mesh_v)
     call create_grid_field(operator%grad_x_contra, 0, 0, domain%mesh_u)
