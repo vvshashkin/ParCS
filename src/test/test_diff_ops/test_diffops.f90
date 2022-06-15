@@ -337,50 +337,50 @@ call init_global_parallel_enviroment()
 !     print "(A,4E15.7)", "Err: ", errs%values
 ! end if
 
-!
-! errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_C_up4", staggering="C")
-! if (parcomm_global%myid==0) then
-!     print *, "vector_advection_C_up4"
-!     print "(A,4E25.16)", "Err: ", errs%values
-! end if
-! errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_C_up3", staggering="C")
-! if (parcomm_global%myid==0) then
-!     print *, "vector_advection_C_up3"
-!     print "(A,4E25.16)", "Err: ", errs%values
-! end if
-! errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_C_up1", staggering="C")
-! if (parcomm_global%myid==0) then
-!     print *, "vector_advection_C_up1"
-!     print "(A,4E25.16)", "Err: ", errs%values
-! end if
-! errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_C_c2", staggering="C")
-! if (parcomm_global%myid==0) then
-!     print *, "vector_advection_C_c2"
-!     print "(A,4E25.16)", "Err: ", errs%values
-! end if
-! errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_C_c4", staggering="C")
-! if (parcomm_global%myid==0) then
-!     print *, "vector_advection_C_c4"
-!     print "(A,4E25.16)", "Err: ", errs%values
-! end if
-!
-! errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_Ah21", staggering="Ah")
-! if (parcomm_global%myid==0) then
-!     print *, "vector_advection_Ah21"
-!     print "(A,4E25.16)", "Err: ", errs%values
-! end if
-!
-! errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_Ah42", staggering="Ah")
-! if (parcomm_global%myid==0) then
-!     print *, "vector_advection_Ah42"
-!     print "(A,4E25.16)", "Err: ", errs%values
-! end if
-!
-! errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_Ah63", staggering="Ah")
-! if (parcomm_global%myid==0) then
-!     print *, "vector_advection_Ah63"
-!     print "(A,4E25.16)", "Err: ", errs%values
-! end if
+
+errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_C_up4", staggering="C")
+if (parcomm_global%myid==0) then
+    print *, "vector_advection_C_up4"
+    print "(A,4E25.16)", "Err: ", errs%values
+end if
+errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_C_up3", staggering="C")
+if (parcomm_global%myid==0) then
+    print *, "vector_advection_C_up3"
+    print "(A,4E25.16)", "Err: ", errs%values
+end if
+errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_C_up1", staggering="C")
+if (parcomm_global%myid==0) then
+    print *, "vector_advection_C_up1"
+    print "(A,4E25.16)", "Err: ", errs%values
+end if
+errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_C_c2", staggering="C")
+if (parcomm_global%myid==0) then
+    print *, "vector_advection_C_c2"
+    print "(A,4E25.16)", "Err: ", errs%values
+end if
+errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_C_c4", staggering="C")
+if (parcomm_global%myid==0) then
+    print *, "vector_advection_C_c4"
+    print "(A,4E25.16)", "Err: ", errs%values
+end if
+
+errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_Ah21", staggering="Ah")
+if (parcomm_global%myid==0) then
+    print *, "vector_advection_Ah21"
+    print "(A,4E25.16)", "Err: ", errs%values
+end if
+
+errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_Ah42", staggering="Ah")
+if (parcomm_global%myid==0) then
+    print *, "vector_advection_Ah42"
+    print "(A,4E25.16)", "Err: ", errs%values
+end if
+
+errs = test_vec_advection(N=32, vecadv_oper_name="vector_advection_Ah63", staggering="Ah")
+if (parcomm_global%myid==0) then
+    print *, "vector_advection_Ah63"
+    print "(A,4E25.16)", "Err: ", errs%values
+end if
 
 call deinit_global_parallel_enviroment()
 

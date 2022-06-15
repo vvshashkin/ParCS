@@ -110,6 +110,8 @@ subroutine create_mesh(mesh, partition, metric, halo_width, h_top, points_type, 
             do j = js - halo_width, je + halo_width
                 beta = mesh%tile(t)%get_beta(j)
                 do i = is - halo_width, ie + halo_width
+                    mesh%tile(t)%panel_ind = pind
+
                     alpha = mesh%tile(t)%get_alpha(i)
                     vec(1:3) = metric%calculate_r(pind, alpha, beta)
 
@@ -122,8 +124,6 @@ subroutine create_mesh(mesh, partition, metric, halo_width, h_top, points_type, 
                     mesh%tile(t)%Qi(1:6,i,j,k) = metric%calculate_Qi(pind, alpha, beta)
 
                     mesh%tile(t)%J(i,j,k)= metric%calculate_J(pind, alpha, beta)
-
-                    mesh%tile(t)%G(1:3,1:3,1:3,i,j,k) = metric%calculate_G(pind,alpha,beta)
 
                     mesh%tile(t)%a1(1:4,i,j,k) = metric%calculate_a1(pind,alpha,beta)
                     mesh%tile(t)%a2(1:4,i,j,k) = metric%calculate_a2(pind,alpha,beta)

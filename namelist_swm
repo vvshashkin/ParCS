@@ -33,12 +33,12 @@
 /
 &shallow_water_model
     swm_op_type       = 'advective'
-    v_components_type = 'contravariant'
+    v_components_type = 'covariant'
     div_op_name       = 'divergence_ah42_sbp',
     grad_op_name      = 'gradient_ah42_sbp_ecs',
     coriolis_op_name  = 'coriolis_colocated',
     co2contra_op_name = 'co2contra_colocated',
-    vector_adv_op_name= 'vector_advection_Ah42'
+    vector_adv_op_name= 'vector_advection_Ah42_cov'
     massflux_op_name  = 'massflux_colocated',
     quadrature_name   = 'SBP_Ah42_quadrature',
     diff_time_scheme  = "explicit_Eul1"

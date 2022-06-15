@@ -15,7 +15,7 @@ type, public :: tile_mesh_t
 
     integer(kind=4) :: is, ie, js, je, ks, ke
     integer(kind=4) :: nx, ny, nz                !global grid dimension
-!    integer(kind=4) :: panel_ind
+    integer(kind=4) :: panel_ind
     integer(kind=4) :: halo_width
 
     real(kind=8), allocatable    :: rx(:,:,:), ry(:,:,:), rz(:,:,:) !cartesian coordinates of mesh points
@@ -27,7 +27,6 @@ type, public :: tile_mesh_t
     real(kind=8), allocatable    :: Q(:,:,:,:)             !metric tensor at mesh-points
     real(kind=8), allocatable    :: QI(:,:,:,:)            !inverse metric tensor at mesh-points
     real(kind=8), allocatable    :: J(:,:,:)               !sqrt of metric tensor det at mesh-points
-    real(kind=8), allocatable    :: G(:,:,:,:,:,:)         !Christofel symbols (i j,k,ix,iy,iz)
     real(kind=8)                 :: hx, hy                 !horizontal grid step
     real(kind=8)                 :: hz                     !vertical grid step
     real(kind=8)                 :: shift_i, shift_j       !determines shift of the first grid point from the boundary
@@ -67,7 +66,7 @@ subroutine init_tile_mesh(this, is, ie, js, je, ks, ke, halo_width)
     allocate(this%Q (6,isv:iev,jsv:jev,ks:ke)) !6 elements of 3x3 matrix are stored due to symmetricity
     allocate(this%QI(6,isv:iev,jsv:jev,ks:ke)) ! -'-'-
     allocate(this%J(isv:iev,jsv:jev,ks:ke))
-    allocate(this%G(3,3,3,isv:iev,jsv:jev,ks:ke))
+    ! allocate(this%G(3,3,3,isv:iev,jsv:jev,ks:ke))
 
     this%is = is
     this%ie = ie

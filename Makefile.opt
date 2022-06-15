@@ -1188,6 +1188,7 @@ $(DOBJ)vector_advection_factory_mod.o: src/differential_operators/horizontal/vec
 	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)v_nabla_mod.o \
+	$(DOBJ)hor_christofel_factory_mod.o \
 	$(DOBJ)vector_advection_ah_mod.o \
 	$(DOBJ)exchange_factory_mod.o \
 	$(DOBJ)halo_factory_mod.o \
@@ -1206,9 +1207,8 @@ $(DOBJ)vector_advection_c_mod.o: src/differential_operators/horizontal/vec_advec
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)halo_mod.o \
 	$(DOBJ)abstract_interpolators2d_mod.o \
-	$(DOBJ)parcomm_mod.o \
-	$(DOBJ)mesh_mod.o \
-	$(DOBJ)tile_mod.o
+	$(DOBJ)abstract_hor_christofel_mod.o \
+	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -1225,7 +1225,7 @@ $(DOBJ)vector_advection_ah_mod.o: src/differential_operators/horizontal/vec_adve
 	$(DOBJ)exchange_abstract_mod.o \
 	$(DOBJ)abstract_vector_advection_mod.o \
 	$(DOBJ)abstract_v_nabla_mod.o \
-	$(DOBJ)mesh_mod.o
+	$(DOBJ)abstract_hor_christofel_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -1398,6 +1398,32 @@ $(DOBJ)co2contra_cgrid_mod.o: src/differential_operators/horizontal/co2contra/co
 $(DOBJ)abstract_co2contra_mod.o: src/differential_operators/horizontal/co2contra/abstract_co2contra_mod.f90 \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)domain_mod.o \
+	$(DOBJ)parcomm_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)hor_christofel_shallow_mod.o: src/differential_operators/horizontal/Christofel/hor_Christofel_shallow_mod.f90 \
+	$(DOBJ)abstract_hor_christofel_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)parcomm_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)hor_christofel_factory_mod.o: src/differential_operators/horizontal/Christofel/hor_Christofel_factory_mod.f90 \
+	$(DOBJ)abstract_hor_christofel_mod.o \
+	$(DOBJ)hor_christofel_shallow_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)grid_field_factory_mod.o \
+	$(DOBJ)metric_mod.o \
+	$(DOBJ)parcomm_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)abstract_hor_christofel_mod.o: src/differential_operators/horizontal/Christofel/abstract_hor_Christofel_mod.f90 \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)mesh_mod.o \
 	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@

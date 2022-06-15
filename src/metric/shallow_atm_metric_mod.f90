@@ -326,7 +326,6 @@ pure function calculate_G_2d(this, panel_ind, alpha, beta) result(G)
 end function calculate_G_2d
 
 subroutine transform_cartesian_to_native(this,panel_ind, alpha, beta, r)
-    import metric_t
     class(shallow_atm_metric_t), intent(in)  :: this
     integer(kind=4),     intent(out) :: panel_ind
     real(kind=8),        intent(out) :: alpha, beta

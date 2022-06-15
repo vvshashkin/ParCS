@@ -9,6 +9,7 @@ use v_nabla_mod,                    only : v_nabla_up4_operator_t, &
                                            v_nabla_up1_operator_t, &
                                            v_nabla_c2_operator_t,  &
                                            v_nabla_c4_operator_t
+use hor_Christofel_factory_mod,     only : create_hor_Christofel
 
 implicit none
 
@@ -27,11 +28,17 @@ subroutine create_vector_advection_operator(vec_advection_op, vec_advection_op_n
     select case(vec_advection_op_name)
 
     case("vector_advection_Ah21")
-        call create_vector_advection_Ah_covariant(vec_advection_op, "d21", 1, domain)
+        call create_vector_advection_Ah(vec_advection_op, "d21", 1, domain, "contravariant")
     case("vector_advection_Ah42")
-        call create_vector_advection_Ah_covariant(vec_advection_op, "d42", 3, domain)
+        call create_vector_advection_Ah(vec_advection_op, "d42", 3, domain, "contravariant")
     case("vector_advection_Ah63")
-        call create_vector_advection_Ah_covariant(vec_advection_op, "d63", 5, domain)
+        call create_vector_advection_Ah(vec_advection_op, "d63", 5, domain, "contravariant")
+    case("vector_advection_Ah21_cov")
+        call create_vector_advection_Ah(vec_advection_op, "d21", 1, domain, "covariant")
+    case("vector_advection_Ah42_cov")
+        call create_vector_advection_Ah(vec_advection_op, "d42", 3, domain, "covariant")
+    case("vector_advection_Ah63_cov")
+        call create_vector_advection_Ah(vec_advection_op, "d63", 5, domain, "covariant")
     case("vector_advection_C_up4")
         call create_vector_advection_C(vec_advection_op, v_nabla_up4_operator_t(), &
                                        "interp2d_uv2pvec_C_sbp42", "interp2d_pvec2uv_C_sbp42", &
@@ -58,8 +65,8 @@ subroutine create_vector_advection_operator(vec_advection_op, vec_advection_op_n
 
 end subroutine create_vector_advection_operator
 
-subroutine create_vector_advection_Ah_covariant(vec_advection_op,sbp_operator_name, &
-                                                halo_width, domain)
+subroutine create_vector_advection_Ah(vec_advection_op,sbp_operator_name, &
+                                      halo_width, domain, vector_type)
 
     use vector_advection_Ah_mod,   only : vector_advection_Ah_t
     use exchange_factory_mod,      only : create_xy_points_halo_exchange
@@ -70,6 +77,7 @@ subroutine create_vector_advection_Ah_covariant(vec_advection_op,sbp_operator_na
     character(len=*),                                intent(in)  :: sbp_operator_name
     integer(kind=4),                                 intent(in)  :: halo_width
     type(domain_t),                                  intent(in)  :: domain
+    character(len=*),                                intent(in)  :: vector_type
 
     type(vector_advection_Ah_t), allocatable :: vec_advection_Ah_op
 
@@ -85,9 +93,12 @@ subroutine create_vector_advection_Ah_covariant(vec_advection_op,sbp_operator_na
                     create_xy_points_halo_exchange(domain%partition, domain%parcomm, &
                                                  domain%topology,  halo_width, 'full')
 
+    call create_hor_Christofel(vec_advection_Ah_op%hor_Christofel,domain%mesh_xy, &
+                               domain%mesh_xy,domain%metric,vector_type)
+
     call move_alloc(vec_advection_Ah_op, vec_advection_op)
 
-end subroutine create_vector_advection_Ah_covariant
+end subroutine create_vector_advection_Ah
 
 subroutine create_vector_advection_C(vec_advection_op, v_nabla_op, uv2p_interp_name, &
                                      p2uv_interp_name, halo_width, domain)
@@ -122,6 +133,8 @@ subroutine create_vector_advection_C(vec_advection_op, v_nabla_op, uv2p_interp_n
     call create_vector_halo_procedure(vec_advection_C_op%halo_uv, domain,max(halo_width,2),"ecs_C_vec")
     call create_vector_halo_procedure(vec_advection_C_op%tendency_edge_sync, domain, &
                                                                               1,"C_vec_default")
+    call create_hor_Christofel(vec_advection_C_op%hor_Christofel,domain%mesh_u, &
+                               domain%mesh_v,domain%metric,"contravariant")
 
     call move_alloc(vec_advection_C_op, vec_advection_op)
 
