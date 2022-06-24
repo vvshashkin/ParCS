@@ -8,7 +8,7 @@ implicit none
 
 contains
 
-subroutine create_mesh(mesh, partition, metric, halo_width, h_top, points_type, vertical_staggering)
+subroutine create_mesh(mesh, partition, metric, halo_width, h_top, tiles, shift_xyz)
 
     use partition_mod, only : partition_t
     use metric_mod,    only : metric_t
@@ -19,56 +19,22 @@ subroutine create_mesh(mesh, partition, metric, halo_width, h_top, points_type, 
 
     integer(kind=4),  intent(in)   :: halo_width
     real(kind=8),     intent(in)   :: h_top
-    character(len=*), intent(in)   :: points_type, vertical_staggering
+    type(tiles_t),    intent(in)   :: tiles
+    real(kind=8),     intent(in)   :: shift_xyz(3)
 
     integer(kind=4) :: t, pind, i, j, k, ts, te, is, ie, js, je, ks, ke, nh, nx, ny, nz
     real(kind=8) :: alpha, beta, eta, hx, hy, hz, vec(3)
 
-    type(tiles_t) :: tiles
 
     real(kind=8) :: shift_i, shift_j, shift_k
 
-    call partition%get_tiles(points_type, tiles)
-
     ! define horizontal grid parameters
-    shift_i = 0.5_8
-    shift_j = 0.5_8
-    select case(points_type)
-    case("o", "z")
-    case("x");         shift_i = 0.0_8
-    case("y");         shift_j = 0.0_8
-    case("xy", "xyz"); shift_i = 0.0_8
-                       shift_j = 0.0_8
-    case default
-        call parcomm_global%abort("mesh factory error! Wrong points_type: "// points_type)
-    end select
+    shift_i = shift_xyz(1); shift_j = shift_xyz(2); shift_k = shift_xyz(3)
 
-    nh = partition%nh
-    hx = (metric%alpha1 - metric%alpha0)/real(nh,8)
-    hy = (metric%beta1  - metric%beta0 )/real(nh,8)
-
-    ! define vertical grid parameters
-    shift_k = 0.0_8
-    select case(vertical_staggering)
-    case("None")
-        if (partition%Nz == 1) then
-            !call parcomm_global%print("Single layer model. Setting hz = 1")
-            hz = 1.0_8
-        else
-            hz = 1.0_8/(partition%Nz-1)
-        end if
-        select case(points_type)
-        case("z, xyz")
-            call parcomm_global%abort( &
-            "Wrong combination of points_type and vertical staggering in mesh factory "//&
-                                      points_type//" "//vertical_staggering)
-        end select
-    case("CharneyPhilips")
-        hz = 1.0_8/partition%Nz
-        select case(points_type)
-        case("o", "x", "y", "xy"); shift_k = 0.5_8
-        end select
-    end select
+    nx = tiles%Nx; ny = tiles%Ny; nz = tiles%Nz
+    hx = (metric%alpha1 - metric%alpha0)/(real(nx,8)-1+2.0_8*shift_i)
+    hy = (metric%beta1  - metric%beta0 )/(real(ny,8)-1+2.0_8*shift_j)
+    hz = 1.0_8 / max(1.0_8,real(nz,8)-1+2.0_8*shift_k)
 
     ts = partition%ts
     te = partition%te
@@ -88,11 +54,10 @@ subroutine create_mesh(mesh, partition, metric, halo_width, h_top, points_type, 
         pind = partition%panel_map(t)
 
         call mesh%tile(t)%init(is, ie, js, je, ks, ke, halo_width)
-        mesh%tile(t)%points_type = points_type
 
-        mesh%tile(t)%nx = tiles%Nx
-        mesh%tile(t)%ny = tiles%Ny
-        mesh%tile(t)%nz = tiles%Nz
+        mesh%tile(t)%nx = nx
+        mesh%tile(t)%ny = ny
+        mesh%tile(t)%nz = nz
 
         mesh%tile(t)%hx = hx
         mesh%tile(t)%hy = hy
@@ -137,8 +102,6 @@ subroutine create_mesh(mesh, partition, metric, halo_width, h_top, points_type, 
 
     end do
 
-
 end subroutine create_mesh
-
 
 end module mesh_factory_mod

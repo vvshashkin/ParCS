@@ -5,6 +5,7 @@ use topology_factory_mod,      only : create_topology
 use cubed_sphere_topology_mod, only : cubed_sphere_topology_t
 use metric_mod,                only : metric_t
 use metric_factory_mod,        only : create_metric, create_metric_by_config
+use orography_factory_mod,     only : create_orography
 use config_domain_mod,         only : config_domain_t
 use mpi
 
@@ -51,9 +52,10 @@ subroutine create_domain_by_config(domain, config, parcomm)
     type(config_domain_t),      intent(in)  :: config
     type(parcomm_t),  optional, intent(in)  :: parcomm
 
-    !class(metric_t), allocatable  :: metric
     integer(kind=4) :: halo_width
     integer(kind=4) :: mpi_comm_local
+    integer(kind=4) :: Nz_inter
+    real(kind=8)    :: shift_zc, shift_zi, shift_xyz(3)
 
     !have to be passed as an argument in future
     halo_width = 8
@@ -73,25 +75,39 @@ subroutine create_domain_by_config(domain, config, parcomm)
         domain%parcomm = parcomm_global
     end if
 
-    call domain%partition%init(config%N, config%Nz, max(1,domain%parcomm%np/6), &
+    if(config%vertical_staggering == "CharneyPhilips") then
+        Nz_inter = config%Nz+1
+        shift_zc = 0.5_8; shift_zi = 0.0_8
+    else
+        shift_zc = 0.0_8; shift_zi = 0.5_8
+        Nz_inter = config%Nz-1
+    end if
+
+    call domain%partition%init(config%N, config%Nz, Nz_inter, max(1,domain%parcomm%np/6), &
                                domain%parcomm%myid, domain%parcomm%Np,          &
                                config%staggering_type, strategy = 'default')
 
-    !WORKAROUND vertical staggering
+    ! print *, "Create domain"
+    ! if(config%need_orography) call create_orography(domain%orography)
+    shift_xyz(1:3) = [0.5_8, 0.5_8, shift_zc]
     call create_mesh(domain%mesh_o,  domain%partition, domain%metric, halo_width, &
-                                     config%h_top, 'o', config%vertical_staggering)
-    call create_mesh(domain%mesh_x,  domain%partition, domain%metric, halo_width, &
-                                     config%h_top, 'x', config%vertical_staggering)
+                     config%h_top, domain%partition%tiles_o,  shift_xyz)
+    shift_xyz(1:3) = [0.0_8, 0.5_8, shift_zc]
+    call create_mesh(domain%mesh_x, domain%partition, domain%metric, halo_width, &
+                     config%h_top, domain%partition%tiles_x,  shift_xyz)
+    shift_xyz(1:3) = [0.5_8, 0.0_8, shift_zc]
     call create_mesh(domain%mesh_y,  domain%partition, domain%metric, halo_width, &
-                                     config%h_top, 'y', config%vertical_staggering)
+                     config%h_top, domain%partition%tiles_y,  shift_xyz)
+    shift_xyz(1:3) = [0.0_8, 0.0_8, shift_zc]
     call create_mesh(domain%mesh_xy, domain%partition, domain%metric, halo_width, &
-                                     config%h_top, 'xy',config%vertical_staggering)
-
+                     config%h_top, domain%partition%tiles_xy, shift_xyz)
     if (config%vertical_staggering ==  "CharneyPhilips") then
-        call create_mesh(domain%mesh_z,  domain%partition, domain%metric, halo_width, &
-                                         config%h_top, 'z', config%vertical_staggering)
-        call create_mesh(domain%mesh_xyz,domain%partition, domain%metric, halo_width, &
-                                         config%h_top, 'xyz',config%vertical_staggering)
+        shift_xyz(1:3) = [0.5_8, 0.5_8, shift_zi]
+        call create_mesh(domain%mesh_z,   domain%partition, domain%metric, halo_width, &
+                         config%h_top, domain%partition%tiles_z, shift_xyz)
+        shift_xyz(1:3) = [0.0_8, 0.0_8, shift_zi]
+        call create_mesh(domain%mesh_xyz, domain%partition, domain%metric, halo_width, &
+                         config%h_top, domain%partition%tiles_xyz, shift_xyz)
     end if
 
     select case(config%staggering_type)

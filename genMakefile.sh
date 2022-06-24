@@ -13,5 +13,5 @@ FoBiS.py build -s ./src -m Makefile.opt -compiler intel -fc "mpiifort" -lflags "
 
 #build all fortran programs from src
 #please note that this is a dirty trick, we need a better solution
-#maybe to gig in FoBiS.py options/code
+#maybe to dig in FoBiS.py options/code
 echo "all: \$(addprefix \$(DEXE),\$(EXES))" >> Makefile

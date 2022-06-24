@@ -50,8 +50,8 @@ subroutine create_ah_sbp_quadrature(quadrature, quadrature_name, mesh)
     real(kind=8) A_edge(8)
     integer(kind=4) :: nedge
 
-    if(mesh%tile(mesh%ts)%points_type /= "xy") &
-        call parcomm_global%abort("create_ah_sbp_quadrature is only for xy-point type meshes")
+    if(mesh%tile(mesh%ts)%shift_i /= 0.0_8 .and. mesh%tile(mesh%ts)%shift_j /= 0) &
+        call parcomm_global%abort("create_ah_sbp_quadrature is only for interface-points meshes")
 
     if(quadrature_name == "SBP_Ah21_quadrature") then
         nedge = size(Q21_A)
@@ -100,6 +100,7 @@ subroutine create_C_sbp_quadrature(quadrature, quadrature_name, mesh)
     real(kind=8) A_edge_c(8)
     real(kind=8) A_edge_i(8)
     integer(kind=4) :: nedge_c, nedge_i
+    real(kind=8)    :: shift_x, shift_y
 
     if(quadrature_name == "SBP_C21_quadrature") then
         nedge_i = size(D21_A_interfaces)
@@ -122,32 +123,34 @@ subroutine create_C_sbp_quadrature(quadrature, quadrature_name, mesh)
         is = mesh%tile(t)%is; ie = mesh%tile(t)%ie
         js = mesh%tile(t)%js; je = mesh%tile(t)%je
 
+        shift_x = mesh%tile(t)%shift_i ; shift_y = mesh%tile(t)%shift_j
+
         allocate(tile_q(t)%Ax(is:ie))
         allocate(tile_q(t)%Ay(js:je))
 
-        if(mesh%tile(t)%points_type == "o" .or. mesh%tile(t)%points_type == "c") then
+        if(shift_x == 0.5_8 .and. shift_y == 0.5_8) then
             call create_mass_coefficients(tile_q(t)%Ax, is, ie, mesh%tile(t)%nx, &
                                                         A_edge_c(1:nedge_c), nedge_c)
             call create_mass_coefficients(tile_q(t)%Ay, js, je, mesh%tile(t)%ny, &
                                                         A_edge_c(1:nedge_c), nedge_c)
-        else if(mesh%tile(t)%points_type == "x") then
+        else if(shift_x == 0.0_8 .and. shift_y == 0.5_8) then
             call create_mass_coefficients(tile_q(t)%Ax, is, ie, mesh%tile(t)%nx, &
                                                         A_edge_i(1:nedge_i), nedge_i)
             call create_mass_coefficients(tile_q(t)%Ay, js, je, mesh%tile(t)%ny, &
                                                         A_edge_c(1:nedge_c), nedge_c)
-        else if(mesh%tile(t)%points_type == "y") then
+        else if(shift_x == 0.5_8 .and. shift_y == 0.0_8) then
             call create_mass_coefficients(tile_q(t)%Ax, is, ie, mesh%tile(t)%nx, &
                                                         A_edge_c(1:nedge_c), nedge_c)
             call create_mass_coefficients(tile_q(t)%Ay, js, je, mesh%tile(t)%ny, &
                                                         A_edge_i(1:nedge_i), nedge_i)
-        else if(mesh%tile(t)%points_type == "xy") then
+        else if(shift_x == 0.0_8 .and. shift_y == 0.0_8) then
             call create_mass_coefficients(tile_q(t)%Ax, is, ie, mesh%tile(t)%nx, &
                                                         A_edge_i(1:nedge_i), nedge_i)
             call create_mass_coefficients(tile_q(t)%Ay, js, je, mesh%tile(t)%ny, &
                                                         A_edge_i(1:nedge_i), nedge_i)
         else
-            call parcomm_global%abort("unknown mesh points type in create_C_sbp_quadrature, "// &
-                                      "quadrature_factory_mod: "// mesh%tile(t)%points_type)
+            call parcomm_global%abort("incompatible mesh-points shifts in create_C_sbp_quadrature, "// &
+                                      "quadrature_factory_mod: ")
         end if
    end do
 

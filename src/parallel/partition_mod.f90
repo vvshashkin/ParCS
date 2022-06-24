@@ -22,10 +22,11 @@ end type partition_t
 
 contains
 
-subroutine init(this, Nh, Nz, num_tiles, myid, Np, staggering_type, strategy)
+subroutine init(this, Nh, Nz, Nz_inter, num_tiles, myid, Np, staggering_type, strategy)
     class(partition_t), intent(inout) :: this
     integer(kind=4),    intent(in)    :: Nh        ! num of points in x and y direction at each panel
-    integer(kind=4),    intent(in)    :: Nz        ! num of points in z direction at each panel
+    integer(kind=4),    intent(in)    :: Nz        ! num of cell-centers in z direction at each panel
+    integer(kind=4),    intent(in)    :: Nz_inter  ! num of cell-interfaces in z direction at each panel
     integer(kind=4),    intent(in)    :: num_tiles ! num of tiles at each panel
     integer(kind=4),    intent(in)    :: myid, Np  ! myid and num of processors
     character(*),       intent(in)    :: staggering_type, strategy
@@ -68,8 +69,8 @@ subroutine init(this, Nh, Nz, num_tiles, myid, Np, staggering_type, strategy)
     call this%tiles_y%init (Nt, Nz, Nh+1, Nh,   this%tiles_o%tile)
     call this%tiles_xy%init(Nt, Nz, Nh+1, Nh+1, this%tiles_o%tile)
 
-    call this%tiles_z%init  (Nt, Nz+1, Nh,   Nh,   this%tiles_o%tile)
-    call this%tiles_xyz%init(Nt, Nz+1, Nh+1, Nh+1, this%tiles_o%tile)
+    call this%tiles_z%init  (Nt, Nz_inter, Nh,   Nh,   this%tiles_o%tile)
+    call this%tiles_xyz%init(Nt, Nz_inter, Nh+1, Nh+1, this%tiles_o%tile)
 
     do t = 1, Nt
         if (this%tiles_x%tile(t)%ie == nh) this%tiles_x%tile(t)%ie = nh+1
@@ -81,8 +82,8 @@ subroutine init(this, Nh, Nz, num_tiles, myid, Np, staggering_type, strategy)
         if (this%tiles_xyz%tile(t)%ie == nh) this%tiles_xyz%tile(t)%ie = nh+1
         if (this%tiles_xyz%tile(t)%je == nh) this%tiles_xyz%tile(t)%je = nh+1
 
-        if(this%tiles_z%tile(t)%ke  == Nz)  this%tiles_z%tile(t)%ke  = Nz+1
-        if(this%tiles_xyz%tile(t)%ke == Nz) this%tiles_xyz%tile(t)%ke = Nz+1
+        if(this%tiles_z%tile(t)%ke  == Nz)  this%tiles_z%tile(t)%ke  = Nz_inter
+        if(this%tiles_xyz%tile(t)%ke == Nz) this%tiles_xyz%tile(t)%ke = Nz_inter
     end do
 
     if (staggering_type == 'A') then

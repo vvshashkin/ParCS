@@ -14,6 +14,7 @@ type, public, extends(config_t) :: config_domain_t
     character(len=:), allocatable :: topology_type
     character(len=:), allocatable :: metric_type
     real(kind=8) :: h_top = 1.0_8
+    logical      :: need_orography = .false.
 
     type(config_metric_t) :: config_metric
 
