@@ -2227,6 +2227,7 @@ $(DOBJ)test_metric_mod.o: src/test/test_metric/test_metric_mod.f90 \
 	$(DOBJ)mesh_factory_mod.o \
 	$(DOBJ)mesh_mod.o \
 	$(DOBJ)config_domain_mod.o \
+	$(DOBJ)const_mod.o \
 	$(DOBJ)tile_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -2242,9 +2243,8 @@ $(DOBJ)test_domain_mod.o: src/test/test_domain/test_domain_mod.f90 \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)config_domain_mod.o \
 	$(DOBJ)domain_factory_mod.o \
-	$(DOBJ)grid_field_factory_mod.o \
-	$(DOBJ)outputer_abstract_mod.o \
-	$(DOBJ)outputer_factory_mod.o
+	$(DOBJ)config_orography_mod.o \
+	$(DOBJ)grid_field_factory_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

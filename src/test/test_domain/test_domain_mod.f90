@@ -4,6 +4,7 @@ use domain_mod,             only : domain_t
 use grid_field_mod,         only : grid_field_t
 use config_domain_mod,      only : config_domain_t
 use domain_factory_mod,     only : create_domain
+use config_orography_mod,   only : config_test_orography_t
 use grid_field_factory_mod, only : create_grid_field
 
 implicit none
@@ -50,7 +51,8 @@ subroutine test_domain_config(horizontal_staggering, vertical_staggering)
     config_domain%topology_type       = "cube"
     config_domain%h_top               = 1.0_8
     config_domain%is_orographic_curvilinear = .true.
-    config_domain%orography_name = "test_orography"
+    config_domain%orography_name = "zero_orography"
+    config_domain%config_orography = config_test_orography_t(h=0.1_8)
     call config_domain%config_metric%set_defaults()
 
     call create_domain(domain, config_domain)

@@ -2,11 +2,13 @@ module orography_factory_mod
 
 use orography_mod,            only : orography_t
 use config_mod,               only : config_t
+use config_orography_mod,     only : config_test_orography_t
 use domain_mod,               only : domain_t
 use grid_field_factory_mod,   only : create_grid_field
 use parcomm_mod,              only : parcomm_global
 use orography_test_field_mod, only : orography_test_field_t, orography_test_grad_t
 use test_fields_3d_mod,       only : scalar_field3d_t, vector_field3d_t
+use parcomm_mod,              only : parcomm_global
 
 implicit none
 
@@ -18,6 +20,8 @@ subroutine create_orography(orography,orography_name,config,domain,halo_width)
     class(config_t),   intent(in)  :: config
     type(domain_t),    intent(in)  :: domain
     integer(kind=4),   intent(in)  :: halo_width
+
+    real(kind=8) :: h
 
     call create_grid_field(orography%o%h,          halo_width,0,domain%mesh_o)
     call create_grid_field(orography%o%dh_alpha,   halo_width,0,domain%mesh_o)
@@ -52,8 +56,15 @@ subroutine create_orography(orography,orography_name,config,domain,halo_width)
         call orography%xy%dh_alpha%assign(0.0_8,domain%mesh_xy,halo_width)
         call orography%xy%dh_beta %assign(0.0_8,domain%mesh_xy,halo_width)
     else if(orography_name == "test_orography") then
-        call create_analytic_orography(orography,orography_test_field_t(1.0_8), &
-                                       orography_test_grad_t(1.0_8,domain%mesh_o%scale),&
+        select type(config)
+        class is (config_test_orography_t)
+            h = config%h
+        class default
+            call parcomm_global%abort("orography_factory_mod, unsupported config type for:"//&
+                                       orography_name)
+        end select
+        call create_analytic_orography(orography,orography_test_field_t(h), &
+                                       orography_test_grad_t(h,domain%mesh_o%scale),&
                                        domain, halo_width)
     else
         call parcomm_global%abort("orography factory mod error - unknown orography name:"//&

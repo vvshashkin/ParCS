@@ -28,7 +28,6 @@ subroutine create_mesh(mesh, partition, metric, halo_width, h_top, tiles, &
     integer(kind=4) :: t, pind, i, j, k, ts, te, is, ie, js, je, ks, ke, nh, nx, ny, nz
     real(kind=8)    :: hx, hy, hz
 
-
     real(kind=8) :: shift_i, shift_j, shift_k
 
     ! define horizontal grid parameters

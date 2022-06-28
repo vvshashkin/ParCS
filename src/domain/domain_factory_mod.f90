@@ -154,25 +154,48 @@ subroutine create_domain_meshes(domain,config, orography)
 
     halo_width = config%halo_width
 
-    shift_xyz(1:3) = [0.5_8, 0.5_8, shift_zc]
-    call create_mesh(domain%mesh_o,  domain%partition, domain%metric, halo_width, &
-                     config%h_top, domain%partition%tiles_o,  shift_xyz, orography%o)
-    shift_xyz(1:3) = [0.0_8, 0.5_8, shift_zc]
-    call create_mesh(domain%mesh_x, domain%partition, domain%metric, halo_width, &
-                     config%h_top, domain%partition%tiles_x,  shift_xyz)
-    shift_xyz(1:3) = [0.5_8, 0.0_8, shift_zc]
-    call create_mesh(domain%mesh_y,  domain%partition, domain%metric, halo_width, &
-                     config%h_top, domain%partition%tiles_y,  shift_xyz)
-    shift_xyz(1:3) = [0.0_8, 0.0_8, shift_zc]
-    call create_mesh(domain%mesh_xy, domain%partition, domain%metric, halo_width, &
-                     config%h_top, domain%partition%tiles_xy, shift_xyz)
-    if (config%vertical_staggering ==  "CharneyPhilips") then
-        shift_xyz(1:3) = [0.5_8, 0.5_8, shift_zi]
-        call create_mesh(domain%mesh_z,   domain%partition, domain%metric, halo_width, &
-                         config%h_top, domain%partition%tiles_z, shift_xyz)
-        shift_xyz(1:3) = [0.0_8, 0.0_8, shift_zi]
-        call create_mesh(domain%mesh_xyz, domain%partition, domain%metric, halo_width, &
-                         config%h_top, domain%partition%tiles_xyz, shift_xyz)
+    if(present(orography)) then
+        shift_xyz(1:3) = [0.5_8, 0.5_8, shift_zc]
+        call create_mesh(domain%mesh_o,  domain%partition, domain%metric, halo_width, &
+                         config%h_top, domain%partition%tiles_o,  shift_xyz, orography%o)
+        shift_xyz(1:3) = [0.0_8, 0.5_8, shift_zc]
+        call create_mesh(domain%mesh_x, domain%partition, domain%metric, halo_width, &
+                         config%h_top, domain%partition%tiles_x,  shift_xyz, orography%x)
+        shift_xyz(1:3) = [0.5_8, 0.0_8, shift_zc]
+        call create_mesh(domain%mesh_y,  domain%partition, domain%metric, halo_width, &
+                         config%h_top, domain%partition%tiles_y,  shift_xyz, orography%y)
+        shift_xyz(1:3) = [0.0_8, 0.0_8, shift_zc]
+        call create_mesh(domain%mesh_xy, domain%partition, domain%metric, halo_width, &
+                         config%h_top, domain%partition%tiles_xy, shift_xyz, orography%xy)
+        if (config%vertical_staggering ==  "CharneyPhilips") then
+            shift_xyz(1:3) = [0.5_8, 0.5_8, shift_zi]
+            call create_mesh(domain%mesh_z,   domain%partition, domain%metric, halo_width, &
+                             config%h_top, domain%partition%tiles_z, shift_xyz, orography%o)
+            shift_xyz(1:3) = [0.0_8, 0.0_8, shift_zi]
+            call create_mesh(domain%mesh_xyz, domain%partition, domain%metric, halo_width, &
+                             config%h_top, domain%partition%tiles_xyz, shift_xyz, orography%xy)
+        end if
+    else
+        shift_xyz(1:3) = [0.5_8, 0.5_8, shift_zc]
+        call create_mesh(domain%mesh_o,  domain%partition, domain%metric, halo_width, &
+                         config%h_top, domain%partition%tiles_o,  shift_xyz)
+        shift_xyz(1:3) = [0.0_8, 0.5_8, shift_zc]
+        call create_mesh(domain%mesh_x, domain%partition, domain%metric, halo_width, &
+                         config%h_top, domain%partition%tiles_x,  shift_xyz)
+        shift_xyz(1:3) = [0.5_8, 0.0_8, shift_zc]
+        call create_mesh(domain%mesh_y,  domain%partition, domain%metric, halo_width, &
+                         config%h_top, domain%partition%tiles_y,  shift_xyz)
+        shift_xyz(1:3) = [0.0_8, 0.0_8, shift_zc]
+        call create_mesh(domain%mesh_xy, domain%partition, domain%metric, halo_width, &
+                         config%h_top, domain%partition%tiles_xy, shift_xyz)
+        if (config%vertical_staggering ==  "CharneyPhilips") then
+            shift_xyz(1:3) = [0.5_8, 0.5_8, shift_zi]
+            call create_mesh(domain%mesh_z,   domain%partition, domain%metric, halo_width, &
+                             config%h_top, domain%partition%tiles_z, shift_xyz)
+            shift_xyz(1:3) = [0.0_8, 0.0_8, shift_zi]
+            call create_mesh(domain%mesh_xyz, domain%partition, domain%metric, halo_width, &
+                             config%h_top, domain%partition%tiles_xyz, shift_xyz)
+        end if
     end if
 
     select case(config%staggering_type)

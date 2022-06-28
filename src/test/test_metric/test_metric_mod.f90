@@ -5,7 +5,7 @@ implicit none
 private
 public :: test_metric, test_metric_vert
 
-real(kind=8), parameter :: test_tolerance=3e-15
+real(kind=8), parameter :: test_tolerance=2e-14
 
 contains
 
@@ -21,6 +21,7 @@ use grid_field_factory_mod, only : create_grid_field
 use mesh_factory_mod,       only : create_mesh
 use mesh_mod,               only : mesh_t
 use config_domain_mod,      only : config_domain_t
+use config_orography_mod,   only : config_test_orography_t
 use const_mod,              only : Earth_radii
 
 type(domain_t)                     :: domain
@@ -55,6 +56,7 @@ config_domain%config_metric%scale = Earth_radii
 config_domain%config_metric%vertical_scale = config_domain%h_top
 config_domain%is_orographic_curvilinear = .true.
 config_domain%orography_name = "test_orography"
+config_domain%config_orography = config_test_orography_t(h=1000.0_8)
 
 call create_domain(domain, config_domain)
 call domain%parcomm%print('equiangular cubed-sphere test')
@@ -80,9 +82,10 @@ else
     print *, "symmetricity test failed"
 end if
 
-call test_mesh_metric(domain%mesh_p,halo_width,"p")
-call test_mesh_metric(domain%mesh_u,halo_width,"u")
-call test_mesh_metric(domain%mesh_v,halo_width,"v")
+call test_mesh_metric(domain%mesh_o ,halo_width,"o")
+call test_mesh_metric(domain%mesh_x ,halo_width,"x")
+call test_mesh_metric(domain%mesh_y ,halo_width,"y")
+call test_mesh_metric(domain%mesh_xy,halo_width,"xy")
 
 contains
 
