@@ -12,7 +12,7 @@ use const_mod,            only : Earth_radii
 
 implicit none
 
-real(kind=8), parameter :: U0 = 20.0_8, W0 = 0.1_8
+real(kind=8), parameter :: U0 = 20.0_8, W0 = 0.01_8
 
 type, extends(vector_field3d_t) :: div3d_test_wind_t
     real(kind=8) :: h_top

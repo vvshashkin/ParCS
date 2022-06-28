@@ -13,31 +13,40 @@ character(len=:), allocatable :: config_str
 
 call init_global_parallel_enviroment()
 
-! errs =  test_div_3d(Nh = 32, Nz = 20, &
-!                     hor_div_name = "divergence_c_sbp42", &
-!                     diff_eta_name = "eta_diff_w2p_sbp42", &
-!                     horizontal_staggering = "C", vertical_staggering = "CharneyPhilips")
-! if (parcomm_global%myid==0) then
-!     print *, "div_3d_c_sbp42"
-!     print "(A,4E25.16)", "Err: ", errs%values
-! end if
-!
-errs =  test_grad_3d(Nh = 32, Nz = 8, &
-                    hor_grad_name = "gradient_c_sbp42", &
-                    diff_eta_name = "eta_diff_p2w_sbp42", &
+errs =  test_div_3d(Nh = 32, Nz = 20, &
+                    hor_div_name = "divergence_c_sbp42", &
+                    diff_eta_name = "eta_diff_w2p_sbp42", &
                     horizontal_staggering = "C", vertical_staggering = "CharneyPhilips")
 if (parcomm_global%myid==0) then
-    print *, "grad_3d_c_sbp42"
+    print *, "div_3d_c_sbp42"
     print "(A,4E25.16)", "Err: ", errs%values
 end if
-errs =  test_grad_3d(Nh = 32, Nz = 8, &
-                    hor_grad_name = "gradient_ah42_sbp_ecs", &
-                    diff_eta_name = "eta_diff_p2w_sbp21", &
+
+errs =  test_div_3d(Nh = 32, Nz = 20, &
+                    hor_div_name = "divergence_ah42_sbp", &
+                    diff_eta_name = "eta_diff_w2p_sbp21", &
                     horizontal_staggering = "Ah", vertical_staggering = "CharneyPhilips")
 if (parcomm_global%myid==0) then
-    print *, "grad_3d_c_sbp42"
+    print *, "div_3d_Ah_sbp42_21"
     print "(A,4E25.16)", "Err: ", errs%values
 end if
+
+! errs =  test_grad_3d(Nh = 64, Nz = 20, &
+!                     hor_grad_name = "gradient_c_sbp42", &
+!                     diff_eta_name = "eta_diff_p2w_sbp42", &
+!                     horizontal_staggering = "C", vertical_staggering = "CharneyPhilips")
+! if (parcomm_global%myid==0) then
+!     print *, "grad_3d_c_sbp42"
+!     print "(A,4E25.16)", "Err: ", errs%values
+! end if
+! errs =  test_grad_3d(Nh = 32, Nz = 8, &
+!                     hor_grad_name = "gradient_ah42_sbp_ecs", &
+!                     diff_eta_name = "eta_diff_p2w_sbp21", &
+!                     horizontal_staggering = "Ah", vertical_staggering = "CharneyPhilips")
+! if (parcomm_global%myid==0) then
+!     print *, "grad_3d_Ah_sbp42"
+!     print "(A,4E25.16)", "Err: ", errs%values
+! end if
 ! errs =  test_co2contra_3d(Nh = 32, Nz = 8, &
 !                     co2contra_3d_oper_name = "co2contra_3d_colocated", &
 !                     horizontal_staggering = "Ah", vertical_staggering = "None")
