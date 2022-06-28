@@ -33,7 +33,6 @@ type, public :: tile_mesh_t
     real(kind=8)                 :: shift_k                !determines shift of the first grid point from the boundary
     real(kind=8)                 :: alpha_0, beta_0        !determines coord start
 
-    ! character(:), allocatable    :: points_type
 contains
 
     procedure, public :: init => init_tile_mesh

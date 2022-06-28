@@ -1,29 +1,32 @@
 module mesh_factory_mod
 
-use mesh_mod,    only : mesh_t
-use tiles_mod,   only : tiles_t
-use parcomm_mod, only : parcomm_global
+use mesh_mod,       only : mesh_t, tile_mesh_t
+use tiles_mod,      only : tiles_t
+use parcomm_mod,    only : parcomm_global
+use orography_mod,  only : orography_1mesh_t
+use partition_mod,  only : partition_t
+use metric_mod,     only : metric_t
+use grid_field_mod, only : tile_field_t
 
 implicit none
 
 contains
 
-subroutine create_mesh(mesh, partition, metric, halo_width, h_top, tiles, shift_xyz)
+subroutine create_mesh(mesh, partition, metric, halo_width, h_top, tiles, &
+                       shift_xyz, orography)
 
-    use partition_mod, only : partition_t
-    use metric_mod,    only : metric_t
+    type(partition_t),       intent(in)   :: partition
+    class(metric_t),         intent(in)   :: metric
+    type(mesh_t),            intent(out)  :: mesh
 
-    type(partition_t), intent(in)  :: partition
-    class(metric_t),   intent(in)  :: metric
-    type(mesh_t),      intent(out) :: mesh
-
-    integer(kind=4),  intent(in)   :: halo_width
-    real(kind=8),     intent(in)   :: h_top
-    type(tiles_t),    intent(in)   :: tiles
-    real(kind=8),     intent(in)   :: shift_xyz(3)
+    integer(kind=4),         intent(in)   :: halo_width
+    real(kind=8),            intent(in)   :: h_top
+    type(tiles_t),           intent(in)   :: tiles
+    real(kind=8),            intent(in)   :: shift_xyz(3)
+    type(orography_1mesh_t), intent(in), optional :: orography
 
     integer(kind=4) :: t, pind, i, j, k, ts, te, is, ie, js, je, ks, ke, nh, nx, ny, nz
-    real(kind=8) :: alpha, beta, eta, hx, hy, hz, vec(3)
+    real(kind=8)    :: hx, hy, hz
 
 
     real(kind=8) :: shift_i, shift_j, shift_k
@@ -70,38 +73,112 @@ subroutine create_mesh(mesh, partition, metric, halo_width, h_top, tiles, shift_
         mesh%tile(t)%alpha_0 = metric%alpha0
         mesh%tile(t)%beta_0  = metric%beta0
 
-        do k = ks, ke
-            eta = mesh%tile(t)%get_eta(k)
-            do j = js - halo_width, je + halo_width
-                beta = mesh%tile(t)%get_beta(j)
-                do i = is - halo_width, ie + halo_width
-                    mesh%tile(t)%panel_ind = pind
+        mesh%tile(t)%panel_ind = pind
 
-                    alpha = mesh%tile(t)%get_alpha(i)
-                    vec(1:3) = metric%calculate_r(pind, alpha, beta)
-
-                    mesh%tile(t)%rx(i,j,k) = vec(1)
-                    mesh%tile(t)%ry(i,j,k) = vec(2)
-                    mesh%tile(t)%rz(i,j,k) = vec(3)
-                    mesh%tile(t)%h(i,j,k)  = metric%calculate_h(pind,alpha,beta,eta,0.0_8,h_top)
-
-                    mesh%tile(t)%Q (1:6,i,j,k) = metric%calculate_Q(pind, alpha, beta)
-                    mesh%tile(t)%Qi(1:6,i,j,k) = metric%calculate_Qi(pind, alpha, beta)
-
-                    mesh%tile(t)%J(i,j,k)= metric%calculate_J(pind, alpha, beta)
-
-                    mesh%tile(t)%a1(1:4,i,j,k) = metric%calculate_a1(pind,alpha,beta)
-                    mesh%tile(t)%a2(1:4,i,j,k) = metric%calculate_a2(pind,alpha,beta)
-                    mesh%tile(t)%a3(1:4,i,j,k) = metric%calculate_a3(pind,alpha,beta)
-                    mesh%tile(t)%b1(1:3,i,j,k) = metric%calculate_b1(pind,alpha,beta)
-                    mesh%tile(t)%b2(1:3,i,j,k) = metric%calculate_b2(pind,alpha,beta)
-                    mesh%tile(t)%b3(1:4,i,j,k) = metric%calculate_b3(pind,alpha,beta)
-                end do
-            end do
-        end do
+        if(present(orography)) then
+            call calc_mesh_metrics_orog(mesh%tile(t),metric,h_top,halo_width,&
+                                        orography%h%tile(t),orography%dh_alpha%tile(t),&
+                                        orography%dh_beta%tile(t))
+        else
+            call calc_mesh_metrics_2d(mesh%tile(t),metric,h_top,halo_width)
+        end if
 
     end do
 
 end subroutine create_mesh
+
+subroutine calc_mesh_metrics_2d(mesh,metric,h_top,halo_width)
+
+    type(tile_mesh_t), intent(inout) :: mesh
+    class(metric_t),   intent(in)    :: metric
+    real(kind=8),      intent(in)    :: h_top
+    integer(kind=4),   intent(in)    :: halo_width
+
+    integer(kind=4) :: i, j, k, pind
+    real(kind=8) :: alpha, beta, eta, vec(3)
+
+    pind = mesh%panel_ind
+
+    do k = mesh%ks, mesh%ke
+        eta = mesh%get_eta(k)
+        do j = mesh%js - halo_width, mesh%je + halo_width
+            beta = mesh%get_beta(j)
+            do i = mesh%is - halo_width, mesh%ie + halo_width
+
+                alpha = mesh%get_alpha(i)
+                vec(1:3) = metric%calculate_r(pind, alpha, beta)
+
+                mesh%rx(i,j,k) = vec(1)
+                mesh%ry(i,j,k) = vec(2)
+                mesh%rz(i,j,k) = vec(3)
+                mesh%h(i,j,k)  = metric%calculate_h(pind,alpha,beta,eta,0.0_8,h_top)
+
+                mesh%Q (1:6,i,j,k) = metric%calculate_Q(pind, alpha, beta)
+                mesh%Qi(1:6,i,j,k) = metric%calculate_Qi(pind, alpha, beta)
+
+                mesh%J(i,j,k)= metric%calculate_J(pind, alpha, beta)
+
+                mesh%a1(1:4,i,j,k) = metric%calculate_a1(pind,alpha,beta)
+                mesh%a2(1:4,i,j,k) = metric%calculate_a2(pind,alpha,beta)
+                mesh%a3(1:4,i,j,k) = metric%calculate_a3(pind,alpha,beta)
+                mesh%b1(1:3,i,j,k) = metric%calculate_b1(pind,alpha,beta)
+                mesh%b2(1:3,i,j,k) = metric%calculate_b2(pind,alpha,beta)
+                mesh%b3(1:4,i,j,k) = metric%calculate_b3(pind,alpha,beta)
+            end do
+        end do
+    end do
+
+end subroutine calc_mesh_metrics_2d
+
+subroutine calc_mesh_metrics_orog(mesh,metric,h_top,halo_width,h_surf,dhs_alpha,dhs_beta)
+
+    type(tile_mesh_t),       intent(inout) :: mesh
+    class(metric_t),         intent(in)    :: metric
+    real(kind=8),            intent(in)    :: h_top
+    integer(kind=4),         intent(in)    :: halo_width
+    type(tile_field_t),      intent(in)    :: h_surf, dhs_alpha, dhs_beta
+
+    integer(kind=4) :: i, j, k, pind
+    real(kind=8) :: alpha, beta, eta, vec(3)
+
+    pind = mesh%panel_ind
+
+    do k = mesh%ks, mesh%ke
+        eta = mesh%get_eta(k)
+        do j = mesh%js - halo_width, mesh%je + halo_width
+            beta = mesh%get_beta(j)
+            do i = mesh%is - halo_width, mesh%ie + halo_width
+
+                alpha = mesh%get_alpha(i)
+                vec(1:3) = metric%calculate_r(pind, alpha, beta,eta,h_surf%p(i,j,1),h_top)
+
+                mesh%rx(i,j,k) = vec(1)
+                mesh%ry(i,j,k) = vec(2)
+                mesh%rz(i,j,k) = vec(3)
+                mesh%h(i,j,k)  = metric%calculate_h(pind,alpha,beta,eta,h_surf%p(i,j,1),h_top)
+
+                mesh%Q (1:6,i,j,k) = metric%calculate_Q(pind, alpha, beta, eta, &
+                                     h_surf%p(i,j,1), dhs_alpha%p(i,j,1), dhs_beta%p(i,j,1),h_top)
+                mesh%Qi(1:6,i,j,k) = metric%calculate_Qi(pind, alpha, beta, eta, &
+                                     h_surf%p(i,j,1), dhs_alpha%p(i,j,1), dhs_beta%p(i,j,1),h_top)
+
+                mesh%J(i,j,k)= metric%calculate_J(pind, alpha, beta, eta, h_surf%p(i,j,1), h_top)
+
+                mesh%a1(1:4,i,j,k) = metric%calculate_a1(pind,alpha,beta,eta,&
+                                                  h_surf%p(i,j,1),dhs_alpha%p(i,j,1),h_top)
+                mesh%a2(1:4,i,j,k) = metric%calculate_a2(pind,alpha,beta,eta,&
+                                                  h_surf%p(i,j,1),dhs_beta%p(i,j,1),h_top)
+                mesh%a3(1:4,i,j,k) = metric%calculate_a3(pind,alpha,beta,eta,h_surf%p(i,j,1),h_top)
+                mesh%b1(1:3,i,j,k) = metric%calculate_b1(pind,alpha,beta,eta,h_surf%p(i,j,1),&
+                                                        dhs_alpha%p(i,j,1),dhs_beta%p(i,j,1),h_top)
+                mesh%b2(1:3,i,j,k) = metric%calculate_b2(pind,alpha,beta,eta,h_surf%p(i,j,1),&
+                                                        dhs_alpha%p(i,j,1),dhs_beta%p(i,j,1),h_top)
+                mesh%b3(1:4,i,j,k) = metric%calculate_b3(pind,alpha,beta,eta,h_surf%p(i,j,1),&
+                                                        dhs_alpha%p(i,j,1),dhs_beta%p(i,j,1),h_top)
+            end do
+        end do
+    end do
+
+end subroutine calc_mesh_metrics_orog
 
 end module mesh_factory_mod

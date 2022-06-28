@@ -15,7 +15,7 @@ end type scalar_field3d_t
 type, abstract :: vector_field3d_t
 contains
     procedure, public :: get_vector_field
-    procedure, public :: get_vertical_component
+    procedure, public :: get_vertical_component, get_x_component, get_y_component
     procedure(generate_vector_component_tile), deferred :: get_vector_component_tile
 end type vector_field3d_t
 
@@ -123,5 +123,47 @@ subroutine get_vertical_component(this,w,mesh_w,halo_width,component_type)
         end select
     end do
 end subroutine get_vertical_component
+
+subroutine get_x_component(this,w,mesh_w,halo_width,component_type)
+    class(vector_field3d_t), intent(in)    :: this
+    type(grid_field_t),      intent(inout) :: w
+    type(mesh_t),            intent(in)    :: mesh_w
+    integer(kind=4),         intent(in)    :: halo_width
+    character(len=*),        intent(in)    :: component_type
+
+    integer(kind=4) :: t
+
+    do t=mesh_w%ts, mesh_w%te
+        select case(component_type)
+        case("covariant")
+            call this%get_vector_component_tile(w%tile(t),mesh_w%tile(t),halo_width,&
+                                                mesh_w%tile(t)%a1,size(mesh_w%tile(t)%a1,1))
+        case("contravariant")
+            call this%get_vector_component_tile(w%tile(t),mesh_w%tile(t),halo_width,&
+                                                mesh_w%tile(t)%b1,size(mesh_w%tile(t)%b1,1))
+        end select
+    end do
+end subroutine get_x_component
+
+subroutine get_y_component(this,w,mesh_w,halo_width,component_type)
+    class(vector_field3d_t), intent(in)    :: this
+    type(grid_field_t),      intent(inout) :: w
+    type(mesh_t),            intent(in)    :: mesh_w
+    integer(kind=4),         intent(in)    :: halo_width
+    character(len=*),        intent(in)    :: component_type
+
+    integer(kind=4) :: t
+
+    do t=mesh_w%ts, mesh_w%te
+        select case(component_type)
+        case("covariant")
+            call this%get_vector_component_tile(w%tile(t),mesh_w%tile(t),halo_width,&
+                                                mesh_w%tile(t)%a2,size(mesh_w%tile(t)%a2,1))
+        case("contravariant")
+            call this%get_vector_component_tile(w%tile(t),mesh_w%tile(t),halo_width,&
+                                                mesh_w%tile(t)%b2,size(mesh_w%tile(t)%b2,1))
+        end select
+    end do
+end subroutine get_y_component
 
 end module test_fields_3d_mod

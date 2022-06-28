@@ -246,16 +246,17 @@ subroutine update_grid_field_s1v1s2v2(this, scalar1, f1, scalar2, f2, mesh)
 
 end subroutine update_grid_field_s1v1s2v2
 
-subroutine assign_grid_field_s1(this, scalar1, mesh)
+subroutine assign_grid_field_s1(this, scalar1, mesh, halo_width)
 
     class(grid_field_t), intent(inout) :: this
     real(kind=8),        intent(in)    :: scalar1
     type(mesh_t),        intent(in)    :: mesh
+    integer(kind=4), optional, intent(in) :: halo_width
 
     integer(kind=4) :: t
 
     do t = mesh%ts, mesh%te
-        call this%tile(t)%assign(scalar1, mesh%tile(t))
+        call this%tile(t)%assign(scalar1, mesh%tile(t), halo_width)
     end do
 
 end subroutine assign_grid_field_s1
@@ -414,17 +415,21 @@ subroutine tile_field_assign_s1v1s2v2(this, scalar1, v1, scalar2, v2, mesh)
 
 end subroutine tile_field_assign_s1v1s2v2
 
-subroutine tile_field_assign_s1(this, scalar1, mesh)
+subroutine tile_field_assign_s1(this, scalar1, mesh, halo_width)
 
     class(tile_field_t), intent(inout) :: this
     real(kind=8),        intent(in)    :: scalar1
     type(tile_mesh_t),   intent(in)    :: mesh
+    integer(kind=4), optional, intent(in) :: halo_width
 
-    integer(kind=4) :: k, j, i
+    integer(kind=4) :: k, j, i, hw
+
+    hw = 0
+    if(present(halo_width)) hw = halo_width
 
     do k = mesh%ks, mesh%ke
-        do j = mesh%js, mesh%je
-            do i = mesh%is, mesh%ie
+        do j = mesh%js-hw, mesh%je+hw
+            do i = mesh%is-hw, mesh%ie+hw
                 this%p(i,j,k) = scalar1
             end do
         end do

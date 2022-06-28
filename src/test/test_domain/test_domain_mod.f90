@@ -49,6 +49,8 @@ subroutine test_domain_config(horizontal_staggering, vertical_staggering)
     config_domain%metric_type         = "shallow_atmosphere_metric"
     config_domain%topology_type       = "cube"
     config_domain%h_top               = 1.0_8
+    config_domain%is_orographic_curvilinear = .true.
+    config_domain%orography_name = "test_orography"
     call config_domain%config_metric%set_defaults()
 
     call create_domain(domain, config_domain)

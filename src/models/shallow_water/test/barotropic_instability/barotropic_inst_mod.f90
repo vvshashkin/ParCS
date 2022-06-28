@@ -30,6 +30,8 @@ use key_value_mod, only : key_value_r8_t
 use grid_field_mod,         only : grid_field_t
 use grid_field_factory_mod, only : create_grid_field
 
+use mpi
+
 implicit none
 
 ! type(config_RH4_wave_t) :: config_RH4_wave
@@ -72,7 +74,7 @@ subroutine run_barotropic_inst()
     real(kind=8)      :: tau_write
     integer(kind=4)   :: nstep_write, nstep_diagnostics
 
-    real(kind=8)    :: time, l2err, l2_ex
+    real(kind=8)    :: time, l2err, l2_ex, wtime
     integer(kind=4) :: it
 
     call read_namelist_as_str(namelist_string, "namelist_swm", parcomm_global%myid)
@@ -140,6 +142,8 @@ subroutine run_barotropic_inst()
     call create_grid_field(curl, halo_width, 0, domain%mesh_q)
 
 
+    wtime = mpi_wtime()
+
     do it = 1, int(config%simulation_time/dt)
 
         !print *, "tstep", it
@@ -171,6 +175,8 @@ subroutine run_barotropic_inst()
             end select
         end if
     end do
+
+    print *, "Wall-time", mpi_wtime()-wtime
 
 end subroutine run_barotropic_inst
 

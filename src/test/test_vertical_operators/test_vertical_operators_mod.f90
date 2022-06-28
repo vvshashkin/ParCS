@@ -9,7 +9,7 @@ use domain_factory_mod,       only: create_domain
 use config_domain_mod,        only: config_domain_t
 use grid_field_mod,           only: grid_field_t
 use grid_field_factory_mod,   only: create_grid_field
-use vec_math_mod,             only : l2norm
+use vec_math_mod,             only: l2norm
 
 implicit none
 

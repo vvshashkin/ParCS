@@ -14,6 +14,7 @@ type, public :: domain_t
     class(topology_t), allocatable  :: topology
     class(metric_t),   allocatable  :: metric
     character(len=:),  allocatable  :: horizontal_staggering
+    type(domain_t),    allocatable  :: domain_2d
     type(parcomm_t)   :: parcomm
     type(partition_t) :: partition
     type(orography_t) :: orography

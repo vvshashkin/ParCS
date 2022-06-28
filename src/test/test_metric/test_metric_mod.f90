@@ -18,19 +18,16 @@ use domain_factory_mod,     only : create_domain
 use topology_mod,           only : topology_t
 use grid_field_mod,         only : grid_field_t
 use grid_field_factory_mod, only : create_grid_field
-!use exchange_abstract_mod,  only : exchange_t
-!use partition_mod,          only : partition_t
-!use exchange_factory_mod,   only : create_Agrid_halo_exchange
 use mesh_factory_mod,       only : create_mesh
 use mesh_mod,               only : mesh_t
+use config_domain_mod,      only : config_domain_t
 
-!class(exchange_t),     allocatable :: exch_halo
-!type(partition_t)                  :: partition
 type(domain_t)                     :: domain
 type(grid_field_t)                 :: f1, f2
 type(mesh_t),          allocatable :: mesh(:)
+type(config_domain_t)              :: config_domain
 
-integer(kind=4), parameter         :: nh=16, nz=3, halo_width=3
+integer(kind=4), parameter         :: nh=16, nz=10, halo_width=3
 real(kind=8),    parameter         :: zeps = 1e-16_8
 integer(kind=4)                    :: myid, np, ierr, code
 
@@ -45,7 +42,19 @@ logical :: lcross_edge_xyz = .true., lsymm_check = .true.
 real(kind=8) zq(1:nh,3), zp(1:nh,3)
 real(kind=8) err_ort_rab, err_ort_abt, err_q, err_qi, err_g
 
-call create_domain(domain, "cube", 'C', nh, nz)
+config_domain%N  = nh
+config_domain%Nz = nz
+config_domain%staggering_type     = "C"
+config_domain%vertical_staggering = "CharneyPhilips"
+config_domain%metric_type         = "shallow_atmosphere_metric"
+config_domain%topology_type       = "cube"
+config_domain%h_top = 30e3
+call config_domain%config_metric%set_defaults()
+config_domain%config_metric%vertical_scale = config_domain%h_top
+config_domain%is_orographic_curvilinear = .true.
+config_domain%orography_name = "zero_orography"
+
+call create_domain(domain, config_domain)
 call domain%parcomm%print('equiangular cubed-sphere test')
 
 if(domain%parcomm%np >1) then
@@ -228,8 +237,8 @@ subroutine test_metric_vert()
     else
         print *, "vertical metric test failed"
     end if
-    print *, domain%mesh_z%tile(1)%h(1,1,:)
-    print *, domain%mesh_xyz%tile(1)%h(1,1,:)
+    ! print *, domain%mesh_z%tile(1)%h(1,1,:)
+    ! print *, domain%mesh_xyz%tile(1)%h(1,1,:)
 
 end subroutine test_metric_vert
 end module test_metric_mod

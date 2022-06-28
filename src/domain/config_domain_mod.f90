@@ -1,7 +1,7 @@
 module config_domain_mod
 
-use config_mod,        only : config_t
-use config_metric_mod, only : config_metric_t
+use config_mod,           only : config_t
+use config_metric_mod,    only : config_metric_t
 
 implicit none
 
@@ -13,8 +13,11 @@ type, public, extends(config_t) :: config_domain_t
     character(len=:), allocatable :: vertical_staggering
     character(len=:), allocatable :: topology_type
     character(len=:), allocatable :: metric_type
-    real(kind=8) :: h_top = 1.0_8
-    logical      :: need_orography = .false.
+    real(kind=8)                  :: h_top = 1.0_8
+    logical                       :: is_orographic_curvilinear = .false.
+    character(len=:), allocatable :: orography_name
+    class(config_t),  allocatable :: config_orography
+    integer(kind=4) :: halo_width = 8
 
     type(config_metric_t) :: config_metric
 

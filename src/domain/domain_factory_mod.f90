@@ -5,8 +5,12 @@ use topology_factory_mod,      only : create_topology
 use cubed_sphere_topology_mod, only : cubed_sphere_topology_t
 use metric_mod,                only : metric_t
 use metric_factory_mod,        only : create_metric, create_metric_by_config
+use orography_mod,             only : orography_t, orography_1mesh_t
 use orography_factory_mod,     only : create_orography
 use config_domain_mod,         only : config_domain_t
+use mesh_factory_mod,          only : create_mesh
+use parcomm_factory_mod,       only : create_parcomm
+use parcomm_mod,               only : parcomm_global, parcomm_t
 use mpi
 
 implicit none
@@ -44,10 +48,6 @@ end subroutine create_domain_by_arguments
 
 subroutine create_domain_by_config(domain, config, parcomm)
 
-    use mesh_factory_mod,    only : create_mesh
-    use parcomm_factory_mod, only : create_parcomm
-    use parcomm_mod,         only : parcomm_global, parcomm_t
-
     type(domain_t),             intent(out) :: domain
     type(config_domain_t),      intent(in)  :: config
     type(parcomm_t),  optional, intent(in)  :: parcomm
@@ -55,10 +55,8 @@ subroutine create_domain_by_config(domain, config, parcomm)
     integer(kind=4) :: halo_width
     integer(kind=4) :: mpi_comm_local
     integer(kind=4) :: Nz_inter
-    real(kind=8)    :: shift_zc, shift_zi, shift_xyz(3)
 
-    !have to be passed as an argument in future
-    halo_width = 8
+    type(domain_t)  :: domain_2d
 
     domain%topology = create_topology(config%topology_type)
 
@@ -77,9 +75,7 @@ subroutine create_domain_by_config(domain, config, parcomm)
 
     if(config%vertical_staggering == "CharneyPhilips") then
         Nz_inter = config%Nz+1
-        shift_zc = 0.5_8; shift_zi = 0.0_8
     else
-        shift_zc = 0.0_8; shift_zi = 0.5_8
         Nz_inter = config%Nz-1
     end if
 
@@ -87,11 +83,80 @@ subroutine create_domain_by_config(domain, config, parcomm)
                                domain%parcomm%myid, domain%parcomm%Np,          &
                                config%staggering_type, strategy = 'default')
 
-    ! print *, "Create domain"
-    ! if(config%need_orography) call create_orography(domain%orography)
+    if(config%is_orographic_curvilinear) then
+        allocate(domain%domain_2d)
+        call create_2d_subdomain(domain%domain_2d, config, domain%parcomm)
+        call create_orography(domain%orography,config%orography_name,&
+                              config%config_orography,domain%domain_2d,config%halo_width)
+        call create_domain_meshes(domain,config,domain%orography)
+    else
+        call create_domain_meshes(domain,config)
+    end if
+
+
+end subroutine create_domain_by_config
+
+subroutine create_2d_subdomain(domain, config, parcomm)
+
+    use mesh_factory_mod,    only : create_mesh
+    use parcomm_factory_mod, only : create_parcomm
+    use parcomm_mod,         only : parcomm_global, parcomm_t
+
+    type(domain_t),             intent(out) :: domain
+    type(config_domain_t),      intent(in)  :: config
+    type(parcomm_t),  optional, intent(in)  :: parcomm
+
+    integer(kind=4) :: halo_width
+    integer(kind=4) :: mpi_comm_local
+    integer(kind=4) :: Nz_inter
+    real(kind=8)    :: shift_zc, shift_zi, shift_xyz(3)
+
+    type(domain_t)  :: domain_2d
+
+    !have to be passed as an argument in future
+    halo_width = 8
+
+    domain%topology = create_topology(config%topology_type)
+
+    call create_metric_by_config(domain%metric, domain%topology, &
+                                 config%config_metric%metric_2d_type, config%config_metric)
+
+    domain%horizontal_staggering = config%staggering_type
+
+    if(present(parcomm)) then
+        domain%parcomm = parcomm
+    else
+        domain%parcomm = parcomm_global
+    end if
+
+    call domain%partition%init(config%N, 1, 1, max(1,domain%parcomm%np/6), &
+                               domain%parcomm%myid, domain%parcomm%Np,          &
+                               config%staggering_type, strategy = 'default')
+
+   call create_domain_meshes(domain,config)
+
+end subroutine create_2d_subdomain
+
+subroutine create_domain_meshes(domain,config, orography)
+
+    type(domain_t),        intent(inout) :: domain
+    type(config_domain_t), intent(in)    :: config
+    type(orography_t),     intent(in), optional    :: orography
+
+    real(kind=8)    :: shift_zc, shift_zi, shift_xyz(3)
+    integer(kind=4) :: halo_width
+
+    if(config%vertical_staggering == "CharneyPhilips") then
+        shift_zc = 0.5_8; shift_zi = 0.0_8
+    else
+        shift_zc = 0.0_8; shift_zi = 0.5_8
+    end if
+
+    halo_width = config%halo_width
+
     shift_xyz(1:3) = [0.5_8, 0.5_8, shift_zc]
     call create_mesh(domain%mesh_o,  domain%partition, domain%metric, halo_width, &
-                     config%h_top, domain%partition%tiles_o,  shift_xyz)
+                     config%h_top, domain%partition%tiles_o,  shift_xyz, orography%o)
     shift_xyz(1:3) = [0.0_8, 0.5_8, shift_zc]
     call create_mesh(domain%mesh_x, domain%partition, domain%metric, halo_width, &
                      config%h_top, domain%partition%tiles_x,  shift_xyz)
@@ -149,6 +214,7 @@ subroutine create_domain_by_config(domain, config, parcomm)
     case default
         call parcomm_global%abort("domain_factory_mod, unknown vertical staggering type: "//config%vertical_staggering)
     end select
-end subroutine create_domain_by_config
+
+end subroutine create_domain_meshes
 
 end module domain_factory_mod
