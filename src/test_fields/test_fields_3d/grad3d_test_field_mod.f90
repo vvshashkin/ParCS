@@ -11,7 +11,7 @@ use const_mod,            only : Earth_radii, grav=>Earth_grav, kappa, Rd=>rgaz
 
 implicit none
 
-real(kind=8), parameter :: ps_amp = 0.1 !relative amplitude of ps variation
+real(kind=8), parameter :: ps_amp = 0.1_8 !relative amplitude of ps variation
 
 type, extends(scalar_field3d_t) :: grad3d_test_input_t
     real(kind=8) :: h_top

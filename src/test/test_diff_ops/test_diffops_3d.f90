@@ -22,14 +22,22 @@ call init_global_parallel_enviroment()
 !     print "(A,4E25.16)", "Err: ", errs%values
 ! end if
 !
-! errs =  test_grad_3d(Nh = 32, Nz = 8, &
-!                     hor_grad_name = "gradient_c_sbp42", &
-!                     diff_eta_name = "eta_diff_p2w_sbp42", &
-!                     horizontal_staggering = "C", vertical_staggering = "CharneyPhilips")
-! if (parcomm_global%myid==0) then
-!     print *, "grad_3d_c_sbp42"
-!     print "(A,4E25.16)", "Err: ", errs%values
-! end if
+errs =  test_grad_3d(Nh = 32, Nz = 8, &
+                    hor_grad_name = "gradient_c_sbp42", &
+                    diff_eta_name = "eta_diff_p2w_sbp42", &
+                    horizontal_staggering = "C", vertical_staggering = "CharneyPhilips")
+if (parcomm_global%myid==0) then
+    print *, "grad_3d_c_sbp42"
+    print "(A,4E25.16)", "Err: ", errs%values
+end if
+errs =  test_grad_3d(Nh = 32, Nz = 8, &
+                    hor_grad_name = "gradient_ah42_sbp_ecs", &
+                    diff_eta_name = "eta_diff_p2w_sbp21", &
+                    horizontal_staggering = "Ah", vertical_staggering = "CharneyPhilips")
+if (parcomm_global%myid==0) then
+    print *, "grad_3d_c_sbp42"
+    print "(A,4E25.16)", "Err: ", errs%values
+end if
 ! errs =  test_co2contra_3d(Nh = 32, Nz = 8, &
 !                     co2contra_3d_oper_name = "co2contra_3d_colocated", &
 !                     horizontal_staggering = "Ah", vertical_staggering = "None")
@@ -169,20 +177,20 @@ call init_global_parallel_enviroment()
 !     print "(A,4E25.16)", "Err: ", errs%values
 ! end if
 
-errs =  test_scalar_advection_3d(Nh = 32, Nz = 10, &
-                                 advection_oper_name      = "advection_w_Ah", &
-                                 config_str               = "&w_advection_conf "          // &
-                                 "hor_advection_oper_name = 'sbp_d42',"                   // &
-                                 "z_advection_oper_name   = 'adv_z_c2',"                  // &
-                                 "uv2w_operator_name      = 'uv2w_hor_colocated',"       // &
-                                 "uv2w_vert_part_name     = 'vertical_interp_p2w_sbp42' /",                     &
-                                 points_type              = "w",                      &
-                                 horizontal_staggering    = "Ah",                     &
-                                 vertical_staggering      = "CharneyPhilips")
-if (parcomm_global%myid==0) then
-    print *, "advection_w_Ah, sbp_d42, adv_z_c2"
-    print "(A,4E25.16)", "Err: ", errs%values
-end if
+! errs =  test_scalar_advection_3d(Nh = 32, Nz = 10, &
+!                                  advection_oper_name      = "advection_w_Ah", &
+!                                  config_str               = "&w_advection_conf "          // &
+!                                  "hor_advection_oper_name = 'sbp_d42',"                   // &
+!                                  "z_advection_oper_name   = 'adv_z_c2',"                  // &
+!                                  "uv2w_operator_name      = 'uv2w_hor_colocated',"       // &
+!                                  "uv2w_vert_part_name     = 'vertical_interp_p2w_sbp42' /",                     &
+!                                  points_type              = "w",                      &
+!                                  horizontal_staggering    = "Ah",                     &
+!                                  vertical_staggering      = "CharneyPhilips")
+! if (parcomm_global%myid==0) then
+!     print *, "advection_w_Ah, sbp_d42, adv_z_c2"
+!     print "(A,4E25.16)", "Err: ", errs%values
+! end if
 
 ! errs =  test_scalar_advection_3d(Nh = 32, Nz = 10, &
 !                                  advection_oper_name      = "advection_p_staggered", &
@@ -199,20 +207,20 @@ end if
 !     print *, "advection_p_staggered, up4, adv_z_c2"
 !     print "(A,4E25.16)", "Err: ", errs%values
 ! end if
-
-errs =  test_scalar_advection_3d(Nh = 32, Nz = 10, &
-                                 advection_oper_name      = "advection_p_Ah", &
-                                 config_str               = "&p_advection_conf "          // &
-                                 "hor_advection_oper_name = 'sbp_d42',"                   // &
-                                 "z_advection_oper_name   = 'adv_z_c2',"                  // &
-                                 "w2p_operator_name       = 'vertical_interp_w2p_sbp42', /", &
-                                 points_type              = "p",                      &
-                                 horizontal_staggering    = "Ah",                     &
-                                 vertical_staggering      = "CharneyPhilips")
-if (parcomm_global%myid==0) then
-    print *, "advection_p_Ah, sbp_d42, adv_z_c2"
-    print "(A,4E25.16)", "Err: ", errs%values
-end if
+!
+! errs =  test_scalar_advection_3d(Nh = 32, Nz = 10, &
+!                                  advection_oper_name      = "advection_p_Ah", &
+!                                  config_str               = "&p_advection_conf "          // &
+!                                  "hor_advection_oper_name = 'sbp_d42',"                   // &
+!                                  "z_advection_oper_name   = 'adv_z_c2',"                  // &
+!                                  "w2p_operator_name       = 'vertical_interp_w2p_sbp42', /", &
+!                                  points_type              = "p",                      &
+!                                  horizontal_staggering    = "Ah",                     &
+!                                  vertical_staggering      = "CharneyPhilips")
+! if (parcomm_global%myid==0) then
+!     print *, "advection_p_Ah, sbp_d42, adv_z_c2"
+!     print "(A,4E25.16)", "Err: ", errs%values
+! end if
 
 
 call deinit_global_parallel_enviroment()

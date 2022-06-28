@@ -49,8 +49,8 @@ subroutine get_vector_component_tile(this,v,mesh,halo_width, &
         do j=js,je
             do i=is,ie
                 call cart2sph(mesh%rx(i,j,k), mesh%ry(i,j,k), mesh%rz(i,j,k), lam, phi)
-                u_sph = 2.0_8*sin(2.0_8*lam)*cos(phi)
-                v_sph =-cos(2.0_8*lam)*sin(2.0_8*phi)
+                u_sph = 2.0_8*sin(2.0_8*lam)*cos(phi) / this%scale
+                v_sph =-cos(2.0_8*lam)*sin(2.0_8*phi) / this%scale
                 call sph2cart_vec(lam, phi, u_sph, v_sph, velocity(1), velocity(2), velocity(3))
                 velocity(4) = 0.0_8
                 v%p(i,j,k) = sum(velocity(1:n_comp)*base_vec(1:n_comp,i,j,k))

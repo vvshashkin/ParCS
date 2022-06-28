@@ -26,6 +26,7 @@ function test_grad_3d(Nh, Nz, hor_grad_name, diff_eta_name, &
     use grad_3d_factory_mod,   only : create_grad_3d_operator
     use abstract_grad_3d_mod,  only : grad_3d_operator_t
     use config_domain_mod,     only : config_domain_t
+    use config_orography_mod,  only : config_test_orography_t
 
     use test_fields_3d_mod,    only : scalar_field3d_t, vector_field3d_t
     use grad3d_test_field_mod, only : grad3d_test_input_t, grad3d_test_out_t
@@ -56,6 +57,9 @@ function test_grad_3d(Nh, Nz, hor_grad_name, diff_eta_name, &
     config_domain%metric_type         = "shallow_atmosphere_metric"
     config_domain%topology_type       = "cube"
     config_domain%h_top = h_top
+    config_domain%is_orographic_curvilinear = .true.
+    config_domain%orography_name = "test_orography"
+    config_domain%config_orography = config_test_orography_t(h=5000.0_8)
     call config_domain%config_metric%set_defaults()
     config_domain%config_metric%vertical_scale = h_top
     config_domain%config_metric%scale = Earth_radii
@@ -66,9 +70,9 @@ function test_grad_3d(Nh, Nz, hor_grad_name, diff_eta_name, &
 
     call create_grid_field(f,  halo_width, 0, domain%mesh_p)
 
-    call create_grid_field(fx, 0, 0, domain%mesh_u)
-    call create_grid_field(fy, 0, 0, domain%mesh_v)
-    call create_grid_field(fz, 0, 0, domain%mesh_w)
+    call create_grid_field(fx, 1, 0, domain%mesh_u)
+    call create_grid_field(fy, 1, 0, domain%mesh_v)
+    call create_grid_field(fz, 1, 0, domain%mesh_w)
 
     call create_grid_field(fx_true, 0, 0, domain%mesh_u)
     call create_grid_field(fy_true, 0, 0, domain%mesh_v)
@@ -79,6 +83,7 @@ function test_grad_3d(Nh, Nz, hor_grad_name, diff_eta_name, &
     errs%keys(2)%str = "verthor_ExnerP L2_norm"
     errs%keys(3)%str = "quasihor_ExnerP C_norm"
     errs%keys(4)%str = "quasihor_ExnerP L2_norm"
+
 
     do itemp = 1, size(T0)
         scalar_generator = grad3d_test_input_t(h_top=h_top,T0=T0(itemp))
