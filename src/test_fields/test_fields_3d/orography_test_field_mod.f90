@@ -11,7 +11,7 @@ use const_mod,            only : Earth_radii
 implicit none
 
 type, extends(vector_field3d_t) :: orography_test_grad_t
-    real(kind=8) :: h0
+    real(kind=8) :: h0, scale
     contains
     procedure :: get_vector_component_tile
 end type orography_test_grad_t

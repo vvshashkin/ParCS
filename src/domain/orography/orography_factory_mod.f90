@@ -53,7 +53,8 @@ subroutine create_orography(orography,orography_name,config,domain,halo_width)
         call orography%xy%dh_beta %assign(0.0_8,domain%mesh_xy,halo_width)
     else if(orography_name == "test_orography") then
         call create_analytic_orography(orography,orography_test_field_t(1.0_8), &
-                                       orography_test_grad_t(1.0_8), domain, halo_width)
+                                       orography_test_grad_t(1.0_8,domain%mesh_o%scale),&
+                                       domain, halo_width)
     else
         call parcomm_global%abort("orography factory mod error - unknown orography name:"//&
                                    orography_name)
