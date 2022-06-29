@@ -13,32 +13,32 @@ character(len=:), allocatable :: config_str
 
 call init_global_parallel_enviroment()
 
-errs =  test_div_3d(Nh = 32, Nz = 20, &
-                    hor_div_name = "divergence_c_sbp42", &
-                    diff_eta_name = "eta_diff_w2p_sbp42", &
-                    horizontal_staggering = "C", vertical_staggering = "CharneyPhilips")
-if (parcomm_global%myid==0) then
-    print *, "div_3d_c_sbp42"
-    print "(A,4E25.16)", "Err: ", errs%values
-end if
-
-errs =  test_div_3d(Nh = 32, Nz = 20, &
-                    hor_div_name = "divergence_ah42_sbp", &
-                    diff_eta_name = "eta_diff_w2p_sbp21", &
-                    horizontal_staggering = "Ah", vertical_staggering = "CharneyPhilips")
-if (parcomm_global%myid==0) then
-    print *, "div_3d_Ah_sbp42_21"
-    print "(A,4E25.16)", "Err: ", errs%values
-end if
-
-! errs =  test_grad_3d(Nh = 64, Nz = 20, &
-!                     hor_grad_name = "gradient_c_sbp42", &
-!                     diff_eta_name = "eta_diff_p2w_sbp42", &
+! errs =  test_div_3d(Nh = 32, Nz = 20, &
+!                     hor_div_name = "divergence_c_sbp42", &
+!                     diff_eta_name = "eta_diff_w2p_sbp42", &
 !                     horizontal_staggering = "C", vertical_staggering = "CharneyPhilips")
 ! if (parcomm_global%myid==0) then
-!     print *, "grad_3d_c_sbp42"
+!     print *, "div_3d_c_sbp42"
 !     print "(A,4E25.16)", "Err: ", errs%values
 ! end if
+!
+! errs =  test_div_3d(Nh = 32, Nz = 20, &
+!                     hor_div_name = "divergence_ah42_sbp", &
+!                     diff_eta_name = "eta_diff_w2p_sbp21", &
+!                     horizontal_staggering = "Ah", vertical_staggering = "CharneyPhilips")
+! if (parcomm_global%myid==0) then
+!     print *, "div_3d_Ah_sbp42_21"
+!     print "(A,4E25.16)", "Err: ", errs%values
+! end if
+
+errs =  test_grad_3d(Nh = 64, Nz = 20, &
+                    hor_grad_name = "gradient_c_sbp42", &
+                    diff_eta_name = "eta_diff_p2w_sbp42", &
+                    horizontal_staggering = "C", vertical_staggering = "CharneyPhilips")
+if (parcomm_global%myid==0) then
+    print *, "grad_3d_c_sbp42"
+    print "(A,4E25.16)", "Err: ", errs%values
+end if
 ! errs =  test_grad_3d(Nh = 32, Nz = 8, &
 !                     hor_grad_name = "gradient_ah42_sbp_ecs", &
 !                     diff_eta_name = "eta_diff_p2w_sbp21", &
@@ -118,8 +118,8 @@ end if
 !     print *, "w2uv_staggered_C_sbp42_v_sbp42"
 !     print "(A,4E25.16)", "Err: ", errs%values
 ! end if
-!
-! errs =  test_uv2w_interp(Nh = 32, Nz = 8, &
+
+! errs =  test_uv2w_interp(Nh = 32, Nz = 16, &
 !                          uv2w_interpolator_name = "uv2w_colocated", &
 !                          uv2w_hor_part_name     = "",               &
 !                          uv2w_vert_part_name    = "",               &
@@ -129,7 +129,7 @@ end if
 !     print "(A,4E25.16)", "Err: ", errs%values
 ! end if
 !
-! errs =  test_uv2w_interp(Nh = 32, Nz = 8, &
+! errs =  test_uv2w_interp(Nh = 32, Nz = 16, &
 !                          uv2w_interpolator_name = "uv2w_hor_colocated",  &
 !                          uv2w_hor_part_name     = "",                          &
 !                          uv2w_vert_part_name    = "vertical_interp_p2w_sbp21", &
@@ -139,7 +139,7 @@ end if
 !     print "(A,4E25.16)", "Err: ", errs%values
 ! end if
 !
-! errs =  test_uv2w_interp(Nh = 32, Nz = 8, &
+! errs =  test_uv2w_interp(Nh = 32, Nz = 16, &
 !                          uv2w_interpolator_name = "uv2w_hor_colocated",  &
 !                          uv2w_hor_part_name     = "",                          &
 !                          uv2w_vert_part_name    = "vertical_interp_p2w_sbp42", &
@@ -149,7 +149,7 @@ end if
 !     print "(A,4E25.16)", "Err: ", errs%values
 ! end if
 !
-! errs =  test_uv2w_interp(Nh = 32, Nz = 8, &
+! errs =  test_uv2w_interp(Nh = 32, Nz = 16, &
 !                          uv2w_interpolator_name = "uv2w_staggered",                  &
 !                          uv2w_hor_part_name     = "interp2d_uv2pvec_C_sbp42",           &
 !                          uv2w_vert_part_name    = "vertical_interp_p2w_sbp21",       &
@@ -159,7 +159,7 @@ end if
 !     print "(A,4E25.16)", "Err: ", errs%values
 ! end if
 !
-! errs =  test_uv2w_interp(Nh = 32, Nz = 8, &
+! errs =  test_uv2w_interp(Nh = 32, Nz = 16, &
 !                          uv2w_interpolator_name = "uv2w_staggered",                  &
 !                          uv2w_hor_part_name     = "interp2d_uv2pvec_C_sbp42",           &
 !                          uv2w_vert_part_name    = "vertical_interp_p2w_sbp42",       &

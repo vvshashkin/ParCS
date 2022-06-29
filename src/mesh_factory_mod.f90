@@ -73,18 +73,20 @@ subroutine create_mesh(mesh, partition, metric, halo_width, h_top, tiles, &
         mesh%tile(t)%beta_0  = metric%beta0
 
         mesh%tile(t)%panel_ind = pind
-
-        if(present(orography)) then
-            call calc_mesh_metrics_orog(mesh%tile(t),metric,h_top,halo_width,&
-                                        orography%h%tile(t),orography%dh_alpha%tile(t),&
-                                        orography%dh_beta%tile(t))
-        else
-            call calc_mesh_metrics_2d(mesh%tile(t),metric,h_top,halo_width)
-        end if
+        ! 
+        ! if(present(orography)) then
+        !     call calc_mesh_metrics_orog(mesh%tile(t),metric,h_top,halo_width,&
+        !                                 orography%h%tile(t),orography%dh_alpha%tile(t),&
+        !                                 orography%dh_beta%tile(t))
+        ! else
+        !     call calc_mesh_metrics_2d(mesh%tile(t),metric,h_top,halo_width)
+        ! end if
 
     end do
 
+    call metric%set_curvilinear_mesh(mesh,h_top,orography)
 end subroutine create_mesh
+
 
 subroutine calc_mesh_metrics_2d(mesh,metric,h_top,halo_width)
 

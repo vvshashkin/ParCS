@@ -321,7 +321,10 @@ $(DOBJ)vertical_transform_factory_mod.o: src/metric/vertical_transform_factory_m
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
-$(DOBJ)metric_mod.o: src/metric/metric_mod.f90
+$(DOBJ)metric_mod.o: src/metric/metric_mod.f90 \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)orography_mod.o \
+	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -344,7 +347,9 @@ $(DOBJ)vertical_transform_mod.o: src/metric/vertical_transform_mod.f90 \
 
 $(DOBJ)shallow_atm_metric_mod.o: src/metric/shallow_atm_metric_mod.f90 \
 	$(DOBJ)metric_mod.o \
-	$(DOBJ)abstract_vertical_transform_mod.o
+	$(DOBJ)abstract_vertical_transform_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)orography_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -2023,8 +2028,9 @@ $(DOBJ)test_diffops_3d_mod.o: src/test/test_diff_ops/test_diffops_3d_mod.f90 \
 	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)vec_math_mod.o \
 	$(DOBJ)config_mod.o \
-	$(DOBJ)key_value_mod.o \
+	$(DOBJ)config_orography_mod.o \
 	$(DOBJ)const_mod.o \
+	$(DOBJ)key_value_mod.o \
 	$(DOBJ)grad_3d_factory_mod.o \
 	$(DOBJ)abstract_grad_3d_mod.o \
 	$(DOBJ)config_domain_mod.o \
@@ -2227,6 +2233,7 @@ $(DOBJ)test_metric_mod.o: src/test/test_metric/test_metric_mod.f90 \
 	$(DOBJ)mesh_factory_mod.o \
 	$(DOBJ)mesh_mod.o \
 	$(DOBJ)config_domain_mod.o \
+	$(DOBJ)config_orography_mod.o \
 	$(DOBJ)const_mod.o \
 	$(DOBJ)tile_mod.o
 	@echo $(COTEXT)
@@ -2411,7 +2418,9 @@ $(DOBJ)ecs_halo_vec_a_mod.o: src/equiang_cs/ecs_halo_vec_a_mod.f90 \
 $(DOBJ)ecs_metric_mod.o: src/equiang_cs/ecs_metric_mod.f90 \
 	$(DOBJ)metric_mod.o \
 	$(DOBJ)cubed_sphere_topology_mod.o \
-	$(DOBJ)parcomm_mod.o
+	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)orography_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -2627,6 +2636,7 @@ $(DOBJ)config_orography_mod.o: src/domain/orography/config_orography_mod.f90 \
 $(DOBJ)orography_factory_mod.o: src/domain/orography/orography_factory_mod.f90 \
 	$(DOBJ)orography_mod.o \
 	$(DOBJ)config_mod.o \
+	$(DOBJ)config_orography_mod.o \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)grid_field_factory_mod.o \
 	$(DOBJ)parcomm_mod.o \

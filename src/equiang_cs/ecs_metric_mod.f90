@@ -4,6 +4,8 @@ module ecs_metric_mod
 use metric_mod,                only : metric_t
 use cubed_sphere_topology_mod, only : cubed_sphere_topology_t
 use parcomm_mod,               only : parcomm_global
+use mesh_mod,                  only : mesh_t
+use orography_mod,             only : orography_1mesh_t
 
 implicit none
 
@@ -42,6 +44,8 @@ contains
     procedure :: calculate_G_2d   => calculate_ecs_G_2d
 
     procedure :: transform_cartesian_to_native => transform_cartesian_to_native_ecs
+
+    procedure :: set_curvilinear_mesh
 
 end type ecs_metric_t
 
@@ -478,7 +482,6 @@ pure function ecs_J(this,panel_ind,alpha,beta) result(J)
 end function ecs_J
 
 subroutine transform_cartesian_to_native_ecs(this,panel_ind, alpha, beta, r)
-    import metric_t
     class(ecs_metric_t), intent(in)  :: this
     integer(kind=4),     intent(out) :: panel_ind
     real(kind=8),        intent(out) :: alpha, beta
@@ -504,5 +507,97 @@ subroutine transform_cartesian_to_native_ecs(this,panel_ind, alpha, beta, r)
     alpha = atan( sum(this%topology%ex(1:3,panel_ind)*r(1:3)) / r_dot_n_max)
     beta  = atan( sum(this%topology%ey(1:3,panel_ind)*r(1:3)) / r_dot_n_max)
 end subroutine transform_cartesian_to_native_ecs
+
+subroutine set_curvilinear_mesh(this,mesh,h_top,orog)
+    class(ecs_metric_t), intent(in)    :: this
+    type(mesh_t),        intent(inout) :: mesh
+    real(kind=8),        intent(in)    :: h_top
+    type(orography_1mesh_t),  intent(in), optional :: orog
+
+    integer(kind=4) :: t, i, j, k, ks, ke, panel_ind, halo_width
+    real(kind=8)    :: alpha, beta, ta, tb, sigm, r(3), a1(3), a2(3), b1(3), b2(3)
+
+
+
+    do t = mesh%ts, mesh%te
+        halo_width = mesh%tile(t)%halo_width
+        ks = mesh%tile(t)%ks; ke = mesh%tile(t)%ke
+        panel_ind = mesh%tile(t)%panel_ind
+        do j = mesh%tile(t)%js-halo_width, mesh%tile(t)%je+halo_width
+            beta = mesh%tile(t)%get_beta(j)
+            tb = tan(beta)
+            do i = mesh%tile(t)%is-halo_width, mesh%tile(t)%ie+halo_width
+                alpha = mesh%tile(t)%get_alpha(i)
+                ta = tan(alpha)
+                sigm = sqrt(1._8+ta**2+tb**2)
+
+                r(1) = ta/sigm; r(2) = tb/sigm; r(3) = 1._8/sigm
+                r(1:3) = ecs_proto2realface(this%topology,this%rotation_matrix,panel_ind,r)
+                mesh%tile(t)%rx(i,j,ks) = r(1)
+                mesh%tile(t)%ry(i,j,ks) = r(2)
+                mesh%tile(t)%rz(i,j,ks) = r(3)
+
+                mesh%tile(t)%h(i,j,ks) = 0.0_8
+
+                a1(1) = (1d0+ta**2d0)*(1d0+tb**2d0)/(1d0+ta**2d0+tb**2d0)**(3d0/2d0)
+                a1(2) = -ta*tb*(1d0+ta**2d0)/(1d0+ta**2d0+tb**2d0)**(3d0/2d0)
+                a1(3) = -ta*(1d0+ta**2d0) / (1d0+ta**2d0+tb**2d0)**(3d0/2d0)
+                mesh%tile(t)%a1(1:3,i,j,ks) = ecs_proto2realface(this%topology,this%rotation_matrix,panel_ind,a1)
+                mesh%tile(t)%a1(4,i,j,ks) = 0.0_8
+
+                a2(1) = -ta*tb*(1d0+tb**2d0)/(1d0+ta**2d0+tb**2d0)**(3d0/2d0)
+                a2(2) = (1d0+ta**2d0)*(1d0+tb**2d0)/(1d0+ta**2d0+tb**2d0)**(3d0/2d0)
+                a2(3) = -tb*(1d0+tb**2d0) / (1d0+ta**2d0+tb**2d0)**(3d0/2d0)
+                mesh%tile(t)%a2(1:3,i,j,ks) = ecs_proto2realface(this%topology,this%rotation_matrix,panel_ind,a2)
+                mesh%tile(t)%a2(4,i,j,ks) = 0.0_8
+
+                mesh%tile(t)%a3(1:4,i,j,ks) = [0.0_8, 0.0_8, 0.0_8, 1.0_8]
+
+                b1(1) = (1._8+tb**2-(ta*tb)**2/(1._8+ta**2)) / sigm
+                b1(2) = 0._8
+                b1(3) =-ta*(1._8+tb**2/(1+ta**2))/sigm
+                mesh%tile(t)%b1(1:3,i,j,ks) = ecs_proto2realface(this%topology,this%rotation_matrix,panel_ind,b1)
+
+                b2(1) = 0._8
+                b2(2) = ((1+ta**2)-(ta*tb)**2/(1+tb**2))/sigm
+                b2(3) =-tb*(ta**2/(1+tb**2)+1._8)/sigm
+                mesh%tile(t)%b2(1:3,i,j,ks) = ecs_proto2realface(this%topology,this%rotation_matrix,panel_ind,b2)
+
+                mesh%tile(t)%b3(1:4,i,j,ks) = [0.0_8, 0.0_8, 0.0_8, 1.0_8]
+
+                mesh%tile(t)%Q(1,i,j,ks) = (1._8+ta**2)**2*(1._8+tb**2)/sigm**4
+                mesh%tile(t)%Q(2,i,j,ks) =-(1._8+ta**2)*(1._8+tb**2)*ta*tb/sigm**4
+                mesh%tile(t)%Q(3,i,j,ks) = (1._8+ta**2)*(1._8+tb**2)**2/sigm**4
+
+                mesh%tile(t)%Qi(1,i,j,ks) = sigm**2 / (1._8+ta**2)
+                mesh%tile(t)%Qi(2,i,j,ks) = sigm**2*ta*tb / ((1+ta**2)*(1+tb**2))
+                mesh%tile(t)%Qi(3,i,j,ks) = sigm**2 / (1._8+tb**2)
+
+                mesh%tile(t)%J(i,j,ks) = (1._8+ta**2)*(1._8+tb**2) / sigm**3
+
+            end do
+        end do
+        do k=ks+1, ke
+            do j = mesh%tile(t)%js-halo_width, mesh%tile(t)%je+halo_width
+                do i = mesh%tile(t)%is-halo_width, mesh%tile(t)%ie+halo_width
+                    mesh%tile(t)%rx(i,j,k)     = mesh%tile(t)%rx(i,j,ks)
+                    mesh%tile(t)%ry(i,j,k)     = mesh%tile(t)%ry(i,j,ks)
+                    mesh%tile(t)%rz(i,j,k)     = mesh%tile(t)%rz(i,j,ks)
+                    mesh%tile(t)%h(i,j,k)      = mesh%tile(t)%h(i,j,ks)
+                    mesh%tile(t)%a1(1:4,i,j,k) = mesh%tile(t)%a1(1:4,i,j,ks)
+                    mesh%tile(t)%a2(1:4,i,j,k) = mesh%tile(t)%a2(1:4,i,j,ks)
+                    mesh%tile(t)%a3(1:4,i,j,k) = mesh%tile(t)%a3(1:4,i,j,ks)
+                    mesh%tile(t)%b1(1:3,i,j,k) = mesh%tile(t)%b1(1:3,i,j,ks)
+                    mesh%tile(t)%b2(1:3,i,j,k) = mesh%tile(t)%b2(1:3,i,j,ks)
+                    mesh%tile(t)%b3(1:4,i,j,k) = mesh%tile(t)%b3(1:4,i,j,ks)
+                    mesh%tile(t)%Q(1:3,i,j,k)  = mesh%tile(t)%Q(1:3,i,j,ks)
+                    mesh%tile(t)%Qi(1:3,i,j,k) = mesh%tile(t)%Qi(1:3,i,j,ks)
+                    mesh%tile(t)%J(i,j,k)      = mesh%tile(t)%J(i,j,ks)
+                end do
+            end do
+        end do
+    end do
+
+end subroutine
 
 end module ecs_metric_mod

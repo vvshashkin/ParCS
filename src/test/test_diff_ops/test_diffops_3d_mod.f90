@@ -7,7 +7,8 @@ use grid_field_factory_mod, only : create_grid_field
 use parcomm_mod,            only : parcomm_global
 use vec_math_mod,           only : l2norm
 use config_mod,             only : config_t
-use config_orography_mod,  only : config_test_orography_t
+use config_orography_mod,   only : config_test_orography_t
+use const_mod,              only : Earth_radii
 
 use key_value_mod,          only : key_value_r8_t
 
@@ -22,14 +23,14 @@ contains
 function test_grad_3d(Nh, Nz, hor_grad_name, diff_eta_name, &
                       horizontal_staggering, vertical_staggering) result(errs)
 
-    use const_mod, only : Earth_radii
-
     use grad_3d_factory_mod,   only : create_grad_3d_operator
     use abstract_grad_3d_mod,  only : grad_3d_operator_t
     use config_domain_mod,     only : config_domain_t
 
     use test_fields_3d_mod,    only : scalar_field3d_t, vector_field3d_t
     use grad3d_test_field_mod, only : grad3d_test_input_t, grad3d_test_out_t
+
+    use mpi
 
     integer(kind=4), intent(in)  :: Nh, Nz
     character(len=*), intent(in) :: hor_grad_name, diff_eta_name
@@ -49,6 +50,7 @@ function test_grad_3d(Nh, Nz, hor_grad_name, diff_eta_name, &
     integer(kind=4) :: halo_width = 8
     real(kind=8), parameter :: h_top = 30e3, T0(2) = [300._8,1e10_8]
     integer(kind=4) :: itemp
+    real(kind=8) :: time
 
     config_domain%N  = nh
     config_domain%Nz = nz
@@ -64,7 +66,10 @@ function test_grad_3d(Nh, Nz, hor_grad_name, diff_eta_name, &
     config_domain%config_metric%vertical_scale = h_top
     config_domain%config_metric%scale = Earth_radii
 
+    print *, "create domain"
+    time = mpi_wtime()
     call create_domain(domain, config_domain)
+    print *, "create domain end", mpi_wtime()-time
 
     call create_grad_3d_operator(grad_3d, domain, hor_grad_name, diff_eta_name)
 
@@ -109,8 +114,6 @@ end function test_grad_3d
 
 function test_div_3d(Nh, Nz, hor_div_name, diff_eta_name, &
                                   horizontal_staggering, vertical_staggering) result(errs)
-
-    use const_mod, only : Earth_radii
 
     use div_3d_factory_mod,   only : create_div_3d_operator
     use abstract_div_3d_mod,  only : div_3d_operator_t
@@ -193,7 +196,6 @@ type(key_value_r8_t) function test_co2contra_3d(Nh, nz, co2contra_3d_oper_name, 
     use co2contra_3d_factory_mod,  only : create_co2contra_3d_operator
     use mesh_mod,                  only : mesh_t
     use config_domain_mod,         only : config_domain_t
-    use const_mod,                 only : Earth_radii
     use grad3d_test_field_mod,     only : grad3d_test_out_t
 
     integer(kind=4),  intent(in) :: Nh, nz
@@ -307,8 +309,12 @@ function test_w2uv_interp(Nh, Nz, w2uv_interpolator_name, w2uv_hor_part_name, w2
     config_domain%metric_type         = "shallow_atmosphere_metric"
     config_domain%topology_type       = "cube"
     config_domain%h_top = h_top
+    config_domain%is_orographic_curvilinear = .true.
+    config_domain%orography_name = "test_orography"
+    config_domain%config_orography = config_test_orography_t(h=5000.0_8)
     call config_domain%config_metric%set_defaults()
     config_domain%config_metric%vertical_scale = h_top
+    config_domain%config_metric%scale = Earth_radii
 
     call create_domain(domain, config_domain)
 
@@ -380,8 +386,12 @@ function test_uv2w_interp(Nh, Nz, uv2w_interpolator_name, uv2w_hor_part_name, uv
     config_domain%metric_type         = "shallow_atmosphere_metric"
     config_domain%topology_type       = "cube"
     config_domain%h_top = h_top
+    config_domain%is_orographic_curvilinear = .true.
+    config_domain%orography_name = "test_orography"
+    config_domain%config_orography = config_test_orography_t(h=5000.0_8)
     call config_domain%config_metric%set_defaults()
     config_domain%config_metric%vertical_scale = h_top
+    config_domain%config_metric%scale = Earth_radii
 
     call create_domain(domain, config_domain)
 

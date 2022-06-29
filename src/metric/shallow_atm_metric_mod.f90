@@ -2,6 +2,8 @@ module shallow_atm_metric_mod
 
 use metric_mod,                      only : metric_t
 use abstract_vertical_transform_mod, only : vertical_transform_t
+use mesh_mod,                        only : mesh_t
+use orography_mod,                   only : orography_1mesh_t
 
 implicit none
 
@@ -36,6 +38,8 @@ type, extends(metric_t) :: shallow_atm_metric_t
     procedure :: calculate_G_2d
 
     procedure :: transform_cartesian_to_native
+
+    procedure :: set_curvilinear_mesh
 
 end type shallow_atm_metric_t
 
@@ -334,5 +338,109 @@ subroutine transform_cartesian_to_native(this,panel_ind, alpha, beta, r)
     call this%metric_2d%transform_cartesian_to_native(panel_ind,alpha,beta,r)
 
 end subroutine transform_cartesian_to_native
+
+subroutine set_curvilinear_mesh(this,mesh,h_top,orog)
+    class(shallow_atm_metric_t), intent(in)    :: this
+    type(mesh_t),                intent(inout) :: mesh
+    real(kind=8),                intent(in)    :: h_top
+    type(orography_1mesh_t),     intent(in), optional :: orog
+
+    if(present(orog)) then
+        call set_curvilinear_mesh_orog(this,mesh,h_top,orog)
+    else
+        call set_curvilinear_mesh_norog(this,mesh,h_top)
+    end if
+
+end subroutine
+
+subroutine set_curvilinear_mesh_orog(this,mesh,h_top,orog)
+    class(shallow_atm_metric_t), intent(in)    :: this
+    type(mesh_t),                intent(inout) :: mesh
+    real(kind=8),                intent(in)    :: h_top
+    type(orography_1mesh_t),     intent(in)    :: orog
+
+    integer(kind=4) :: t, i, j, k, halo_width
+    real(kind=8)    :: eta, dh_dhs, dh_dalpha, dh_dbeta, dh_deta, h_surf
+    real(kind=8)    :: qi(3), b1(3), b2(3)
+
+    call this%metric_2d%set_curvilinear_mesh(mesh,h_top)
+
+    do t = mesh%ts, mesh%te
+        halo_width = mesh%tile(t)%halo_width
+        do k=mesh%tile(t)%ks, mesh%tile(t)%ke
+            eta = mesh%tile(t)%get_eta(k)
+            dh_dhs = this%vertical_transform%calc_dz_dh_surf(eta)
+            do j = mesh%tile(t)%js-halo_width, mesh%tile(t)%je+halo_width
+                do i = mesh%tile(t)%is-halo_width, mesh%tile(t)%ie+halo_width
+                    dh_dalpha  = dh_dhs*orog%dh_alpha%tile(t)%p(i,j,1)
+                    dh_dbeta   = dh_dhs*orog%dh_beta%tile(t)%p(i,j,1)
+                    h_surf     = orog%h%tile(t)%p(i,j,1)
+                    dh_deta = this%vertical_transform%calc_dz_deta(h_surf,h_top,eta) &
+                                                                / this%vertical_scale
+
+                    mesh%tile(t)%h(i,j,k) = this%vertical_transform%calc_z(h_surf,h_top,eta)
+
+                    mesh%tile(t)%a1(4,i,j,k) = dh_dalpha
+                    mesh%tile(t)%a2(4,i,j,k) = dh_dbeta
+                    mesh%tile(t)%a3(1:4,i,j,k) = [0.0_8, 0.0_8, 0.0_8, dh_deta]
+                    !b1 and b2 remains the same as initialized by metric_2d
+                    b1(1:3) = mesh%tile(t)%b1(1:3,i,j,k)
+                    b2(1:3) = mesh%tile(t)%b2(1:3,i,j,k)
+
+                    mesh%tile(t)%b3(1,i,j,k) =-(dh_dalpha*b1(1)+dh_dbeta*b2(1)) / dh_deta
+                    mesh%tile(t)%b3(2,i,j,k) =-(dh_dalpha*b1(2)+dh_dbeta*b2(2)) / dh_deta
+                    mesh%tile(t)%b3(3,i,j,k) =-(dh_dalpha*b1(3)+dh_dbeta*b2(3)) / dh_deta
+                    mesh%tile(t)%b3(4,i,j,k) = 1.0_8 / dh_deta
+
+                    mesh%tile(t)%Q(1,i,j,k) = mesh%tile(t)%Q(1,i,j,k) + dh_dalpha**2
+                    mesh%tile(t)%Q(2,i,j,k) = mesh%tile(t)%Q(2,i,j,k) + dh_dalpha*dh_dbeta
+                    mesh%tile(t)%Q(3,i,j,k) = mesh%tile(t)%Q(3,i,j,k) + dh_dbeta**2
+                    mesh%tile(t)%Q(4,i,j,k) = dh_dalpha*dh_deta
+                    mesh%tile(t)%Q(5,i,j,k) = dh_dbeta*dh_deta
+                    mesh%tile(t)%Q(6,i,j,k) = dh_deta**2
+
+                    qi(1:3) = mesh%tile(t)%Qi(1:3,i,j,k)
+                    mesh%tile(t)%Qi(4,i,j,k) = -(dh_dalpha*qi(1)+dh_dbeta*qi(2)) / dh_deta
+                    mesh%tile(t)%Qi(5,i,j,k) = -(dh_dalpha*qi(2)+dh_dbeta*qi(3)) / dh_deta
+                    mesh%tile(t)%Qi(6,i,j,k) = (1+dh_dalpha*(dh_dalpha*qi(1)+dh_dbeta*qi(2))+&
+                                                dh_dbeta *(dh_dalpha*qi(2)+dh_dbeta*qi(3))) / dh_deta**2
+
+                    mesh%tile(t)%J(i,j,k) = mesh%tile(t)%J(i,j,k)*dh_deta
+                end do
+            end do
+        end do
+    end do
+
+end subroutine
+
+subroutine set_curvilinear_mesh_norog(this,mesh,h_top)
+    class(shallow_atm_metric_t), intent(in)    :: this
+    type(mesh_t),                intent(inout) :: mesh
+    real(kind=8),                intent(in)    :: h_top
+
+    integer(kind=4) :: t, i, j, k, halo_width
+    real(kind=8)    :: alpha, beta, eta
+
+    call this%metric_2d%set_curvilinear_mesh(mesh,h_top)
+
+    do t = mesh%ts, mesh%te
+        halo_width = mesh%tile(t)%halo_width
+        do k=mesh%tile(t)%ks, mesh%tile(t)%ke
+            eta = mesh%tile(t)%get_eta(k)
+            do j = mesh%tile(t)%js-halo_width, mesh%tile(t)%je+halo_width
+                do i = mesh%tile(t)%is-halo_width, mesh%tile(t)%ie+halo_width
+                    mesh%tile(t)%h(i,j,k) = this%vertical_transform%calc_z(0.0_8,h_top,eta)
+                    mesh%tile(t)%Q(4,i,j,k) = 0.0_8
+                    mesh%tile(t)%Q(5,i,j,k) = 0.0_8
+                    mesh%tile(t)%Q(6,i,j,k) = 1._8
+                    mesh%tile(t)%Qi(4,i,j,k) = 0.0_8
+                    mesh%tile(t)%Qi(5,i,j,k) = 0.0_8
+                    mesh%tile(t)%Qi(6,i,j,k) = 1._8
+                    mesh%tile(t)%J(i,j,k) = mesh%tile(t)%J(i,j,k)*1.0_8
+                end do
+            end do
+        end do
+    end do
+end subroutine
 
 end module shallow_atm_metric_mod

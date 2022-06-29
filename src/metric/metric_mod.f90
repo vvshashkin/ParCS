@@ -1,5 +1,9 @@
 module metric_mod
 
+use mesh_mod,      only : mesh_t
+use orography_mod, only : orography_1mesh_t
+use parcomm_mod,   only : parcomm_global
+
 implicit none
 
 !Abstract type to aquire horizontal grid characteristics from panel coordinates
@@ -65,6 +69,8 @@ contains
 
     procedure(cart_to_native_transform), deferred :: transform_cartesian_to_native
 
+    ! subroutine interfaces
+    procedure :: set_curvilinear_mesh
 
 end type metric_t
 
@@ -212,5 +218,16 @@ abstract interface
     end subroutine cart_to_native_transform
 
 end interface
+
+contains
+
+subroutine set_curvilinear_mesh(this,mesh,h_top,orog)
+    class(metric_t),   intent(in)    :: this
+    type(mesh_t),      intent(inout) :: mesh
+    real(kind=8),      intent(in)    :: h_top
+    type(orography_1mesh_t), intent(in), optional :: orog
+
+    call parcomm_global%abort("set_tile_mesh is not implemented for this metric class")
+end subroutine
 
 end module metric_mod
