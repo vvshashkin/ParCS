@@ -114,14 +114,20 @@ subroutine get_vertical_component(this,w,mesh_w,halo_width,component_type)
 
     do t=mesh_w%ts, mesh_w%te
         select case(component_type)
-        case("covariant")
+        case("covariant","shallow_atm_real")
             call this%get_vector_component_tile(w%tile(t),mesh_w%tile(t),halo_width,&
                                                 mesh_w%tile(t)%a3,size(mesh_w%tile(t)%a3,1))
+            if(component_type == "shallow_atm_real") then
+                call normalize_vertical_speed(w%tile(t),mesh_w%tile(t),halo_width)
+            end if
         case("contravariant")
             call this%get_vector_component_tile(w%tile(t),mesh_w%tile(t),halo_width,&
                                                 mesh_w%tile(t)%b3,size(mesh_w%tile(t)%b3,1))
+        case default
+            call parcomm_global%abort("test_fileds_3d_mod, get vertical components, unknown component type: "//component_type)
         end select
     end do
+
 end subroutine get_vertical_component
 
 subroutine get_x_component(this,w,mesh_w,halo_width,component_type)
@@ -165,5 +171,21 @@ subroutine get_y_component(this,w,mesh_w,halo_width,component_type)
         end select
     end do
 end subroutine get_y_component
+
+subroutine normalize_vertical_speed(w,mesh_w,halo_width)
+    type(tile_field_t), intent(inout) :: w
+    type(tile_mesh_t),  intent(in)    :: mesh_w
+    integer(kind=4),    intent(in)    :: halo_width
+
+    integer(kind=4) :: i, j, k
+
+    do k = mesh_w%ks, mesh_w%ke
+        do j = mesh_w%js-halo_width, mesh_w%je+halo_width
+            do i = mesh_w%is-halo_width, mesh_w%ie+halo_width
+                w%p(i,j,k) = w%p(i,j,k) / mesh_w%a3(4,i,j,k)
+            end do
+        end do
+    end do
+end
 
 end module test_fields_3d_mod

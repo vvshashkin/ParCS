@@ -7,6 +7,7 @@ use grid_field_factory_mod, only : create_grid_field
 use parcomm_mod,            only : parcomm_global
 use vec_math_mod,           only : l2norm
 use config_mod,             only : config_t
+use config_domain_mod,     only : config_domain_t
 use config_orography_mod,   only : config_test_orography_t
 use const_mod,              only : Earth_radii
 
@@ -16,41 +17,18 @@ implicit none
 
 private
 public :: test_w2uv_interp, test_uv2w_interp, test_scalar_advection_3d, &
-          test_grad_3d, test_div_3d, test_co2contra_3d
+          test_grad_3d, test_div_3d, test_co2contra_3d, test_mixvec_transform
 
 contains
 
-function test_grad_3d(Nh, Nz, hor_grad_name, diff_eta_name, &
-                      horizontal_staggering, vertical_staggering) result(errs)
+subroutine create_standard_3d_domain(domain, Nh, Nz, horizontal_staggering, &
+                                                     vertical_staggering, h_top)
+    type(domain_t),   intent(out) :: domain
+    integer(kind=4),  intent(in)  :: Nh, Nz
+    character(len=*), intent(in)  :: horizontal_staggering, vertical_staggering
+    real(kind=8),     intent(in)  :: h_top
 
-    use grad_3d_factory_mod,   only : create_grad_3d_operator
-    use abstract_grad_3d_mod,  only : grad_3d_operator_t
-    use config_domain_mod,     only : config_domain_t
-
-    use test_fields_3d_mod,    only : scalar_field3d_t, vector_field3d_t
-    use grad3d_test_field_mod, only : grad3d_test_input_t, grad3d_test_out_t
-
-    use mpi
-
-    integer(kind=4), intent(in)  :: Nh, Nz
-    character(len=*), intent(in) :: hor_grad_name, diff_eta_name
-    character(len=*), intent(in) :: horizontal_staggering, vertical_staggering
-
-    type(key_value_r8_t) :: errs
-
-    class(grad_3d_operator_t), allocatable :: grad_3d
     type(config_domain_t) :: config_domain
-    type(domain_t)        :: domain
-
-    type(grad3d_test_input_t) :: scalar_generator
-    type(grad3d_test_out_t)   :: grad_generator
-
-    type(grid_field_t) :: f, fx, fy, fz, fx_true, fy_true, fz_true
-
-    integer(kind=4) :: halo_width = 8
-    real(kind=8), parameter :: h_top = 30e3, T0(2) = [300._8,1e10_8]
-    integer(kind=4) :: itemp
-    real(kind=8) :: time
 
     config_domain%N  = nh
     config_domain%Nz = nz
@@ -66,10 +44,38 @@ function test_grad_3d(Nh, Nz, hor_grad_name, diff_eta_name, &
     config_domain%config_metric%vertical_scale = h_top
     config_domain%config_metric%scale = Earth_radii
 
-    print *, "create domain"
-    time = mpi_wtime()
     call create_domain(domain, config_domain)
-    print *, "create domain end", mpi_wtime()-time
+
+end subroutine
+
+function test_grad_3d(Nh, Nz, hor_grad_name, diff_eta_name, &
+                      horizontal_staggering, vertical_staggering) result(errs)
+
+    use grad_3d_factory_mod,   only : create_grad_3d_operator
+    use abstract_grad_3d_mod,  only : grad_3d_operator_t
+    use test_fields_3d_mod,    only : scalar_field3d_t, vector_field3d_t
+    use grad3d_test_field_mod, only : grad3d_test_input_t, grad3d_test_out_t
+
+    integer(kind=4), intent(in)  :: Nh, Nz
+    character(len=*), intent(in) :: hor_grad_name, diff_eta_name
+    character(len=*), intent(in) :: horizontal_staggering, vertical_staggering
+
+    type(key_value_r8_t) :: errs
+
+    class(grad_3d_operator_t), allocatable :: grad_3d
+    type(domain_t)        :: domain
+
+    type(grad3d_test_input_t) :: scalar_generator
+    type(grad3d_test_out_t)   :: grad_generator
+
+    type(grid_field_t) :: f, fx, fy, fz, fx_true, fy_true, fz_true
+
+    integer(kind=4) :: halo_width = 8
+    real(kind=8), parameter :: h_top = 30e3, T0(2) = [300._8,1e10_8]
+    integer(kind=4) :: itemp
+
+    call create_standard_3d_domain(domain,Nh,Nz,horizontal_staggering,&
+                                   vertical_staggering, h_top)
 
     call create_grad_3d_operator(grad_3d, domain, hor_grad_name, diff_eta_name)
 
@@ -88,7 +94,6 @@ function test_grad_3d(Nh, Nz, hor_grad_name, diff_eta_name, &
     errs%keys(2)%str = "verthor_ExnerP L2_norm"
     errs%keys(3)%str = "quasihor_ExnerP C_norm"
     errs%keys(4)%str = "quasihor_ExnerP L2_norm"
-
 
     do itemp = 1, size(T0)
         scalar_generator = grad3d_test_input_t(h_top=h_top,T0=T0(itemp))
@@ -130,7 +135,6 @@ function test_div_3d(Nh, Nz, hor_div_name, diff_eta_name, &
 
     class(div_3d_operator_t), allocatable :: div_3d
 
-    type(config_domain_t) :: config_domain
     type(domain_t)        :: domain
 
     type(grid_field_t) :: div, u, v, w, div_true
@@ -140,21 +144,8 @@ function test_div_3d(Nh, Nz, hor_div_name, diff_eta_name, &
     integer(kind=4) :: halo_width = 8
     integer(kind=4) :: k
 
-    config_domain%N  = nh
-    config_domain%Nz = nz
-    config_domain%staggering_type     = horizontal_staggering
-    config_domain%vertical_staggering = vertical_staggering
-    config_domain%metric_type         = "shallow_atmosphere_metric"
-    config_domain%topology_type       = "cube"
-    config_domain%h_top = h_top
-    config_domain%is_orographic_curvilinear = .true.
-    config_domain%orography_name = "test_orography"
-    config_domain%config_orography = config_test_orography_t(h=5000.0_8)
-    call config_domain%config_metric%set_defaults()
-    config_domain%config_metric%vertical_scale = h_top
-    config_domain%config_metric%scale = Earth_radii
-
-    call create_domain(domain, config_domain)
+    call create_standard_3d_domain(domain,Nh,Nz,horizontal_staggering,&
+                                   vertical_staggering, h_top)
 
     call create_div_3d_operator(div_3d, domain, hor_div_name, diff_eta_name)
 
@@ -293,7 +284,6 @@ function test_w2uv_interp(Nh, Nz, w2uv_interpolator_name, w2uv_hor_part_name, w2
 
     class(interpolator_w2uv_t), allocatable :: w2uv_operator
 
-    type(config_domain_t) :: config_domain
     type(domain_t)        :: domain
 
     type(grid_field_t) :: w, wu, wv, wu_true, wv_true
@@ -302,21 +292,8 @@ function test_w2uv_interp(Nh, Nz, w2uv_interpolator_name, w2uv_hor_part_name, w2
 
     integer(kind=4) :: halo_width = 8
 
-    config_domain%N  = nh
-    config_domain%Nz = nz
-    config_domain%staggering_type     = horizontal_staggering
-    config_domain%vertical_staggering = vertical_staggering
-    config_domain%metric_type         = "shallow_atmosphere_metric"
-    config_domain%topology_type       = "cube"
-    config_domain%h_top = h_top
-    config_domain%is_orographic_curvilinear = .true.
-    config_domain%orography_name = "test_orography"
-    config_domain%config_orography = config_test_orography_t(h=5000.0_8)
-    call config_domain%config_metric%set_defaults()
-    config_domain%config_metric%vertical_scale = h_top
-    config_domain%config_metric%scale = Earth_radii
-
-    call create_domain(domain, config_domain)
+    call create_standard_3d_domain(domain,Nh,Nz,horizontal_staggering,&
+                                   vertical_staggering, h_top)
 
     call create_w2uv_interpolator(w2uv_operator,w2uv_interpolator_name, &
                                   w2uv_hor_part_name, w2uv_vert_part_name, domain)
@@ -370,7 +347,6 @@ function test_uv2w_interp(Nh, Nz, uv2w_interpolator_name, uv2w_hor_part_name, uv
 
     class(interpolator_uv2w_t), allocatable :: uv2w_operator
 
-    type(config_domain_t) :: config_domain
     type(domain_t)        :: domain
 
     type(grid_field_t) :: u, v, uw, vw, uw_true, vw_true
@@ -379,21 +355,8 @@ function test_uv2w_interp(Nh, Nz, uv2w_interpolator_name, uv2w_hor_part_name, uv
 
     integer(kind=4) :: halo_width = 8
 
-    config_domain%N  = nh
-    config_domain%Nz = nz
-    config_domain%staggering_type     = horizontal_staggering
-    config_domain%vertical_staggering = vertical_staggering
-    config_domain%metric_type         = "shallow_atmosphere_metric"
-    config_domain%topology_type       = "cube"
-    config_domain%h_top = h_top
-    config_domain%is_orographic_curvilinear = .true.
-    config_domain%orography_name = "test_orography"
-    config_domain%config_orography = config_test_orography_t(h=5000.0_8)
-    call config_domain%config_metric%set_defaults()
-    config_domain%config_metric%vertical_scale = h_top
-    config_domain%config_metric%scale = Earth_radii
-
-    call create_domain(domain, config_domain)
+    call create_standard_3d_domain(domain,Nh,Nz,horizontal_staggering,&
+                                   vertical_staggering, h_top)
 
     call create_uv2w_interpolator(uv2w_operator,uv2w_interpolator_name, &
                                   uv2w_hor_part_name, uv2w_vert_part_name, domain)
@@ -428,6 +391,78 @@ function test_uv2w_interp(Nh, Nz, uv2w_interpolator_name, uv2w_hor_part_name, uv
                       l2norm(vw_true, domain%mesh_w, domain%parcomm))
 
 end function test_uv2w_interp
+
+function test_mixvec_transform(Nh, Nz, horizontal_staggering, vertical_staggering, &
+                               mixvec_transform_name, config_str) result(errs)
+
+    use div3d_test_field_mod,          only : div3d_test_wind_t
+    use mixvec_transform_factory_mod,  only : create_mixvec_transform
+    use abstract_mixvec_transform_mod, only : mixvec_transform_t
+    use mixvec_transform_factory_mod,  only : create_mixvec_transform
+
+    integer(kind=4),  intent(in) :: Nh, Nz
+    character(len=*), intent(in) :: horizontal_staggering, vertical_staggering
+    character(len=*), intent(in) :: mixvec_transform_name, config_str
+
+    type(key_value_r8_t) :: errs
+    real(kind=8), parameter :: h_top = 30e3
+    type(domain_t) :: domain
+    type(div3d_test_wind_t)  :: wind_generator
+    integer(kind=4) :: halo_width = 8
+    integer(kind=4) :: k
+    type(grid_field_t) :: u_cov, v_cov, w_cov, w, w_true
+    type(grid_field_t) :: u_contra, v_contra, w_contra
+    type(grid_field_t) :: u_contra_true, v_contra_true, w_contra_true
+    class(mixvec_transform_t), allocatable :: mixvec_transform
+
+    allocate(errs%keys(2), errs%values(2))
+    errs%keys(1)%str = "L_inf"
+    errs%keys(2)%str = "L_2"
+
+    call create_standard_3d_domain(domain,Nh,Nz,horizontal_staggering,&
+                                   vertical_staggering, h_top)
+
+    call create_mixvec_transform(mixvec_transform, mixvec_transform_name, domain)
+
+    call create_grid_field(u_cov, halo_width, 0, domain%mesh_u)
+    call create_grid_field(v_cov, halo_width, 0, domain%mesh_v)
+    call create_grid_field(w_cov, halo_width, 0, domain%mesh_w)
+    call create_grid_field(w    , halo_width, 0, domain%mesh_w)
+    call create_grid_field(u_contra, halo_width, 0, domain%mesh_u)
+    call create_grid_field(v_contra, halo_width, 0, domain%mesh_v)
+    call create_grid_field(w_contra, halo_width, 0, domain%mesh_w)
+
+    call create_grid_field(u_contra_true, halo_width, 0, domain%mesh_u)
+    call create_grid_field(v_contra_true, halo_width, 0, domain%mesh_v)
+    call create_grid_field(w_true,   halo_width, 0, domain%mesh_w)
+    call create_grid_field(w_contra_true, halo_width, 0, domain%mesh_w)
+
+
+    wind_generator = div3d_test_wind_t(h_top=h_top)
+
+    call wind_generator%get_vector_field(u_cov, v_cov, w_cov, &
+                                         domain%mesh_u, domain%mesh_v, domain%mesh_w, &
+                                         0,"covariant")
+
+    call wind_generator%get_vector_field(u_contra_true, v_contra_true, w_contra_true,&
+                                         domain%mesh_u,domain%mesh_v,domain%mesh_w,  &
+                                         halo_width,"contravariant")
+    call wind_generator%get_vertical_component(w_true,domain%mesh_w,halo_width,"shallow_atm_real")
+
+    call mixvec_transform%transform_co2mix(u_contra, v_contra, w, u_cov, v_cov, w_cov, domain)
+    call mixvec_transform%transform_mix2contra(w_contra, u_contra_true, v_contra_true, w_true, domain)
+
+    call u_contra%update(-1.0_8,u_contra_true,domain%mesh_u)
+    call v_contra%update(-1.0_8,v_contra_true,domain%mesh_v)
+    call w%update(-1.0_8,w_true,domain%mesh_w)
+
+    call w_contra%update(-1.0_8,w_contra_true,domain%mesh_w)
+
+    errs%values(1) = u_contra%maxabs(domain%mesh_u,domain%parcomm)+&
+                     v_contra%maxabs(domain%mesh_v,domain%parcomm)+&
+                     w%maxabs(domain%mesh_w,domain%parcomm)
+    errs%values(2) = w_contra%maxabs(domain%mesh_w,domain%parcomm)
+end function
 
 function test_scalar_advection_3d(Nh, Nz, advection_oper_name, config_str, points_type, &
                                           horizontal_staggering, vertical_staggering) result(errs)

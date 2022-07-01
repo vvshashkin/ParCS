@@ -1841,6 +1841,28 @@ $(DOBJ)interpolator_uv2w_factory_mod.o: src/differential_operators/3d/interpolat
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)mixvec_transform_colocated_mod.o: src/differential_operators/3d/mixvec_transform/mixvec_transform_colocated_mod.f90 \
+	$(DOBJ)abstract_mixvec_transform_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)grid_field_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)abstract_mixvec_transform_mod.o: src/differential_operators/3d/mixvec_transform/abstract_mixvec_transform_mod.f90 \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)parcomm_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)mixvec_transform_factory_mod.o: src/differential_operators/3d/mixvec_transform/mixvec_transform_factory_mod.f90 \
+	$(DOBJ)abstract_mixvec_transform_mod.o \
+	$(DOBJ)mixvec_transform_colocated_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)parcomm_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)abstract_co2contra_3d_mod.o: src/differential_operators/3d/co2contra/abstract_co2contra_3d_mod.f90 \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)domain_mod.o \
@@ -2028,12 +2050,12 @@ $(DOBJ)test_diffops_3d_mod.o: src/test/test_diff_ops/test_diffops_3d_mod.f90 \
 	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)vec_math_mod.o \
 	$(DOBJ)config_mod.o \
+	$(DOBJ)config_domain_mod.o \
 	$(DOBJ)config_orography_mod.o \
 	$(DOBJ)const_mod.o \
 	$(DOBJ)key_value_mod.o \
 	$(DOBJ)grad_3d_factory_mod.o \
 	$(DOBJ)abstract_grad_3d_mod.o \
-	$(DOBJ)config_domain_mod.o \
 	$(DOBJ)test_fieds_3d_mod.o \
 	$(DOBJ)grad3d_test_field_mod.o \
 	$(DOBJ)div_3d_factory_mod.o \
@@ -2046,6 +2068,8 @@ $(DOBJ)test_diffops_3d_mod.o: src/test/test_diff_ops/test_diffops_3d_mod.f90 \
 	$(DOBJ)interpolator_w2uv_factory_mod.o \
 	$(DOBJ)abstract_interpolators3d_mod.o \
 	$(DOBJ)interpolator_uv2w_factory_mod.o \
+	$(DOBJ)mixvec_transform_factory_mod.o \
+	$(DOBJ)abstract_mixvec_transform_mod.o \
 	$(DOBJ)abstract_scalar_advection3d_mod.o \
 	$(DOBJ)scalar_advection_factory_mod.o \
 	$(DOBJ)config_advection_3d_mod.o \
