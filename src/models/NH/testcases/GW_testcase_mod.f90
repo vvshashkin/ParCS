@@ -67,7 +67,7 @@ subroutine get_GW_initial_conditions_nh_stvec(stvec, domain, is_nonlin)
 
     call stvec%u%assign(0.0_8,domain%mesh_u)
     call stvec%v%assign(0.0_8,domain%mesh_v)
-    call stvec%eta_dot%assign(0.0_8,domain%mesh_w)
+    call stvec%w%assign(0.0_8,domain%mesh_w)
     call stvec%P%assign(0.0_8,domain%mesh_p)
 
     theta_generator = GW_theta_t(amp=1._8,a=5e3,Lz=10e3,hor_scale=domain%mesh_w%scale)
@@ -83,7 +83,7 @@ subroutine get_GW_initial_conditions_nh_stvec(stvec, domain, is_nonlin)
                                                     PExner_gen = P0_generator,  &
                                                     wind_gen   = wind_gen)
 
-        call wind_gen%get_vector_field(stvec%u,stvec%v,stvec%eta_dot, &
+        call wind_gen%get_vector_field(stvec%u,stvec%v,stvec%w, &
                                        domain%mesh_u,domain%mesh_v,domain%mesh_w,0,"contravariant")
 
         call P0_generator%get_scalar_field(P0,domain%mesh_p,0)

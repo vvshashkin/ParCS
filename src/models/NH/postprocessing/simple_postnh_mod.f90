@@ -29,7 +29,7 @@ subroutine write_fields(this, irec, stvec, domain)
     class is (stvec_nh_t)
         call this%outputer_P%write(stvec%P, domain, 'P.dat', irec)
         call this%outputer_theta%write(stvec%theta, domain, 'theta.dat', irec)
-        call this%outputer_theta%write(stvec%eta_dot, domain, 'w.dat', irec)
+        call this%outputer_theta%write(stvec%w, domain, 'w.dat', irec)
         call this%outputer_uv%write(stvec%u, stvec%v, domain, 'u.dat', 'v.dat', irec)
     class default
         call parcomm_global%abort("unsupported state vector type in simple_postnh_t%write")

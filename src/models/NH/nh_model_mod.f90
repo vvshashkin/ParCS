@@ -57,12 +57,9 @@ subroutine run(this)
         select type(stvec=>this%stvec)
         type is (stvec_nh_t)
             tmax = stvec%theta%maxabs(this%domain%mesh_w,this%domain%parcomm)
-            wmax = stvec%eta_dot%maxabs(this%domain%mesh_w,this%domain%parcomm)
+            wmax = stvec%w%maxabs(this%domain%mesh_w,this%domain%parcomm)
             pmax = stvec%P%maxabs(this%domain%mesh_p,this%domain%parcomm)
             if(this%domain%parcomm%myid == 0) print *, istep, "w_maxabs", wmax, "t_maxabs", tmax, "pmaxabs", pmax, "time=", mpi_wtime()-time
-            !print *, istep, "w maxabs", stvec%eta_dot%maxabs(this%domain%mesh_w,this%domain%parcomm) &
-            !              , "T maxabs", stvec%theta%maxabs(this%domain%mesh_w,this%domain%parcomm)   &
-            !              , "P maxabs", stvec%P%maxabs(this%domain%mesh_p,this%domain%parcomm)
         class default
             print *, istep, "***"
         end select

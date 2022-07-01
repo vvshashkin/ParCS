@@ -44,7 +44,7 @@ subroutine apply(this, vout, vin, domain)
 
         call vout%u%assign(0.0_8, domain%mesh_u)
         call vout%v%assign(0.0_8, domain%mesh_v)
-        call vout%eta_dot%assign(0.0_8, domain%mesh_w)
+        call vout%w%assign(0.0_8, domain%mesh_w)
         !call vout%theta%assign(0.0_8, domain%mesh_w)
         call this%theta_adv_oper%calc_adv3d(vout%theta,vin%theta,this%u_adv,this%v_adv, &
                                             this%eta_dot_adv,domain)

@@ -51,14 +51,9 @@ subroutine apply(this, vout, vin, domain)
     class is (stvec_nh_t)
     select type(vin)
     class is (stvec_nh_t)
-        ! call vout%u%assign(0.0_8, domain%mesh_u)
-        ! call vout%v%assign(0.0_8, domain%mesh_v)
-        ! call vout%eta_dot%assign(0.0_8, domain%mesh_w)
-        ! call vout%theta%assign(0.0_8, domain%mesh_w)
-        ! call vout%P%assign(0.0_8,domain%mesh_p)
 
-        call this%momentum_adv_op%calc_vec_adv3d(vout%u,vout%v,vout%eta_dot, &
-                                                vin%u,vin%v,vin%eta_dot,vin%eta_dot,domain)
+        call this%momentum_adv_op%calc_vec_adv3d(vout%u,vout%v,vout%w, &
+                                                vin%u,vin%v,vin%w,vin%w,domain)
 
         call this%grad_op%calc_grad(this%grad_x, this%grad_y, this%grad_z,vin%P,domain)
 
@@ -76,18 +71,18 @@ subroutine apply(this, vout, vin, domain)
         call vout%v%update(1.0_8,this%grad_y,domain%mesh_v)
 
         call this%grad_z%assign_prod(-Cp,this%grad_z,vin%theta,domain%mesh_w)
-        call vout%eta_dot%update(1.0_8,this%grad_z,-1.0_8,this%grad_phi_z,domain%mesh_w)
+        call vout%w%update(1.0_8,this%grad_z,-1.0_8,this%grad_phi_z,domain%mesh_w)
 
-        call this%theta_adv_oper%calc_adv3d(vout%theta,vin%theta,vin%u,vin%v,vin%eta_dot,domain)
-        call this%p_adv_oper%calc_adv3d(vout%P,vin%P,vin%u,vin%v,vin%eta_dot,domain)
+        call this%theta_adv_oper%calc_adv3d(vout%theta,vin%theta,vin%u,vin%v,vin%w,domain)
+        call this%p_adv_oper%calc_adv3d(vout%P,vin%P,vin%u,vin%v,vin%w,domain)
 
-        call this%div_op%calc_div(this%div3,vin%u,vin%v,vin%eta_dot,domain)
+        call this%div_op%calc_div(this%div3,vin%u,vin%v,vin%w,domain)
         call this%div3%assign_prod(-rgaz/Cv,vin%P,this%div3,domain%mesh_p)
         call vout%P%update(1.0_8,this%div3,domain%mesh_p)
 
         vout%model_time = 1.0_8 != dt / dt
 
-        call apply_0boundary_conds(vout%eta_dot,domain%mesh_w)
+        call apply_0boundary_conds(vout%w,domain%mesh_w)
     class default
         call parcomm_global%abort("Ptheta_linear_nh_oper_t, vin type error")
     end select

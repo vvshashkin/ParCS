@@ -21,7 +21,7 @@ subroutine create_stvec_nh(stvec, domain, halo_width_xy, halo_width_z)
 
     call create_grid_field(stvec_nh%u, halo_width_xy, halo_width_z, domain%mesh_u)
     call create_grid_field(stvec_nh%v, halo_width_xy, halo_width_z, domain%mesh_v)
-    call create_grid_field(stvec_nh%eta_dot, halo_width_xy, halo_width_z, domain%mesh_w)
+    call create_grid_field(stvec_nh%w, halo_width_xy, halo_width_z, domain%mesh_w)
     call create_grid_field(stvec_nh%theta, halo_width_xy, halo_width_z, domain%mesh_w)
     call create_grid_field(stvec_nh%P, halo_width_xy, halo_width_z, domain%mesh_P)
 

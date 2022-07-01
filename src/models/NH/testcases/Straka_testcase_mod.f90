@@ -47,7 +47,7 @@ subroutine get_Straka_initial_conditions_nh_stvec(stvec, domain)
 
     call stvec%u%assign(0.0_8,domain%mesh_u)
     call stvec%v%assign(0.0_8,domain%mesh_v)
-    call stvec%eta_dot%assign(0.0_8,domain%mesh_w)
+    call stvec%w%assign(0.0_8,domain%mesh_w)
 
     theta_generator%scale = domain%mesh_p%scale
     call theta_generator%get_scalar_field(stvec%theta,domain%mesh_w,0)

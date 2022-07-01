@@ -54,20 +54,20 @@ subroutine apply(this, vout, vin, domain)
         call this%grad_z%assign_prod(-Cp,this%grad_z,this%theta0,domain%mesh_w)
         call this%co2contra_op%transform(vout%u,vout%v,this%grad_x, this%grad_y, domain)
 
-        call vout%eta_dot%assign_prod(-Cp,vin%theta,this%dP0_dz_w,domain%mesh_w)
-        call vout%eta_dot%update(1.0_8, this%grad_z, domain%mesh_w)
+        call vout%w%assign_prod(-Cp,vin%theta,this%dP0_dz_w,domain%mesh_w)
+        call vout%w%update(1.0_8, this%grad_z, domain%mesh_w)
 
-        call vout%theta%assign_prod(-1.0_8,this%dtheta0_dz,vin%eta_dot,domain%mesh_w)
+        call vout%theta%assign_prod(-1.0_8,this%dtheta0_dz,vin%w,domain%mesh_w)
 
-        call this%w2p_op%apply(this%wp,vin%eta_dot,domain)
+        call this%w2p_op%apply(this%wp,vin%w,domain)
         call vout%P%assign_prod(-1.0_8, this%wp, this%dP0_dz,domain%mesh_p)
-        call this%div_op%calc_div(this%div3,vin%u,vin%v,vin%eta_dot,domain)
+        call this%div_op%calc_div(this%div3,vin%u,vin%v,vin%w,domain)
         call this%div3%assign_prod(-rgaz/Cv,this%P0,this%div3,domain%mesh_p)
         call vout%P%update(1.0_8,this%div3,domain%mesh_p)
 
         vout%model_time = 1.0_8 != dt / dt
 
-        call apply_0boundary_conds(vout%eta_dot,domain%mesh_w)
+        call apply_0boundary_conds(vout%w,domain%mesh_w)
     class default
         call parcomm_global%abort("Ptheta_linear_nh_oper_t, vin type error")
     end select

@@ -48,7 +48,7 @@ subroutine get_solid_rotation_initial_conditions_nh_stvec(stvec, domain)
                                                 PExner_gen = P0_generator,  &
                                                 wind_gen   = wind_gen)
 
-    call wind_gen%get_vector_field(stvec%u,stvec%v,stvec%eta_dot, &
+    call wind_gen%get_vector_field(stvec%u,stvec%v,stvec%w, &
                                    domain%mesh_u,domain%mesh_v,domain%mesh_w,0,"contravariant")
 
     call P0_generator%get_scalar_field(stvec%P,domain%mesh_p,0)
