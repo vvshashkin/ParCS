@@ -169,12 +169,29 @@ call init_global_parallel_enviroment()
 !     print "(A,4E25.16)", "Err: ", errs%values
 ! end if
 !
-errs = test_mixvec_transform(32,10,"Ah","None","mixvec_colocated","")
+! errs = test_mixvec_transform(32,10,"Ah","None","mixvec_colocated",&
+!                                     config_str="&mixvec_transform_config /")
+! if(parcomm_global%myid == 0) then
+!     print *, "mixvec_colocated"
+!     print *, errs%values
+! end if
+
+errs = test_mixvec_transform(32,20,"Ah","CharneyPhilips","mixvec_hor_colocated",&
+                             config_str="&mixvec_transform_config " // &
+                                        "w2p_interp_name='vertical_interp_w2p_sbp42'," //&
+                                        "p2w_interp_name='vertical_interp_p2w_sbp42'/")
 if(parcomm_global%myid == 0) then
-    print *, "mixvec_colocated"
+    print *, "mixvec_hor_colocated_sbp42"
     print *, errs%values
 end if
-
+errs = test_mixvec_transform(32,20,"Ah","CharneyPhilips","mixvec_hor_colocated",&
+                             config_str="&mixvec_transform_config " // &
+                                        "w2p_interp_name='vertical_interp_w2p_sbp21'," //&
+                                        "p2w_interp_name='vertical_interp_p2w_sbp21'/")
+if(parcomm_global%myid == 0) then
+    print *, "mixvec_hor_colocated_sbp21"
+    print *, errs%values
+end if
 ! errs =  test_scalar_advection_3d(Nh = 32, Nz = 10, &
 !                                  advection_oper_name      = "advection_w_staggered", &
 !                                  config_str               = "&w_advection_conf "          // &

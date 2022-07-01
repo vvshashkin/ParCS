@@ -43,7 +43,7 @@ subroutine get_vector_component_tile(this,v,mesh,halo_width, &
 
     integer(kind=4) :: i,j,k,is,ie,js,je,ks,ke
     real(kind=8)    :: velocity(4)
-    real(kind=8)    :: lam, phi, u_sph, v_sph
+    real(kind=8)    :: lam, phi, u_sph, v_sph, eta
 
     is = mesh%is-halo_width; ie = mesh%ie+halo_width
     js = mesh%js-halo_width; je = mesh%je+halo_width
@@ -52,11 +52,12 @@ subroutine get_vector_component_tile(this,v,mesh,halo_width, &
     do k=ks,ke
         do j=js,je
             do i=is,ie
+                eta = 1.0_8+mesh%h(i,j,k)/this%h_top
                 call cart2sph(mesh%rx(i,j,k), mesh%ry(i,j,k), mesh%rz(i,j,k), lam, phi)
-                u_sph = U0*(sin(phi)*(sin(phi)**2-3.0_8*cos(phi)**2)*sin(lam)-0.5_8*cos(phi))
-                v_sph = U0*sin(phi)**2*cos(lam)
+                u_sph = U0*(1.0_8+eta)*(sin(phi)*(sin(phi)**2-3.0_8*cos(phi)**2)*sin(lam)-0.5_8*cos(phi))
+                v_sph = U0*(1.0_8+eta)*sin(phi)**2*cos(lam)
                 call sph2cart_vec(lam, phi, u_sph, v_sph, velocity(1), velocity(2), velocity(3))
-                velocity(4) = W0*sin(4._8*pi*mesh%h(i,j,k) / this%h_top)
+                velocity(4) = W0*sin(4._8*pi*eta)*sin(phi)
                 v%p(i,j,k) = sum(velocity(1:n_comp)*base_vec(1:n_comp,i,j,k))
             end do
         end do
@@ -70,7 +71,7 @@ subroutine get_scalar_field_tile(this,f,mesh,halo_width)
     integer(kind=4),              intent(in)    :: halo_width
 
     integer(kind=4) :: i,j,k,is,ie,js,je,ks,ke
-    real(kind=8)    :: lam, phi
+    real(kind=8)    :: lam, phi, eta
 
     is = mesh%is; ie = mesh%ie
     js = mesh%js; je = mesh%je
@@ -79,9 +80,10 @@ subroutine get_scalar_field_tile(this,f,mesh,halo_width)
     do k=ks,ke
         do j=js,je
             do i=is,ie
+                eta = 1.0_8+mesh%h(i,j,k)/this%h_top
                 call cart2sph(mesh%rx(i,j,k), mesh%ry(i,j,k), mesh%rz(i,j,k), lam, phi)
-                f%p(i,j,k) = W0*4.0_8*pi/this%h_top * cos(4.0_8*pi/this%h_top* mesh%h(i,j,k))-&
-                             U0*cos(lam)*sin(phi)*cos(phi) / Earth_radii
+                f%p(i,j,k) = W0*4.0_8*pi/this%h_top * cos(4.0_8*pi*eta)*sin(phi)-&
+                             U0*(1.0_8+eta)*cos(lam)*sin(phi)*cos(phi) / Earth_radii
             end do
         end do
     end do

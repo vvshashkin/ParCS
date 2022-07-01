@@ -399,6 +399,7 @@ function test_mixvec_transform(Nh, Nz, horizontal_staggering, vertical_staggerin
     use mixvec_transform_factory_mod,  only : create_mixvec_transform
     use abstract_mixvec_transform_mod, only : mixvec_transform_t
     use mixvec_transform_factory_mod,  only : create_mixvec_transform
+    use config_mixvec_transform_mod,   only : config_mixvec_transform_t
 
     integer(kind=4),  intent(in) :: Nh, Nz
     character(len=*), intent(in) :: horizontal_staggering, vertical_staggering
@@ -414,6 +415,7 @@ function test_mixvec_transform(Nh, Nz, horizontal_staggering, vertical_staggerin
     type(grid_field_t) :: u_contra, v_contra, w_contra
     type(grid_field_t) :: u_contra_true, v_contra_true, w_contra_true
     class(mixvec_transform_t), allocatable :: mixvec_transform
+    type(config_mixvec_transform_t) :: config
 
     allocate(errs%keys(2), errs%values(2))
     errs%keys(1)%str = "L_inf"
@@ -422,7 +424,8 @@ function test_mixvec_transform(Nh, Nz, horizontal_staggering, vertical_staggerin
     call create_standard_3d_domain(domain,Nh,Nz,horizontal_staggering,&
                                    vertical_staggering, h_top)
 
-    call create_mixvec_transform(mixvec_transform, mixvec_transform_name, domain)
+    call config%parse(config_str)
+    call create_mixvec_transform(mixvec_transform, mixvec_transform_name, config, domain)
 
     call create_grid_field(u_cov, halo_width, 0, domain%mesh_u)
     call create_grid_field(v_cov, halo_width, 0, domain%mesh_v)

@@ -1841,10 +1841,25 @@ $(DOBJ)interpolator_uv2w_factory_mod.o: src/differential_operators/3d/interpolat
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
+$(DOBJ)mixvec_transform_hor_colocated_mod.o: src/differential_operators/3d/mixvec_transform/mixvec_transform_hor_colocated_mod.f90 \
+	$(DOBJ)abstract_mixvec_transform_mod.o \
+	$(DOBJ)domain_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)abstract_vertical_operator_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
 $(DOBJ)mixvec_transform_colocated_mod.o: src/differential_operators/3d/mixvec_transform/mixvec_transform_colocated_mod.f90 \
 	$(DOBJ)abstract_mixvec_transform_mod.o \
 	$(DOBJ)domain_mod.o \
+	$(DOBJ)mesh_mod.o \
 	$(DOBJ)grid_field_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)config_mixvec_transform_mod.o: src/differential_operators/3d/mixvec_transform/config_mixvec_transform_mod.f90 \
+	$(DOBJ)config_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
@@ -1858,6 +1873,7 @@ $(DOBJ)abstract_mixvec_transform_mod.o: src/differential_operators/3d/mixvec_tra
 $(DOBJ)mixvec_transform_factory_mod.o: src/differential_operators/3d/mixvec_transform/mixvec_transform_factory_mod.f90 \
 	$(DOBJ)abstract_mixvec_transform_mod.o \
 	$(DOBJ)mixvec_transform_colocated_mod.o \
+	$(DOBJ)mixvec_transform_hor_colocated_mod.o \
 	$(DOBJ)domain_mod.o \
 	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
@@ -2070,6 +2086,7 @@ $(DOBJ)test_diffops_3d_mod.o: src/test/test_diff_ops/test_diffops_3d_mod.f90 \
 	$(DOBJ)interpolator_uv2w_factory_mod.o \
 	$(DOBJ)mixvec_transform_factory_mod.o \
 	$(DOBJ)abstract_mixvec_transform_mod.o \
+	$(DOBJ)config_mixvec_transform_mod.o \
 	$(DOBJ)abstract_scalar_advection3d_mod.o \
 	$(DOBJ)scalar_advection_factory_mod.o \
 	$(DOBJ)config_advection_3d_mod.o \
