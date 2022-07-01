@@ -176,7 +176,7 @@ call init_global_parallel_enviroment()
 !     print *, errs%values
 ! end if
 
-errs = test_mixvec_transform(32,20,"Ah","CharneyPhilips","mixvec_hor_colocated",&
+errs = test_mixvec_transform(32,10,"Ah","CharneyPhilips","mixvec_hor_colocated",&
                              config_str="&mixvec_transform_config " // &
                                         "w2p_interp_name='vertical_interp_w2p_sbp42'," //&
                                         "p2w_interp_name='vertical_interp_p2w_sbp42'/")
@@ -184,12 +184,32 @@ if(parcomm_global%myid == 0) then
     print *, "mixvec_hor_colocated_sbp42"
     print *, errs%values
 end if
-errs = test_mixvec_transform(32,20,"Ah","CharneyPhilips","mixvec_hor_colocated",&
+errs = test_mixvec_transform(32,10,"Ah","CharneyPhilips","mixvec_hor_colocated",&
                              config_str="&mixvec_transform_config " // &
                                         "w2p_interp_name='vertical_interp_w2p_sbp21'," //&
                                         "p2w_interp_name='vertical_interp_p2w_sbp21'/")
 if(parcomm_global%myid == 0) then
     print *, "mixvec_hor_colocated_sbp21"
+    print *, errs%values
+end if
+errs = test_mixvec_transform(32,10,"C","CharneyPhilips","mixvec_staggered",&
+                             config_str="&mixvec_transform_config " // &
+                                        "w2p_interp_name='vertical_interp_w2p_sbp42'," //&
+                                        "p2w_interp_name='vertical_interp_p2w_sbp42'," //&
+                                        "uv2p_interp_name='interp2d_uv2pvec_C_sbp42'," //&
+                                        "p2uv_interp_name='interp2d_pvec2uv_C_sbp42'/")
+if(parcomm_global%myid == 0) then
+    print *, "mixvec_staggered_sbp42_sbp42"
+    print *, errs%values
+end if
+errs = test_mixvec_transform(32,10,"C","CharneyPhilips","mixvec_staggered",&
+                             config_str="&mixvec_transform_config " // &
+                                        "w2p_interp_name='vertical_interp_w2p_sbp21'," //&
+                                        "p2w_interp_name='vertical_interp_p2w_sbp21'," //&
+                                        "uv2p_interp_name='interp2d_uv2pvec_C_sbp21'," //&
+                                        "p2uv_interp_name='interp2d_pvec2uv_C_sbp21'/")
+if(parcomm_global%myid == 0) then
+    print *, "mixvec_staggered_sbp21_sbp21"
     print *, errs%values
 end if
 ! errs =  test_scalar_advection_3d(Nh = 32, Nz = 10, &
