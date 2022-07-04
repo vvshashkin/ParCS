@@ -6,6 +6,9 @@ use config_mod,             only : config_t
 use config_nh_operator_mod, only : config_Ptheta_linear_t, config_advection3d_t, &
                                    config_nonlin_nh_operator_t
 use parcomm_mod,            only : parcomm_global
+use grid_field_mod,         only : grid_field_t
+use grid_field_factory_mod, only : create_grid_field
+use mesh_mod,               only : mesh_t
 
 implicit none
 
@@ -36,7 +39,6 @@ subroutine create_Ptheta_linear_nh_operator(nh_operator,config,domain)
     use co2contra_factory_mod,         only: create_co2contra_operator
     use interpolator_w2uv_factory_mod, only: create_w2uv_interpolator
     use vertical_operator_factory_mod, only: create_vertical_operator
-    use grid_field_factory_mod,        only: create_grid_field
     use vertical_test_field_mod,       only: vertical_ExnerP_t, vertical_ExnerP_grad_t, &
                                              vertical_theta_t,  vertical_theta_grad_t
     use const_N_profile_mod,           only: const_N_profile_t
@@ -116,7 +118,6 @@ subroutine create_advection3d_operator(nh_operator,config,domain)
 
     use advection3d_oper_mod,          only : advection3d_operator_t
     use scalar_advection_factory_mod,  only : create_scalar_advection3d_operator
-    use grid_field_factory_mod,        only : create_grid_field
     use solid_rotation_wind_field_mod, only : solid_rotation_wind_field_t
     use const_mod, only : pi, Earth_radii, Day24h_sec
 
@@ -159,9 +160,8 @@ subroutine create_nonlin_nh_operator(nh_operator,config,domain)
     use nonlin_nh_oper_mod,             only: nonlin_nh_operator_t
     use grad_3d_factory_mod,            only: create_grad_3d_operator
     use div_3d_factory_mod,             only: create_div_3d_operator
-    use co2contra_factory_mod,          only: create_co2contra_operator
+    use mixvec_transform_factory_mod,   only: create_mixvec_transform
     use interpolator_w2uv_factory_mod,  only: create_w2uv_interpolator
-    use grid_field_factory_mod,         only: create_grid_field
     use scalar_advection_factory_mod,   only: create_scalar_advection3d_operator
     use vector_advection3d_factory_mod, only: create_vector_advection3d_operator
     use coriolis_factory_mod,           only: create_coriolis
@@ -183,7 +183,9 @@ subroutine create_nonlin_nh_operator(nh_operator,config,domain)
     call create_div_3d_operator(operator%div_op, domain, &
                                 config%div_hor_part_name, config%div_vert_part_name)
 
-    operator%co2contra_op = create_co2contra_operator(domain, config%co2contra_operator_name)
+    ! operator%co2contra_op = create_co2contra_operator(domain, config%co2contra_operator_name)
+    call create_mixvec_transform(operator%mixvec_transform,config%mixvec_transform_name, &
+                                 config%config_mixvec_transform, domain)
 
     call create_w2uv_interpolator(operator%theta2uv_op,config%theta2uv_operator_name,&
                                   config%theta2uv_hor_part_name, config%theta2uv_vert_part_name, &
@@ -207,11 +209,38 @@ subroutine create_nonlin_nh_operator(nh_operator,config,domain)
     call create_grid_field(operator%grad_x_contra, 0, 0, domain%mesh_u)
     call create_grid_field(operator%grad_y_contra, 0, 0, domain%mesh_v)
     call create_grid_field(operator%grad_z, 0, 0, domain%mesh_w)
-    call create_grid_field(operator%grad_phi_z, 0, 0, domain%mesh_w)
-    call operator%grad_phi_z%assign(Earth_grav,domain%mesh_w)
+    call create_grid_field(operator%grad_z_real, 0, 0, domain%mesh_w)
+    call create_grid_field(operator%Phi, halo_width_xy, 0, domain%mesh_p)
+    call create_grid_field(operator%grad_Phi_x, 0, 0, domain%mesh_u)
+    call create_grid_field(operator%grad_Phi_y, 0, 0, domain%mesh_v)
+    call create_grid_field(operator%grad_Phi_z, 0, 0, domain%mesh_w)
+    call create_grid_field(operator%eta_dot,    0, 0, domain%mesh_w)
+
+    call set_geopotential(operator%Phi,domain%mesh_p,Earth_grav)
+    call operator%grad_op%calc_grad(operator%grad_Phi_x,operator%grad_Phi_y,operator%grad_Phi_z,&
+                                    operator%Phi, domain)
 
     call move_alloc(operator, nh_operator)
 
 end subroutine create_nonlin_nh_operator
+
+subroutine set_geopotential(Phi,mesh,grav)
+    type(grid_field_t), intent(inout) :: Phi
+    type(mesh_t),       intent(in)    :: mesh
+    real(kind=8),       intent(in)    :: grav
+
+    integer(kind=4) :: t, i, j, k
+
+    do t = mesh%ts, mesh%te
+        do k = mesh%tile(t)%ks, mesh%tile(t)%ke
+            do j = mesh%tile(t)%js, mesh%tile(t)%je
+                do i = mesh%tile(t)%is, mesh%tile(t)%ie
+                    Phi%tile(t)%p(i,j,k) = mesh%tile(t)%h(i,j,k)*grav
+                end do
+            end do
+        end do
+    end do
+
+end subroutine
 
 end module nh_operator_factory_mod

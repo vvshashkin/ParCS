@@ -35,7 +35,12 @@
     grad_vert_part_name           = "eta_diff_p2w_sbp42",
     div_hor_part_name             = "divergence_c_sbp42",
     div_vert_part_name            = "eta_diff_w2p_sbp42_sat0",
-    co2contra_operator_name       = "co2contra_c_sbp42_new",
+    mixvec_transform_name         = "mixvec_staggered",
+    mixvec_transform_config_str   = "&mixvec_transform_config
+        w2p_interp_name='vertical_interp_w2p_sbp42',
+        p2w_interp_name='vertical_interp_p2w_sbp42',
+        uv2p_interp_name='interp2d_uv2pvec_C_sbp42',
+        p2uv_interp_name='interp2d_pvec2uv_C_sbp42' /",
     theta2uv_operator_name        = "w2uv_staggered",
     theta2uv_hor_part_name        = "interp2d_p2uv_C_sbp42",
     theta2uv_vert_part_name       = "vertical_interp_w2p_sbp42",

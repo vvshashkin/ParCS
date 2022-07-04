@@ -641,13 +641,15 @@ $(DOBJ)nh_operator_factory_mod.o: src/models/NH/operators/nh_operator_factory_mo
 	$(DOBJ)config_mod.o \
 	$(DOBJ)config_nh_operator_mod.o \
 	$(DOBJ)parcomm_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)grid_field_factory_mod.o \
+	$(DOBJ)mesh_mod.o \
 	$(DOBJ)ptheta_linear_nh_oper_mod.o \
 	$(DOBJ)grad_3d_factory_mod.o \
 	$(DOBJ)div_3d_factory_mod.o \
 	$(DOBJ)co2contra_factory_mod.o \
 	$(DOBJ)interpolator_w2uv_factory_mod.o \
 	$(DOBJ)vertical_operator_factory_mod.o \
-	$(DOBJ)grid_field_factory_mod.o \
 	$(DOBJ)vertical_test_field_mod.o \
 	$(DOBJ)const_n_profile_mod.o \
 	$(DOBJ)advection3d_oper_mod.o \
@@ -655,6 +657,7 @@ $(DOBJ)nh_operator_factory_mod.o: src/models/NH/operators/nh_operator_factory_mo
 	$(DOBJ)solid_rotation_wind_field_mod.o \
 	$(DOBJ)const_mod.o \
 	$(DOBJ)nonlin_nh_oper_mod.o \
+	$(DOBJ)mixvec_transform_factory_mod.o \
 	$(DOBJ)vector_advection3d_factory_mod.o \
 	$(DOBJ)coriolis_factory_mod.o
 	@echo $(COTEXT)
@@ -665,7 +668,7 @@ $(DOBJ)nonlin_nh_oper_mod.o: src/models/NH/operators/nonlin_nh_oper_mod.f90 \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)abstract_grad_3d_mod.o \
 	$(DOBJ)abstract_div_3d_mod.o \
-	$(DOBJ)abstract_co2contra_mod.o \
+	$(DOBJ)abstract_mixvec_transform_mod.o \
 	$(DOBJ)abstract_interpolators3d_mod.o \
 	$(DOBJ)abstract_scalar_advection3d_mod.o \
 	$(DOBJ)abstract_vector_advection3d_mod.o \
@@ -711,6 +714,7 @@ $(DOBJ)advection3d_oper_mod.o: src/models/NH/operators/advection3d_oper_mod.f90 
 $(DOBJ)config_nh_operator_mod.o: src/models/NH/operators/config_nh_operator_mod.f90 \
 	$(DOBJ)config_mod.o \
 	$(DOBJ)config_advection_3d_mod.o \
+	$(DOBJ)config_mixvec_transform_mod.o \
 	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -2103,8 +2107,6 @@ $(DOBJ)test_diffops_3d_mod.o: src/test/test_diff_ops/test_diffops_3d_mod.f90 \
 	$(DOBJ)mixvec_transform_factory_mod.o \
 	$(DOBJ)abstract_mixvec_transform_mod.o \
 	$(DOBJ)config_mixvec_transform_mod.o \
-	$(DOBJ)abstract_co2contra_mod.o \
-	$(DOBJ)co2contra_factory_mod.o \
 	$(DOBJ)abstract_scalar_advection3d_mod.o \
 	$(DOBJ)scalar_advection_factory_mod.o \
 	$(DOBJ)config_advection_3d_mod.o \

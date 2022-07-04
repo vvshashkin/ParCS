@@ -1,8 +1,9 @@
 module config_nh_operator_mod
 
-use config_mod,              only : config_t
-use config_advection_3d_mod, only : get_advection_3d_config
-use parcomm_mod,             only : parcomm_global
+use config_mod,                  only : config_t
+use config_advection_3d_mod,     only : get_advection_3d_config
+use config_mixvec_transform_mod, only : config_mixvec_transform_t
+use parcomm_mod,                 only : parcomm_global
 
 implicit none
 
@@ -29,12 +30,13 @@ end type config_advection3d_t
 type, extends(config_t) :: config_nonlin_nh_operator_t
     character(:),    allocatable :: grad_hor_part_name, grad_vert_part_name,        &
                                     div_hor_part_name,  div_vert_part_name,         &
-                                    co2contra_operator_name,                        &
+                                    mixvec_transform_name,                          &
                                     theta2uv_operator_name, theta2uv_hor_part_name, &
                                     theta2uv_vert_part_name
     character(:),    allocatable :: p_advection_oper_name
     character(:),    allocatable :: theta_advection_oper_name
-    class(config_t), allocatable :: config_p_advec, config_theta_advec
+    class(config_t), allocatable :: config_mixvec_transform, config_p_advec, &
+                                    config_theta_advec
     character(:),    allocatable :: vec_adv_op_name
     character(:),    allocatable :: uv_hor_adv_op_name, uv_ver_adv_op_name
     character(:),    allocatable :: w_adv_op_name, w_adv_hor_part_name, w_adv_ver_part_name
@@ -126,7 +128,8 @@ subroutine parse_nonlinear_nh_operator_config(this,config_string)
 
     namelist /nonlin_nh_operator/ grad_hor_part_name, grad_vert_part_name, &
                                   div_hor_part_name,  div_vert_part_name,  &
-                                  co2contra_operator_name,                 &
+                                  mixvec_transform_name,                   &
+                                  mixvec_transform_config_str,             &
                                   theta2uv_operator_name,                  &
                                   theta2uv_hor_part_name,                  &
                                   theta2uv_vert_part_name,                 &
@@ -140,7 +143,8 @@ subroutine parse_nonlinear_nh_operator_config(this,config_string)
 
     character(len=512) :: grad_hor_part_name, grad_vert_part_name, &
                           div_hor_part_name, div_vert_part_name,   &
-                          co2contra_operator_name,                 &
+                          mixvec_transform_name,                   &
+                          mixvec_transform_config_str,             &
                           theta2uv_operator_name,                  &
                           theta2uv_hor_part_name,                  &
                           theta2uv_vert_part_name,                 &
@@ -158,7 +162,9 @@ subroutine parse_nonlinear_nh_operator_config(this,config_string)
     this%grad_vert_part_name           = trim(grad_vert_part_name)
     this%div_hor_part_name             = trim(div_hor_part_name)
     this%div_vert_part_name            = trim(div_vert_part_name)
-    this%co2contra_operator_name       = trim(co2contra_operator_name)
+    this%mixvec_transform_name         = trim(mixvec_transform_name)
+    this%config_mixvec_transform       = config_mixvec_transform_t()
+    call this%config_mixvec_transform%parse(mixvec_transform_config_str)
     this%theta2uv_operator_name        = trim(theta2uv_operator_name)
     this%theta2uv_hor_part_name        = trim(theta2uv_hor_part_name)
     this%theta2uv_vert_part_name       = trim(theta2uv_vert_part_name)
