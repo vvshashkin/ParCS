@@ -29,6 +29,10 @@ subroutine create_vertical_operator(vertical_op, vertical_op_name)
         call create_sbp_vertical_op(vertical_op, "D21_staggered_i2c","p",is_diff=.true.)
     case("eta_diff_w2p_sbp42")
         call create_sbp_vertical_op(vertical_op, "D42_staggered_i2c","p",is_diff=.true.)
+    case("eta_diff_w2p_sbp21_sat0")
+        call create_sbp_vertical_op(vertical_op, "D21_staggered_i2c_sat0","p",is_diff=.true.)
+    case("eta_diff_w2p_sbp42_sat0")
+        call create_sbp_vertical_op(vertical_op, "D42_staggered_i2c_sat0","p",is_diff=.true.)
     case("vertical_interp_p2w_sbp21")
         call create_sbp_vertical_op(vertical_op, "W21_stagered_interp_c2i","w",is_diff=.false.)
     case("vertical_interp_p2w_sbp42")
@@ -45,7 +49,7 @@ subroutine create_vertical_operator(vertical_op, vertical_op_name)
     end select
 end subroutine create_vertical_operator
 
-subroutine create_sbp_vertical_op(vertical_op, sbp_op_name, target_grid_name, is_diff)
+subroutine create_sbp_vertical_op(vertical_op,sbp_op_name,target_grid_name,is_diff)
 
     use sbp_vertical_operator_mod, only : sbp_vertical_op_t
     use sbp_factory_mod,           only : create_sbp_operator

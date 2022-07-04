@@ -23,7 +23,7 @@
     simulation_time_days  = 0.0,
     simulation_time_hours = 0.0,
     simulation_time_min   = 0.0,
-    simulation_time_sec   = 3600.0,
+    simulation_time_sec   = 500.0,
 /
 &nh_postprocessing
     Nlon = 320
@@ -34,7 +34,7 @@
     grad_hor_part_name            = "gradient_c_sbp42",
     grad_vert_part_name           = "eta_diff_p2w_sbp42",
     div_hor_part_name             = "divergence_c_sbp42",
-    div_vert_part_name            = "eta_diff_w2p_sbp42",
+    div_vert_part_name            = "eta_diff_w2p_sbp42_sat0",
     co2contra_operator_name       = "co2contra_c_sbp42_new",
     theta2uv_operator_name        = "w2uv_staggered",
     theta2uv_hor_part_name        = "interp2d_p2uv_C_sbp42",

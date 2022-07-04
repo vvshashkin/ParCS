@@ -41,7 +41,7 @@ function create_sbp_operator(sbp_operator_name) result(sbp_op)
     !should be -1 for derivatives, 1 for interpolations
     real(kind=8)                 :: right_side_sign
     !size of edge matrix block
-    integer(kind=4)              :: n_edge, nw_edge, ne
+    integer(kind=4)              :: n_edge, nw_edge, ne, i
     !
 
     !Initialization of Left-side and inner matrix coefficients
@@ -113,7 +113,8 @@ function create_sbp_operator(sbp_operator_name) result(sbp_op)
         sbp_op%proj_operator_l = D21_boundary_proj
         sbp_op%Al_in = D21_A_centers
         sbp_op%Al_out = D21_A_interfaces
-    else if(sbp_operator_name == "D21_staggered_i2c") then
+    else if(sbp_operator_name == "D21_staggered_i2c" .or. &
+            sbp_operator_name == "D21_staggered_i2c_sat0") then
         sbp_op%W_edge_l    = D21_staggered_i2c
         sbp_op%edge_last_l = D21_staggered_i2c_last_nonzero
         sbp_op%W_in        = D21_staggered_in
@@ -123,6 +124,11 @@ function create_sbp_operator(sbp_operator_name) result(sbp_op)
         sbp_op%proj_operator_l = D21_boundary_proj
         sbp_op%Al_in = D21_A_interfaces
         sbp_op%Al_out = D21_A_centers
+        if(sbp_operator_name == "D21_staggered_i2c_sat0") then
+            do i=1, size(sbp_op%proj_operator_l,1)
+                sbp_op%W_edge_l(1,i) = sbp_op%W_edge_l(1,i)+sbp_op%proj_operator_l(i)/sbp_op%Al_out(i)
+            end do
+        end if
     else if(sbp_operator_name == "D42_staggered_c2i") then
         sbp_op%W_edge_l    = D42_staggered_c2i
         sbp_op%edge_last_l = D42_staggered_c2i_last_nonzero
@@ -133,7 +139,8 @@ function create_sbp_operator(sbp_operator_name) result(sbp_op)
         sbp_op%proj_operator_l = D42_boundary_proj
         sbp_op%Al_in = D42_A_centers
         sbp_op%Al_out = D42_A_interfaces
-    else if(sbp_operator_name == "D42_staggered_i2c") then
+    else if(sbp_operator_name == "D42_staggered_i2c".or. &
+            sbp_operator_name == "D42_staggered_i2c_sat0") then
         sbp_op%W_edge_l    = D42_staggered_i2c
         sbp_op%edge_last_l = D42_staggered_i2c_last_nonzero
         sbp_op%W_in        = D42_staggered_in
@@ -143,6 +150,11 @@ function create_sbp_operator(sbp_operator_name) result(sbp_op)
         sbp_op%proj_operator_l = D42_boundary_proj
         sbp_op%Al_in = D42_A_interfaces
         sbp_op%Al_out = D42_A_centers
+        if(sbp_operator_name == "D42_staggered_i2c_sat0") then
+            do i=1, size(sbp_op%proj_operator_l,1)
+                sbp_op%W_edge_l(1,i) = sbp_op%W_edge_l(1,i)+sbp_op%proj_operator_l(i)/sbp_op%Al_out(i)
+            end do
+        end if
     else
         call parcomm_global%abort("sbp_factory_mod, unknown sbp operator name: "// sbp_operator_name)
     end if

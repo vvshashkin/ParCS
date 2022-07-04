@@ -82,7 +82,7 @@ subroutine apply(this, vout, vin, domain)
 
         vout%model_time = 1.0_8 != dt / dt
 
-        call apply_0boundary_conds(vout%w,domain%mesh_w)
+        ! call apply_0boundary_conds(vout%w,domain%mesh_w)
     class default
         call parcomm_global%abort("Ptheta_linear_nh_oper_t, vin type error")
     end select
