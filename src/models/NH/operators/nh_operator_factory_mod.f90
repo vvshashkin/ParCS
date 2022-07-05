@@ -211,9 +211,9 @@ subroutine create_nonlin_nh_operator(nh_operator,config,domain)
     call create_grid_field(operator%grad_z, 0, 0, domain%mesh_w)
     call create_grid_field(operator%grad_z_real, 0, 0, domain%mesh_w)
     call create_grid_field(operator%Phi, halo_width_xy, 0, domain%mesh_p)
-    call create_grid_field(operator%grad_Phi_x, 0, 0, domain%mesh_u)
-    call create_grid_field(operator%grad_Phi_y, 0, 0, domain%mesh_v)
-    call create_grid_field(operator%grad_Phi_z, 0, 0, domain%mesh_w)
+    call create_grid_field(operator%grad_Phi_x, 1, 0, domain%mesh_u)
+    call create_grid_field(operator%grad_Phi_y, 1, 0, domain%mesh_v)
+    call create_grid_field(operator%grad_Phi_z, 1, 0, domain%mesh_w)
     call create_grid_field(operator%eta_dot,    0, 0, domain%mesh_w)
 
     call set_geopotential(operator%Phi,domain%mesh_p,Earth_grav)
@@ -232,6 +232,7 @@ subroutine set_geopotential(Phi,mesh,grav)
     integer(kind=4) :: t, i, j, k
 
     do t = mesh%ts, mesh%te
+
         do k = mesh%tile(t)%ks, mesh%tile(t)%ke
             do j = mesh%tile(t)%js, mesh%tile(t)%je
                 do i = mesh%tile(t)%is, mesh%tile(t)%ie

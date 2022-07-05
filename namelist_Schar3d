@@ -1,32 +1,32 @@
 &domain
-    N = 80,
-    Nz = 10,
+    N = 60,
+    Nz = 60,
     topology_type       = 'cube',
     staggering_type     = 'C',
     vertical_staggering = 'CharneyPhilips'
     metric_type         = 'shallow_atmosphere_metric'
-    h_top               = 10e3
-    is_orographic_curvilinear = .false.
-    orography_name = "None"
-    orography_config_str = "&orography /"
+    h_top               = 30e3
+    is_orographic_curvilinear = .true.
+    orography_name = "Schar_orography"
+    orography_config_str = "&orography h = 250.0/"
 /
 &metric
   metric_2d_type = "ecs",
   vertical_transform_name = "vertical_transform_default",
-  scale               = 50969.832,
+  scale               = 12742.458,
   omega = 0.0
 /
 &nh_model
     timescheme_name  = "rk4"
     operator_type    = "nonlinear_nh"
-    testcase_name    = "GW"
-    dt= 1.0,
+    testcase_name    = "solid_rotation"
+    dt= 0.5,
     tau_write = 100.0,
-    tau_diagnostics = 2.0
+    tau_diagnostics = 1.0
     simulation_time_days  = 0.0,
     simulation_time_hours = 0.0,
     simulation_time_min   = 0.0,
-    simulation_time_sec   = 500.0,
+    simulation_time_sec   = 7200.0,
 /
 &nh_postprocessing
     Nlon = 320
