@@ -1,14 +1,15 @@
 module orography_factory_mod
 
-use orography_mod,            only : orography_t
-use config_mod,               only : config_t
-use config_orography_mod,     only : config_test_orography_t
-use domain_mod,               only : domain_t
-use grid_field_factory_mod,   only : create_grid_field
-use parcomm_mod,              only : parcomm_global
-use orography_test_field_mod, only : orography_test_field_t, orography_test_grad_t
-use test_fields_3d_mod,       only : scalar_field3d_t, vector_field3d_t
-use parcomm_mod,              only : parcomm_global
+use orography_mod,             only : orography_t
+use config_mod,                only : config_t
+use config_orography_mod,      only : config_test_orography_t
+use domain_mod,                only : domain_t
+use grid_field_factory_mod,    only : create_grid_field
+use parcomm_mod,               only : parcomm_global
+use orography_test_field_mod,  only : orography_test_field_t, orography_test_grad_t
+use Schar_orography_field_mod, only : Schar_orography_grad_t, Schar_orography_field_t
+use test_fields_3d_mod,        only : scalar_field3d_t, vector_field3d_t
+use parcomm_mod,               only : parcomm_global
 
 implicit none
 
@@ -22,6 +23,8 @@ subroutine create_orography(orography,orography_name,config,domain,halo_width)
     integer(kind=4),   intent(in)  :: halo_width
 
     real(kind=8) :: h
+    class(scalar_field3d_t), allocatable :: orog_gen
+    class(vector_field3d_t), allocatable :: orog_grad_gen
 
     call create_grid_field(orography%o%h,          halo_width,0,domain%mesh_o)
     call create_grid_field(orography%o%dh_alpha,   halo_width,0,domain%mesh_o)
@@ -55,7 +58,7 @@ subroutine create_orography(orography,orography_name,config,domain,halo_width)
         call orography%xy%h       %assign(0.0_8,domain%mesh_xy,halo_width)
         call orography%xy%dh_alpha%assign(0.0_8,domain%mesh_xy,halo_width)
         call orography%xy%dh_beta %assign(0.0_8,domain%mesh_xy,halo_width)
-    else if(orography_name == "test_orography") then
+    else!(orography_name == "test_orography") then
         select type(config)
         class is (config_test_orography_t)
             h = config%h
@@ -63,12 +66,23 @@ subroutine create_orography(orography,orography_name,config,domain,halo_width)
             call parcomm_global%abort("orography_factory_mod, unsupported config type for:"//&
                                        orography_name)
         end select
-        call create_analytic_orography(orography,orography_test_field_t(h), &
-                                       orography_test_grad_t(h,domain%mesh_o%scale),&
+
+        select case(orography_name)
+        case("test_orography")
+            orog_gen      = orography_test_field_t(h)
+            orog_grad_gen = orography_test_grad_t(h,domain%mesh_o%scale)
+        case("Schar_orography")
+            orog_gen      = Schar_orography_field_t(h,domain%mesh_o%scale)
+            orog_grad_gen = Schar_orography_grad_t(h,domain%mesh_o%scale)
+        case default
+            call parcomm_global%abort("orography factory mod error - unknown orography name:"//&
+                                      orography_name)
+        end select
+        call create_analytic_orography(orography,orog_gen,orog_grad_gen, &
                                        domain, halo_width)
-    else
-        call parcomm_global%abort("orography factory mod error - unknown orography name:"//&
-                                   orography_name)
+    !else
+    !    call parcomm_global%abort("orography factory mod error - unknown orography name:"//&
+    !                               orography_name)
     end if
 
 end subroutine create_orography

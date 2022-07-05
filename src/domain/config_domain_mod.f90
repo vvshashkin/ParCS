@@ -2,6 +2,7 @@ module config_domain_mod
 
 use config_mod,           only : config_t
 use config_metric_mod,    only : config_metric_t
+use config_orography_mod, only : config_test_orography_t
 
 implicit none
 
@@ -41,9 +42,12 @@ subroutine parse(this, config_string)
     character(len=255) :: metric_type
     character(len=255) :: vertical_staggering = "None"
     real(kind=8)       :: h_top = 1.0_8
+    logical            :: is_orographic_curvilinear
+    character(len=255) :: orography_name, orography_config_str
 
     namelist /domain/ N, Nz, staggering_type, topology_type, metric_type,&
-                             vertical_staggering, h_top
+                             vertical_staggering, h_top, is_orographic_curvilinear, &
+                             orography_name, orography_config_str
 
     read(config_string, domain)
 
@@ -56,6 +60,10 @@ subroutine parse(this, config_string)
     this%vertical_staggering     = trim(vertical_staggering)
 
     this%h_top = h_top
+    this%is_orographic_curvilinear = is_orographic_curvilinear
+    this%config_orography = config_test_orography_t()
+    this%orography_name   = trim(orography_name)
+    call this%config_orography%parse(orography_config_str)
 
     call this%config_metric%parse(config_string)
 

@@ -2685,6 +2685,7 @@ $(DOBJ)domain_factory_mod.o: src/domain/domain_factory_mod.f90 \
 $(DOBJ)config_domain_mod.o: src/domain/config_domain_mod.f90 \
 	$(DOBJ)config_mod.o \
 	$(DOBJ)config_metric_mod.o \
+	$(DOBJ)config_orography_mod.o \
 	$(DOBJ)parcomm_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -2702,6 +2703,7 @@ $(DOBJ)orography_factory_mod.o: src/domain/orography/orography_factory_mod.f90 \
 	$(DOBJ)grid_field_factory_mod.o \
 	$(DOBJ)parcomm_mod.o \
 	$(DOBJ)orography_test_field_mod.o \
+	$(DOBJ)schar_orography_field_mod.o \
 	$(DOBJ)test_fieds_3d_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
@@ -2807,6 +2809,15 @@ $(DOBJ)vertical_test_field_mod.o: src/test_fields/test_fields_3d/vertical_test_f
 	$(DOBJ)abstract_vertical_profile_mod.o \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)mesh_mod.o
+	@echo $(COTEXT)
+	@$(FC) $(OPTSC)  $< -o $@
+
+$(DOBJ)schar_orography_field_mod.o: src/test_fields/test_fields_3d/Schar_orography_field_mod.f90 \
+	$(DOBJ)test_fieds_3d_mod.o \
+	$(DOBJ)grid_field_mod.o \
+	$(DOBJ)mesh_mod.o \
+	$(DOBJ)const_mod.o \
+	$(DOBJ)sph_coords_mod.o
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 

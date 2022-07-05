@@ -78,6 +78,8 @@ subroutine apply(this, vout, vin, domain)
         call vout%v%update(1.0_8,this%grad_y_contra,domain%mesh_v)
         call vout%w%update(1.0_8,this%grad_z_real,  domain%mesh_w)
 
+        call add_top_damping(vout%w,vin%w,domain%mesh_w)
+
         call this%coriolis_op%calc_coriolis_contra(this%grad_x, this%grad_y, &
                                                            vin%u, vin%v, domain)
         call vout%u%update(1.0_8,this%grad_x,domain%mesh_u)
@@ -125,5 +127,29 @@ subroutine apply_0boundary_conds(eta_dot, mesh)
         end do
     end do
 end subroutine apply_0boundary_conds
+
+subroutine add_top_damping(w1,w0,mesh)
+
+    use mesh_mod, only : mesh_t
+
+    type(grid_field_t), intent(inout) :: w1
+    type(grid_field_t), intent(in)    :: w0
+    type(mesh_t),       intent(in)    :: mesh
+
+    integer(kind=4) :: i, j, k, t
+    real(kind=8)    :: sigma, sigma0 = 1.0_8/25.0_8
+    real(kind=8)    :: h0 = 20e3_8, dh = 10e3_8
+
+    do t=mesh%ts, mesh%te
+        do k = mesh%tile(t)%ks, mesh%tile(t)%ke
+            do j = mesh%tile(t)%js, mesh%tile(t)%je
+                do i = mesh%tile(t)%is, mesh%tile(t)%ie
+                    sigma = sigma0*min(1.0_8,max(0.0_8,(mesh%tile(t)%h(i,j,k)-h0)/dh))
+                    w1%tile(t)%p(i,j,k) = w1%tile(t)%p(i,j,k)-sigma*w0%tile(t)%p(i,j,k)
+                end do
+            end do
+        end do
+    end do
+end subroutine add_top_damping
 
 end module nonlin_nh_oper_mod

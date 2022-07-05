@@ -50,6 +50,7 @@ subroutine get_solid_rotation_initial_conditions_nh_stvec(stvec, domain)
 
     call wind_gen%get_vector_field(stvec%u,stvec%v,stvec%w, &
                                    domain%mesh_u,domain%mesh_v,domain%mesh_w,0,"contravariant")
+    call wind_gen%get_vertical_component(stvec%w,domain%mesh_w,0,"shallow_atm_real")
 
     call P0_generator%get_scalar_field(stvec%P,domain%mesh_p,0)
     call theta0_generator%get_scalar_field(stvec%theta,domain%mesh_w,0)
