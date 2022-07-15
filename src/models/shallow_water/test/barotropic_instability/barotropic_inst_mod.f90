@@ -30,6 +30,8 @@ use key_value_mod, only : key_value_r8_t
 use grid_field_mod,         only : grid_field_t
 use grid_field_factory_mod, only : create_grid_field
 
+use mpi
+
 implicit none
 
 ! type(config_RH4_wave_t) :: config_RH4_wave
@@ -72,7 +74,7 @@ subroutine run_barotropic_inst()
     real(kind=8)      :: tau_write
     integer(kind=4)   :: nstep_write, nstep_diagnostics
 
-    real(kind=8)    :: time, l2err, l2_ex
+    real(kind=8)    :: time, l2err, l2_ex, wall_time
     real(kind=8)    :: l2_err_h, l2_ex_h, l2_err_u, l2_ex_u
     real(kind=8)    :: linf_err_h, linf_ex_h, linf_err_u, linf_ex_u
     integer(kind=4) :: it
@@ -157,7 +159,9 @@ subroutine run_barotropic_inst()
                         state_ex%v%maxabs(domain%mesh_v, domain%parcomm))
     end select
 
+    wall_time = mpi_wtime()
     do it = 1, int(config%simulation_time/dt)
+
 
         call timescheme%step(state, operator, domain, dt)
         call timescheme_diff%step(state, operator_diff, domain, dt)
@@ -182,6 +186,8 @@ subroutine run_barotropic_inst()
                                                   "Hours = ", real(time/3600 ,4), &
                                                   " l2_h =", real(l2_err_h,4), " linf_h = ", real(linf_err_h,4), &
                                                   " l2_u =", real(l2_err_u,4), " linf_u = ", real(linf_err_u,4)
+                if(domain%parcomm%myid == 0) print *, "step wall-time: ", mpi_wtime()-wall_time
+                wall_time = mpi_wtime()
             end select
         end if
 

@@ -6,7 +6,7 @@ from add_cubed_sphere import add_cubed_sphere
 
 path = argv[1]
 
-schemes = ["Ah21","Ah42","Ah43","Ah63"]
+schemes = ["Ah21","Ah42","Ah63"]
 cn_res = Ngl.Resources()
 cn_res.cnFillOn = True
 cn_res.cnLinesOn = False
@@ -36,7 +36,9 @@ for N in [20,40]:#[20,40,80,160]:
     cn_res.sfYArray = np.linspace(-90.0,90.0,Nlat)
     overlay_res.sfXArray = np.linspace(0.0,360.0,Nlon,endpoint=False)
     overlay_res.sfYArray = np.linspace(-90.0,90.0,Nlat)
-    wks = Ngl.open_wks("eps", "ts2_h_error_N{:03d}".format(N))
+    wksres = Ngl.Resources()
+    wksres.wkOrientation="portrait"
+    wks = Ngl.open_wks("eps", "ts2_h_error_N{:03d}".format(N),wksres)
     Ngl.define_colormap(wks,"GMT_polar")
     plots = []
     for scheme in schemes:
@@ -53,9 +55,9 @@ for N in [20,40]:#[20,40,80,160]:
 
     textres = Ngl.Resources()
     textres.txFontHeightF = 0.020
-    Ngl.text_ndc(wks,"Height error at day 10 [m]",0.5,.97,textres)
+    #Ngl.text_ndc(wks,"Height error at day 10 [m]",0.5,.97,textres)
     pres = Ngl.Resources()
-    Ngl.panel(wks,plots,(2,2),pres)
+    Ngl.panel(wks,plots,(3,1),pres)
     Ngl.delete_wks(wks)
 
 def read_err(fname):
@@ -84,7 +86,7 @@ Ngl.delete_wks(wks)
 
 l2_conv = []
 linf_conv = []
-schemes = ["21","42","43","63"]
+schemes = ["21","42","63"]
 path = path+"/errors_"
 resolutions=["N020_dt800","N040_dt400","N080_dt200","N160_dt100"]
 
@@ -145,7 +147,7 @@ lg_res = Ngl.Resources()
 lg_res.vpWidthF = 0.12
 lg_res.vpHeightF = 0.11
 lg_res.lgLineThicknessF  = 2.0
-lg_res.lgLineColors = ["red","green","blue","orange"]
+lg_res.lgLineColors = ["red","green","blue"]
 lg_res.lgDashIndexes = [0,0,0,0]
 lg_res.lgLabelFontHeightF = 0.013
 lg_res.lgPerimOn = True

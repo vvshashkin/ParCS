@@ -1,6 +1,6 @@
 #!/bin/bash
 
-EXE=$1/ELDRED_TEST_MAIN
+EXE=$1/BAROTROPIC_INST_MAIN
 Nprocs=$2
 source $(dirname "$0")"/gen_namelist.sh"
 
@@ -26,30 +26,24 @@ NAMELIST_TEMPLATE="
     massflux_op_name  = 'massflux_colocated',\n
     quadrature_name   = '%%%quadrature',\n
     diff_time_scheme  = 'explicit_Eul1'\n
-    uv_diff_coeff     =  0.0,\n
+    uv_diff_coeff     =  0.03,\n
     hordiff_uv_name   = '%%%uv_diff',\n
-    h_diff_coeff      =  0.0,\n
+    h_diff_coeff      =  0.01,\n
     hordiff_h_name    = '%%%h_diff',\n
     dt=%%%dt,\n
     tau_write = 86400.0,\n
     tau_diagnostics = 3600.0\n
-    simulation_time_days  = 2400.0,\n
+    simulation_time_days  = 1.0,\n
     simulation_time_hours = 0.0,\n
     simulation_time_min   = 0.0,\n
     simulation_time_sec   = 0.0,\n
 /"
 
-run_Eldred(){
+run_barotropic(){
 	gen_namelist $1 $2 $3 "$4"  > namelist_swm
-	mpirun -n $Nprocs $EXE &> swm_N$1_dt$2_Ah$3.out
-    mv h.dat h_N$1_Ah$3.dat
-    mv u.dat u_N$1_Ah$3.dat
-    mv v.dat v_N$1_Ah$3.dat
-    mv div.dat div_N$1_Ah$3.dat
-    mv curl.dat curl_N$1_Ah$3.dat
+	mpirun -n $Nprocs $EXE &> swm_N$1_dt$2_Ah$3_mpi$Nprocs.out
 }
-
-run_Eldred 096 300 21 "$NAMELIST_TEMPLATE"
-run_Eldred 096 300 42 "$NAMELIST_TEMPLATE"
-run_Eldred 096 300 43 "$NAMELIST_TEMPLATE"
-run_Eldred 096 300 63 "$NAMELIST_TEMPLATE"
+run_barotropic 256 075 21 "$NAMELIST_TEMPLATE"
+run_barotropic 256 075 42 "$NAMELIST_TEMPLATE"
+run_barotropic 256 075 43 "$NAMELIST_TEMPLATE"
+run_barotropic 256 075 63 "$NAMELIST_TEMPLATE"

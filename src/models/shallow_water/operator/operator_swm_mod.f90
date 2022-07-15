@@ -225,7 +225,8 @@ subroutine calc_energy(this, te, ke, pe, vin, domain)
 
     call this%KE_diag_u%assign_prod(0.5_8,this%hu,vin%u,domain%mesh_u)
     call this%KE_diag_v%assign_prod(0.5_8,this%hv,vin%v,domain%mesh_v)
-    call this%PE_diag%assign_prod(0.5_8*this%grav,vin%h,vin%h,domain%mesh_p)
+    call this%PE_diag%assign(1.0_8,vin%h,1.0_8,this%h_surf,domain%mesh_p)
+    call this%PE_diag%assign_prod(0.5_8*this%grav,this%PE_diag,this%PE_diag,domain%mesh_p)
 
     ke = this%quadrature_u%mass(this%KE_diag_u,domain%mesh_u,domain%parcomm)+&
          this%quadrature_v%mass(this%KE_diag_v,domain%mesh_v,domain%parcomm)

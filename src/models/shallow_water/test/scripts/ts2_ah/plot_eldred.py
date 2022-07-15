@@ -4,11 +4,17 @@ import Ngl
 from sys import argv
 
 path = argv[1]
-schemes = ["Ah21","Ah42","Ah43","Ah63"]
+if len(argv)>2 :
+    stswm_sol_path = argv[2]
+else:
+    stswm_sol_path = None
+schemes = ["Ah21","Ah42","Ah63"]
 #schemes = ["Ah42"]
 t1 = 401
 t2 = 2400
 Nc = 96
+Nlon_stswm = 388
+Nlat_stswm = 194
 wktype = "eps"
 
 
@@ -22,6 +28,20 @@ def add_cubed_sphere(wks,plot):
     l3 = Ngl.add_polyline(wks,plot,(225,225,135,135,225),(clat,-clat,-clat,clat,clat),line_res)
     l4 = Ngl.add_polyline(wks,plot,(315,315,225,225,315),(clat,-clat,-clat,clat,clat),line_res)
     return (l1,l2,l3,l4)
+
+def get_mean_and_std(fname,t1,t2,nx,ny):
+    Nt = t2-t1+1.0
+    f_mean  = np.zeros((ny,nx),dtype=np.float64)
+    f_mean2 = np.zeros((ny,nx),dtype=np.float64)
+    fd = open(fname,"rb")
+    fd.seek(4*t1*nx*ny,0)
+    for i in range(t2-t1+1):
+        f = np.fromfile(fd,count=nx*ny,dtype=np.float32).reshape((ny,nx))
+        f_mean  = f_mean+f/Nt
+        f_mean2 = f_mean2+f**2/Nt
+
+    fd.close()
+    return f_mean, np.sqrt(f_mean2-f_mean**2)
 
 def plot_Eldred(scheme, N, path,t1,t2):
 
@@ -70,30 +90,9 @@ def plot_Eldred(scheme, N, path,t1,t2):
     Ngl.delete_wks(wks)
 
 
-    def get_mean_and_std(fname, t1, t2):
-        Nt = t2-t1+1.0
-        f_mean  = np.zeros((Nlat,Nlon),dtype=np.float64)
-        f_mean2 = np.zeros((Nlat,Nlon),dtype=np.float64)
-        fd = open(fname,"rb")
-        fd.seek(4*t1*Nlon*Nlat,0)
-        #lon=174
-        #lat = 63
-        for i in range(t2-t1+1):
-            f = np.fromfile(fd,count=Nlon*Nlat,dtype=np.float32).reshape((Nlat,Nlon))
-            f_mean  = f_mean+f/Nt
-            f_mean2 = f_mean2+f**2/Nt
-            #print "f", f[lat,lon], Nt
-
-
-        fd.close()
-        return f_mean, np.sqrt(f_mean2-f_mean**2)
-
-    z_mean, z_std     = get_mean_and_std(path+"/curl"+suffix+".dat", t1, t2)
-    div_mean, div_std = get_mean_and_std(path+"/div"+suffix+".dat", t1, t2)
-    h_mean, h_std     = get_mean_and_std(path+"/h"+suffix+".dat", t1, t2)
-
-    #cn_res.cnLevelSelectionMode = "AutomaticLevels"
-    #cn_res.cnFillColors = []
+    z_mean, z_std     = get_mean_and_std(path+"/curl"+suffix+".dat", t1, t2, Nlon, Nlat)
+    div_mean, div_std = get_mean_and_std(path+"/div"+suffix+".dat", t1, t2, Nlon, Nlat)
+    h_mean, h_std     = get_mean_and_std(path+"/h"+suffix+".dat", t1, t2, Nlon, Nlat)
 
     wks = Ngl.open_wks(wktype, "Eldred_N{:03d}_".format(N)+scheme,wkres)
    
@@ -155,29 +154,48 @@ for scheme in schemes:
     div_stds = np.vstack((div_stds,div_std))
     print div_std.shape
 
-wks = Ngl.open_wks(wktype, "z_div_std".format(Nc))
+if(stswm_sol_path):
+    stswm_lat = np.fromfile(stswm_sol_path+"/lats_stswm_128.txt",sep=",")
+    z_mean, z_std     = get_mean_and_std(stswm_sol_path+"/Eldred_z.dat", t1, t2, Nlon_stswm, Nlat_stswm)
+    d_mean, d_std     = get_mean_and_std(stswm_sol_path+"/Eldred_d.dat", t1, t2, Nlon_stswm, Nlat_stswm)
+    z_std_stswm = np.mean(z_std,axis=1)
+    d_std_stswm = np.mean(d_std,axis=1)
+
+wk_res = Ngl.Resources()
+wk_res.wkOrientation="Landscape"
+wks = Ngl.open_wks(wktype, "z_div_std".format(Nc),wk_res)
 xy_res = Ngl.Resources()
 xy_res.nglDraw = False
 xy_res.nglFrame = False
-xy_res.xyLineColors=["red","green","blue","yellow"]
+xy_res.xyLineColors=["red","green","blue"]
 xy_res.xyLineThicknessF=2.0
 
 x = np.linspace(-90.0,90.0,2*Nc+1)
 
 xy_res.tiMainString="divergence std 10~S~-8 ~N~ [1/s]"
 plot1 = Ngl.xy(wks,x,div_stds*1e8,xy_res)
+if(stswm_sol_path):
+    line_res = Ngl.Resources()
+    line_res.gsLineColor="orange"
+    line_res.gsLineThicknessF = 2.0
+    line1 = Ngl.add_polyline(wks,plot1,stswm_lat,d_std_stswm*1e8,line_res)
 xy_res.tiMainString="relative vorticity std 10~S~-5 ~N~ [1/s]"
 plot2 = Ngl.xy(wks,x,z_stds*1e5,xy_res)
+if(stswm_sol_path): line2 = Ngl.add_polyline(wks,plot2,stswm_lat,z_std_stswm*1e5,line_res)
 
 lg_res = Ngl.Resources()
 lg_res.vpWidthF = 0.12
-lg_res.vpHeightF = 0.11
+lg_res.vpHeightF = 0.13
 lg_res.lgLineThicknessF  = 2.0
-lg_res.lgLineColors = ["red","green","blue","yellow"]
-lg_res.lgDashIndexes = [0,0,0,0]
+lg_res.lgLineColors = ["red","green","blue"]
+if(stswm_sol_path): lg_res.lgLineColors = ["red","green","blue","orange"]
+lg_res.lgDashIndexes = [0,0,0,0,0]
 lg_res.lgLabelFontHeightF = 0.013
 lg_res.lgPerimOn = True
-lg1 = Ngl.legend_ndc(wks,4,["Ah21","Ah42","Ah43","Ah63"],0.2,0.67,lg_res)
+if(stswm_sol_path):
+    lg1 = Ngl.legend_ndc(wks,4,["Ah21","Ah42","Ah63","T128"],0.2,0.67,lg_res)
+else :
+    lg1 = Ngl.legend_ndc(wks,3,["Ah21","Ah42","Ah63"],0.2,0.67,lg_res)
 #lg2 = Ngl.legend_ndc(wks,4,["Ah21","Ah42","Ah43","Ah63"],0.72,0.65,lg_res)
 
 pres = Ngl.Resources()

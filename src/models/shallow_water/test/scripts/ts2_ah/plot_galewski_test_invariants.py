@@ -4,7 +4,7 @@ import Ngl
 from sys import argv
 
 wktype = "eps"
-schemes = ["Ah21","Ah42","Ah43","Ah63"]
+schemes = ["Ah21","Ah42","Ah63"]
 resolutions = ["N256_dt075"]
 
 path = argv[1]
@@ -51,7 +51,7 @@ lg_res = Ngl.Resources()
 lg_res.vpWidthF = 0.12
 lg_res.vpHeightF = 0.11
 lg_res.lgLineThicknessF  = 2.0
-lg_res.lgLineColors = ["red","green","blue","orange"]
+lg_res.lgLineColors = ["red","green","blue"]
 lg_res.lgDashIndexes = [0,0,0,0]
 lg_res.lgLabelFontHeightF = 0.013
 lg_res.lgPerimOn = True
