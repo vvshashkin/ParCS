@@ -2,152 +2,94 @@ import numpy as np
 import re
 import Ngl
 from sys import argv
+from add_cubed_sphere import add_cubed_sphere
 
+from plot_te_en_cons import plot_te_en
+
+wktype = "eps"
 path = argv[1]
-refsol_path = argv[2]
-
 schemes = ["Ah21","Ah42","Ah43","Ah63"]
+
+plot_te_en("ts5",path,schemes,["N040_dt400"],wktype)
+
 cn_res = Ngl.Resources()
 cn_res.cnFillOn = True
-cn_res.cnLinesOn = False
+#cn_res.cnLinesOn = False
 cn_res.cnLineLabelsOn = False
 cn_res.mpCenterLonF = 180.0
 cn_res.mpGridAndLimbOn = False
 cn_res.lbOrientation="Horizontal"
 cn_res.lbLabelFontHeightF = 0.015
 cn_res.tiMainFontHeightF = 0.02
+cn_res.mpGeophysicalLineColor="Transparent"
+cn_res.mpGreatCircleLinesOn = True
 
 cn_res.nglDraw = False
 cn_res.nglFrame = False
+
+orog_nlat = 181
+orog_nlon = 360
+orog_lon = np.linspace(0.0,2.0*np.pi,orog_nlon,endpoint=False)
+orog_lat = np.linspace(-0.5*np.pi,0.5*np.pi,orog_nlat)
+orog = np.empty((orog_nlat,orog_nlon),dtype = np.float32)
+orog_phi0 = np.pi / 6.0
+orog_lam0 = 0.5*np.pi
+orog_r = np.pi / 9.0
+orog_h = 2000.0
+for j in range(orog_nlat):
+    r = np.arccos(np.sin(orog_phi0)*np.sin(orog_lat[j])+\
+                  np.cos(orog_phi0)*np.cos(orog_lat[j])*np.cos(orog_lam0-orog_lon))
+    orog[j,:] = orog_h*(1-np.minimum(orog_r,r)/orog_r)
+
 
 overlay_res = Ngl.Resources()
 overlay_res.nglDraw = False
 overlay_res.nglFrame = False
 overlay_res.cnLineThicknessF = 2.0
+overlay_res.sfXArray = np.linspace(0.0,360.0,orog_nlon,endpoint=False)
+overlay_res.sfYArray = np.linspace(-90.0,90.0,orog_nlat)
+overlay_res.cnLineLabelsOn = False
+overlay_res.cnInfoLabelOn = False
+overlay_res.cnLevelSelectionMode = "ExplicitLevels"
+overlay_res.cnLevels = [0.5]
 
-for N in [32,48,64,96]:
+for N in [20,40,80,160]:#[32,48,64,96]:
     Nlon = 4*N
     Nlat = 2*N+1
     cn_res.sfXArray = np.linspace(0.0,360.0,Nlon,endpoint=False)
     cn_res.sfYArray = np.linspace(-90.0,90.0,Nlat)
-    overlay_res.sfXArray = np.linspace(0.0,360.0,Nlon,endpoint=False)
-    overlay_res.sfYArray = np.linspace(-90.0,90.0,Nlat)
-    wks = Ngl.open_wks("png", "ts5_h_error_N{:03d}".format(N))
-    Ngl.define_colormap(wks,"GMT_polar")
-    plots = []
     for scheme in schemes:
+        wks = Ngl.open_wks(wktype, "ts5_h_"+scheme+"_N{:03d}".format(N))
+        Ngl.define_colormap(wks,"rainbow+white")
         fd = open(path+"/h_N"+"{:03d}_".format(N)+scheme+".dat","rb")
         fd.seek(4*Nlon*Nlat*15,0)
         h15 = np.fromfile(fd,count=Nlon*Nlat,dtype=np.float32).reshape(Nlat,Nlon)
         fd.close()
-        fd = open(refsol_path+"/wt5smooth_h_"+str(Nlat)+"x"+str(Nlon)+".dat","rb")
+        fd = open(path+"/curl_N"+"{:03d}_".format(N)+scheme+".dat","rb")
         fd.seek(4*Nlon*Nlat*15,0)
-        h15_ref = np.fromfile(fd,count=Nlon*Nlat,dtype=np.float32).reshape(Nlat,Nlon)
+        z15 = np.fromfile(fd,count=Nlon*Nlat,dtype=np.float32).reshape(Nlat,Nlon)
         fd.close()
-        cn_res.tiMainString = scheme
-        plots.append(Ngl.contour_map(wks,h15-h15_ref,cn_res))
-        overlay_plot = Ngl.contour(wks, h15_ref, overlay_res)
-        Ngl.overlay(plots[-1], overlay_plot)
+        cn_res.tiMainString = "total height field [m] "+scheme + " N~B~c~N~="+str(N)
+        cn_res.cnLevelSelectionMode = "ExplicitLevels"
+        #cn_res.cnLevels = [5100,5200,5300,5400,5500,5600,5700,5800,5900]
+        cn_res.cnLevels = [5050,5100,5150,5200,5250,5300,5350,5400,5450,5500,5550,5600,5650,5700,5750,5800,5850,5900,5950]
+        cn_res.cnFillColors = list(np.linspace(33,237,21,dtype=int))#len(cn_res.cnLevels)+1))
+        plot1 = Ngl.contour_map(wks,h15,cn_res)
+        print(np.max(orog),np.min(orog))
+        plot2 = Ngl.contour(wks,orog,overlay_res)
+        add_cubed_sphere(wks,plot1)
 
-    textres = Ngl.Resources()
-    textres.txFontHeightF = 0.020
-    Ngl.text_ndc(wks,"Height error at day 15 [m]",0.5,.97,textres)
-    pres = Ngl.Resources()
-    Ngl.panel(wks,plots,(2,2),pres)
-    Ngl.delete_wks(wks)
+        cn_res.tiMainString = "relative vorticity field 10~S~-5~N~[s] "+scheme + " N~B~c~N~="+str(N)
+        cn_res.cnLevels = [-3,-2.5,-2,-1.5,-1,-0.5,0.5,1.,1.5,2,2.5,3,3.5,4,4.5,5]
+        cn_res.cnFillColors = [17,33,49,65,81,97,238,177,183,189,195,201,207,213,219,225,231]
+        plot3 = Ngl.contour_map(wks,z15*1e5,cn_res)
+        plot4 = Ngl.contour(wks,orog,overlay_res)
+        add_cubed_sphere(wks,plot3)
+        Ngl.overlay(plot1,plot2)
+        Ngl.overlay(plot3,plot4)
 
-#def read_err(fname):
-#    fd = open(fname,"rb")
-#    l2_h = []
-#    linf_h = []
-#    for line in fd.readlines():
-#        errs = re.findall("\d+\.\d+E.\d+",line)
-#        l2_h.append(float(errs[0]))
-#        linf_h.append(float(errs[1]))
-#    return np.array(l2_h), np.array(linf_h)
-#
-#l221, linf = read_err(path+"/errors_N160_dt100_Ah21.txt")
-#l242, linf = read_err(path+"/errors_N160_dt100_Ah42.txt")
-#l263, linf = read_err(path+"/errors_N160_dt100_Ah63.txt")
-#
-#
-#wks = Ngl.open_wks("eps", "l2_h_t")
-#
-#res = Ngl.Resources()
-#res.trYLog = True
-#
-#plot = Ngl.xy(wks,range(1,241),np.array([l221,l242,l263]),res)
-#
-#Ngl.delete_wks(wks)
-#
-#l2_conv = []
-#linf_conv = []
-#schemes = ["21","42","43","63"]
-#path = path+"/errors_"
-#resolutions=["N020_dt800","N040_dt400","N080_dt200","N160_dt100"]
-#
-#for scheme in schemes:
-#    for res in resolutions:
-#        fname = path+res+"_Ah"+scheme+".txt"
-#        l2, linf = read_err(fname)
-#        l2_conv.append(np.max(l2))
-#        linf_conv.append(np.max(linf))
-#l2_order = []
-#linf_order=[]
-#x = np.array([20,40,80,160])
-#l2_0 = {2: 1e-3, 3: 2e-4, 4: 6e-5}
-#linf_0 = {2: 3e-3, 3: 5e-4, 4: 2e-4}
-#for order in [2,3,4]:
-#    for i in range(len(x)):
-#        l2_order.append(l2_0[order]*(1.0*x[0]/x[i])**order)
-#        linf_order.append(linf_0[order]*(1.0*x[0]/x[i])**order)
-#
-#l2 = np.array(l2_conv).reshape((len(schemes),len(resolutions)))
-#linf = np.array(linf_conv).reshape((len(schemes),len(resolutions)))
-#l2_ord = np.array(l2_order).reshape((3,len(resolutions)))
-#linf_ord = np.array(linf_order).reshape((3,len(resolutions)))
-#
-#wks = Ngl.open_wks("png", "ts2_conv")
-#res = Ngl.Resources()
-#res.trXLog = True
-#res.trYLog = True
-#res.tiXAxisString="N~B~c"
-#res.tmXBMode = "Explicit"
-#res.tmXBValues = x
-#res.tmXBLabels = x
-#res.trXMinF = 19
-#res.trXMaxF = 170
-#res.nglDraw = False
-#res.nglFrame = False
-#res.xyLineThicknessF  = 2
-#res.xyLineColors=["red","green","blue","orange"]
-#res.xyMarkLineMode="MarkLines"
-#res.xyMarker = 16
-##res.xyLabelMode = "Custom"
-##res.xyExplicitLabels = ['Ah21', 'Ah42', 'Ah63']
-##res.xyLineLabelFontHeightF = 0.015
-#
-#res.tiYAxisString="~F10~l~B~2~N~ ~F21~error"
-#plot1 =  Ngl.xy(wks,x,l2,res)
-#res.tiYAxisString="~F10~l~B~~F34~%~N~~F21~ error"
-#plot2 =  Ngl.xy(wks,x,linf,res)
-#
-#lres = Ngl.Resources()
-#text_label_orders=['2nd order', '3rd order', '4th order']
-#for i in range(3):
-#    lres.gsLineLabelString = text_label_orders[i]
-#    Ngl.add_polyline(wks, plot1, x, l2_ord[i,:],lres)
-#    Ngl.add_polyline(wks, plot2, x, linf_ord[i,:],lres)
-#
-#lg_res = Ngl.Resources()
-#lg_res.vpWidthF = 0.12
-#lg_res.vpHeightF = 0.11
-#lg_res.lgLineThicknessF  = 2.0
-#lg_res.lgLineColors = ["red","green","blue","yellow"]
-#lg_res.lgDashIndexes = [0,0,0,0]
-#lg_res.lgLabelFontHeightF = 0.013
-#lg_res.lgPerimOn = True
-#lg1 = Ngl.legend_ndc(wks,len(schemes),["Ah"+scheme for scheme in schemes],0.1,0.45,lg_res)
-#lg2 = Ngl.legend_ndc(wks,len(schemes),["Ah"+scheme for scheme in schemes],0.6,0.45,lg_res)
-#
-#Ngl.panel(wks,(plot1,plot2),(1,2))
+        Ngl.panel(wks,(plot1,plot3),(1,2))
+        #Ngl.draw(plot1)
+        #Ngl.frame(wks)
+        Ngl.delete_wks(wks)
+

@@ -8,6 +8,7 @@ use stvec_mod,                only : stvec_t
 use stvec_swm_mod,            only : stvec_swm_t
 use stvec_swm_factory_mod,    only : create_stvec_swm
 use operator_mod,             only : operator_t
+use operator_swm_mod,         only : operator_swm_t
 use operator_swm_factory_mod, only : create_swm_operator
 use timescheme_mod,           only : timescheme_t
 use timescheme_factory_mod,   only : create_timescheme
@@ -49,11 +50,12 @@ subroutine run_ts5()
 
     type(config_swm_t) :: config
     type(domain_t)     :: domain
+    type(grid_field_t) :: curl
 
     class(stvec_t),           allocatable :: state
     class(operator_t),        allocatable :: operator
     class(timescheme_t),      allocatable :: timescheme
-    class(outputer_t),        allocatable :: outputer
+    class(outputer_t),        allocatable :: outputer, outputer_curl
     class(outputer_vector_t), allocatable :: outputer_vec
 
     type(operator_swm_diff_t),   allocatable :: operator_diff
@@ -117,10 +119,12 @@ subroutine run_ts5()
 
     if(config%config_domain%staggering_type == "Ah") then
         call create_latlon_outputer(outputer, 2*domain%partition%Nh+1, 4*domain%partition%Nh, "Ah", domain)
+        call create_latlon_outputer(outputer_curl,     2*domain%partition%Nh+1, 4*domain%partition%Nh, "Ah", domain)
         call create_latlon_vec_outputer(outputer_vec,  2*domain%partition%Nh+1, 4*domain%partition%Nh, "Ah", &
                                    config%v_components_type, domain)
     else if(config%config_domain%staggering_type == "C") then
         call create_latlon_outputer(outputer, 2*domain%partition%Nh+1, 4*domain%partition%Nh, "A", domain)
+        call create_latlon_outputer(outputer_curl,     2*domain%partition%Nh+1, 4*domain%partition%Nh, "Ah", domain)
         call create_latlon_vec_outputer(outputer_vec,  2*domain%partition%Nh+1, 4*domain%partition%Nh, "C", &
                                        config%v_components_type, domain)
     else
@@ -128,6 +132,8 @@ subroutine run_ts5()
                                   " swe test 2 output:"//&
                                   config%config_domain%staggering_type)
     end if
+
+    call create_grid_field(curl, halo_width, 0, domain%mesh_q)
 
     select type(state)
     class is (stvec_swm_t)
@@ -142,13 +148,23 @@ subroutine run_ts5()
         call h_total%assign(1.0_8,state%h,1.0_8,h_orog,domain%mesh_p)
         call outputer%write(h_total, domain, 'h.dat', 1)
         call outputer_vec%write(state%u, state%v, domain, 'u.dat', 'v.dat', 1)
+        select type(operator)
+        class is (operator_swm_t)
+            call operator%curl_op%calc_curl(curl, state%u, state%v, domain)
+            call outputer_curl%write(curl, domain, 'curl.dat', 1)
+        end select
     end select
 
 
     do it = 1, int(config%simulation_time/dt)
 
         call timescheme%step(state, operator, domain, dt)
-        call timescheme_diff%step(state, operator_diff, domain, dt)
+        select type(state)
+        class is (stvec_swm_t)
+            call state%h%assign(1.0_8,state%h,1.0_8,h_orog,domain%mesh_p)
+            call timescheme_diff%step(state, operator_diff, domain, dt)
+            call state%h%assign(1.0_8,state%h,-1.0_8,h_orog,domain%mesh_p)
+        end select
 
         time = it*dt
 
@@ -164,6 +180,11 @@ subroutine run_ts5()
                 call h_total%assign(1.0_8,state%h,1.0_8,h_orog,domain%mesh_p)
                 call outputer%write(h_total, domain, 'h.dat', int(it/nstep_write)+1)
                 call outputer_vec%write(state%u, state%v, domain, 'u.dat', 'v.dat', int(it/nstep_write)+1)
+                select type(operator)
+                class is (operator_swm_t)
+                    call operator%curl_op%calc_curl(curl, state%u, state%v, domain)
+                    call outputer_curl%write(curl, domain, 'curl.dat', int(it/nstep_write)+1)
+                end select
             end select
 
             if (parcomm_global%myid==0) print*, "Hours = ", real(time/3600 ,4), &
