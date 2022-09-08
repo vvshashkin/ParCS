@@ -8,11 +8,11 @@ if len(argv)>2 :
     stswm_sol_path = argv[2]
 else:
     stswm_sol_path = None
-schemes = ["Ah21","Ah42","Ah63"]
-#schemes = ["Ah42"]
+#schemes = ["Ah21","Ah42","Ah63"]
+schemes = ["Ah42"]
 t1 = 401
 t2 = 2400
-Nc = 96
+Nc = 128
 Nlon_stswm = 388
 Nlat_stswm = 194
 wktype = "eps"

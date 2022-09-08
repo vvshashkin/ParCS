@@ -26,9 +26,9 @@ NAMELIST_TEMPLATE="
     massflux_op_name  = 'massflux_colocated',\n
     quadrature_name   = '%%%quadrature',\n
     diff_time_scheme  = 'explicit_Eul1'\n
-    uv_diff_coeff     =  0.0,\n
+    uv_diff_coeff     =  0.03,\n
     hordiff_uv_name   = '%%%uv_diff',\n
-    h_diff_coeff      =  0.0,\n
+    h_diff_coeff      =  0.01,\n
     hordiff_h_name    = '%%%h_diff',\n
     dt=%%%dt,\n
     tau_write = 86400.0,\n
@@ -53,3 +53,4 @@ run_Eldred 096 300 21 "$NAMELIST_TEMPLATE"
 run_Eldred 096 300 42 "$NAMELIST_TEMPLATE"
 run_Eldred 096 300 43 "$NAMELIST_TEMPLATE"
 run_Eldred 096 300 63 "$NAMELIST_TEMPLATE"
+run_Eldred 128 200 42 "$NAMELIST_TEMPLATE"
