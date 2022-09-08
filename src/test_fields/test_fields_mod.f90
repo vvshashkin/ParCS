@@ -29,8 +29,11 @@ public :: ts2_height_generator_t
 public :: rh4_wave_height_generator_t, rh4_wave_wind_generator_t
 public :: barotropic_instability_wind_generator_t
 public :: barotropic_instability_height_generator_t
+public :: Eldred_test_height_generator_t, Eldred_test_height_generator
+public :: Eldred_test_wind_generator_t, Eldred_test_wind_generator
+public :: ts5_orography_generator_t
 
-public :: KE_scalar_field_t
+public :: KE_scalar_field_t, Ylm2_field_generator_t
 
 !!!!!!!!!!!!!Abstract scalar and vector fields generators
 type, public, abstract :: scalar_field_generator_t
@@ -112,8 +115,14 @@ contains
     procedure :: get_scalar_field => generate_zero_scalar_field
 end type zero_scalar_field_generator_t
 
+type, extends(scalar_field_generator_t) :: Ylm2_field_generator_t
+contains
+    procedure :: get_scalar_field => generate_Ylm2_scalar_field
+end type Ylm2_field_generator_t
+
 type, extends(vector_field_generator_t) :: solid_rotation_t
     real(kind=8) :: alpha = 0.0_8 !rotation axis angle
+    real(kind=8) :: axis(3) = [0.0_8,0.0_8,1.0_8]
     real(kind=8) :: u0 = 1.0_8    ! equator speed
 contains
     procedure :: get_vector_field => gen_solid_rotation_vec_field
@@ -133,12 +142,13 @@ contains
 end type KE_scalar_field_t
 
 type, extends(scalar_field_generator_t) :: ts2_height_generator_t
-    real(kind=8) :: h_mean = 1.0_8
-    real(kind=8) :: alpha  = 0.0_8 !rotation axis angle
-    real(kind=8) :: u0     = 1.0_8 !equator speed
-    real(kind=8) :: omega  = 1.0_8 !angular velocity of the sphere
-    real(kind=8) :: a      = 1.0_8 !radii of the sphere
-    real(kind=8) :: grav   = 1.0_8 !gravity acceleration
+    real(kind=8) :: h_mean  = 1.0_8
+    real(kind=8) :: alpha   = 0.0_8 !rotation axis angle
+    real(kind=8) :: axis(3) = [0.0_8, 0.0_8, 1.0_8]
+    real(kind=8) :: u0      = 1.0_8 !equator speed
+    real(kind=8) :: omega   = 1.0_8 !angular velocity of the sphere
+    real(kind=8) :: a       = 1.0_8 !radii of the sphere
+    real(kind=8) :: grav    = 1.0_8 !gravity acceleration
 contains
     procedure :: get_scalar_field => generate_ts2_height_field
 end type ts2_height_generator_t
@@ -175,6 +185,30 @@ contains
     procedure :: get_vector_field => generate_barotropic_instability_wind
 end type barotropic_instability_wind_generator_t
 
+type, extends(scalar_field_generator_t) :: Eldred_test_height_generator_t
+    real(kind=8) :: h_mean  = 1e3_8
+    real(kind=8) :: delta_h = 8e3_8 / 9.80616_8
+contains
+    procedure :: get_scalar_field => generate_Eldred_test_height
+end type Eldred_test_height_generator_t
+
+type, extends(vector_field_generator_t) :: Eldred_test_wind_generator_t
+    real(kind=8)    :: u0 = 120.0_8
+    integer(kind=4) :: m  = 12 !number of periods pole to pole
+contains
+    procedure :: get_vector_field => generate_Eldred_test_wind
+end type Eldred_test_wind_generator_t
+
+type, extends(scalar_field_generator_t) :: ts5_orography_generator_t
+    real(kind=8) :: r_mount = 1.0
+    real(kind=8) :: h_mount = 0.0_8
+    real(kind=8) :: x_mount = 0.0_8
+    real(kind=8) :: y_mount = 0.5_8*sqrt(3.0_8)
+    real(kind=8) :: z_mount = 0.5_8
+contains
+    procedure :: get_scalar_field => generate_ts5_orography_field
+end type ts5_orography_generator_t
+
 !!!field generator instances
 type(xyz_scalar_field_generator_t)     :: xyz_scalar_field_generator
 type(solid_rotation_field_generator_t) :: solid_rotation_field_generator
@@ -188,6 +222,8 @@ type(random_scalar_field_generator_t)  :: random_scalar_field_generator
 type(VSH_curl_free_10_generator_t)     :: VSH_curl_free_10_generator
 type(zero_scalar_field_generator_t)    :: zero_scalar_field_generator
 type(gaussian_hill_scalar_field_generator_t) :: gaussian_hill_scalar_field_generator
+type(Eldred_test_height_generator_t)   :: Eldred_test_height_generator
+type(Eldred_test_wind_generator_t)     :: Eldred_test_wind_generator
 ! type(coriolis_force_field_generator_t) :: coriolis_force_field_generator = &
 
 
@@ -525,18 +561,30 @@ subroutine gen_solid_rotation_vec_field(this, vx, vy, vz, npts, nlev, x, y, z)
 
     integer(kind=4) :: i, k
     real(kind=8) :: lam, phi, v_lam, v_phi, xn, yn, zn, vxn, vyn, vzn
+    real(kind=8) :: ax, ay, az, amod
+
+    amod = sqrt(sum(this%axis(1:3)**2))
+    ax = this%axis(1) / amod
+    ay = this%axis(2) / amod
+    az = this%axis(3) / amod
 
     do k = 1, nlev
         do i=1, npts
-            !translate north pole from [0, pi/2] to [0, pi/2-alpha]
-            call rotate_3D_y(x(i), y(i), z(i), -this%alpha, xn, yn, zn)
-            call cart2sph(xn, yn, zn, lam, phi)
-
-            v_lam = this%u0*cos(phi)
-            v_phi = 0.0_8
-
-            call sph2cart_vec(lam, phi, v_lam, v_phi, vxn, vyn, vzn)
-            call rotate_3D_y(vxn, vyn, vzn, this%alpha, vx(i,k), vy(i,k), vz(i,k))
+            xn = x(i) / sqrt(x(i)**2+y(i)**2+z(i)**2)
+            yn = y(i) / sqrt(x(i)**2+y(i)**2+z(i)**2)
+            zn = z(i) / sqrt(x(i)**2+y(i)**2+z(i)**2)
+            vx(i,k) = this%u0*(ay*zn-az*yn)
+            vy(i,k) =-this%u0*(ax*zn-az*xn)
+            vz(i,k) = this%u0*(ax*yn-ay*xn)
+            ! !translate north pole from [0, pi/2] to [0, pi/2-alpha]
+            ! call rotate_3D_y(x(i), y(i), z(i), -this%alpha, xn, yn, zn)
+            ! call cart2sph(xn, yn, zn, lam, phi)
+            !
+            ! v_lam = this%u0*cos(phi)
+            ! v_phi = 0.0_8
+            !
+            ! call sph2cart_vec(lam, phi, v_lam, v_phi, vxn, vyn, vzn)
+            ! call rotate_3D_y(vxn, vyn, vzn, this%alpha, vx(i,k), vy(i,k), vz(i,k))
         end do
     end do
 end subroutine gen_solid_rotation_vec_field
@@ -786,19 +834,24 @@ subroutine generate_ts2_height_field(this, f, npts, nlev, x, y, z)
 
     integer(kind=4) :: i, k
     real(kind=8) :: lam, phi, v_lam, v_phi, xn(npts), yn(npts), zn(npts)
-    real(kind=8) :: alpha, u0, h_mean, a, omega, grav
+    real(kind=8) :: alpha, u0, h_mean, a, omega, grav, axis(3)
 
-    alpha  = this%alpha
-    u0     = this%u0
-    h_mean = this%h_mean
-    omega  = this%omega
-    a      = this%a
-    grav   = this%grav
+    alpha     = this%alpha
+    axis(1:3) = this%axis(1:3) / sqrt(sum(this%axis(1:3)**2))
+    u0        = this%u0
+    h_mean    = this%h_mean
+    omega     = this%omega
+    a         = this%a
+    grav      = this%grav
     do k = 1, nlev
         do i=1, npts
-            !translate north pole from [0, pi/2] to [0, pi/2-alpha]
-            call rotate_3D_y(x(i), y(i), z(i), -alpha, xn(i), yn(i), zn(i))
-            call cart2sph(xn(i), yn(i), zn(i), lam, phi)
+            ! !translate north pole from [0, pi/2] to [0, pi/2-alpha]
+            ! call rotate_3D_y(x(i), y(i), z(i), -alpha, xn(i), yn(i), zn(i))
+            ! call cart2sph(xn(i), yn(i), zn(i), lam, phi)
+            xn(1) = x(i) / sqrt(x(i)**2+y(i)**2+z(i)**2)
+            yn(1) = y(i) / sqrt(x(i)**2+y(i)**2+z(i)**2)
+            zn(1) = z(i) / sqrt(x(i)**2+y(i)**2+z(i)**2)
+            phi = asin(xn(1)*axis(1)+yn(1)*axis(2)+zn(1)*axis(3))
             f(i,k) = h_mean - (a*omega*u0+0.5_8*u0**2)/grav*sin(phi)**2
         end do
     end do
@@ -927,7 +980,7 @@ subroutine generate_barotropic_instability_height(this, f, npts, nlev, x, y, z)
     integer(kind=4) :: i, k, indy
     real(kind=8), parameter :: phi0 = pi/7d0, phi1 = .5d0*pi-phi0
     real(kind=8),  parameter :: lat_diam = 1.0_8/15.0_8, lon_diam = 1.0_8/3.0_8
-    real(kind=8) :: phi, lam, zdy
+    real(kind=8) :: phi, lam, zdy, w(-1:2)
 
 
     do k = 1, nlev
@@ -935,13 +988,18 @@ subroutine generate_barotropic_instability_height(this, f, npts, nlev, x, y, z)
             call cart2sph(x(i), y(i), z(i), lam, phi)
             if(phi<=phi0) then
                 f(i,k) = this%H0
-            else if(phi >phi1) then
+            else if(phi >= phi1) then
                 f(i,k) = this%H_north
             else
                 zdy = (phi-phi0) / this%dphi
                 indy = floor(zdy)
                 zdy = zdy - indy
-                f(i,k) = this%H_zonal(indy) + (this%H_zonal(indy+1)-this%H_zonal(indy))*zdy
+                w(-1) =-zdy*(zdy-1._8)*(zdy-2._8) / 6._8
+                w(0) = (zdy+1._8)*(zdy-1._8)*(zdy-2._8) / 2._8
+                w(1) =-(zdy+1._8)*zdy*(zdy-2._8) / 2._8
+                w(2) = (zdy+1._8)*zdy*(zdy-1._8) / 6._8
+                ! f(i,k) = this%H_zonal(indy) + (this%H_zonal(indy+1)-this%H_zonal(indy))*zdy
+                f(i,k) = sum(this%H_zonal(indy-1:indy+2)*w(-1:2))
             end if
             if(lam>pi) lam = lam -2.0_8*pi
             f(i,k) = f(i,k) + this%h_pert*cos(phi)* &
@@ -979,4 +1037,95 @@ subroutine generate_random_scalar_field(this, f, npts, nlev, x, y, z)
     call random_number(f)
 
 end subroutine generate_random_scalar_field
+
+subroutine generate_Eldred_test_height(this, f, npts, nlev, x, y, z)
+
+    class(Eldred_test_height_generator_t), intent(in)   :: this
+    integer(kind=4),                       intent(in)   :: npts, nlev
+    real(kind=8),                          intent(in)   :: x(npts), y(npts), z(npts)
+    real(kind=8),                          intent(out)  :: f(npts,nlev)
+
+    integer(kind=4) :: i, k
+
+    do k = 1, nlev
+        do i=1, npts
+            f(i,k) = this%h_mean+this%delta_h*(1.0_8/3.0_8 - z(i)**2)
+        end do
+    end do
+
+end subroutine generate_Eldred_test_height
+
+subroutine generate_Eldred_test_wind(this, vx, vy, vz, npts, nlev, x, y, z)
+
+    use const_mod, only : pi
+
+    class(Eldred_test_wind_generator_t),      intent(in)  :: this
+    integer(kind=4),                          intent(in)  :: npts, nlev
+    real(kind=8),       dimension(npts),      intent(in)  :: x, y, z
+    real(kind=8),       dimension(npts,nlev), intent(out) :: vx, vy, vz
+
+    integer(kind=4) :: i, k
+    real(kind=8)    :: phi, u_div_cos
+    ! real(kind=8), parameter :: phi0 = pi/7d0, phi1 = .5d0*pi-phi0
+    !
+    do k = 1, nlev
+        do i=1, npts
+            phi = asin(z(i) / sqrt(x(i)**2+y(i)**2+z(i)**2))
+            !u / cos(phi):
+            u_div_cos = 4.0_8*this%u0*sin(phi)**2*cos(phi)*(sin(this%m*phi)**2-0.5_8)
+            vx(i,k) =-u_div_cos*y(i)
+            vy(i,k) = u_div_cos*x(i)
+            vz(i,k) = 0.0_8
+        end do
+    end do
+end subroutine generate_Eldred_test_wind
+
+subroutine generate_ts5_orography_field(this, f, npts, nlev, x, y, z)
+
+
+    class(ts5_orography_generator_t), intent(in)  :: this
+    integer(kind=4),                  intent(in)  :: npts, nlev
+    real(kind=8),                     intent(in)  :: x(npts), y(npts), z(npts)
+    real(kind=8),                     intent(out) :: f(npts,nlev)
+
+    integer(kind=4) :: i, k
+    real(kind=8)    :: dist
+
+    do k = 1, nlev
+        do i=1, npts
+            dist = acos(x(i)*this%x_mount+y(i)*this%y_mount+z(i)*this%z_mount)
+            f(i,k) = this%h_mount*max(0.0_8,1.0-dist/this%r_mount)
+        end do
+    end do
+
+end subroutine generate_ts5_orography_field
+
+subroutine generate_Ylm2_scalar_field(this, f, npts, nlev, x, y, z)
+
+    use sph_coords_mod, only : cart2sph
+
+    class(Ylm2_field_generator_t), intent(in)  :: this
+    integer(kind=4),               intent(in)  :: npts, nlev
+    real(kind=8),                  intent(in)  :: x(npts), y(npts), z(npts)
+    real(kind=8),                  intent(out) :: f(npts,nlev)
+
+    integer(kind=4) :: i, k
+    real(kind=8)    :: lam, phi
+
+    do k = 1, nlev
+        do i=1, npts
+            call cart2sph(x(i), y(i), z(i), lam, phi)
+            if(mod(k,3) == 1) then
+                f(i,k) = cos(2.0_8*lam)*cos(phi)**2
+            else if(mod(k,3) == 2) then
+                f(i,k) = cos(lam)*cos(phi)*sin(phi)
+            else
+                f(i,k) = 3.0_8*sin(phi)**2 -1.0_8
+            end if
+            ! f(i,k) = cos(phi)*cos(lam)
+        end do
+    end do
+
+end subroutine generate_Ylm2_scalar_field
+
 end module test_fields_mod

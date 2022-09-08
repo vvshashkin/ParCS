@@ -18,6 +18,103 @@ integer(kind=4), parameter :: Ns(3) = [32,64,128]
 
 call init_global_parallel_enviroment()
 
+! errs = test_laplace(N=32,laplace_oper_name="divgrad_laplace_c_sbp21",staggering="C")
+! if(parcomm_global%myid == 0) then
+!     print *, "divgrad_laplace_c_sbp21"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+!
+! errs = test_laplace(N=32,laplace_oper_name="divgrad_laplace_c_sbp21",staggering="C")
+! if(parcomm_global%myid == 0) then
+!     print *, "divgrad_laplace_c_sbp21"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+! errs = test_laplace(N=64,laplace_oper_name="divgrad_laplace_c_sbp21",staggering="C")
+! if(parcomm_global%myid == 0) then
+!     print *, "divgrad_laplace_c_sbp21"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+!
+! errs = test_laplace(N=32,laplace_oper_name="divgrad_laplace_c_sbp42",staggering="C")
+! if(parcomm_global%myid == 0) then
+!     print *, "divgrad_laplace_c_sbp42"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+! errs = test_laplace(N=64,laplace_oper_name="divgrad_laplace_c_sbp42",staggering="C")
+! if(parcomm_global%myid == 0) then
+!     print *, "divgrad_laplace_c_sbp42"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+! errs = test_laplace(N=32,laplace_oper_name="divgrad_laplace_ch_sbp42",staggering="Ah")
+! if(parcomm_global%myid == 0) then
+!     print *, "divgrad_laplace_ch_sbp42"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+! errs = test_laplace(N=32,laplace_oper_name="divgrad_laplace_ah_sbp21",staggering="Ah")
+! if(parcomm_global%myid == 0) then
+!     print *, "divgrad_laplace_ah_sbp21"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+! errs = test_laplace(N=64,laplace_oper_name="divgrad_laplace_ah_sbp21",staggering="Ah")
+! if(parcomm_global%myid == 0) then
+!     print *, "divgrad_laplace_ah_sbp21"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+! errs = test_laplace(N=32,laplace_oper_name="divgrad_laplace_ah_sbp42",staggering="Ah")
+! if(parcomm_global%myid == 0) then
+!     print *, "divgrad_laplace_ah_sbp42"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+! errs = test_laplace(N=64,laplace_oper_name="divgrad_laplace_ah_sbp42",staggering="Ah")
+! if(parcomm_global%myid == 0) then
+!     print *, "divgrad_laplace_ah_sbp42"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+! errs = test_laplace(N=32,laplace_oper_name="laplace_ch_halo2",staggering="Ch")
+! if(parcomm_global%myid == 0) then
+!     print *, "laplace_ch_halo2"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+! errs = test_laplace(N=32,laplace_oper_name="laplace_ch_halo4",staggering="Ch")
+! if(parcomm_global%myid == 0) then
+!     print *, "laplace_ch_halo4"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+
+errs = test_laplace(N=32,laplace_oper_name="laplace_ah_sbp63_narrow",staggering="Ah")
+if(parcomm_global%myid == 0) then
+    print *, "laplace_ah_sbp63_narrow"
+    print "(A,4E15.7)", "Err: ", errs%values
+end if
+errs = test_laplace(N=64,laplace_oper_name="laplace_ah_sbp63_narrow",staggering="Ah")
+if(parcomm_global%myid == 0) then
+    print *, "laplace_ah_sbp63_narrow"
+    print "(A,4E15.7)", "Err: ", errs%values
+end if
+errs = test_laplace(N=128,laplace_oper_name="laplace_ah_sbp63_narrow",staggering="Ah")
+if(parcomm_global%myid == 0) then
+    print *, "laplace_ah_sbp63_narrow"
+    print "(A,4E15.7)", "Err: ", errs%values
+end if
+
+! errs = test_laplace(N=32,laplace_oper_name="laplace_ah_sbp21_narrow",staggering="Ah")
+! if(parcomm_global%myid == 0) then
+!     print *, "laplace_Ah_sbp21_narrow"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+!
+! errs = test_laplace(N=64,laplace_oper_name="laplace_ah_sbp21_narrow",staggering="Ah")
+! if(parcomm_global%myid == 0) then
+!     print *, "laplace_Ah_sbp21_narrow"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+!
+! errs = test_laplace(N=128,laplace_oper_name="laplace_ah_sbp21_narrow",staggering="Ah")
+! if(parcomm_global%myid == 0) then
+!     print *, "laplace_Ah_sbp21_narrow"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+
 ! errs = test_div(N=32,div_oper_name="divergence_a2_ecs",staggering="A")
 ! if(parcomm_global%myid == 0) then
 !     print *, "divergence_a2_ecs"
@@ -148,6 +245,18 @@ end if
 ! errs = test_grad(N=32,grad_oper_name="gradient_ch_sbp42",staggering="Ch")
 ! if(parcomm_global%myid == 0) then
 !     print *, "gradient_ch_sbp42_ecs"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+!
+! errs = test_grad(N=32,grad_oper_name="gradient_ch_ecs_halo2",staggering="Ch")
+! if(parcomm_global%myid == 0) then
+!     print *, "gradient_ch_ecs_halo2"
+!     print "(A,4E15.7)", "Err: ", errs%values
+! end if
+!
+! errs = test_grad(N=32,grad_oper_name="gradient_ch_ecs_halo4",staggering="Ch")
+! if(parcomm_global%myid == 0) then
+!     print *, "gradient_ch_ecs_halo4"
 !     print "(A,4E15.7)", "Err: ", errs%values
 ! end if
 

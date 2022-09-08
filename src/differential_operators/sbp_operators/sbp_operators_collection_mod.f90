@@ -4,6 +4,13 @@ implicit none
 
 !Colocated grid differentiation
 
+!Ah 2-1 scheme second derivative
+real(kind=8), parameter :: D2_21_in(3) = [1, -2, 1]
+real(kind=8), parameter :: D2_21_shift = -1
+
+real(kind=8),    parameter :: D2_21_edge(3,1) = reshape([1, -2, 1], [3,1])
+integer(kind=4), parameter :: lastnonzeroD2_21_edge(1) = [3]
+real(kind=8),    parameter :: D2_21_boundary_proj(3) = [3.0_8/2,-2.0_8, 1.0_8/2]
 !Ah 2-1 scheme written as SBP
 real(kind=8), parameter :: Q21(2,1) = reshape( [-1._8, 1._8],  [2,1])
 integer(kind=4), parameter :: lastnonzeroQ21(1) =[2]
@@ -167,14 +174,14 @@ real(kind=8), parameter :: D42_staggered_c2i(5,4) = reshape( &
 integer(kind=4), parameter :: D42_staggered_c2i_last_nonzero(4) = [3,2,4,5]
 
 real(kind=8), parameter :: D42_staggered_i2c(5,3) = reshape( &
-                           [-79.0_8/78.0_8, 27.0_8/26.0_8, -1.0/26.0_8, 1.0/78.0_8, 0.0_8,       &
+                           [-79.0_8/78.0_8, 27.0_8/26.0_8, -1.0_8/26.0_8, 1.0_8/78.0_8, 0.0_8,       &
                              2.0_8/21.0_8, -9.0_8/7.0_8, 9.0_8/7.0_8, -2.0_8/21.0_8, 0.0_8,      &
                              1.0_8/75.0_8, 0.0_8, -27.0_8/25.0_8, 83.0_8/75.0_8, -1.0_8/25.0_8], &
                                               [5,3])
 
 integer(kind=4), parameter :: D42_staggered_i2c_last_nonzero(3) = [4,4,5]
 
-real(kind=8), parameter :: D42_staggered_in(4) = [1.0_8/24.0_8, -9.0_8/8.0_8, 9.0_8/8.0_8, -1.0/24.0_8]
+real(kind=8), parameter :: D42_staggered_in(4) = [1.0_8/24.0_8, -9.0_8/8.0_8, 9.0_8/8.0_8, -1.0_8/24.0_8]
 real(kind=8), parameter :: D42_staggered_c2i_in_shift = -2
 real(kind=8), parameter :: D42_staggered_i2c_in_shift = -1
 !Projection operator for left side os stencil

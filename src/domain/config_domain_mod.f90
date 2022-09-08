@@ -63,7 +63,8 @@ subroutine parse(this, config_string)
     this%is_orographic_curvilinear = is_orographic_curvilinear
     this%config_orography = config_test_orography_t()
     this%orography_name   = trim(orography_name)
-    call this%config_orography%parse(orography_config_str)
+    if(is_orographic_curvilinear) &
+        call this%config_orography%parse(orography_config_str)
 
     call this%config_metric%parse(config_string)
 

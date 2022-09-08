@@ -74,12 +74,15 @@ subroutine run_barotropic_inst()
     real(kind=8)      :: tau_write
     integer(kind=4)   :: nstep_write, nstep_diagnostics
 
-    real(kind=8)    :: time, l2err, l2_ex, wtime
+    real(kind=8)    :: time, l2err, l2_ex, wall_time
+    real(kind=8)    :: l2_err_h, l2_ex_h, l2_err_u, l2_ex_u
+    real(kind=8)    :: linf_err_h, linf_ex_h, linf_err_u, linf_ex_u
     integer(kind=4) :: it
 
     call read_namelist_as_str(namelist_string, "namelist_swm", parcomm_global%myid)
 
     call config%parse(namelist_string)
+
 
     test_config%Nq = 10*config%config_domain%N
 
@@ -131,30 +134,61 @@ subroutine run_barotropic_inst()
     end if
 
     call get_exact_solution(state,    domain, config%v_components_type)
-    call get_exact_solution(state_ex, domain, config%v_components_type)
+    call state_ex%assign(1.0_8,state,0.0_8,state,domain)
+
+    call create_grid_field(curl, halo_width, 0, domain%mesh_q)
 
     select type(state)
     class is (stvec_swm_t)
+        select type(operator)
+        class is (operator_swm_t)
+            call operator%curl_op%calc_curl(curl, state%u, state%v, domain)
+            call outputer_curl%write(curl, domain, 'curl.dat', 1)
+        end select
         call outputer%write(state%h, domain, 'h.dat',1)
         call outputer_vec%write(state%u,state%v,domain,"u.dat","v.dat",1)
     end select
 
-    call create_grid_field(curl, halo_width, 0, domain%mesh_q)
+    select type(state_ex)
+    class is (stvec_swm_t)
+        l2_ex_h = l2norm(state_ex%h,  domain%mesh_p, domain%parcomm)
+        l2_ex_u = sqrt(l2norm(state_ex%u,  domain%mesh_u, domain%parcomm)**2+&
+                       l2norm(state_ex%v,  domain%mesh_v, domain%parcomm)**2)
+        linf_ex_h = state_ex%h%maxabs(domain%mesh_p, domain%parcomm)
+        linf_ex_u = max(state_ex%u%maxabs(domain%mesh_u, domain%parcomm), &
+                        state_ex%v%maxabs(domain%mesh_v, domain%parcomm))
+    end select
 
-
-    wtime = mpi_wtime()
-
+    wall_time = mpi_wtime()
     do it = 1, int(config%simulation_time/dt)
 
-        !print *, "tstep", it
+
         call timescheme%step(state, operator, domain, dt)
         call timescheme_diff%step(state, operator_diff, domain, dt)
 
         time = it*dt
 
+        call state_err%assign(1.0_8,state,-1.0_8,state_ex,domain)
+
         if(mod(it, nstep_diagnostics) == 0) then
             diagnostics = operator%get_diagnostics(state, domain)
-            call diagnostics%print()
+            if(parcomm_global%myid == 0) call diagnostics%print()
+
+            select type(state_err)
+            class is (stvec_swm_t)
+                l2_err_h = l2norm(state_err%h,  domain%mesh_p, domain%parcomm) / l2_ex_h
+                l2_err_u = sqrt(l2norm(state_err%u,  domain%mesh_u, domain%parcomm)**2+&
+                                l2norm(state_err%v,  domain%mesh_v, domain%parcomm)**2) / l2_ex_u
+                linf_err_h = state_err%h%maxabs(domain%mesh_p, domain%parcomm) / linf_ex_h
+                linf_err_u = max(state_err%u%maxabs(domain%mesh_u, domain%parcomm), &
+                                 state_err%v%maxabs(domain%mesh_v, domain%parcomm)) / linf_ex_u
+                if (parcomm_global%myid==0) print '(A,F12.4,4(A,E15.7))', &
+                                                  "Hours = ", real(time/3600 ,4), &
+                                                  " l2_h =", real(l2_err_h,4), " linf_h = ", real(linf_err_h,4), &
+                                                  " l2_u =", real(l2_err_u,4), " linf_u = ", real(linf_err_u,4)
+                if(domain%parcomm%myid == 0) print *, "step wall-time: ", mpi_wtime()-wall_time
+                wall_time = mpi_wtime()
+            end select
         end if
 
         if(mod(it,nstep_write) == 0) then
@@ -171,7 +205,7 @@ subroutine run_barotropic_inst()
                 call outputer_vec%write(state%u,state%v,domain,"u.dat","v.dat",int(it/nstep_write)+1)
                 l2err = l2norm(state%h, domain%mesh_p, domain%parcomm)
                 if (parcomm_global%myid==0) print*, "Hours = ", real(time/3600 ,4), &
-                                                    "L2err =", real(l2err,4), int(it/nstep_write)+1
+                                                    "rec ", int(it/nstep_write)+1
             end select
         end if
     end do
@@ -228,12 +262,13 @@ function create_barotropic_instability_height_field_generator(H0, &
 
     height_gen%H0 = H0
     height_gen%Nq = Nq
-    allocate(height_gen%H_zonal(0:Nq))
+    allocate(height_gen%H_zonal(-1:Nq+1))
     dphi = (phi1 - phi0) / real(Nq,8)
     height_gen%dphi = dphi
     height_gen%h_pert = h_pert
 
-    height_gen%H_zonal(0) = H0!0.0_8
+    height_gen%H_zonal(-1) = H0!0.0_8
+    height_gen%H_zonal( 0) = H0!0.0_8
     do j=1, Nq
         dh = 0.0_8
         do iq=1, size(wq)
@@ -244,6 +279,7 @@ function create_barotropic_instability_height_field_generator(H0, &
         end do
         height_gen%H_zonal(j) = height_gen%H_zonal(j-1)+0.5_8*dh*dphi
     end do
+    height_gen%H_zonal(Nq+1) = height_gen%H_zonal(Nq)
 
     height_gen%H_north = height_gen%H_zonal(Nq)
 

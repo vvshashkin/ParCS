@@ -8,9 +8,10 @@ type, public :: grid_field_t
     integer(kind=4)                 :: ts, te ! tile_field_t-array bounds
     type(tile_field_t), allocatable :: tile(:)
 contains
+    procedure, public :: update_s1 => update_grid_field_s1 !v = v + s1*unity
     procedure, public :: update_s1v1 => update_grid_field_s1v1 !v = v + s1*v1
     procedure, public :: update_s1v1s2v2 => update_grid_field_s1v1s2v2 !v = v + s1*v1+s2*v2
-    generic :: update => update_s1v1, update_s1v1s2v2
+    generic :: update => update_s1, update_s1v1, update_s1v1s2v2
 
     procedure, public :: assign_s1v1       => assign_grid_field_s1v1 !v = s1*v1
     procedure, public :: assign_s1         => assign_grid_field_s1 !v = s1
@@ -18,7 +19,8 @@ contains
     procedure, public :: assign_s1v1s2v2   => assign_grid_field_s1v1s2v2 !v = s1*v1+s2*v2
     generic :: assign => assign_s1v1, assign_s1, assign_v1, assign_s1v1s2v2
 
-    procedure, public :: assign_prod => assign_grid_field_prod_s1v1v2
+    procedure, public :: assign_prod  => assign_grid_field_prod_s1v1v2
+    procedure, public :: assign_ratio => assign_grid_field_ratio_s1v1v2
 
     procedure, public :: copy => copy_grid_field
     procedure, public :: create_similar => create_similar_grid_field
@@ -37,10 +39,11 @@ type, public :: tile_field_t
 contains
     procedure, public :: init => tile_field_init
 
+    procedure, public :: update_s1 => tile_field_update_s1!v = v + s1*unity
     procedure, public :: update_s1v1 => tile_field_update_s1v1!v = v + s1*v1
     procedure, public :: update_s1v1s2v2 => tile_field_update_s1v1s2v2!v = v + s1*v1+s2*v2
     !update -- generic procedure for v = v + ... operations
-    generic :: update => update_s1v1, update_s1v1s2v2
+    generic :: update => update_s1, update_s1v1, update_s1v1s2v2
 
     procedure, public :: assign_s1       => tile_field_assign_s1  !v = s1
     procedure, public :: assign_v1       => tile_field_assign_v1  !v = v1
@@ -49,7 +52,8 @@ contains
     !assign -- generic procedure for v = ... operations
     generic :: assign => assign_s1v1, assign_s1, assign_v1, assign_s1v1s2v2
 
-    procedure, public :: assign_prod => tile_field_assign_prod_s1v1v2
+    procedure, public :: assign_prod  => tile_field_assign_prod_s1v1v2
+    procedure, public :: assign_ratio => tile_field_assign_ratio_s1v1v2
 
     procedure, public :: algebraic_norm2 => compute_tile_field_algebraic_norm2
     procedure, public :: algebraic_dot => compute_tile_field_algebraic_dot
@@ -216,6 +220,20 @@ function compute_tile_field_algebraic_dot(this, other, mesh) result(dot_product)
         end do
 end function compute_tile_field_algebraic_dot
 
+subroutine update_grid_field_s1(this, scalar1, mesh)
+
+    class(grid_field_t), intent(inout) :: this
+    real(kind=8),        intent(in)    :: scalar1
+    type(mesh_t),        intent(in)    :: mesh
+
+    integer(kind=4) :: t
+
+    do t = mesh%ts, mesh%te
+        call this%tile(t)%update(scalar1, mesh%tile(t))
+    end do
+
+end subroutine update_grid_field_s1
+
 subroutine update_grid_field_s1v1(this, scalar1, f1, mesh)
 
     class(grid_field_t), intent(inout) :: this
@@ -320,6 +338,21 @@ subroutine assign_grid_field_prod_s1v1v2(this, scalar1, f1, f2, mesh)
 
 end subroutine assign_grid_field_prod_s1v1v2
 
+subroutine assign_grid_field_ratio_s1v1v2(this, scalar1, f1, f2, mesh)
+
+    class(grid_field_t), intent(inout) :: this
+    type(grid_field_t),  intent(in)    :: f1, f2
+    real(kind=8),        intent(in)    :: scalar1
+    type(mesh_t),        intent(in)    :: mesh
+
+    integer(kind=4) :: t
+
+    do t = mesh%ts, mesh%te
+        call this%tile(t)%assign_ratio(scalar1, f1%tile(t), f2%tile(t), mesh%tile(t))
+    end do
+
+end subroutine assign_grid_field_ratio_s1v1v2
+
 subroutine tile_field_assign_prod_s1v1v2(this, scalar1, v1, v2, mesh)
 
     class(tile_field_t), intent(inout) :: this
@@ -338,6 +371,43 @@ subroutine tile_field_assign_prod_s1v1v2(this, scalar1, v1, v2, mesh)
     end do
 
 end subroutine tile_field_assign_prod_s1v1v2
+
+subroutine tile_field_assign_ratio_s1v1v2(this, scalar1, v1, v2, mesh)
+
+    class(tile_field_t), intent(inout) :: this
+    type(tile_field_t),  intent(in)    :: v1, v2
+    real(kind=8),        intent(in)    :: scalar1
+    type(tile_mesh_t),   intent(in)    :: mesh
+
+    integer(kind=4) :: k, j, i
+
+    do k = mesh%ks, mesh%ke
+        do j = mesh%js, mesh%je
+            do i = mesh%is, mesh%ie
+                this%p(i,j,k) = scalar1*v1%p(i,j,k)/v2%p(i,j,k)
+            end do
+        end do
+    end do
+
+end subroutine tile_field_assign_ratio_s1v1v2
+
+subroutine tile_field_update_s1(this, scalar1, mesh)
+
+    class(tile_field_t), intent(inout) :: this
+    real(kind=8),        intent(in)    :: scalar1
+    type(tile_mesh_t),   intent(in)    :: mesh
+
+    integer(kind=4) :: k, j, i
+
+    do k = mesh%ks, mesh%ke
+        do j = mesh%js, mesh%je
+            do i = mesh%is, mesh%ie
+                this%p(i,j,k) = this%p(i,j,k)+scalar1
+            end do
+        end do
+    end do
+
+end subroutine tile_field_update_s1
 
 subroutine tile_field_update_s1v1(this, scalar1, v1, mesh)
 
