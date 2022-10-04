@@ -29,12 +29,14 @@ use key_value_mod, only : key_value_r8_t
 
 use grid_field_mod,         only : grid_field_t
 use grid_field_factory_mod, only : create_grid_field
+use abstract_curl_mod,      only : curl_operator_t
+use curl_factory_mod,       only : create_curl_operator
+use abstract_co2contra_mod, only : co2contra_operator_t
+use co2contra_factory_mod,  only : create_co2contra_operator
 
 use mpi
 
 implicit none
-
-! type(config_RH4_wave_t) :: config_RH4_wave
 
 type(barotropic_instability_height_generator_t) :: height_field
 type(barotropic_instability_wind_generator_t)   :: velocity_field
@@ -70,6 +72,10 @@ subroutine run_barotropic_inst()
     character(:), allocatable :: namelist_string
     type(key_value_r8_t) :: diagnostics
 
+    class(curl_operator_t), allocatable :: curl_op
+    class(co2contra_operator_t), allocatable :: co2contra_op
+    type(grid_field_t) :: u, v
+
     real(kind=8)      :: dt
     real(kind=8)      :: tau_write
     integer(kind=4)   :: nstep_write, nstep_diagnostics
@@ -77,6 +83,7 @@ subroutine run_barotropic_inst()
     real(kind=8)    :: time, l2err, l2_ex, wall_time
     real(kind=8)    :: l2_err_h, l2_ex_h, l2_err_u, l2_ex_u
     real(kind=8)    :: linf_err_h, linf_ex_h, linf_err_u, linf_ex_u
+
     integer(kind=4) :: it
 
     call read_namelist_as_str(namelist_string, "namelist_swm", parcomm_global%myid)
@@ -117,6 +124,13 @@ subroutine run_barotropic_inst()
     call create_swm_diff_operator(operator_diff, config, domain)
     call create_timescheme(timescheme_diff, state, config%diff_time_scheme)
 
+    if(trim(domain%horizontal_staggering)=="C") then
+        call create_curl_operator(curl_op,"curl_c_sbp42",domain)
+        co2contra_op = create_co2contra_operator(domain,"co2contra_c_sbp42_new")
+        call create_grid_field(u,7,0,domain%mesh_u)
+        call create_grid_field(v,7,0,domain%mesh_v)
+    end if
+
     if(config%config_domain%staggering_type == "Ah") then
         call create_latlon_outputer(outputer,          2*domain%partition%Nh+1, 4*domain%partition%Nh, "Ah", domain)
         call create_latlon_outputer(outputer_curl,     2*domain%partition%Nh+1, 4*domain%partition%Nh, "Ah", domain)
@@ -144,6 +158,12 @@ subroutine run_barotropic_inst()
         class is (operator_swm_t)
             call operator%curl_op%calc_curl(curl, state%u, state%v, domain)
             call outputer_curl%write(curl, domain, 'curl.dat', 1)
+        class default
+            if(trim(domain%horizontal_staggering)=="C") then
+                call co2contra_op%transform2co(u,v,state%u,state%v,domain)
+                call curl_op%calc_curl(curl,u,v,domain)
+                call outputer_curl%write(curl, domain, 'curl.dat', 1)
+            end if
         end select
         call outputer%write(state%h, domain, 'h.dat',1)
         call outputer_vec%write(state%u,state%v,domain,"u.dat","v.dat",1)
@@ -200,6 +220,12 @@ subroutine run_barotropic_inst()
                 class is (operator_swm_t)
                     call operator%curl_op%calc_curl(curl, state%u, state%v, domain)
                     call outputer_curl%write(curl, domain, 'curl.dat', int(it/nstep_write)+1)
+                class default
+                    if(trim(domain%horizontal_staggering)=="C") then
+                        call co2contra_op%transform2co(u,v,state%u,state%v,domain)
+                        call curl_op%calc_curl(curl,u,v,domain)
+                        call outputer_curl%write(curl, domain, 'curl.dat', 1)
+                    end if
                 end select
                 call outputer%write(state%h, domain, 'h.dat', int(it/nstep_write)+1)
                 call outputer_vec%write(state%u,state%v,domain,"u.dat","v.dat",int(it/nstep_write)+1)
@@ -209,8 +235,6 @@ subroutine run_barotropic_inst()
             end select
         end if
     end do
-
-    print *, "Wall-time", mpi_wtime()-wtime
 
 end subroutine run_barotropic_inst
 

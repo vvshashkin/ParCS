@@ -8,7 +8,7 @@ DEXE    = ./
 LIBS    =
 FC      = mpiifort
 OPTSC   =  -c -traceback -init=snan -init=arrays -check all -ftrapuv -fpp -fp-model strict -module mod
-OPTSL   =  -traceback -init=snan -init=arrays -check all -ftrapuv -fpp -fp-model strict -lmkl_intel_lp64 -lmkl_core -lmkl_gf_lp64 -lmkl_sequential -lmkl_lapack95_lp64 -module mod
+OPTSL   =  -traceback -init=snan -init=arrays -check all -ftrapuv -fpp -fp-model strict  -module mod
 VPATH   = $(DSRC) $(DOBJ) $(DMOD)
 MKDIRS  = $(DOBJ) $(DMOD) $(DEXE)
 LCEXES  = $(shell echo $(EXES) | tr '[:upper:]' '[:lower:]')
@@ -21,204 +21,175 @@ LITEXT  = "Assembling $@"
 
 #building rules
 $(DEXE)RH4_WAVE_MAIN: $(MKDIRS) $(DOBJ)rh4_wave_main.o \
-	$(DOBJ)avost.o \
-	$(DOBJ)auxhs.o
+	$(DOBJ)avost.o
 	@rm -f $(filter-out $(DOBJ)rh4_wave_main.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) RH4_WAVE_MAIN
 $(DEXE)TS2_MAIN: $(MKDIRS) $(DOBJ)ts2_main.o \
-	$(DOBJ)avost.o \
-	$(DOBJ)auxhs.o
+	$(DOBJ)avost.o
 	@rm -f $(filter-out $(DOBJ)ts2_main.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TS2_MAIN
 $(DEXE)FORCING_TEST_MAIN: $(MKDIRS) $(DOBJ)forcing_test_main.o \
-	$(DOBJ)avost.o \
-	$(DOBJ)auxhs.o
+	$(DOBJ)avost.o
 	@rm -f $(filter-out $(DOBJ)forcing_test_main.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) FORCING_TEST_MAIN
 $(DEXE)TS5_MAIN: $(MKDIRS) $(DOBJ)ts5_main.o \
-	$(DOBJ)avost.o \
-	$(DOBJ)auxhs.o
+	$(DOBJ)avost.o
 	@rm -f $(filter-out $(DOBJ)ts5_main.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TS5_MAIN
 $(DEXE)BAROTROPIC_INST_MAIN: $(MKDIRS) $(DOBJ)barotropic_inst_main.o \
-	$(DOBJ)avost.o \
-	$(DOBJ)auxhs.o
+	$(DOBJ)avost.o
 	@rm -f $(filter-out $(DOBJ)barotropic_inst_main.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) BAROTROPIC_INST_MAIN
 $(DEXE)ELDRED_TEST_MAIN: $(MKDIRS) $(DOBJ)eldred_test_main.o \
-	$(DOBJ)avost.o \
-	$(DOBJ)auxhs.o
+	$(DOBJ)avost.o
 	@rm -f $(filter-out $(DOBJ)eldred_test_main.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) ELDRED_TEST_MAIN
 $(DEXE)NH_MAIN: $(MKDIRS) $(DOBJ)nh_main.o \
-	$(DOBJ)avost.o \
-	$(DOBJ)auxhs.o
+	$(DOBJ)avost.o
 	@rm -f $(filter-out $(DOBJ)nh_main.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) NH_MAIN
 $(DEXE)TEST_TS: $(MKDIRS) $(DOBJ)test_ts.o \
-	$(DOBJ)avost.o \
-	$(DOBJ)auxhs.o
+	$(DOBJ)avost.o
 	@rm -f $(filter-out $(DOBJ)test_ts.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_TS
 $(DEXE)TEST_VERTICAL_OPERATORS_MAIN: $(MKDIRS) $(DOBJ)test_vertical_operators_main.o \
-	$(DOBJ)avost.o \
-	$(DOBJ)auxhs.o
+	$(DOBJ)avost.o
 	@rm -f $(filter-out $(DOBJ)test_vertical_operators_main.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_VERTICAL_OPERATORS_MAIN
 $(DEXE)TEST_CMD_LINE: $(MKDIRS) $(DOBJ)test_cmd_line.o \
-	$(DOBJ)avost.o \
-	$(DOBJ)auxhs.o
+	$(DOBJ)avost.o
 	@rm -f $(filter-out $(DOBJ)test_cmd_line.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_CMD_LINE
 $(DEXE)TEST_NAMELIST: $(MKDIRS) $(DOBJ)test_namelist.o \
-	$(DOBJ)avost.o \
-	$(DOBJ)auxhs.o
+	$(DOBJ)avost.o
 	@rm -f $(filter-out $(DOBJ)test_namelist.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_NAMELIST
 $(DEXE)TEST_EXCH_MAIN: $(MKDIRS) $(DOBJ)test_exch_main.o \
-	$(DOBJ)avost.o \
-	$(DOBJ)auxhs.o
+	$(DOBJ)avost.o
 	@rm -f $(filter-out $(DOBJ)test_exch_main.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_EXCH_MAIN
 $(DEXE)TEST_GRID_FIELD: $(MKDIRS) $(DOBJ)test_grid_field.o \
-	$(DOBJ)avost.o \
-	$(DOBJ)auxhs.o
+	$(DOBJ)avost.o
 	@rm -f $(filter-out $(DOBJ)test_grid_field.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_GRID_FIELD
 $(DEXE)TEST_DIFFOPS_CONV: $(MKDIRS) $(DOBJ)test_diffops_conv.o \
-	$(DOBJ)avost.o \
-	$(DOBJ)auxhs.o
+	$(DOBJ)avost.o
 	@rm -f $(filter-out $(DOBJ)test_diffops_conv.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_DIFFOPS_CONV
 $(DEXE)TEST_DIFFOPS: $(MKDIRS) $(DOBJ)test_diffops.o \
-	$(DOBJ)avost.o \
-	$(DOBJ)auxhs.o
+	$(DOBJ)avost.o
 	@rm -f $(filter-out $(DOBJ)test_diffops.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_DIFFOPS
 $(DEXE)TEST_DIFFOPS_ALL: $(MKDIRS) $(DOBJ)test_diffops_all.o \
-	$(DOBJ)avost.o \
-	$(DOBJ)auxhs.o
+	$(DOBJ)avost.o
 	@rm -f $(filter-out $(DOBJ)test_diffops_all.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_DIFFOPS_ALL
 $(DEXE)TEST_DIFFOPS_3D: $(MKDIRS) $(DOBJ)test_diffops_3d.o \
-	$(DOBJ)avost.o \
-	$(DOBJ)auxhs.o
+	$(DOBJ)avost.o
 	@rm -f $(filter-out $(DOBJ)test_diffops_3d.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_DIFFOPS_3D
 $(DEXE)TEST_LAPLACE_SPECTRE: $(MKDIRS) $(DOBJ)test_laplace_spectre.o \
-	$(DOBJ)avost.o \
-	$(DOBJ)auxhs.o
+	$(DOBJ)avost.o
 	@rm -f $(filter-out $(DOBJ)test_laplace_spectre.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_LAPLACE_SPECTRE
 $(DEXE)TEST_HALO_MAIN: $(MKDIRS) $(DOBJ)test_halo_main.o \
-	$(DOBJ)avost.o \
-	$(DOBJ)auxhs.o
+	$(DOBJ)avost.o
 	@rm -f $(filter-out $(DOBJ)test_halo_main.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_HALO_MAIN
 $(DEXE)TEST_REGRID: $(MKDIRS) $(DOBJ)test_regrid.o \
-	$(DOBJ)avost.o \
-	$(DOBJ)auxhs.o
+	$(DOBJ)avost.o
 	@rm -f $(filter-out $(DOBJ)test_regrid.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_REGRID
 $(DEXE)TEST_LATLON_OUTPUT: $(MKDIRS) $(DOBJ)test_latlon_output.o \
-	$(DOBJ)avost.o \
-	$(DOBJ)auxhs.o
+	$(DOBJ)avost.o
 	@rm -f $(filter-out $(DOBJ)test_latlon_output.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_LATLON_OUTPUT
 $(DEXE)TEST_VERTICAL_PROFILES_MAIN: $(MKDIRS) $(DOBJ)test_vertical_profiles_main.o \
-	$(DOBJ)avost.o \
-	$(DOBJ)auxhs.o
+	$(DOBJ)avost.o
 	@rm -f $(filter-out $(DOBJ)test_vertical_profiles_main.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_VERTICAL_PROFILES_MAIN
 $(DEXE)TEST_METRIC_MAIN: $(MKDIRS) $(DOBJ)test_metric_main.o \
-	$(DOBJ)avost.o \
-	$(DOBJ)auxhs.o
+	$(DOBJ)avost.o
 	@rm -f $(filter-out $(DOBJ)test_metric_main.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_METRIC_MAIN
 $(DEXE)TEST_DOMAIN_MAIN: $(MKDIRS) $(DOBJ)test_domain_main.o \
-	$(DOBJ)avost.o \
-	$(DOBJ)auxhs.o
+	$(DOBJ)avost.o
 	@rm -f $(filter-out $(DOBJ)test_domain_main.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_DOMAIN_MAIN
 $(DEXE)TEST_ADVECTION_MAIN: $(MKDIRS) $(DOBJ)test_advection_main.o \
-	$(DOBJ)avost.o \
-	$(DOBJ)auxhs.o
+	$(DOBJ)avost.o
 	@rm -f $(filter-out $(DOBJ)test_advection_main.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_ADVECTION_MAIN
 $(DEXE)TEST_HORDIFF_MAIN: $(MKDIRS) $(DOBJ)test_hordiff_main.o \
-	$(DOBJ)avost.o \
-	$(DOBJ)auxhs.o
+	$(DOBJ)avost.o
 	@rm -f $(filter-out $(DOBJ)test_hordiff_main.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_HORDIFF_MAIN
 $(DEXE)TEST_VERTICAL_TRANSFORM_MAIN: $(MKDIRS) $(DOBJ)test_vertical_transform_main.o \
-	$(DOBJ)avost.o \
-	$(DOBJ)auxhs.o
+	$(DOBJ)avost.o
 	@rm -f $(filter-out $(DOBJ)test_vertical_transform_main.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_VERTICAL_TRANSFORM_MAIN
 $(DEXE)TEST_QUADRATURE_MAIN: $(MKDIRS) $(DOBJ)test_quadrature_main.o \
-	$(DOBJ)avost.o \
-	$(DOBJ)auxhs.o
+	$(DOBJ)avost.o
 	@rm -f $(filter-out $(DOBJ)test_quadrature_main.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
 EXES := $(EXES) TEST_QUADRATURE_MAIN
 $(DEXE)TEST_PANELED_OUTPUT: $(MKDIRS) $(DOBJ)test_paneled_output.o \
-	$(DOBJ)avost.o \
-	$(DOBJ)auxhs.o
+	$(DOBJ)avost.o
 	@rm -f $(filter-out $(DOBJ)test_paneled_output.o,$(EXESOBJ))
 	@echo $(LITEXT)
 	@$(FC) $(OPTSL) $(DOBJ)*.o $(LIBS) -o $@
@@ -598,6 +569,10 @@ $(DOBJ)barotropic_inst_mod.o: src/models/shallow_water/test/barotropic_instabili
 	$(DOBJ)key_value_mod.o \
 	$(DOBJ)grid_field_mod.o \
 	$(DOBJ)grid_field_factory_mod.o \
+	$(DOBJ)abstract_curl_mod.o \
+	$(DOBJ)curl_factory_mod.o \
+	$(DOBJ)abstract_co2contra_mod.o \
+	$(DOBJ)co2contra_factory_mod.o \
 	$(DOBJ)vec_math_mod.o \
 	$(DOBJ)namelist_read_mod.o \
 	$(DOBJ)barotropic_instability_u_mod.o
@@ -2987,10 +2962,6 @@ $(DOBJ)orography_factory_mod.o: src/domain/orography/orography_factory_mod.f90 \
 
 $(DOBJ)orography_mod.o: src/domain/orography/orography_mod.f90 \
 	$(DOBJ)grid_field_mod.o
-	@echo $(COTEXT)
-	@$(FC) $(OPTSC)  $< -o $@
-
-$(DOBJ)auxhs.o: src/aux/auxhs.f
 	@echo $(COTEXT)
 	@$(FC) $(OPTSC)  $< -o $@
 
